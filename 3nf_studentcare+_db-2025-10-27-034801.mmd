@@ -1,0 +1,119 @@
+erDiagram
+    USER_ROLES {
+        INT role_id PK
+        VARCHAR role_name
+        TEXT description
+        TEXT permissions
+    }
+
+    USERS {
+        INT user_id PK
+        VARCHAR username
+        VARCHAR password
+        INT role_id FK
+        ENUM status
+        DATETIME created_at
+    }
+
+    STUDENTS {
+        INT student_id PK
+        INT user_id FK
+        VARCHAR lrn
+        VARCHAR first_name
+        VARCHAR last_name
+        ENUM gender
+        DATE birthdate
+        VARCHAR grade_level
+        TEXT address
+        VARCHAR qr_code
+        DATETIME created_at
+    }
+
+    PARENTS {
+        INT parent_id PK
+        INT student_id FK
+        VARCHAR parent_name
+        VARCHAR parent_contact
+    }
+
+    MEDICAL_RECORDS {
+        INT record_id PK
+        INT student_id FK
+        VARCHAR illness
+        TEXT symptoms
+        TEXT treatment
+        DATE date_of_visit
+        INT attending_staff_id FK
+        TEXT remarks
+        DATE follow_up
+    }
+
+    APPOINTMENTS {
+        INT appointment_id PK
+        INT student_id FK
+        DATE scheduled_date
+        TEXT purpose
+        ENUM status
+        INT created_by FK
+    }
+
+    SMS_NOTIFICATIONS {
+        INT sms_id PK
+        INT student_id FK
+        TEXT message
+        VARCHAR recipient_number
+        INT sent_by FK
+        DATETIME date_sent
+        ENUM status
+    }
+
+    HEALTH_REPORTS {
+        INT report_id PK
+        INT generated_by FK
+        VARCHAR report_type
+        DATE period_start
+        DATE period_end
+        VARCHAR file_path
+        DATETIME created_at
+    }
+
+    ACTIVITY_LOGS {
+        INT log_id PK
+        INT user_id FK
+        VARCHAR action
+        DATETIME timestamp
+    }
+
+    QR_SCANS {
+        INT scan_id PK
+        INT student_id FK
+        INT scanned_by FK
+        DATETIME scan_time
+        VARCHAR purpose
+    }
+
+    CLINIC_INVENTORY {
+        INT item_id PK
+        VARCHAR item_name
+        VARCHAR category
+        INT quantity
+        VARCHAR unit
+        DATE expiry_date
+        DATETIME last_updated
+        INT updated_by FK
+    }
+
+    %% --- RELATIONSHIPS ---
+    USER_ROLES ||--o{ USERS : "has"
+    USERS ||--|| STUDENTS : "linked"
+    STUDENTS ||--o{ PARENTS : "has"
+    STUDENTS ||--o{ MEDICAL_RECORDS : "has"
+    STUDENTS ||--o{ APPOINTMENTS : "schedules"
+    STUDENTS ||--o{ SMS_NOTIFICATIONS : "receives"
+    STUDENTS ||--o{ QR_SCANS : "scanned"
+    USERS ||--o{ ACTIVITY_LOGS : "performs"
+    USERS ||--o{ HEALTH_REPORTS : "generates"
+    USERS ||--o{ CLINIC_INVENTORY : "updates"
+    USERS ||--o{ SMS_NOTIFICATIONS : "sends"
+    USERS ||--o{ MEDICAL_RECORDS : "attends"
+    USERS ||--o{ QR_SCANS : "scans"
