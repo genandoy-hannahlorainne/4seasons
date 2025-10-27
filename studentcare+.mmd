@@ -1,0 +1,130 @@
+erDiagram
+  ROLES {
+    TINYINT role_id PK
+    VARCHAR role_name
+  }
+  USERS {
+    INT user_id PK
+    TINYINT role_id FK
+    VARCHAR username
+    VARCHAR password_hash
+    VARCHAR email
+    VARCHAR phone
+    VARCHAR full_name
+  }
+  STUDENTS {
+    INT student_id PK
+    VARCHAR student_number
+    INT user_id FK
+    VARCHAR first_name
+    VARCHAR last_name
+    DATE birth_date
+    VARCHAR grade_level
+  }
+  PARENTS {
+    INT parent_id PK
+    INT user_id FK
+    VARCHAR first_name
+    VARCHAR last_name
+    VARCHAR phone
+  }
+  STUDENT_PARENT {
+    INT student_id FK
+    INT parent_id FK
+  }
+  ADVISERS {
+    INT adviser_id PK
+    INT user_id FK
+    VARCHAR first_name
+    VARCHAR last_name
+  }
+  STUDENT_ADVISER {
+    INT student_id FK
+    INT adviser_id FK
+  }
+  CLINIC_STAFF {
+    INT clinic_staff_id PK
+    INT user_id FK
+    VARCHAR staff_code
+  }
+  MEDICAL_VISITS {
+    BIGINT visit_id PK
+    INT student_id FK
+    INT clinic_staff_id FK
+    DATETIME visit_datetime
+    VARCHAR chief_complaint
+    VARCHAR status
+  }
+  VITALS {
+    BIGINT vitals_id PK
+    BIGINT visit_id FK
+    DECIMAL weight_kg
+    DECIMAL height_cm
+  }
+  DIAGNOSES {
+    BIGINT diagnosis_id PK
+    BIGINT visit_id FK
+    VARCHAR diagnosis_text
+  }
+  TREATMENTS {
+    BIGINT treatment_id PK
+    BIGINT visit_id FK
+    VARCHAR treatment_text
+  }
+  MEDICATIONS {
+    BIGINT med_id PK
+    BIGINT visit_id FK
+    VARCHAR medication_name
+  }
+  ALLERGIES {
+    INT allergy_id PK
+    INT student_id FK
+    VARCHAR allergy_text
+  }
+  IMMUNIZATIONS {
+    INT immunization_id PK
+    INT student_id FK
+    VARCHAR vaccine_name
+  }
+  QR_CODES {
+    BIGINT qr_id PK
+    INT student_id FK
+    VARCHAR qr_token
+  }
+  NOTIFICATIONS {
+    BIGINT notification_id PK
+    INT parent_id FK
+    INT student_id FK
+    BIGINT visit_id FK
+    VARCHAR message
+    VARCHAR status
+  }
+  ACTIVITY_LOGS {
+    BIGINT log_id PK
+    INT user_id FK
+    VARCHAR action
+    DATETIME created_at
+  }
+
+  ROLES ||--o{ USERS : has
+  USERS ||--o{ STUDENTS : "may be linked"
+  USERS ||--o{ PARENTS : "may be linked"
+  USERS ||--o{ ADVISERS : "may be linked"
+  USERS ||--o{ CLINIC_STAFF : "may be linked"
+  STUDENTS ||--o{ STUDENT_PARENT : ""
+  PARENTS ||--o{ STUDENT_PARENT : ""
+  STUDENTS ||--o{ STUDENT_ADVISER : ""
+  ADVISERS ||--o{ STUDENT_ADVISER : ""
+  STUDENTS ||--o{ MEDICAL_VISITS : "has"
+  CLINIC_STAFF ||--o{ MEDICAL_VISITS : "attends"
+  MEDICAL_VISITS ||--o{ VITALS : ""
+  MEDICAL_VISITS ||--o{ DIAGNOSES : ""
+  MEDICAL_VISITS ||--o{ TREATMENTS : ""
+  MEDICAL_VISITS ||--o{ MEDICATIONS : ""
+  STUDENTS ||--o{ ALLERGIES : ""
+  STUDENTS ||--o{ IMMUNIZATIONS : ""
+  STUDENTS ||--o{ QR_CODES : ""
+  PARENTS ||--o{ NOTIFICATIONS : ""
+  STUDENTS ||--o{ NOTIFICATIONS : ""
+  MEDICAL_VISITS ||--o{ NOTIFICATIONS : ""
+  USERS ||--o{ ACTIVITY_LOGS : ""
