@@ -1,0 +1,34 @@
+<div class="student-list-container">
+  <h2>Students</h2>
+
+  @if (loading) {
+    <p>Loading students...</p>
+  } @else if (students.length === 0) {
+    <p>No students found.</p>
+  } @else {
+    <table class="student-table">
+      <thead>
+        <tr>
+          <th>Student Number</th>
+          <th>Name</th>
+          <th>Grade Level</th>
+          <th>Section</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (student of students; track student.student_id) {
+          <tr>
+            <td>{{ student.student_number }}</td>
+            <td>{{ student.first_name }} {{ student.last_name }}</td>
+            <td>{{ student.grade_level }}</td>
+            <td>{{ student.section }}</td>
+            <td>
+              <a [routerLink]="['/students', student.student_id]" class="btn btn-sm">View</a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
