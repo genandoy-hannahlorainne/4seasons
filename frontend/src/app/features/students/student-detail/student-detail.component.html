@@ -1,0 +1,48 @@
+<div class="student-detail-container">
+  <a routerLink="/students" class="back-link">← Back to Students</a>
+
+  @if (loading) {
+    <p>Loading student details...</p>
+  } @else if (student) {
+    <div class="student-card">
+      <h2>{{ student.first_name }} {{ student.last_name }}</h2>
+      
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Student Number:</label>
+          <span>{{ student.student_number }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Grade Level:</label>
+          <span>{{ student.grade_level }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Section:</label>
+          <span>{{ student.section }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Gender:</label>
+          <span>{{ student.gender }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Birth Date:</label>
+          <span>{{ student.birth_date }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Blood Type:</label>
+          <span>{{ student.blood_type }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Emergency Contact:</label>
+          <span>{{ student.emergency_contact }}</span>
+        </div>
+        <div class="detail-item full-width">
+          <label>Address:</label>
+          <span>{{ student.address }}</span>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <p>Student not found.</p>
+  }
+</div>
