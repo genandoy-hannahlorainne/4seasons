@@ -1,6 +1,7 @@
 <div class="login-container">
   <div class="login-card">
     <h2>StudentCare+ Login</h2>
+    <p class="subtitle">Sign in to your account</p>
     
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <div class="form-group">
@@ -40,6 +41,10 @@
           <span>Login</span>
         }
       </button>
+
+      <div class="signup-link">
+        Don't have an account? <a routerLink="/signup">Sign up</a>
+      </div>
     </form>
   </div>
 </div>
