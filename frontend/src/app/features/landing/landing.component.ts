@@ -13,7 +13,7 @@ export class LandingComponent {
   constructor(private router: Router) {}
 
   navigateToLogin(): void {
-    this.router.navigate(['/login']);
+    this.router.navigate(['/role-selection']);
   }
 
   navigateToSignup(): void {
