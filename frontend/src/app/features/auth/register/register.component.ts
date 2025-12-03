@@ -21,6 +21,7 @@ export class RegisterComponent {
   showModal = false;
   modalMessage = '';
   modalSuccess = false;
+  registeredUsername = '';
 
   constructor(
     private fb: FormBuilder,
@@ -79,7 +80,8 @@ export class RegisterComponent {
         this.loading = false;
         if (response.success) {
           this.modalSuccess = true;
-          this.modalMessage = `Registration successful! Your username is: ${response.username}`;
+          this.registeredUsername = response.username;
+          this.modalMessage = `Registration successful! Please save your username - you'll need it to login.`;
           this.showModal = true;
         } else {
           this.modalSuccess = false;
@@ -110,5 +112,16 @@ export class RegisterComponent {
 
   goToLogin(): void {
     this.router.navigate(['/login']);
+  }
+
+  copyUsername(): void {
+    navigator.clipboard.writeText(this.registeredUsername).then(() => {
+      // Optional: Show a brief "Copied!" message
+      const originalMessage = this.modalMessage;
+      this.modalMessage = 'Username copied to clipboard!';
+      setTimeout(() => {
+        this.modalMessage = originalMessage;
+      }, 2000);
+    });
   }
 }
