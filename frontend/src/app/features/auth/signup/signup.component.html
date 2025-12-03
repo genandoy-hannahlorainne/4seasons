@@ -1,83 +1,99 @@
 <div class="signup-container">
-  <div class="signup-card">
-    <h2>Create Account</h2>
-    <p class="subtitle">Sign up for StudentCare+</p>
-    
-    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
-      <div class="form-group">
-        <label for="fullName">Full Name</label>
-        <input 
-          type="text" 
-          id="fullName" 
-          formControlName="fullName" 
-          class="form-control"
-          [class.is-invalid]="signupForm.get('fullName')?.invalid && signupForm.get('fullName')?.touched"
-        />
-      </div>
+  <div class="left-side"></div>
+  
+  <div class="right-side">
+    <div class="form-wrapper">
+      <h2 class="heading">Start Your Session</h2>
+      
+      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+        <!-- Email -->
+        <div class="form-group">
+          <input 
+            type="email" 
+            id="email" 
+            placeholder="Email"
+            formControlName="email" 
+            class="form-control"
+            [class.is-invalid]="signupForm.get('email')?.invalid && signupForm.get('email')?.touched"
+          />
+        </div>
 
-      <div class="form-group">
-        <label for="username">Username</label>
-        <input 
-          type="text" 
-          id="username" 
-          formControlName="username" 
-          class="form-control"
-          [class.is-invalid]="signupForm.get('username')?.invalid && signupForm.get('username')?.touched"
-        />
-      </div>
+        <!-- Date of Birth (Month, Day, Year) -->
+        <div class="date-group">
+          <select 
+            id="month" 
+            formControlName="month" 
+            class="form-control date-control"
+            [class.is-invalid]="signupForm.get('month')?.invalid && signupForm.get('month')?.touched"
+          >
+            <option value="">month</option>
+            <option *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="i">{{ i }}</option>
+          </select>
+          
+          <select 
+            id="day" 
+            formControlName="day" 
+            class="form-control date-control"
+            [class.is-invalid]="signupForm.get('day')?.invalid && signupForm.get('day')?.touched"
+          >
+            <option value="">day</option>
+            <option *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]" [value]="i">{{ i }}</option>
+          </select>
+          
+          <select 
+            id="year" 
+            formControlName="year" 
+            class="form-control date-control"
+            [class.is-invalid]="signupForm.get('year')?.invalid && signupForm.get('year')?.touched"
+          >
+            <option value="">year</option>
+            <option *ngFor="let i of getYears()" [value]="i">{{ i }}</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input 
-          type="email" 
-          id="email" 
-          formControlName="email" 
-          class="form-control"
-          [class.is-invalid]="signupForm.get('email')?.invalid && signupForm.get('email')?.touched"
-        />
-      </div>
+        <!-- Password -->
+        <div class="form-group">
+          <input 
+            type="password" 
+            id="password" 
+            placeholder="Password"
+            formControlName="password" 
+            class="form-control"
+            [class.is-invalid]="signupForm.get('password')?.invalid && signupForm.get('password')?.touched"
+          />
+        </div>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input 
-          type="password" 
-          id="password" 
-          formControlName="password" 
-          class="form-control"
-          [class.is-invalid]="signupForm.get('password')?.invalid && signupForm.get('password')?.touched"
-        />
-      </div>
+        <!-- Role -->
+        <div class="form-group">
+          <select 
+            id="role" 
+            formControlName="role" 
+            class="form-control"
+            [class.is-invalid]="signupForm.get('role')?.invalid && signupForm.get('role')?.touched"
+          >
+            <option value="">Role</option>
+            <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="confirmPassword">Confirm Password</label>
-        <input 
-          type="password" 
-          id="confirmPassword" 
-          formControlName="confirmPassword" 
-          class="form-control"
-          [class.is-invalid]="signupForm.get('confirmPassword')?.invalid && signupForm.get('confirmPassword')?.touched"
-        />
-      </div>
-
-      @if (error) {
-        <div class="alert alert-danger">{{ error }}</div>
-      }
-
-      <button 
-        type="submit" 
-        class="btn btn-primary" 
-        [disabled]="loading || signupForm.invalid"
-      >
-        @if (loading) {
-          <span>Creating account...</span>
-        } @else {
-          <span>Sign Up</span>
+        @if (error) {
+          <div class="alert alert-danger">{{ error }}</div>
         }
-      </button>
 
-      <div class="login-link">
-        Already have an account? <a routerLink="/login">Log in</a>
-      </div>
-    </form>
+        <!-- Log In Button -->
+        <button 
+          type="submit" 
+          class="btn-login" 
+          [disabled]="loading || signupForm.invalid"
+        >
+          LOG IN
+        </button>
+
+        <!-- Forgot Password Link -->
+        <div class="forgot-password">
+          <a href="#" routerLink="/forgot-password">I forgot my password</a>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
