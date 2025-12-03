@@ -214,7 +214,20 @@
         }
       </div>
       <h3>{{ modalSuccess ? 'Registration Successful!' : 'Registration Failed' }}</h3>
-      <p>{{ modalMessage }}</p>
+      <p style="white-space: pre-line;">{{ modalMessage }}</p>
+      
+      @if (modalSuccess && registeredUsername) {
+        <div class="username-display">
+          <label>Your Username:</label>
+          <div class="username-box">
+            <span class="username-text">{{ registeredUsername }}</span>
+            <button class="btn-copy" (click)="copyUsername()" title="Copy username">
+              📋 Copy
+            </button>
+          </div>
+        </div>
+      }
+      
       <div class="modal-actions">
         @if (modalSuccess) {
           <button class="btn btn-primary" (click)="goToLogin()">Go to Login</button>
