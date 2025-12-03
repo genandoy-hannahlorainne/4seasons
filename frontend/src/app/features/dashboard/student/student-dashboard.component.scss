@@ -99,18 +99,22 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
           align-items: center;
           justify-content: center;
           transition: background 0.3s;
+          padding: 8px;
 
           &:hover {
             background: rgba(255, 255, 255, 0.3);
           }
 
-          &::before {
-            content: '🔔';
-            font-size: 1.2rem;
+          .icon-img {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
           }
 
           &.profile::before {
             content: '👤';
+            font-size: 1.2rem;
           }
         }
       }
@@ -130,7 +134,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
         font-family: $font-secondary;
         color: $color-text-dark;
         margin-bottom: $spacing-xs;
-        font-weight: 600;
+        font-weight: 1000;
       }
 
       .student-info {
@@ -331,10 +335,17 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
             &:hover {
               background: $color-primary;
               color: $color-white;
+
+              .edit-icon-img {
+                filter: brightness(0) invert(1);
+              }
             }
 
-            &::before {
-              content: '✏️';
+            .edit-icon-img {
+              width: 25px;
+              height: 25px;
+              object-fit: contain;
+              transition: filter 0.3s;
             }
           }
         }
