@@ -74,6 +74,9 @@ export class RegisterComponent {
       ...this.registerForm.value,
       role: this.selectedRole
     };
+    
+    // Log for debugging
+    console.log('Sending registration data:', { ...formData, password: '***' });
 
     this.authService.register(formData).subscribe({
       next: (response) => {
@@ -92,8 +95,27 @@ export class RegisterComponent {
       error: (err) => {
         this.loading = false;
         this.modalSuccess = false;
-        this.modalMessage = err.error?.message || 'Registration failed. Please check your connection and try again.';
+        
+        // Better error handling
+        let errorMessage = 'Registration failed. Please try again.';
+        
+        if (err.status === 0) {
+          errorMessage = 'Cannot connect to server. Please make sure the backend server is running on http://localhost:8000';
+        } else if (err.error?.message) {
+          errorMessage = err.error.message;
+        } else if (err.message) {
+          errorMessage = err.message;
+        } else if (err.status === 400) {
+          errorMessage = 'Invalid registration data. Please check all required fields.';
+        } else if (err.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+        
+        this.modalMessage = errorMessage;
         this.showModal = true;
+        
+        // Log to console for debugging
+        console.error('Registration error:', err);
       }
     });
   }

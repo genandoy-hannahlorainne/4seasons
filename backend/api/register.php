@@ -20,6 +20,25 @@ $db = $database->getConnection();
 
 $data = json_decode(file_get_contents("php://input"));
 
+// Validate basic required fields
+if (empty($data->role)) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Role is required'
+    ]);
+    exit;
+}
+
+if (empty($data->password)) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Password is required'
+    ]);
+    exit;
+}
+
 if (!empty($data->role) && !empty($data->password)) {
     
     try {
@@ -90,6 +109,11 @@ if (!empty($data->role) && !empty($data->password)) {
         
         // Insert role-specific data
         if ($data->role === 'student') {
+            // Validate required student fields
+            if (empty($data->studentNumber) || empty($data->firstName) || empty($data->lastName)) {
+                throw new Exception("Student number, first name, and last name are required");
+            }
+            
             $studentQuery = "INSERT INTO students 
                            (user_id, student_number, first_name, middle_name, last_name, birth_date, gender) 
                            VALUES (:user_id, :student_number, :first_name, :middle_name, :last_name, :birth_date, :gender)";
@@ -100,11 +124,12 @@ if (!empty($data->role) && !empty($data->password)) {
             $middleName = $data->middleName ?? null;
             $studentStmt->bindParam(":middle_name", $middleName);
             $studentStmt->bindParam(":last_name", $data->lastName);
-            $studentStmt->bindParam(":birth_date", $data->birthday);
+            $birthDate = $data->birthday ?? null;
+            $studentStmt->bindParam(":birth_date", $birthDate);
             
             // Convert gender to database format
             $genderMap = ['male' => 'M', 'female' => 'F', 'other' => 'Other'];
-            $gender = $genderMap[$data->gender] ?? 'Other';
+            $gender = $genderMap[strtolower($data->gender ?? '')] ?? 'Other';
             $studentStmt->bindParam(":gender", $gender);
             $studentStmt->execute();
             
@@ -147,14 +172,23 @@ if (!empty($data->role) && !empty($data->password)) {
             'username' => $username
         ]);
         
+    } catch (PDOException $e) {
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ]);
     } catch (Exception $e) {
-        $db->rollBack();
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'message' => $e->getMessage()
-        ]);
-    }
+            'messa
     
 } else {
     http_response_code(400);
