@@ -201,3 +201,27 @@
     }
   </div>
 </div>
+
+<!-- Success/Error Modal -->
+@if (showModal) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()" [class.success]="modalSuccess" [class.error]="!modalSuccess">
+      <div class="modal-icon">
+        @if (modalSuccess) {
+          <span class="icon-success">✓</span>
+        } @else {
+          <span class="icon-error">✕</span>
+        }
+      </div>
+      <h3>{{ modalSuccess ? 'Registration Successful!' : 'Registration Failed' }}</h3>
+      <p>{{ modalMessage }}</p>
+      <div class="modal-actions">
+        @if (modalSuccess) {
+          <button class="btn btn-primary" (click)="goToLogin()">Go to Login</button>
+        } @else {
+          <button class="btn btn-secondary" (click)="closeModal()">Try Again</button>
+        }
+      </div>
+    </div>
+  </div>
+}

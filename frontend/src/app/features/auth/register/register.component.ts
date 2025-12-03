@@ -18,6 +18,9 @@ export class RegisterComponent {
   registerForm: FormGroup;
   loading = false;
   error = '';
+  showModal = false;
+  modalMessage = '';
+  modalSuccess = false;
 
   constructor(
     private fb: FormBuilder,
@@ -71,18 +74,41 @@ export class RegisterComponent {
       role: this.selectedRole
     };
 
-    // TODO: Implement actual registration API call
-    console.log('Registration data:', formData);
-    
-    // Simulate API call
-    setTimeout(() => {
-      this.loading = false;
-      this.router.navigate(['/login']);
-    }, 1000);
+    this.authService.register(formData).subscribe({
+      next: (response) => {
+        this.loading = false;
+        if (response.success) {
+          this.modalSuccess = true;
+          this.modalMessage = `Registration successful! Your username is: ${response.username}`;
+          this.showModal = true;
+        } else {
+          this.modalSuccess = false;
+          this.modalMessage = response.message || 'Registration failed. Please try again.';
+          this.showModal = true;
+        }
+      },
+      error: (err) => {
+        this.loading = false;
+        this.modalSuccess = false;
+        this.modalMessage = err.error?.message || 'Registration failed. Please check your connection and try again.';
+        this.showModal = true;
+      }
+    });
   }
 
   goBack(): void {
     this.selectedRole = null;
     this.registerForm = this.fb.group({});
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    if (this.modalSuccess) {
+      this.router.navigate(['/login']);
+    }
+  }
+
+  goToLogin(): void {
+    this.router.navigate(['/login']);
   }
 }
