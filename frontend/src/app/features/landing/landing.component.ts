@@ -17,6 +17,6 @@ export class LandingComponent {
   }
 
   navigateToSignup(): void {
-    this.router.navigate(['/signup']);
+    this.router.navigate(['/register']);
   }
 }

@@ -15,6 +15,6 @@ export class RoleSelection {
     localStorage.setItem('selectedRole', role);
     
     // Navigate to the actual login page with the role
-    this.router.navigate(['/auth/login'], { queryParams: { role } });
+    this.router.navigate(['/login'], { queryParams: { role } });
   }
 }
