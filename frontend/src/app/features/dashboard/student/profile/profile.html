@@ -1,1 +1,266 @@
-<p>profile works!</p>
+<div class="profile-container">
+  <nav class="top-nav">
+    <div class="nav-left">
+      <button class="back-btn" (click)="goBack()">
+        ← Back to Dashboard
+      </button>
+    </div>
+    <div class="nav-icons">
+      <button class="icon-btn notification">
+        <i class="bell-icon"></i>
+      </button>
+      <button class="icon-btn profile active">
+        <i class="user-icon"></i>
+      </button>
+    </div>
+  </nav>
+
+  <div class="profile-content">
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <div class="avatar-circle">
+          {{ profileForm.get('firstName')?.value?.charAt(0) }}{{ profileForm.get('lastName')?.value?.charAt(0) }}
+        </div>
+      </div>
+      <div class="profile-title">
+        <h1>My Profile</h1>
+        <p class="student-id">{{ profileForm.get('studentNumber')?.value }}</p>
+      </div>
+      <div class="profile-actions">
+        @if (!isEditing) {
+          <button class="btn btn-primary" (click)="toggleEdit()">
+            ✏️ Edit Profile
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading && !isEditing) {
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading profile...</p>
+      </div>
+    }
+
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+      <!-- Success/Error Messages -->
+      @if (successMessage) {
+        <div class="alert alert-success">
+          ✓ {{ successMessage }}
+        </div>
+      }
+      @if (errorMessage) {
+        <div class="alert alert-danger">
+          ✕ {{ errorMessage }}
+        </div>
+      }
+
+      <div class="profile-sections">
+        <!-- Personal Information -->
+        <div class="section-card">
+          <h2 class="section-title">Personal Information</h2>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Student Number</label>
+              <input 
+                type="text" 
+                formControlName="studentNumber" 
+                class="form-control"
+                readonly
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name *</label>
+              <input 
+                type="text" 
+                formControlName="firstName" 
+                class="form-control"
+                [class.is-invalid]="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Middle Name</label>
+              <input 
+                type="text" 
+                formControlName="middleName" 
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Last Name *</label>
+              <input 
+                type="text" 
+                formControlName="lastName" 
+                class="form-control"
+                [class.is-invalid]="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Gender *</label>
+              <select 
+                formControlName="gender" 
+                class="form-control"
+                [class.is-invalid]="profileForm.get('gender')?.invalid && profileForm.get('gender')?.touched"
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Birthday *</label>
+              <input 
+                type="date" 
+                formControlName="birthday" 
+                class="form-control"
+                [class.is-invalid]="profileForm.get('birthday')?.invalid && profileForm.get('birthday')?.touched"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Academic Information -->
+        <div class="section-card">
+          <h2 class="section-title">Academic Information</h2>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Grade Level *</label>
+              <input 
+                type="text" 
+                formControlName="gradeLevel" 
+                class="form-control"
+                placeholder="e.g., Grade 10"
+                [class.is-invalid]="profileForm.get('gradeLevel')?.invalid && profileForm.get('gradeLevel')?.touched"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Section *</label>
+              <input 
+                type="text" 
+                formControlName="section" 
+                class="form-control"
+                placeholder="e.g., HUMSS"
+                [class.is-invalid]="profileForm.get('section')?.invalid && profileForm.get('section')?.touched"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="section-card">
+          <h2 class="section-title">Contact Information</h2>
+          
+          <div class="form-group">
+            <label>Address *</label>
+            <textarea 
+              formControlName="address" 
+              class="form-control"
+              rows="3"
+              placeholder="Complete address"
+              [class.is-invalid]="profileForm.get('address')?.invalid && profileForm.get('address')?.touched"
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Contact Number *</label>
+              <input 
+                type="tel" 
+                formControlName="contactNumber" 
+                class="form-control"
+                placeholder="09XXXXXXXXX"
+                [class.is-invalid]="profileForm.get('contactNumber')?.invalid && profileForm.get('contactNumber')?.touched"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Email *</label>
+              <input 
+                type="email" 
+                formControlName="email" 
+                class="form-control"
+                placeholder="email@example.com"
+                [class.is-invalid]="profileForm.get('email')?.invalid && profileForm.get('email')?.touched"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Medical Information -->
+        <div class="section-card">
+          <h2 class="section-title">Medical Information</h2>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Blood Type</label>
+              <select 
+                formControlName="bloodType" 
+                class="form-control"
+              >
+                <option value="">Select Blood Type</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Emergency Contact *</label>
+              <input 
+                type="text" 
+                formControlName="emergencyContact" 
+                class="form-control"
+                placeholder="Name and phone number"
+                [class.is-invalid]="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      @if (isEditing) {
+        <div class="form-actions">
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="toggleEdit()"
+            [disabled]="loading"
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary" 
+            [disabled]="loading || profileForm.invalid"
+          >
+            @if (loading) {
+              <span>Saving...</span>
+            } @else {
+              <span>💾 Save Changes</span>
+            }
+          </button>
+        </div>
+      }
+    </form>
+  </div>
+</div>

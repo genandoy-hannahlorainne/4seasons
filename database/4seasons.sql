@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 03, 2025 at 07:49 AM
+-- Generation Time: Dec 03, 2025 at 11:45 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -36,6 +36,28 @@ CREATE TABLE `activity_logs` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `activity_logs`
+--
+
+INSERT INTO `activity_logs` (`log_id`, `user_id`, `action`, `details`, `ip_address`, `created_at`) VALUES
+(1, 1, 'Registration', NULL, '::1', '2025-12-03 07:08:26'),
+(2, 2, 'Registration', NULL, '::1', '2025-12-03 07:22:35'),
+(3, 2, 'Login', NULL, '::1', '2025-12-03 07:22:44'),
+(4, 3, 'Registration', NULL, '::1', '2025-12-03 07:24:35'),
+(5, 3, 'Login', NULL, '::1', '2025-12-03 07:24:44'),
+(6, 4, 'Registration', NULL, '::1', '2025-12-03 07:25:47'),
+(7, 4, 'Login', NULL, '::1', '2025-12-03 07:26:09'),
+(8, 5, 'Registration', NULL, '::1', '2025-12-03 07:27:26'),
+(9, 3, 'Login', NULL, '::1', '2025-12-03 07:30:40'),
+(10, 1, 'Login', NULL, '::1', '2025-12-03 09:22:21'),
+(11, 1, 'Login', NULL, '::1', '2025-12-03 09:28:12'),
+(12, 3, 'Login', NULL, '::1', '2025-12-03 09:29:58'),
+(13, 1, 'Login', NULL, '::1', '2025-12-03 09:39:28'),
+(14, 6, 'Registration', NULL, '::1', '2025-12-03 09:49:07'),
+(15, 6, 'Login', NULL, '::1', '2025-12-03 09:50:09'),
+(16, 1, 'Login', NULL, '::1', '2025-12-03 10:44:13');
+
 -- --------------------------------------------------------
 
 --
@@ -53,6 +75,13 @@ CREATE TABLE `advisers` (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `advisers`
+--
+
+INSERT INTO `advisers` (`adviser_id`, `user_id`, `first_name`, `last_name`, `employee_number`, `contact_phone`, `created_at`, `is_active`, `deleted_at`) VALUES
+(1, 3, 'Irene', 'DelMonte', NULL, '09123456789', '2025-12-03 07:24:35', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -83,6 +112,13 @@ CREATE TABLE `clinic_staff` (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `clinic_staff`
+--
+
+INSERT INTO `clinic_staff` (`clinic_staff_id`, `user_id`, `staff_code`, `position`, `created_at`, `is_active`, `deleted_at`) VALUES
+(1, 4, NULL, 'Staff', '2025-12-03 07:25:47', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -247,6 +283,15 @@ CREATE TABLE `students` (
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `students`
+--
+
+INSERT INTO `students` (`student_id`, `student_number`, `user_id`, `first_name`, `middle_name`, `last_name`, `birth_date`, `gender`, `grade_level`, `section`, `address`, `blood_type`, `emergency_contact`, `created_at`, `is_active`, `deleted_at`) VALUES
+(2, '2023-0048-TG-0', 2, 'Hannah Lorainne ', 'Manliquess', 'Genandoy', '2005-04-03', 'F', NULL, NULL, NULL, NULL, NULL, '2025-12-03 07:22:35', 1, NULL),
+(3, '2023-00435-TG-0', 5, 'Mikka Kette', 'Pacoma', 'Esparagoza', '2004-11-12', 'F', NULL, NULL, NULL, NULL, NULL, '2025-12-03 07:27:26', 1, NULL),
+(4, '2023-00124-TG-0', 6, 'Alyza ', 'Hipolito', 'Amen', '2005-01-24', 'F', NULL, NULL, NULL, NULL, NULL, '2025-12-03 09:49:07', 1, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -302,6 +347,18 @@ CREATE TABLE `users` (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`user_id`, `role_id`, `username`, `password_hash`, `email`, `phone`, `full_name`, `created_at`, `is_active`, `deleted_at`) VALUES
+(1, 2, '2023-00438-TG-0', '$2y$10$icv4rEvWp5lzBgXNLok4YefYvAtTFUTwK/mSs2wfs4rbd.03.2hfK', 'lorainneh540@gmail.com', '09923663742', 'Hannah Lorainne  Manliquess Genandoy', '2025-12-03 07:08:26', 1, NULL),
+(2, 2, '2023-0048-TG-0', '$2y$10$oX1/Q/rGN9Lc.RPZKjN5P.ZLs/s4EspR5KYxda.d5Z8e.WNcBdwqK', 'lorainneh540@gmail.com', '09923663742', 'Hannah Lorainne  Manliquess Genandoy', '2025-12-03 07:22:35', 1, NULL),
+(3, 3, 'irene.delmonte', '$2y$10$uyVsJ2PPp3AZbo/Q7DzKb.K.Z.ixk6IrheT2AZpEfYrPRsyOlmUvq', 'irenedelmonte@gmail.com', '09123456789', 'Irene Merino DelMonte', '2025-12-03 07:24:35', 1, NULL),
+(4, 4, 'lulubelle.gabasa', '$2y$10$8pjD35qae4qUYqVgOakgOert5Qf.st0C.4WAPoE9NbgaiPjExoGpu', 'lulubelleg@gmail.com', '09789456123', 'Lulubelle Gapit Gabasa', '2025-12-03 07:25:47', 1, NULL),
+(5, 2, '2023-00435-TG-0', '$2y$10$vBCVL1PtulKU6/MmLECJFuLu/9A1MjGgHZmdEkbBZ.BWuCNr/.lOS', 'mikka@gmail.com', '09123456786', 'Mikka Kette Pacoma Esparagoza', '2025-12-03 07:27:26', 1, NULL),
+(6, 2, '2023-00124-TG-0', '$2y$10$MJ7vif2elgSF1f.tNKUrsumZ.Oi7lsjjStRtU4VnsRRgQMpHAthXS', 'alyza.a@gmail.com', '09123456789', 'Alyza  Hipolito Amen', '2025-12-03 09:49:07', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -473,13 +530,13 @@ ALTER TABLE `vitals`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `advisers`
 --
 ALTER TABLE `advisers`
-  MODIFY `adviser_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `adviser_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `allergies`
@@ -491,7 +548,7 @@ ALTER TABLE `allergies`
 -- AUTO_INCREMENT for table `clinic_staff`
 --
 ALTER TABLE `clinic_staff`
-  MODIFY `clinic_staff_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `clinic_staff_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `diagnoses`
@@ -545,7 +602,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `student_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `student_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `treatments`
@@ -557,7 +614,7 @@ ALTER TABLE `treatments`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `vitals`

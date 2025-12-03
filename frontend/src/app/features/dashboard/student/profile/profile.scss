@@ -1,0 +1,387 @@
+@import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@900&family=Albert+Sans:wght@600&display=swap');
+
+.profile-container {
+  min-height: 100vh;
+  background: #f5f7fa;
+
+  .top-nav {
+    background: linear-gradient(135deg, #5b8db8 0%, #7ba5c9 100%);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .nav-left {
+      .back-btn {
+        font-family: 'Albert Sans', sans-serif;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: translateX(-3px);
+        }
+      }
+    }
+
+    .nav-icons {
+      display: flex;
+      gap: 1rem;
+
+      .icon-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        &.active {
+          background: rgba(255, 255, 255, 0.4);
+        }
+
+        &::before {
+          content: '🔔';
+          font-size: 1.2rem;
+        }
+
+        &.profile::before {
+          content: '👤';
+        }
+      }
+    }
+  }
+
+  .profile-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .loading-container {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      margin: 0 auto 1rem;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #5b8db8;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    p {
+      font-family: 'Albert Sans', sans-serif;
+      color: #7f8c8d;
+      font-size: 1rem;
+    }
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .profile-header {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+
+    .profile-avatar {
+      .avatar-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #5b8db8 0%, #7ba5c9 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        font-family: 'Epilogue', sans-serif;
+      }
+    }
+
+    .profile-title {
+      flex: 1;
+
+      h1 {
+        font-family: 'Epilogue', sans-serif;
+        font-size: 2rem;
+        font-weight: 900;
+        color: #052355;
+        margin: 0 0 0.5rem 0;
+      }
+
+      .student-id {
+        font-family: 'Albert Sans', sans-serif;
+        color: #7f8c8d;
+        font-size: 1rem;
+        margin: 0;
+      }
+    }
+
+    .profile-actions {
+      .btn {
+        font-family: 'Albert Sans', sans-serif;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &.btn-primary {
+          background: #052355;
+          color: white;
+
+          &:hover {
+            background: #041b44;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+          }
+        }
+      }
+    }
+  }
+
+  .alert {
+    font-family: 'Albert Sans', sans-serif;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    animation: slideDown 0.3s ease;
+
+    &.alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    &.alert-danger {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .profile-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .section-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .section-title {
+      font-family: 'Epilogue', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #5b8db8;
+      margin: 0 0 1.5rem 0;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e9ecef;
+    }
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      font-family: 'Albert Sans', sans-serif;
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #052355;
+      font-size: 0.95rem;
+    }
+
+    .form-control {
+      font-family: 'Albert Sans', sans-serif;
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+
+      &:focus {
+        outline: none;
+        border-color: #5b8db8;
+        box-shadow: 0 0 0 3px rgba(91, 141, 184, 0.1);
+        background: white;
+      }
+
+      &:disabled {
+        background: #e9ecef;
+        cursor: not-allowed;
+        color: #6c757d;
+      }
+
+      &.is-invalid {
+        border-color: #dc3545;
+      }
+
+      &[readonly] {
+        background: #e9ecef;
+        cursor: not-allowed;
+      }
+    }
+
+    select.form-control {
+      cursor: pointer;
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #e9ecef;
+
+    .btn {
+      font-family: 'Albert Sans', sans-serif;
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 150px;
+
+      &.btn-primary {
+        background: #052355;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background: #041b44;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      &.btn-secondary {
+        background: #6c757d;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background: #5a6268;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    .profile-content {
+      padding: 1rem;
+    }
+
+    .profile-header {
+      flex-direction: column;
+      text-align: center;
+
+      .profile-title h1 {
+        font-size: 1.5rem;
+      }
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+      flex-direction: column;
+
+      .btn {
+        width: 100%;
+      }
+    }
+
+    .top-nav {
+      padding: 1rem;
+
+      .nav-left .back-btn {
+        font-size: 0.85rem;
+        padding: 0.5rem 1rem;
+      }
+    }
+  }
+}

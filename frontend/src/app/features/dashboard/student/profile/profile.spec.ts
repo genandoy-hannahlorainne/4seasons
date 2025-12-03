@@ -1,18 +1,26 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { ReactiveFormsModule } from '@angular/forms';
 
-import { Profile } from './profile';
+import { StudentProfileComponent } from './profile';
 
-describe('Profile', () => {
-  let component: Profile;
-  let fixture: ComponentFixture<Profile>;
+describe('StudentProfileComponent', () => {
+  let component: StudentProfileComponent;
+  let fixture: ComponentFixture<StudentProfileComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Profile]
+      imports: [
+        StudentProfileComponent,
+        HttpClientTestingModule,
+        RouterTestingModule,
+        ReactiveFormsModule
+      ]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(Profile);
+    fixture = TestBed.createComponent(StudentProfileComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
