@@ -14,29 +14,24 @@ export class SignupComponent {
   signupForm: FormGroup;
   loading = false;
   error = '';
+  roles = ['Student', 'Staff', 'Adviser', 'Admin'];
 
   constructor(
     private fb: FormBuilder,
     private router: Router
   ) {
     this.signupForm = this.fb.group({
-      username: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
+      month: ['', Validators.required],
+      day: ['', Validators.required],
+      year: ['', Validators.required],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', Validators.required],
-      fullName: ['', Validators.required]
+      role: ['', Validators.required]
     });
   }
 
   onSubmit(): void {
     if (this.signupForm.invalid) {
-      return;
-    }
-
-    const { password, confirmPassword } = this.signupForm.value;
-    
-    if (password !== confirmPassword) {
-      this.error = 'Passwords do not match';
       return;
     }
 
@@ -50,5 +45,14 @@ export class SignupComponent {
     setTimeout(() => {
       this.router.navigate(['/login']);
     }, 1000);
+  }
+
+  getYears(): number[] {
+    const currentYear = new Date().getFullYear();
+    const years: number[] = [];
+    for (let i = currentYear; i >= 1950; i--) {
+      years.push(i);
+    }
+    return years;
   }
 }
