@@ -1,0 +1,291 @@
+.student-dashboard {
+  min-height: 100vh;
+  background: #f5f7fa;
+
+  .top-nav {
+    background: linear-gradient(135deg, #5b8db8 0%, #7ba5c9 100%);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+
+      .nav-link {
+        color: white;
+        text-decoration: none;
+        font-size: 1rem;
+        padding: 0.5rem 0;
+        border-bottom: 2px solid transparent;
+        transition: border-color 0.3s;
+
+        &.active,
+        &:hover {
+          border-bottom-color: white;
+        }
+      }
+    }
+
+    .nav-icons {
+      display: flex;
+      gap: 1rem;
+
+      .icon-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        &::before {
+          content: '🔔';
+          font-size: 1.2rem;
+        }
+
+        &.profile::before {
+          content: '👤';
+        }
+      }
+    }
+  }
+
+  .dashboard-content {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .welcome-section {
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 2rem;
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .student-info {
+      color: #7f8c8d;
+      font-size: 1rem;
+    }
+  }
+
+  .info-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    .info-card {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        opacity: 0.1;
+        z-index: 0;
+      }
+
+      &.bmi {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      &.blood-type {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+      }
+
+      &.allergies {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        color: #333;
+      }
+
+      &.last-visit {
+        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        color: #333;
+      }
+
+      .card-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .card-label {
+        font-size: 1rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+      }
+    }
+  }
+
+  .main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+
+    h2 {
+      font-size: 1.2rem;
+      color: #5b8db8;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    &.medical-info {
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1.5rem;
+
+        .info-item {
+          .info-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+          }
+
+          .info-value {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+
+    &.immunization-records {
+      .immunization-list {
+        .immunization-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1rem 0;
+          border-bottom: 1px solid #ecf0f1;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          .immunization-info {
+            .immunization-name {
+              font-weight: 600;
+              color: #2c3e50;
+              margin-bottom: 0.25rem;
+            }
+
+            .immunization-date {
+              font-size: 0.85rem;
+              color: #7f8c8d;
+            }
+          }
+
+          .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+
+            &.updated {
+              background: #d4edda;
+              color: #155724;
+            }
+
+            &.outdated {
+              background: #f8d7da;
+              color: #721c24;
+            }
+          }
+        }
+      }
+    }
+
+    &.known-allergies {
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+
+        h2 {
+          margin-bottom: 0;
+        }
+
+        .edit-btn {
+          background: transparent;
+          border: 1px solid #5b8db8;
+          color: #5b8db8;
+          padding: 0.5rem 1rem;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: all 0.3s;
+
+          &:hover {
+            background: #5b8db8;
+            color: white;
+          }
+
+          &::before {
+            content: '✏️';
+          }
+        }
+      }
+
+      .allergies-list {
+        .allergy-item {
+          padding: 1rem;
+          background: #f8f9fa;
+          border-radius: 8px;
+          margin-bottom: 0.75rem;
+          color: #2c3e50;
+          font-weight: 500;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+    }
+  }
+}

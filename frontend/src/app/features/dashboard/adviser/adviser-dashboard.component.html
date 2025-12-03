@@ -1,0 +1,45 @@
+<div class="adviser-dashboard">
+  <div class="dashboard-header">
+    <h1>Adviser Dashboard</h1>
+    <p>Welcome, {{ adviserName }}!</p>
+  </div>
+
+  <div class="dashboard-content">
+    <div class="card">
+      <h2>Advised Students</h2>
+      <div class="students-list">
+        <div *ngFor="let student of advisedStudents" class="student-item">
+          <div class="student-name">{{ student.name }}</div>
+          <div class="student-year">{{ student.year }}</div>
+          <div class="student-status">{{ student.status }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Pending Approvals</h2>
+      <div class="approvals-list">
+        <div *ngFor="let approval of pendingApprovals" class="approval-item">
+          <div class="approval-student">{{ approval.student }}</div>
+          <div class="approval-type">{{ approval.type }}</div>
+          <div class="approval-date">{{ approval.date }}</div>
+          <div class="approval-actions">
+            <button class="approve-btn">Approve</button>
+            <button class="reject-btn">Reject</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Recent Activities</h2>
+      <div class="activities-list">
+        <div *ngFor="let activity of recentActivities" class="activity-item">
+          <div class="activity-action">{{ activity.action }}</div>
+          <div class="activity-student">{{ activity.student }}</div>
+          <div class="activity-date">{{ activity.date }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

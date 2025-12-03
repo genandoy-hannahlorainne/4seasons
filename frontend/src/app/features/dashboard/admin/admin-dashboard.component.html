@@ -1,0 +1,71 @@
+<div class="admin-dashboard">
+  <div class="dashboard-header">
+    <h1>Admin Dashboard</h1>
+    <p>Welcome, {{ adminName }}!</p>
+  </div>
+
+  <div class="statistics">
+    <div class="stat-card">
+      <div class="stat-value">{{ systemStats.totalUsers }}</div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ systemStats.totalStudents }}</div>
+      <div class="stat-label">Students</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ systemStats.totalStaff }}</div>
+      <div class="stat-label">Staff</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ systemStats.totalAdvisers }}</div>
+      <div class="stat-label">Advisers</div>
+    </div>
+  </div>
+
+  <div class="dashboard-content">
+    <div class="card">
+      <h2>Recent Users</h2>
+      <div class="users-list">
+        <div *ngFor="let user of recentUsers" class="user-item">
+          <div class="user-name">{{ user.name }}</div>
+          <div class="user-role">{{ user.role }}</div>
+          <div class="user-date">{{ user.registeredDate }}</div>
+          <div class="user-status">{{ user.status }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>System Alerts</h2>
+      <div class="alerts-list">
+        <div *ngFor="let alert of systemAlerts" class="alert-item" [class]="alert.type">
+          <div class="alert-message">{{ alert.message }}</div>
+          <div class="alert-date">{{ alert.date }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Activity Log</h2>
+      <div class="activity-list">
+        <div *ngFor="let activity of activityLog" class="activity-item">
+          <div class="activity-action">{{ activity.action }}</div>
+          <div class="activity-user">{{ activity.user }}</div>
+          <div class="activity-timestamp">{{ activity.timestamp }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Admin Actions</h2>
+      <div class="actions">
+        <button class="action-btn">Manage Users</button>
+        <button class="action-btn">System Settings</button>
+        <button class="action-btn">View Reports</button>
+        <button class="action-btn">Database Backup</button>
+        <button class="action-btn">Audit Logs</button>
+      </div>
+    </div>
+  </div>
+</div>

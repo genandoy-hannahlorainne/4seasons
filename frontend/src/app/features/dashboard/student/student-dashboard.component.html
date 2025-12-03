@@ -1,0 +1,105 @@
+<div class="student-dashboard">
+  <nav class="top-nav">
+    <div class="nav-links">
+      <a href="#" class="nav-link active">Home</a>
+      <a href="#" class="nav-link">Messages</a>
+      <a href="#" class="nav-link">Alerts</a>
+      <a href="#" class="nav-link">Information</a>
+    </div>
+    <div class="nav-icons">
+      <button class="icon-btn notification">
+        <i class="bell-icon"></i>
+      </button>
+      <button class="icon-btn profile">
+        <i class="user-icon"></i>
+      </button>
+    </div>
+  </nav>
+
+  <div class="dashboard-content">
+    <div class="welcome-section">
+      <h1>Welcome back, User!</h1>
+      <p class="student-info">{{ studentId }} • {{ gradeLevel }}</p>
+    </div>
+
+    <div class="info-cards">
+      <div class="info-card bmi">
+        <div class="card-value">{{ bmi }}</div>
+        <div class="card-label">BMI</div>
+      </div>
+      <div class="info-card blood-type">
+        <div class="card-value">{{ bloodType }}</div>
+        <div class="card-label">Blood Type</div>
+      </div>
+      <div class="info-card allergies">
+        <div class="card-value">{{ allergiesCount }}</div>
+        <div class="card-label">Allergies</div>
+      </div>
+      <div class="info-card last-visit">
+        <div class="card-value">{{ lastVisit }}</div>
+        <div class="card-label">Last Visit</div>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="left-column">
+        <div class="card medical-info">
+          <h2>Medical Information</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">Height</div>
+              <div class="info-value">{{ height }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Weight</div>
+              <div class="info-value">{{ weight }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Age</div>
+              <div class="info-value">{{ age }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">BMI</div>
+              <div class="info-value">{{ bmiPercentage }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Blood Type</div>
+              <div class="info-value">{{ bloodType }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card immunization-records">
+          <h2>Immunization Records</h2>
+          <div class="immunization-list">
+            <div *ngFor="let record of immunizationRecords" class="immunization-item">
+              <div class="immunization-info">
+                <div class="immunization-name">{{ record.name }}</div>
+                <div class="immunization-date">Last: {{ record.lastDate }}</div>
+              </div>
+              <span class="status-badge" [class]="record.status.toLowerCase()">
+                {{ record.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-column">
+        <div class="card known-allergies">
+          <div class="card-header">
+            <h2>Known Allergies</h2>
+            <button class="edit-btn">
+              <i class="edit-icon"></i> Edit
+            </button>
+          </div>
+          <div class="allergies-list">
+            <div *ngFor="let allergy of knownAllergies" class="allergy-item">
+              {{ allergy }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
