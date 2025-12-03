@@ -38,15 +38,15 @@ $radius-lg: 12px;
 $radius-xl: 20px;
 
 // Font Sizes
-$font-size-xs: 0.85rem;
-$font-size-sm: 0.9rem;
-$font-size-base: 1rem;
-$font-size-md: 1.05rem;
-$font-size-lg: 1.1rem;
-$font-size-xl: 1.2rem;
-$font-size-2xl: 1.35rem;
-$font-size-3xl: 2.25rem;
-$font-size-4xl: 2.75rem;
+$font-size-xs: 0.9rem;
+$font-size-sm: 1rem;
+$font-size-base: 1.05rem;
+$font-size-md: 1.15rem;
+$font-size-lg: 1.2rem;
+$font-size-xl: 1.35rem;
+$font-size-2xl: 1.5rem;
+$font-size-3xl: 2.4rem;
+$font-size-4xl: 2.9rem;
 
 // Shadows
 $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -71,8 +71,9 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
         .nav-link {
           color: $color-white;
           text-decoration: none;
-          font-size: $font-size-lg;
+          font-size: $font-size-xl;
           font-family: $font-secondary;
+          font-weight: 600;
           padding: $spacing-xs 0;
           border-bottom: 2px solid transparent;
           transition: border-color 0.3s;
@@ -230,7 +231,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
         font-family: $font-secondary;
         color: $color-primary;
         margin-bottom: $spacing-md;
-        font-weight: 600;
+        font-weight: 700;
       }
 
       &.medical-info {
@@ -244,6 +245,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
               color: $color-text-muted;
               font-size: $font-size-sm;
               font-family: $font-primary;
+              font-weight: 500;
               margin-bottom: $spacing-xs;
             }
 
@@ -251,7 +253,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
               color: $color-text-dark;
               font-size: $font-size-xl;
               font-family: $font-secondary;
-              font-weight: 600;
+              font-weight: 700;
             }
           }
         }
@@ -272,7 +274,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
             .immunization-info {
               .immunization-name {
-                font-weight: 600;
+                font-weight: 700;
                 font-family: $font-secondary;
                 font-size: $font-size-md;
                 color: $color-text-dark;
@@ -282,6 +284,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
               .immunization-date {
                 font-size: $font-size-sm;
                 font-family: $font-primary;
+                font-weight: 500;
                 color: $color-text-muted;
               }
             }
@@ -359,7 +362,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
             color: $color-text-dark;
             font-size: $font-size-md;
             font-family: $font-primary;
-            font-weight: 500;
+            font-weight: 600;
 
             &:last-child {
               margin-bottom: 0;
