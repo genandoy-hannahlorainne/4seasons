@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@900&family=Albert+Sans:wght@600&display=swap');
 
-.login-container {
+.register-container {
   position: relative;
   width: 100%;
   min-height: 100vh;
@@ -16,40 +16,17 @@
   padding: 2rem;
 }
 
-.login-card {
+.register-card {
   background: white;
   padding: 2.5rem;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   width: 100%;
-  max-width: 420px;
+  max-width: 550px;
+  max-height: 90vh;
+  overflow-y: auto;
   position: relative;
   z-index: 10;
-
-  .back-button {
-    font-family: 'Albert Sans', sans-serif;
-    color: #052355;
-    cursor: pointer;
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background-color: #f0f4ff;
-      transform: translateX(-3px);
-    }
-
-    &::before {
-      content: '←';
-      font-size: 1.2rem;
-    }
-  }
 
   h2 {
     font-family: 'Epilogue', sans-serif;
@@ -69,6 +46,78 @@
   }
 }
 
+// Role Selection Cards
+.role-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.role-card {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: #052355;
+    background: #f0f4ff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(5, 35, 85, 0.2);
+  }
+
+  .role-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-family: 'Albert Sans', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0.5rem 0 0.25rem;
+    color: #052355;
+  }
+
+  p {
+    font-family: 'Albert Sans', sans-serif;
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0;
+  }
+}
+
+// Back Button
+.back-button {
+  font-family: 'Albert Sans', sans-serif;
+  color: #052355;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: #f0f4ff;
+    transform: translateX(-3px);
+  }
+
+  &::before {
+    content: '←';
+    font-size: 1.2rem;
+  }
+}
+
+// Form Styles
 .form-group {
   margin-bottom: 1rem;
 
@@ -88,6 +137,7 @@
     border: 1px solid #ddd;
     border-radius: 8px;
     font-size: 1rem;
+    box-sizing: border-box;
     transition: all 0.3s ease;
 
     &:focus {
@@ -100,6 +150,24 @@
       border-color: #dc3545;
     }
   }
+
+  select.form-control {
+    cursor: pointer;
+  }
+
+  .form-text {
+    font-family: 'Albert Sans', sans-serif;
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: #666;
+  }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
 .alert {
@@ -146,7 +214,7 @@
   }
 }
 
-.signup-link {
+.login-link {
   font-family: 'Albert Sans', sans-serif;
   text-align: center;
   margin-top: 1rem;
@@ -161,5 +229,20 @@
     &:hover {
       text-decoration: underline;
     }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .role-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .register-card {
+    padding: 1.5rem;
   }
 }
