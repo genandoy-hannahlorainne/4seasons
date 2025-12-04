@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { StudentService } from '../../../core/services/student.service';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -40,8 +40,7 @@ export class StudentDashboardComponent implements OnInit {
 
   constructor(
     private studentService: StudentService,
-    private authService: AuthService,
-    private router: Router
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -163,10 +162,4 @@ export class StudentDashboardComponent implements OnInit {
     return age;
   }
 
-  logout(): void {
-    if (confirm('Are you sure you want to logout?')) {
-      this.authService.logout();
-      this.router.navigate(['/login']);
-    }
-  }
 }

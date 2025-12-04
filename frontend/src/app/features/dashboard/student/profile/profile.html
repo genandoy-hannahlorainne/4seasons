@@ -1,39 +1,23 @@
 <div class="profile-container">
   <nav class="top-nav">
-    <div class="nav-left">
-      <button class="back-btn" (click)="goBack()">
-        ← Back to Dashboard
-      </button>
+    <div class="nav-links">
+      <a (click)="goBack()" class="nav-link">Home</a>
+      <a href="#" class="nav-link">Messages</a>
+      <a href="#" class="nav-link">Alerts</a>
+      <a href="#" class="nav-link active">Information</a>
     </div>
     <div class="nav-icons">
       <button class="icon-btn notification">
-        <i class="bell-icon"></i>
+        🔔
       </button>
       <button class="icon-btn profile active">
-        <i class="user-icon"></i>
+        👤
       </button>
     </div>
   </nav>
 
   <div class="profile-content">
-    <div class="profile-header">
-      <div class="profile-avatar">
-        <div class="avatar-circle">
-          {{ profileForm.get('firstName')?.value?.charAt(0) }}{{ profileForm.get('lastName')?.value?.charAt(0) }}
-        </div>
-      </div>
-      <div class="profile-title">
-        <h1>My Profile</h1>
-        <p class="student-id">{{ profileForm.get('studentNumber')?.value }}</p>
-      </div>
-      <div class="profile-actions">
-        @if (!isEditing) {
-          <button class="btn btn-primary" (click)="toggleEdit()">
-            ✏️ Edit Profile
-          </button>
-        }
-      </div>
-    </div>
+    <h1 class="page-title">Profile Settings</h1>
 
     <!-- Loading State -->
     @if (loading && !isEditing) {
@@ -43,224 +27,127 @@
       </div>
     }
 
+    <!-- Success/Error Messages -->
+    @if (successMessage) {
+      <div class="alert alert-success">
+        ✓ {{ successMessage }}
+      </div>
+    }
+    @if (errorMessage) {
+      <div class="alert alert-danger">
+        ✕ {{ errorMessage }}
+      </div>
+    }
+
     <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-      <!-- Success/Error Messages -->
-      @if (successMessage) {
-        <div class="alert alert-success">
-          ✓ {{ successMessage }}
-        </div>
-      }
-      @if (errorMessage) {
-        <div class="alert alert-danger">
-          ✕ {{ errorMessage }}
-        </div>
-      }
-
       <div class="profile-sections">
-        <!-- Personal Information -->
-        <div class="section-card">
-          <h2 class="section-title">Personal Information</h2>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label>Student Number</label>
-              <input 
-                type="text" 
-                formControlName="studentNumber" 
-                class="form-control"
-                readonly
-              />
+        <!-- Profile Header Card -->
+        <div class="section-card profile-header-card">
+          <div class="profile-header-content">
+            <div class="profile-avatar">
+              <div class="avatar-circle">
+                👤
+              </div>
             </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>First Name *</label>
-              <input 
-                type="text" 
-                formControlName="firstName" 
-                class="form-control"
-                [class.is-invalid]="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched"
-              />
+            <div class="profile-info">
+              <div class="info-group">
+                <label>Full Name</label>
+                <div class="info-value">{{ profileForm.get('firstName')?.value }} {{ profileForm.get('middleName')?.value }} {{ profileForm.get('lastName')?.value }}</div>
+              </div>
+              <div class="info-group">
+                <label>Sex</label>
+                <div class="info-value">{{ profileForm.get('gender')?.value | titlecase }}</div>
+              </div>
             </div>
-
-            <div class="form-group">
-              <label>Middle Name</label>
-              <input 
-                type="text" 
-                formControlName="middleName" 
-                class="form-control"
-              />
+            <div class="profile-info">
+              <div class="info-group">
+                <label>Date of Birth</label>
+                <div class="info-value">{{ profileForm.get('birthday')?.value | date:'MMMM d, yyyy' }}</div>
+              </div>
+              <div class="info-group">
+                <label>Student ID</label>
+                <div class="info-value">{{ profileForm.get('studentNumber')?.value }}</div>
+              </div>
             </div>
-
-            <div class="form-group">
-              <label>Last Name *</label>
-              <input 
-                type="text" 
-                formControlName="lastName" 
-                class="form-control"
-                [class.is-invalid]="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched"
-              />
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Gender *</label>
-              <select 
-                formControlName="gender" 
-                class="form-control"
-                [class.is-invalid]="profileForm.get('gender')?.invalid && profileForm.get('gender')?.touched"
-              >
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>Birthday *</label>
-              <input 
-                type="date" 
-                formControlName="birthday" 
-                class="form-control"
-                [class.is-invalid]="profileForm.get('birthday')?.invalid && profileForm.get('birthday')?.touched"
-              />
+            <div class="edit-button-container">
+              @if (!isEditing) {
+                <button type="button" class="btn-edit" (click)="toggleEdit()">
+                  ✏️ Edit
+                </button>
+              }
             </div>
           </div>
         </div>
 
-        <!-- Academic Information -->
-        <div class="section-card">
-          <h2 class="section-title">Academic Information</h2>
-          
-          <div class="form-row">
+        <div class="two-column-layout">
+          <!-- Contact Information -->
+          <div class="section-card contact-card">
+            <h2 class="section-title">Contact Information</h2>
+            
             <div class="form-group">
-              <label>Grade Level *</label>
-              <input 
-                type="text" 
-                formControlName="gradeLevel" 
-                class="form-control"
-                placeholder="e.g., Grade 10"
-                [class.is-invalid]="profileForm.get('gradeLevel')?.invalid && profileForm.get('gradeLevel')?.touched"
-              />
+              <label>Email Address</label>
+              <div class="input-with-icon">
+                <span class="icon">📧</span>
+                <input 
+                  type="email" 
+                  formControlName="email" 
+                  class="form-control"
+                  placeholder="email@example.com"
+                />
+              </div>
             </div>
 
             <div class="form-group">
-              <label>Section *</label>
-              <input 
-                type="text" 
-                formControlName="section" 
-                class="form-control"
-                placeholder="e.g., HUMSS"
-                [class.is-invalid]="profileForm.get('section')?.invalid && profileForm.get('section')?.touched"
-              />
+              <label>Phone Number</label>
+              <div class="input-with-icon">
+                <span class="icon">📞</span>
+                <input 
+                  type="tel" 
+                  formControlName="contactNumber" 
+                  class="form-control"
+                  placeholder="09XXXXXXXXX"
+                />
+              </div>
             </div>
+
+            <div class="form-group">
+              <label>Residential Address</label>
+              <div class="input-with-icon">
+                <span class="icon">🏠</span>
+                <textarea 
+                  formControlName="address" 
+                  class="form-control"
+                  rows="3"
+                  placeholder="Complete address"
+                ></textarea>
+              </div>
+            </div>
+
+            @if (isEditing) {
+              <button type="submit" class="btn-save" [disabled]="loading || profileForm.invalid">
+                Save Changes
+              </button>
+            }
           </div>
-        </div>
 
-        <!-- Contact Information -->
-        <div class="section-card">
-          <h2 class="section-title">Contact Information</h2>
-          
-          <div class="form-group">
-            <label>Address *</label>
-            <textarea 
-              formControlName="address" 
-              class="form-control"
-              rows="3"
-              placeholder="Complete address"
-              [class.is-invalid]="profileForm.get('address')?.invalid && profileForm.get('address')?.touched"
-            ></textarea>
-          </div>
+          <!-- Others Section -->
+          <div class="section-card others-card">
+            <h2 class="section-title">Others</h2>
+            
+            <button type="button" class="option-btn" (click)="changePassword()">
+              Change Password
+            </button>
+            
+            <button type="button" class="option-btn" (click)="toggleEdit()" *ngIf="!isEditing">
+              Update Information
+            </button>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>Contact Number *</label>
-              <input 
-                type="tel" 
-                formControlName="contactNumber" 
-                class="form-control"
-                placeholder="09XXXXXXXXX"
-                [class.is-invalid]="profileForm.get('contactNumber')?.invalid && profileForm.get('contactNumber')?.touched"
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Email *</label>
-              <input 
-                type="email" 
-                formControlName="email" 
-                class="form-control"
-                placeholder="email@example.com"
-                [class.is-invalid]="profileForm.get('email')?.invalid && profileForm.get('email')?.touched"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Medical Information -->
-        <div class="section-card">
-          <h2 class="section-title">Medical Information</h2>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label>Blood Type</label>
-              <select 
-                formControlName="bloodType" 
-                class="form-control"
-              >
-                <option value="">Select Blood Type</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>Emergency Contact *</label>
-              <input 
-                type="text" 
-                formControlName="emergencyContact" 
-                class="form-control"
-                placeholder="Name and phone number"
-                [class.is-invalid]="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched"
-              />
-            </div>
+            <button type="button" class="option-btn logout-btn" (click)="logout()">
+              Logout
+            </button>
           </div>
         </div>
       </div>
-
-      <!-- Action Buttons -->
-      @if (isEditing) {
-        <div class="form-actions">
-          <button 
-            type="button" 
-            class="btn btn-secondary" 
-            (click)="toggleEdit()"
-            [disabled]="loading"
-          >
-            Cancel
-          </button>
-          <button 
-            type="submit" 
-            class="btn btn-primary" 
-            [disabled]="loading || profileForm.invalid"
-          >
-            @if (loading) {
-              <span>Saving...</span>
-            } @else {
-              <span>💾 Save Changes</span>
-            }
-          </button>
-        </div>
-      }
     </form>
   </div>
 </div>

@@ -159,6 +159,18 @@ export class StudentProfileComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/dashboard/student']);
+  }
+
+  logout(): void {
+    if (confirm('Are you sure you want to logout?')) {
+      this.authService.logout();
+      this.router.navigate(['/login']);
+    }
+  }
+
+  changePassword(): void {
+    // TODO: Implement change password functionality
+    alert('Change password functionality coming soon!');
   }
 }
