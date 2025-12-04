@@ -188,7 +188,9 @@ if (!empty($data->role) && !empty($data->password)) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'messa
+            'message' => $e->getMessage()
+        ]);
+    }
     
 } else {
     http_response_code(400);

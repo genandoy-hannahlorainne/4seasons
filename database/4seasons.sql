@@ -94,7 +94,7 @@ CREATE TABLE `allergies` (
   `student_id` int(10) UNSIGNED NOT NULL,
   `allergy_text` varchar(255) DEFAULT NULL,
   `severity` enum('Mild','Moderate','Severe') DEFAULT 'Moderate',
-  `recorded_at` date DEFAULT curdate()
+  `recorded_at` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -301,7 +301,7 @@ INSERT INTO `students` (`student_id`, `student_number`, `user_id`, `first_name`,
 CREATE TABLE `student_adviser` (
   `student_id` int(10) UNSIGNED NOT NULL,
   `adviser_id` int(10) UNSIGNED NOT NULL,
-  `assigned_date` date DEFAULT curdate()
+  `assigned_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

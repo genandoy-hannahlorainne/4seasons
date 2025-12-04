@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: 4seasons-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: 4seasons
+    ports:
+      - "3307:3306"  # Changed to 3307 to avoid conflict with XAMPP
+    volumes:
+      - ./database/4seasons.sql:/docker-entrypoint-initdb.d/init.sql
+      - db_data:/var/lib/mysql
+    networks:
+      - 4seasons-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PHP Backend with Apache
+  backend:
+    image: php:8.2-apache
+    container_name: 4seasons-backend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./backend:/var/www/html
+    networks:
+      - 4seasons-network
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_NAME=4seasons
+      - DB_USER=root
+      - DB_PASS=root
+    command: >
+      bash -c "docker-php-ext-install pdo pdo_mysql mysqli &&
+               a2enmod rewrite &&
+               apache2-foreground"
+
+  # Angular Frontend
+  frontend:
+    image: node:20
+    container_name: 4seasons-frontend
+    working_dir: /app
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - 4seasons-network
+    depends_on:
+      - backend
+    command: bash -c "npm install && npm start -- --host 0.0.0.0"
+    environment:
+      - NODE_ENV=development
+
+networks:
+  4seasons-network:
+    driver: bridge
+
+volumes:
+  db_data:
