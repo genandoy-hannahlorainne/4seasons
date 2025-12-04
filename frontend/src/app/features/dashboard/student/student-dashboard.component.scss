@@ -121,6 +121,18 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
             content: '👤';
             font-size: 1.2rem;
           }
+
+          &.logout {
+            svg {
+              width: 20px;
+              height: 20px;
+              stroke: $color-white;
+            }
+
+            &:hover {
+              background: rgba(255, 0, 0, 0.3);
+            }
+          }
         }
       }
     }
