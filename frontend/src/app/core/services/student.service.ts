@@ -37,6 +37,10 @@ export class StudentService {
     });
   }
 
+  getStudentMedicalData(studentId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/get-student-medical-data.php?student_id=${studentId}`);
+  }
+
   // TODO: Implement these methods when backend APIs are ready
   getAll(): Observable<any> {
     // Placeholder - return empty array for now
