@@ -14,11 +14,17 @@ import { StudentService } from '../../../../core/services/student.service';
 })
 export class StudentProfileComponent implements OnInit {
   profileForm: FormGroup;
+  changePasswordForm: FormGroup;
   isEditing = false;
   loading = false;
+  showPasswordModal = false;
+  showLogoutModal = false;
+  passwordLoading = false;
   currentUser: any;
   errorMessage = '';
   successMessage = '';
+  passwordError = '';
+  passwordSuccess = '';
 
   constructor(
     private fb: FormBuilder,
@@ -41,10 +47,37 @@ export class StudentProfileComponent implements OnInit {
       contactNumber: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]]
     });
+
+    this.changePasswordForm = this.fb.group({
+      currentPassword: ['', Validators.required],
+      newPassword: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required]
+    }, { validators: this.passwordMatchValidator });
+  }
+
+  passwordMatchValidator(form: FormGroup) {
+    const newPassword = form.get('newPassword');
+    const confirmPassword = form.get('confirmPassword');
+    
+    if (newPassword && confirmPassword && newPassword.value !== confirmPassword.value) {
+      confirmPassword.setErrors({ passwordMismatch: true });
+      return { passwordMismatch: true };
+    }
+    return null;
   }
 
   ngOnInit(): void {
     this.loadUserProfile();
+  }
+
+  getProfileIcon(): string {
+    const gender = this.profileForm.get('gender')?.value;
+    if (gender === 'male') {
+      return 'assets/user-male.png';
+    } else if (gender === 'female') {
+      return 'assets/user-female.png';
+    }
+    return 'assets/user-male.png'; // default
   }
 
   loadUserProfile(): void {
@@ -119,7 +152,13 @@ export class StudentProfileComponent implements OnInit {
   }
 
   onSubmit(): void {
+    console.log('onSubmit called');
+    console.log('Form valid:', !this.profileForm.invalid);
+    console.log('Form values:', this.profileForm.getRawValue());
+    
     if (this.profileForm.invalid) {
+      console.error('Form is invalid');
+      this.errorMessage = 'Please fill in all required fields correctly';
       return;
     }
 
@@ -133,14 +172,19 @@ export class StudentProfileComponent implements OnInit {
     this.successMessage = '';
 
     const profileData = this.profileForm.getRawValue();
+    console.log('Sending profile data:', profileData);
 
     this.studentService.updateStudentProfile(this.currentUser.user_id, profileData).subscribe({
       next: (response) => {
+        console.log('Update response:', response);
         this.loading = false;
         if (response.success) {
           this.successMessage = 'Profile updated successfully!';
           this.isEditing = false;
           this.profileForm.disable();
+          
+          // Reload profile data to show updated values
+          this.loadUserProfile();
           
           // Clear success message after 3 seconds
           setTimeout(() => {
@@ -151,9 +195,9 @@ export class StudentProfileComponent implements OnInit {
         }
       },
       error: (err) => {
+        console.error('Update error:', err);
         this.loading = false;
         this.errorMessage = err.error?.message || 'Error updating profile';
-        console.error('Error updating profile:', err);
       }
     });
   }
@@ -163,14 +207,65 @@ export class StudentProfileComponent implements OnInit {
   }
 
   logout(): void {
-    if (confirm('Are you sure you want to logout?')) {
+    this.showLogoutModal = true;
+    
+    // Logout after showing the modal
+    setTimeout(() => {
       this.authService.logout();
       this.router.navigate(['/login']);
-    }
+    }, 1500);
   }
 
   changePassword(): void {
-    // TODO: Implement change password functionality
-    alert('Change password functionality coming soon!');
+    this.showPasswordModal = true;
+    this.passwordError = '';
+    this.passwordSuccess = '';
+    this.changePasswordForm.reset();
+  }
+
+  closePasswordModal(): void {
+    this.showPasswordModal = false;
+    this.changePasswordForm.reset();
+    this.passwordError = '';
+    this.passwordSuccess = '';
+  }
+
+  onChangePasswordSubmit(): void {
+    if (this.changePasswordForm.invalid) {
+      return;
+    }
+
+    if (!this.currentUser || !this.currentUser.user_id) {
+      this.passwordError = 'User not logged in';
+      return;
+    }
+
+    this.passwordLoading = true;
+    this.passwordError = '';
+    this.passwordSuccess = '';
+
+    const formData = this.changePasswordForm.value;
+
+    this.authService.changePassword(
+      this.currentUser.user_id,
+      formData.currentPassword,
+      formData.newPassword
+    ).subscribe({
+      next: (response) => {
+        this.passwordLoading = false;
+        if (response.success) {
+          this.passwordSuccess = 'Password changed successfully!';
+          setTimeout(() => {
+            this.closePasswordModal();
+          }, 2000);
+        } else {
+          this.passwordError = response.message || 'Failed to change password';
+        }
+      },
+      error: (err) => {
+        this.passwordLoading = false;
+        this.passwordError = err.error?.message || 'Error changing password';
+      }
+    });
   }
 }

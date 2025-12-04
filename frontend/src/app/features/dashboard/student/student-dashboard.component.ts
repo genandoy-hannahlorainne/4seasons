@@ -16,6 +16,7 @@ export class StudentDashboardComponent implements OnInit {
   studentName = 'User';
   studentId = '';
   gradeLevel = '';
+  studentGender = '';
   
   // Info cards data
   bmi = '--';
@@ -68,6 +69,9 @@ export class StudentDashboardComponent implements OnInit {
           this.gradeLevel = profile.grade_level && profile.section 
             ? `${profile.grade_level} - ${profile.section}` 
             : profile.grade_level || 'Not assigned';
+          
+          // Set gender
+          this.studentGender = profile.gender || '';
           
           // Set blood type
           this.bloodType = profile.blood_type || '--';
@@ -160,6 +164,15 @@ export class StudentDashboardComponent implements OnInit {
     }
     
     return age;
+  }
+
+  getProfileIcon(): string {
+    if (this.studentGender === 'M') {
+      return 'assets/user-male.png';
+    } else if (this.studentGender === 'F') {
+      return 'assets/user-female.png';
+    }
+    return 'assets/user-male.png'; // default
   }
 
 }

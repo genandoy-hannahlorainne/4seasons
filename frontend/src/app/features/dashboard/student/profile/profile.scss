@@ -57,7 +57,7 @@ $color-border: #d1d5db;
         align-items: center;
         justify-content: center;
         transition: background 0.3s;
-        font-size: 1.2rem;
+        padding: 8px;
 
         &:hover {
           background: rgba(255, 255, 255, 0.3);
@@ -65,6 +65,20 @@ $color-border: #d1d5db;
 
         &.active {
           background: rgba(255, 255, 255, 0.4);
+        }
+
+        .icon-img {
+          width: 24px;
+          height: 24px;
+          object-fit: contain;
+        }
+
+        &.notification .icon-img {
+          filter: brightness(0) invert(1);
+        }
+
+        &.profile .icon-img {
+          border-radius: 50%;
         }
       }
     }
@@ -153,6 +167,13 @@ $color-border: #d1d5db;
           justify-content: center;
           font-size: 3rem;
           color: white;
+          overflow: hidden;
+
+          .profile-icon-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
         }
       }
 
@@ -227,13 +248,15 @@ $color-border: #d1d5db;
         display: flex;
         align-items: flex-start;
 
-        .icon {
+        .icon-img {
           position: absolute;
           left: 1rem;
           top: 50%;
           transform: translateY(-50%);
-          font-size: 1.2rem;
+          width: 20px;
+          height: 20px;
           z-index: 1;
+          object-fit: contain;
         }
 
         .form-control {
@@ -260,11 +283,11 @@ $color-border: #d1d5db;
         textarea.form-control {
           resize: vertical;
           padding-top: 1rem;
+        }
 
-          & + .icon {
-            top: 1.5rem;
-            transform: none;
-          }
+        textarea.form-control ~ .icon-img {
+          top: 1.5rem;
+          transform: none;
         }
       }
     }
@@ -336,6 +359,238 @@ $color-border: #d1d5db;
     }
   }
 
+  // Change Password Modal
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #e9ecef;
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: $color-primary-dark;
+      margin: 0;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: $color-text-muted;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.3s;
+
+      &:hover {
+        background: #f8f9fa;
+        color: $color-text-dark;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 2rem;
+
+    .form-group {
+      margin-bottom: 1.5rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: $color-text-dark;
+        font-size: 0.95rem;
+
+        .required {
+          color: #dc3545;
+          margin-left: 2px;
+        }
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid $color-border;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: #f8f9fa;
+        transition: all 0.3s;
+        box-sizing: border-box;
+
+        &:focus {
+          outline: none;
+          border-color: $color-primary;
+          background: white;
+          box-shadow: 0 0 0 3px rgba(91, 141, 184, 0.1);
+        }
+
+        &.is-invalid {
+          border-color: #dc3545;
+          background: #fff5f5;
+        }
+      }
+
+      .error-message {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    border-top: 2px solid #e9ecef;
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      min-width: 120px;
+
+      &.btn-primary {
+        background: $color-primary;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background: darken($color-primary, 10%);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      &.btn-secondary {
+        background: #6c757d;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background: #5a6268;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      &.btn-danger {
+        background: #dc3545;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background: #c82333;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  // Logout Modal Specific Styles
+  .logout-modal {
+    max-width: 400px;
+
+    .logout-message {
+      font-size: 1.1rem;
+      color: $color-text-dark;
+      text-align: center;
+      margin: 0;
+      padding: 1rem 0;
+    }
+
+    .logout-loading {
+      padding: 3rem 2rem;
+      text-align: center;
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        margin: 0 auto 1.5rem;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid $color-primary;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      p {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: $color-text-dark;
+        margin: 0;
+      }
+    }
+  }
+
   @media (max-width: 768px) {
     .profile-content {
       padding: 1rem;
@@ -350,6 +605,25 @@ $color-border: #d1d5db;
         .nav-link {
           font-size: 0.9rem;
         }
+      }
+    }
+
+    .modal-content {
+      width: 95%;
+      margin: 1rem;
+    }
+
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+      padding: 1rem 1.5rem;
+    }
+
+    .modal-footer {
+      flex-direction: column;
+
+      .btn {
+        width: 100%;
       }
     }
   }
