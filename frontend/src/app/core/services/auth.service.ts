@@ -48,4 +48,12 @@ export class AuthService {
   isAuthenticated(): boolean {
     return !!this.currentUserValue;
   }
+
+  changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/change-password.php`, {
+      user_id: userId,
+      current_password: currentPassword,
+      new_password: newPassword
+    });
+  }
 }

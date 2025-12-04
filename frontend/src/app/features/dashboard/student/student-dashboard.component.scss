@@ -114,25 +114,16 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
             width: 30px;
             height: 30px;
             object-fit: contain;
+          }
+
+          &.notification .icon-img {
             filter: brightness(0) invert(1);
           }
 
-          &.profile::before {
-            content: '👤';
-            font-size: 1.2rem;
+          &.profile .icon-img {
+            border-radius: 50%;
           }
 
-          &.logout {
-            svg {
-              width: 20px;
-              height: 20px;
-              stroke: $color-white;
-            }
-
-            &:hover {
-              background: rgba(255, 0, 0, 0.3);
-            }
-          }
         }
       }
     }
