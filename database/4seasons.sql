@@ -41,8 +41,6 @@ CREATE TABLE `activity_logs` (
 
 LOCK TABLES `activity_logs` WRITE;
 /*!40000 ALTER TABLE `activity_logs` DISABLE KEYS */;
-INSERT INTO `activity_logs` VALUES (1,1,'Registration',NULL,'::1','2025-12-03 07:08:26'),(2,2,'Registration',NULL,'::1','2025-12-03 07:22:35'),(3,2,'Login',NULL,'::1','2025-12-03 07:22:44'),(4,3,'Registration',NULL,'::1','2025-12-03 07:24:35'),(5,3,'Login',NULL,'::1','2025-12-03 07:24:44'),(6,4,'Registration',NULL,'::1','2025-12-03 07:25:47'),(7,4,'Login',NULL,'::1','2025-12-03 07:26:09'),(8,5,'Registration',NULL,'::1','2025-12-03 07:27:26'),(9,3,'Login',NULL,'::1','2025-12-03 07:30:40'),(10,1,'Login',NULL,'::1','2025-12-03 09:22:21'),(11,1,'Login',NULL,'::1','2025-12-03 09:28:12'),(12,3,'Login',NULL,'::1','2025-12-03 09:29:58'),(13,1,'Login',NULL,'::1','2025-12-03 09:39:28'),(14,6,'Registration',NULL,'::1','2025-12-03 09:49:07'),(15,6,'Login',NULL,'::1','2025-12-03 09:50:09'),(16,1,'Login',NULL,'::1','2025-12-03 10:44:13'),(17,7,'Registration',NULL,'172.18.0.1','2025-12-08 07:02:19'),(18,7,'Login',NULL,'172.18.0.1','2025-12-08 07:02:36');
-/*!40000 ALTER TABLE `activity_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -75,7 +73,6 @@ CREATE TABLE `advisers` (
 
 LOCK TABLES `advisers` WRITE;
 /*!40000 ALTER TABLE `advisers` DISABLE KEYS */;
-INSERT INTO `advisers` VALUES (1,3,'Irene','DelMonte',NULL,'09123456789','2025-12-03 07:24:35',1,NULL);
 /*!40000 ALTER TABLE `advisers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -135,7 +132,6 @@ CREATE TABLE `clinic_staff` (
 
 LOCK TABLES `clinic_staff` WRITE;
 /*!40000 ALTER TABLE `clinic_staff` DISABLE KEYS */;
-INSERT INTO `clinic_staff` VALUES (1,4,NULL,'Staff','2025-12-03 07:25:47',1,NULL);
 /*!40000 ALTER TABLE `clinic_staff` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -477,7 +473,6 @@ CREATE TABLE `students` (
 
 LOCK TABLES `students` WRITE;
 /*!40000 ALTER TABLE `students` DISABLE KEYS */;
-INSERT INTO `students` VALUES (2,'2023-0048-TG-0',2,'Hannah Lorainne ','Manliquess','Genandoy','2005-04-03','F',NULL,NULL,NULL,NULL,NULL,'2025-12-03 07:22:35',1,NULL),(3,'2023-00435-TG-0',5,'Mikka Kette','Pacoma','Esparagoza','2004-11-12','F',NULL,NULL,NULL,NULL,NULL,'2025-12-03 07:27:26',1,NULL),(4,'2023-00124-TG-0',6,'Alyza ','Hipolito','Amen','2005-01-24','F',NULL,NULL,NULL,NULL,NULL,'2025-12-03 09:49:07',1,NULL),(5,'2023-00001-TG-0',7,'HANNAH LORAINNE','MANLIQUES','GENANDOY','2005-04-03','F',NULL,NULL,NULL,NULL,NULL,'2025-12-08 07:02:19',1,NULL);
 /*!40000 ALTER TABLE `students` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -541,7 +536,6 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,2,'2023-00438-TG-0','$2y$10$icv4rEvWp5lzBgXNLok4YefYvAtTFUTwK/mSs2wfs4rbd.03.2hfK','lorainneh540@gmail.com','09923663742','Hannah Lorainne  Manliquess Genandoy','2025-12-03 07:08:26',1,NULL),(2,2,'2023-0048-TG-0','$2y$10$oX1/Q/rGN9Lc.RPZKjN5P.ZLs/s4EspR5KYxda.d5Z8e.WNcBdwqK','lorainneh540@gmail.com','09923663742','Hannah Lorainne  Manliquess Genandoy','2025-12-03 07:22:35',1,NULL),(3,3,'irene.delmonte','$2y$10$uyVsJ2PPp3AZbo/Q7DzKb.K.Z.ixk6IrheT2AZpEfYrPRsyOlmUvq','irenedelmonte@gmail.com','09123456789','Irene Merino DelMonte','2025-12-03 07:24:35',1,NULL),(4,4,'lulubelle.gabasa','$2y$10$8pjD35qae4qUYqVgOakgOert5Qf.st0C.4WAPoE9NbgaiPjExoGpu','lulubelleg@gmail.com','09789456123','Lulubelle Gapit Gabasa','2025-12-03 07:25:47',1,NULL),(5,2,'2023-00435-TG-0','$2y$10$vBCVL1PtulKU6/MmLECJFuLu/9A1MjGgHZmdEkbBZ.BWuCNr/.lOS','mikka@gmail.com','09123456786','Mikka Kette Pacoma Esparagoza','2025-12-03 07:27:26',1,NULL),(6,2,'2023-00124-TG-0','$2y$10$MJ7vif2elgSF1f.tNKUrsumZ.Oi7lsjjStRtU4VnsRRgQMpHAthXS','alyza.a@gmail.com','09123456789','Alyza  Hipolito Amen','2025-12-03 09:49:07',1,NULL),(7,2,'2023-00001-TG-0','$2y$10$XDuLMzaLqIxTKJf4yLyEjeUMAz6UhX0vOmB0q/ntuyPfaU3viWGfa','HANNAHLORAINNEGENANDOY@GMAIL.COM','09260023267','HANNAH LORAINNE MANLIQUES GENANDOY','2025-12-08 07:02:19',1,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
