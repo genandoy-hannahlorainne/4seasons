@@ -54,7 +54,7 @@ services:
       - 4seasons-network
     depends_on:
       - backend
-    command: bash -c "npm install && npm start -- --host 0.0.0.0"
+    command: bash -c "npm install --legacy-peer-deps && npm start -- --host 0.0.0.0"
     environment:
       - NODE_ENV=development
 

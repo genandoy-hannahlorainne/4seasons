@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../../core/services/auth.service';
+import { AdviserService, AdvisedStudent, RecentVisit } from '../../../core/services/adviser.service';
 
 @Component({
   selector: 'app-adviser-dashboard',
@@ -8,23 +10,75 @@ import { CommonModule } from '@angular/common';
   templateUrl: './adviser-dashboard.component.html',
   styleUrls: ['./adviser-dashboard.component.scss']
 })
-export class AdviserDashboardComponent {
+export class AdviserDashboardComponent implements OnInit {
   adviserName = 'Adviser';
+  employeeNumber = '';
+  
+  // Statistics
+  totalStudents = 0;
+  studentsWithVisits = 0;
+  studentsWithAllergies = 0;
+  pendingVisits = 0;
+  
+  // Data
+  advisedStudents: AdvisedStudent[] = [];
+  recentVisits: RecentVisit[] = [];
+  
+  loading = true;
+  error = '';
 
-  // Adviser-specific data
-  advisedStudents = [
-    { id: 1, name: 'John Doe', year: '3rd Year', status: 'Active' },
-    { id: 2, name: 'Jane Smith', year: '2nd Year', status: 'Active' },
-    { id: 3, name: 'Mike Johnson', year: '4th Year', status: 'Active' }
-  ];
+  constructor(
+    private authService: AuthService,
+    private adviserService: AdviserService
+  ) {}
 
-  pendingApprovals = [
-    { student: 'John Doe', type: 'Medical Leave', date: '2024-12-03' },
-    { student: 'Jane Smith', type: 'Health Certificate', date: '2024-12-02' }
-  ];
+  ngOnInit(): void {
+    this.loadDashboardData();
+  }
 
-  recentActivities = [
-    { action: 'Approved medical leave', student: 'Mike Johnson', date: '2024-12-01' },
-    { action: 'Reviewed health record', student: 'John Doe', date: '2024-11-30' }
-  ];
+  loadDashboardData(): void {
+    const currentUser = this.authService.currentUserValue;
+    
+    if (!currentUser) {
+      this.error = 'User not logged in';
+      this.loading = false;
+      return;
+    }
+
+    // Set adviser name from current user
+    this.adviserName = currentUser.full_name || 'Adviser';
+
+    // Fetch dashboard data from API
+    this.adviserService.getAdviserDashboard(currentUser.user_id).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const data = response.data;
+          
+          // Update adviser info
+          if (data.adviser) {
+            this.adviserName = data.adviser.full_name || currentUser.full_name || 'Adviser';
+            this.employeeNumber = data.adviser.employee_number || '';
+          }
+          
+          // Update statistics
+          if (data.statistics) {
+            this.totalStudents = data.statistics.total_students;
+            this.studentsWithVisits = data.statistics.students_with_visits;
+            this.studentsWithAllergies = data.statistics.students_with_allergies;
+            this.pendingVisits = data.statistics.pending_visits;
+          }
+          
+          // Update students and visits
+          this.advisedStudents = data.students || [];
+          this.recentVisits = data.recent_visits || [];
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading adviser dashboard:', error);
+        this.error = 'Failed to load dashboard data';
+        this.loading = false;
+      }
+    });
+  }
 }
