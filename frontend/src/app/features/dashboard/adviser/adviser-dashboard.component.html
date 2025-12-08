@@ -2,43 +2,90 @@
   <div class="dashboard-header">
     <h1>Adviser Dashboard</h1>
     <p>Welcome, {{ adviserName }}!</p>
+    <p *ngIf="employeeNumber" class="employee-number">Employee #: {{ employeeNumber }}</p>
   </div>
 
-  <div class="dashboard-content">
-    <div class="card">
-      <h2>Advised Students</h2>
-      <div class="students-list">
-        <div *ngFor="let student of advisedStudents" class="student-item">
-          <div class="student-name">{{ student.name }}</div>
-          <div class="student-year">{{ student.year }}</div>
-          <div class="student-status">{{ student.status }}</div>
-        </div>
+  <div *ngIf="loading" class="loading-message">Loading dashboard data...</div>
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div class="dashboard-content" *ngIf="!loading && !error">
+    <!-- Statistics Cards -->
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-value">{{ totalStudents }}</div>
+        <div class="stat-label">Total Students</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ studentsWithVisits }}</div>
+        <div class="stat-label">Recent Clinic Visits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ studentsWithAllergies }}</div>
+        <div class="stat-label">Students with Allergies</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ pendingVisits }}</div>
+        <div class="stat-label">Pending Visits</div>
       </div>
     </div>
 
+    <!-- Advised Students -->
     <div class="card">
-      <h2>Pending Approvals</h2>
-      <div class="approvals-list">
-        <div *ngFor="let approval of pendingApprovals" class="approval-item">
-          <div class="approval-student">{{ approval.student }}</div>
-          <div class="approval-type">{{ approval.type }}</div>
-          <div class="approval-date">{{ approval.date }}</div>
-          <div class="approval-actions">
-            <button class="approve-btn">Approve</button>
-            <button class="reject-btn">Reject</button>
+      <h2>Advised Students ({{ advisedStudents.length }})</h2>
+      <div class="students-list" *ngIf="advisedStudents.length > 0">
+        <div *ngFor="let student of advisedStudents" class="student-item">
+          <div class="student-info">
+            <div class="student-name">{{ student.name }}</div>
+            <div class="student-details">
+              {{ student.student_number }} • {{ student.grade_level }} - {{ student.section }}
+            </div>
+          </div>
+          <div class="student-meta">
+            <div class="student-blood">Blood Type: {{ student.blood_type || 'N/A' }}</div>
+            <div class="student-visit">Last Visit: {{ student.last_visit }}</div>
+            <div class="student-allergies" *ngIf="student.allergy_count > 0">
+              {{ student.allergy_count }} Allergy(ies)
+            </div>
+          </div>
+          <div class="student-status">
+            <span class="status-badge" [class.active]="student.status === 'Active'">
+              {{ student.status }}
+            </span>
           </div>
         </div>
       </div>
+      <div *ngIf="advisedStudents.length === 0" class="empty-message">
+        No students assigned yet
+      </div>
     </div>
 
+    <!-- Recent Medical Visits -->
     <div class="card">
-      <h2>Recent Activities</h2>
-      <div class="activities-list">
-        <div *ngFor="let activity of recentActivities" class="activity-item">
-          <div class="activity-action">{{ activity.action }}</div>
-          <div class="activity-student">{{ activity.student }}</div>
-          <div class="activity-date">{{ activity.date }}</div>
+      <h2>Recent Medical Visits (Last 30 Days)</h2>
+      <div class="visits-list" *ngIf="recentVisits.length > 0">
+        <div *ngFor="let visit of recentVisits" class="visit-item">
+          <div class="visit-header">
+            <div class="visit-student">
+              <strong>{{ visit.student_name }}</strong>
+              <span class="visit-student-number">{{ visit.student_number }}</span>
+            </div>
+            <div class="visit-datetime">
+              {{ visit.visit_date }} at {{ visit.visit_time }}
+            </div>
+          </div>
+          <div class="visit-details">
+            <span class="visit-type-badge" [ngClass]="visit.visit_type.toLowerCase()">
+              {{ visit.visit_type }}
+            </span>
+            <span class="visit-complaint">{{ visit.chief_complaint }}</span>
+            <span class="visit-status-badge" [ngClass]="visit.status.toLowerCase()">
+              {{ visit.status }}
+            </span>
+          </div>
         </div>
+      </div>
+      <div *ngIf="recentVisits.length === 0" class="empty-message">
+        No recent clinic visits
       </div>
     </div>
   </div>

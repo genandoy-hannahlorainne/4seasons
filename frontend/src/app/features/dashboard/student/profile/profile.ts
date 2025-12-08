@@ -2,13 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { QRCodeComponent } from 'angularx-qrcode';
 import { AuthService } from '../../../../core/services/auth.service';
 import { StudentService } from '../../../../core/services/student.service';
 
 @Component({
   selector: 'app-student-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, QRCodeComponent],
   templateUrl: './profile.html',
   styleUrls: ['./profile.scss']
 })
@@ -25,6 +26,13 @@ export class StudentProfileComponent implements OnInit {
   successMessage = '';
   passwordError = '';
   passwordSuccess = '';
+  
+  // QR Code data
+  qrCodeData = '';
+  qrCodeLoading = false;
+  qrImageLoading = true;
+  showQRModal = false;
+  studentId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -107,6 +115,9 @@ export class StudentProfileComponent implements OnInit {
           const genderMap: any = { 'M': 'male', 'F': 'female', 'Other': 'other' };
           const gender = genderMap[profile.gender] || 'other';
           
+          // Store student_id for QR code generation
+          this.studentId = profile.student_id;
+          
           this.profileForm.patchValue({
             studentNumber: profile.student_number,
             firstName: profile.first_name,
@@ -126,6 +137,9 @@ export class StudentProfileComponent implements OnInit {
           // Disable form after loading
           this.profileForm.disable();
           console.log('Form values after patch:', this.profileForm.value);
+          
+          // Load QR code
+          this.loadQRCode();
         } else {
           this.errorMessage = 'Failed to load profile';
           console.error('API returned success=false');
@@ -267,5 +281,73 @@ export class StudentProfileComponent implements OnInit {
         this.passwordError = err.error?.message || 'Error changing password';
       }
     });
+  }
+
+  loadQRCode(): void {
+    if (!this.studentId) {
+      console.error('Cannot load QR code: studentId is null');
+      return;
+    }
+
+    console.log('Loading QR code for student_id:', this.studentId);
+    this.qrCodeLoading = true;
+    
+    // Set qrCodeData to trigger the image display
+    // The actual QR code will be loaded via the image URL
+    this.qrCodeData = 'loaded';
+    this.qrCodeLoading = false;
+    
+    console.log('QR Code ready to display');
+  }
+
+  viewQRCode(): void {
+    this.showQRModal = true;
+    this.qrImageLoading = true;
+  }
+
+  onQRImageLoad(event: any): void {
+    console.log('QR Code image loaded successfully');
+    this.qrImageLoading = false;
+  }
+
+  closeQRModal(): void {
+    this.showQRModal = false;
+  }
+
+  getQRCodeImageUrl(): string {
+    if (!this.studentId) {
+      return '';
+    }
+    return `http://localhost:8080/api/generate-qr-image.php?student_id=${this.studentId}`;
+  }
+
+  onQRImageError(event: any): void {
+    console.error('Failed to load QR code image');
+    console.error('Image URL:', this.getQRCodeImageUrl());
+    console.error('Student ID:', this.studentId);
+    
+    // Try to reload once
+    if (!event.target.dataset.retried) {
+      event.target.dataset.retried = 'true';
+      setTimeout(() => {
+        event.target.src = this.getQRCodeImageUrl() + '&retry=' + Date.now();
+      }, 1000);
+    } else {
+      // Show error message
+      event.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="300" height="300" fill="white"/><text x="150" y="150" text-anchor="middle" fill="red" font-size="16">QR Code Load Error</text></svg>';
+    }
+  }
+
+  downloadQRCode(): void {
+    if (!this.studentId) {
+      return;
+    }
+    
+    const url = this.getQRCodeImageUrl();
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `student-qr-${this.profileForm.get('studentNumber')?.value}.png`;
+    link.target = '_blank';
+    link.click();
   }
 }

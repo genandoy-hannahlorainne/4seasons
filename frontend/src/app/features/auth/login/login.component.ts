@@ -61,8 +61,17 @@ export class LoginComponent implements OnInit {
     const { username, password } = this.loginForm.value;
 
     this.authService.login(username, password).subscribe({
-      next: () => {
-        this.router.navigate(['/dashboard']);
+      next: (user) => {
+        // Redirect based on user role
+        const roleRoutes: { [key: string]: string } = {
+          'Student': '/dashboard/student',
+          'Adviser': '/dashboard/adviser',
+          'Clinic Staff': '/dashboard/staff',
+          'Admin': '/dashboard/admin'
+        };
+        
+        const route = roleRoutes[user.role_name] || '/dashboard/student';
+        this.router.navigate([route]);
       },
       error: (err) => {
         this.error = 'Invalid username or password';

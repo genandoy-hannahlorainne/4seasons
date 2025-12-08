@@ -74,6 +74,9 @@
                 <button type="button" class="btn-edit" (click)="toggleEdit()">
                   ✏️ Edit
                 </button>
+                <button type="button" class="btn-qr" (click)="viewQRCode()" [disabled]="qrCodeLoading">
+                  📱 View QR Code
+                </button>
               }
             </div>
           </div>
@@ -254,3 +257,59 @@
     </div>
   }
 </div>
+
+
+<!-- QR Code Modal -->
+@if (showQRModal) {
+  <div class="modal-overlay" (click)="closeQRModal()">
+    <div class="modal-content qr-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Your Student QR Code</h2>
+        <button class="close-btn" (click)="closeQRModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (qrCodeLoading) {
+          <div class="loading-container">
+            <div class="spinner"></div>
+            <p>Generating QR Code...</p>
+          </div>
+        } @else if (qrCodeData) {
+          <div class="qr-code-container" id="qr-code-display">
+            <img 
+              [src]="getQRCodeImageUrl()" 
+              alt="Student QR Code"
+              class="qr-code-image"
+              (error)="onQRImageError($event)"
+              (load)="onQRImageLoad($event)"
+              loading="eager"
+            />
+            <div class="qr-loading" *ngIf="qrImageLoading">
+              <div class="spinner"></div>
+              <p>Loading QR Code...</p>
+            </div>
+          </div>
+          <div class="qr-info">
+            <p class="qr-description">
+              <strong>Student Number:</strong> {{ profileForm.get('studentNumber')?.value }}
+            </p>
+            <p class="qr-description">
+              <strong>Name:</strong> {{ profileForm.get('firstName')?.value }} {{ profileForm.get('lastName')?.value }}
+            </p>
+            <p class="qr-note">
+              Show this QR code to clinic staff for quick access to your medical records.
+            </p>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-download" (click)="downloadQRCode()">
+              💾 Download QR Code
+            </button>
+          </div>
+        } @else {
+          <div class="error-message">
+            Failed to generate QR code. Please try again.
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

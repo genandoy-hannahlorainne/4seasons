@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { DashboardComponent } from './dashboard.component';
 import { StudentDashboardComponent } from './student/student-dashboard.component';
 import { StudentProfileComponent } from './student/profile/profile';
 import { AdviserDashboardComponent } from './adviser/adviser-dashboard.component';
@@ -28,7 +29,11 @@ export const dashboardRoutes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'student',
+    component: DashboardComponent,
     pathMatch: 'full'
+  },
+  {
+    path: '**',
+    component: DashboardComponent
   }
 ];
