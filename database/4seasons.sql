@@ -1,740 +1,593 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
+-- MySQL dump 10.13  Distrib 8.0.44, for Linux (x86_64)
 --
--- Host: 127.0.0.1
--- Generation Time: Dec 03, 2025 at 11:45 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
+-- Host: localhost    Database: 4seasons
+-- ------------------------------------------------------
+-- Server version	8.0.44
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Database: `4seasons`
---
-
--- --------------------------------------------------------
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
 -- Table structure for table `activity_logs`
 --
 
+DROP TABLE IF EXISTS `activity_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `activity_logs` (
-  `log_id` bigint(20) UNSIGNED NOT NULL,
-  `user_id` int(10) UNSIGNED DEFAULT NULL,
-  `action` varchar(150) DEFAULT NULL,
-  `details` text DEFAULT NULL,
-  `ip_address` varchar(50) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `log_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned DEFAULT NULL,
+  `action` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `details` text COLLATE utf8mb4_general_ci,
+  `ip_address` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`),
+  KEY `fk_log_user` (`user_id`),
+  CONSTRAINT `fk_log_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `activity_logs`
 --
 
-INSERT INTO `activity_logs` (`log_id`, `user_id`, `action`, `details`, `ip_address`, `created_at`) VALUES
-(1, 1, 'Registration', NULL, '::1', '2025-12-03 07:08:26'),
-(2, 2, 'Registration', NULL, '::1', '2025-12-03 07:22:35'),
-(3, 2, 'Login', NULL, '::1', '2025-12-03 07:22:44'),
-(4, 3, 'Registration', NULL, '::1', '2025-12-03 07:24:35'),
-(5, 3, 'Login', NULL, '::1', '2025-12-03 07:24:44'),
-(6, 4, 'Registration', NULL, '::1', '2025-12-03 07:25:47'),
-(7, 4, 'Login', NULL, '::1', '2025-12-03 07:26:09'),
-(8, 5, 'Registration', NULL, '::1', '2025-12-03 07:27:26'),
-(9, 3, 'Login', NULL, '::1', '2025-12-03 07:30:40'),
-(10, 1, 'Login', NULL, '::1', '2025-12-03 09:22:21'),
-(11, 1, 'Login', NULL, '::1', '2025-12-03 09:28:12'),
-(12, 3, 'Login', NULL, '::1', '2025-12-03 09:29:58'),
-(13, 1, 'Login', NULL, '::1', '2025-12-03 09:39:28'),
-(14, 6, 'Registration', NULL, '::1', '2025-12-03 09:49:07'),
-(15, 6, 'Login', NULL, '::1', '2025-12-03 09:50:09'),
-(16, 1, 'Login', NULL, '::1', '2025-12-03 10:44:13');
-
--- --------------------------------------------------------
+LOCK TABLES `activity_logs` WRITE;
+/*!40000 ALTER TABLE `activity_logs` DISABLE KEYS */;
+INSERT INTO `activity_logs` VALUES (1,1,'Registration',NULL,'::1','2025-12-03 07:08:26'),(2,2,'Registration',NULL,'::1','2025-12-03 07:22:35'),(3,2,'Login',NULL,'::1','2025-12-03 07:22:44'),(4,3,'Registration',NULL,'::1','2025-12-03 07:24:35'),(5,3,'Login',NULL,'::1','2025-12-03 07:24:44'),(6,4,'Registration',NULL,'::1','2025-12-03 07:25:47'),(7,4,'Login',NULL,'::1','2025-12-03 07:26:09'),(8,5,'Registration',NULL,'::1','2025-12-03 07:27:26'),(9,3,'Login',NULL,'::1','2025-12-03 07:30:40'),(10,1,'Login',NULL,'::1','2025-12-03 09:22:21'),(11,1,'Login',NULL,'::1','2025-12-03 09:28:12'),(12,3,'Login',NULL,'::1','2025-12-03 09:29:58'),(13,1,'Login',NULL,'::1','2025-12-03 09:39:28'),(14,6,'Registration',NULL,'::1','2025-12-03 09:49:07'),(15,6,'Login',NULL,'::1','2025-12-03 09:50:09'),(16,1,'Login',NULL,'::1','2025-12-03 10:44:13'),(17,7,'Registration',NULL,'172.18.0.1','2025-12-08 07:02:19'),(18,7,'Login',NULL,'172.18.0.1','2025-12-08 07:02:36');
+/*!40000 ALTER TABLE `activity_logs` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `advisers`
 --
 
+DROP TABLE IF EXISTS `advisers`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `advisers` (
-  `adviser_id` int(10) UNSIGNED NOT NULL,
-  `user_id` int(10) UNSIGNED DEFAULT NULL,
-  `first_name` varchar(80) DEFAULT NULL,
-  `last_name` varchar(80) DEFAULT NULL,
-  `employee_number` varchar(50) DEFAULT NULL,
-  `contact_phone` varchar(30) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `deleted_at` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `adviser_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned DEFAULT NULL,
+  `first_name` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `last_name` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `employee_number` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `contact_phone` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`adviser_id`),
+  UNIQUE KEY `employee_number` (`employee_number`),
+  KEY `fk_advisers_user` (`user_id`),
+  CONSTRAINT `fk_advisers_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `advisers`
 --
 
-INSERT INTO `advisers` (`adviser_id`, `user_id`, `first_name`, `last_name`, `employee_number`, `contact_phone`, `created_at`, `is_active`, `deleted_at`) VALUES
-(1, 3, 'Irene', 'DelMonte', NULL, '09123456789', '2025-12-03 07:24:35', 1, NULL);
-
--- --------------------------------------------------------
+LOCK TABLES `advisers` WRITE;
+/*!40000 ALTER TABLE `advisers` DISABLE KEYS */;
+INSERT INTO `advisers` VALUES (1,3,'Irene','DelMonte',NULL,'09123456789','2025-12-03 07:24:35',1,NULL);
+/*!40000 ALTER TABLE `advisers` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `allergies`
 --
 
+DROP TABLE IF EXISTS `allergies`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `allergies` (
-  `allergy_id` int(10) UNSIGNED NOT NULL,
-  `student_id` int(10) UNSIGNED NOT NULL,
-  `allergy_text` varchar(255) DEFAULT NULL,
-  `severity` enum('Mild','Moderate','Severe') DEFAULT 'Moderate',
-  `recorded_at` date DEFAULT NULL
+  `allergy_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `student_id` int unsigned NOT NULL,
+  `allergy_text` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `severity` enum('Mild','Moderate','Severe') COLLATE utf8mb4_general_ci DEFAULT 'Moderate',
+  `recorded_at` date DEFAULT NULL,
+  PRIMARY KEY (`allergy_id`),
+  KEY `fk_allergy_student` (`student_id`),
+  CONSTRAINT `fk_allergy_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `allergies`
+--
+
+LOCK TABLES `allergies` WRITE;
+/*!40000 ALTER TABLE `allergies` DISABLE KEYS */;
+/*!40000 ALTER TABLE `allergies` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `clinic_staff`
 --
 
+DROP TABLE IF EXISTS `clinic_staff`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `clinic_staff` (
-  `clinic_staff_id` int(10) UNSIGNED NOT NULL,
-  `user_id` int(10) UNSIGNED DEFAULT NULL,
-  `staff_code` varchar(50) DEFAULT NULL,
-  `position` varchar(80) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `deleted_at` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `clinic_staff_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned DEFAULT NULL,
+  `staff_code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `position` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`clinic_staff_id`),
+  UNIQUE KEY `staff_code` (`staff_code`),
+  KEY `fk_clinic_user` (`user_id`),
+  CONSTRAINT `fk_clinic_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `clinic_staff`
 --
 
-INSERT INTO `clinic_staff` (`clinic_staff_id`, `user_id`, `staff_code`, `position`, `created_at`, `is_active`, `deleted_at`) VALUES
-(1, 4, NULL, 'Staff', '2025-12-03 07:25:47', 1, NULL);
-
--- --------------------------------------------------------
+LOCK TABLES `clinic_staff` WRITE;
+/*!40000 ALTER TABLE `clinic_staff` DISABLE KEYS */;
+INSERT INTO `clinic_staff` VALUES (1,4,NULL,'Staff','2025-12-03 07:25:47',1,NULL);
+/*!40000 ALTER TABLE `clinic_staff` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `diagnoses`
 --
 
+DROP TABLE IF EXISTS `diagnoses`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `diagnoses` (
-  `diagnosis_id` bigint(20) UNSIGNED NOT NULL,
-  `visit_id` bigint(20) UNSIGNED NOT NULL,
-  `icd_code` varchar(20) DEFAULT NULL,
-  `diagnosis_text` varchar(255) DEFAULT NULL
+  `diagnosis_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `visit_id` bigint unsigned NOT NULL,
+  `icd_code` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `diagnosis_text` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  PRIMARY KEY (`diagnosis_id`),
+  KEY `fk_diag_visit` (`visit_id`),
+  CONSTRAINT `fk_diag_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `diagnoses`
+--
+
+LOCK TABLES `diagnoses` WRITE;
+/*!40000 ALTER TABLE `diagnoses` DISABLE KEYS */;
+/*!40000 ALTER TABLE `diagnoses` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `immunizations`
 --
 
+DROP TABLE IF EXISTS `immunizations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `immunizations` (
-  `immunization_id` int(10) UNSIGNED NOT NULL,
-  `student_id` int(10) UNSIGNED NOT NULL,
-  `vaccine_name` varchar(150) DEFAULT NULL,
+  `immunization_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `student_id` int unsigned NOT NULL,
+  `vaccine_name` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `date_administered` date DEFAULT NULL,
-  `administered_by` varchar(150) DEFAULT NULL,
-  `notes` varchar(255) DEFAULT NULL
+  `administered_by` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `notes` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  PRIMARY KEY (`immunization_id`),
+  KEY `fk_immun_student` (`student_id`),
+  CONSTRAINT `fk_immun_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `immunizations`
+--
+
+LOCK TABLES `immunizations` WRITE;
+/*!40000 ALTER TABLE `immunizations` DISABLE KEYS */;
+/*!40000 ALTER TABLE `immunizations` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `medical_visits`
 --
 
+DROP TABLE IF EXISTS `medical_visits`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `medical_visits` (
-  `visit_id` bigint(20) UNSIGNED NOT NULL,
-  `student_id` int(10) UNSIGNED NOT NULL,
-  `clinic_staff_id` int(10) UNSIGNED DEFAULT NULL,
+  `visit_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `student_id` int unsigned NOT NULL,
+  `clinic_staff_id` int unsigned DEFAULT NULL,
   `visit_datetime` datetime NOT NULL,
-  `visit_type` enum('Routine','Emergency','Follow-up','Referral') DEFAULT 'Routine',
-  `chief_complaint` varchar(255) DEFAULT NULL,
-  `notes` text DEFAULT NULL,
-  `status` enum('Open','Closed','Referred') DEFAULT 'Open',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `visit_type` enum('Routine','Emergency','Follow-up','Referral') COLLATE utf8mb4_general_ci DEFAULT 'Routine',
+  `chief_complaint` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_general_ci,
+  `status` enum('Open','Closed','Referred') COLLATE utf8mb4_general_ci DEFAULT 'Open',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`visit_id`),
+  KEY `fk_visit_staff` (`clinic_staff_id`),
+  KEY `idx_visit_student_datetime` (`student_id`,`visit_datetime`),
+  CONSTRAINT `fk_visit_staff` FOREIGN KEY (`clinic_staff_id`) REFERENCES `clinic_staff` (`clinic_staff_id`),
+  CONSTRAINT `fk_visit_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `medical_visits`
+--
+
+LOCK TABLES `medical_visits` WRITE;
+/*!40000 ALTER TABLE `medical_visits` DISABLE KEYS */;
+/*!40000 ALTER TABLE `medical_visits` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `medications`
 --
 
+DROP TABLE IF EXISTS `medications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `medications` (
-  `med_id` bigint(20) UNSIGNED NOT NULL,
-  `visit_id` bigint(20) UNSIGNED NOT NULL,
-  `medication_name` varchar(150) DEFAULT NULL,
-  `dosage` varchar(80) DEFAULT NULL,
-  `route` varchar(50) DEFAULT NULL,
-  `frequency` varchar(80) DEFAULT NULL,
-  `duration` varchar(80) DEFAULT NULL,
-  `notes` text DEFAULT NULL
+  `med_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `visit_id` bigint unsigned NOT NULL,
+  `medication_name` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `dosage` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `route` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `frequency` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `duration` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_general_ci,
+  PRIMARY KEY (`med_id`),
+  KEY `fk_med_visit` (`visit_id`),
+  CONSTRAINT `fk_med_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `medications`
+--
+
+LOCK TABLES `medications` WRITE;
+/*!40000 ALTER TABLE `medications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `medications` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `notifications`
 --
 
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `notifications` (
-  `notification_id` bigint(20) UNSIGNED NOT NULL,
-  `parent_id` int(10) UNSIGNED DEFAULT NULL,
-  `student_id` int(10) UNSIGNED DEFAULT NULL,
-  `visit_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `channel` enum('SMS','Email') DEFAULT 'SMS',
-  `message` text DEFAULT NULL,
-  `status` enum('Pending','Sent','Failed') DEFAULT 'Pending',
-  `provider_id` varchar(100) DEFAULT NULL,
+  `notification_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `parent_id` int unsigned DEFAULT NULL,
+  `student_id` int unsigned DEFAULT NULL,
+  `visit_id` bigint unsigned DEFAULT NULL,
+  `channel` enum('SMS','Email') COLLATE utf8mb4_general_ci DEFAULT 'SMS',
+  `message` text COLLATE utf8mb4_general_ci,
+  `status` enum('Pending','Sent','Failed') COLLATE utf8mb4_general_ci DEFAULT 'Pending',
+  `provider_id` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `sent_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`notification_id`),
+  KEY `fk_notif_parent` (`parent_id`),
+  KEY `fk_notif_student` (`student_id`),
+  KEY `fk_notif_visit` (`visit_id`),
+  KEY `idx_notifications_status_sentat` (`status`,`sent_at`),
+  CONSTRAINT `fk_notif_parent` FOREIGN KEY (`parent_id`) REFERENCES `parents` (`parent_id`),
+  CONSTRAINT `fk_notif_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`),
+  CONSTRAINT `fk_notif_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `notifications`
+--
+
+LOCK TABLES `notifications` WRITE;
+/*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `parents`
 --
 
+DROP TABLE IF EXISTS `parents`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `parents` (
-  `parent_id` int(10) UNSIGNED NOT NULL,
-  `user_id` int(10) UNSIGNED DEFAULT NULL,
-  `first_name` varchar(80) NOT NULL,
-  `last_name` varchar(80) NOT NULL,
-  `relation` varchar(50) DEFAULT NULL,
-  `phone` varchar(30) DEFAULT NULL,
-  `email` varchar(150) DEFAULT NULL,
-  `address` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `deleted_at` datetime DEFAULT NULL
+  `parent_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned DEFAULT NULL,
+  `first_name` varchar(80) COLLATE utf8mb4_general_ci NOT NULL,
+  `last_name` varchar(80) COLLATE utf8mb4_general_ci NOT NULL,
+  `relation` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `phone` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `email` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_general_ci,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`parent_id`),
+  KEY `fk_parents_user` (`user_id`),
+  CONSTRAINT `fk_parents_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `parents`
+--
+
+LOCK TABLES `parents` WRITE;
+/*!40000 ALTER TABLE `parents` DISABLE KEYS */;
+/*!40000 ALTER TABLE `parents` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `qr_codes`
 --
 
+DROP TABLE IF EXISTS `qr_codes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `qr_codes` (
-  `qr_id` bigint(20) UNSIGNED NOT NULL,
-  `student_id` int(10) UNSIGNED NOT NULL,
-  `qr_token` varchar(255) NOT NULL,
-  `qr_generated_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `qr_expires_at` datetime DEFAULT NULL
+  `qr_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `student_id` int unsigned NOT NULL,
+  `qr_token` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `qr_generated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `qr_expires_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`qr_id`),
+  UNIQUE KEY `student_id` (`student_id`),
+  UNIQUE KEY `qr_token` (`qr_token`),
+  CONSTRAINT `fk_qr_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `qr_codes`
+--
+
+LOCK TABLES `qr_codes` WRITE;
+/*!40000 ALTER TABLE `qr_codes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `qr_codes` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `roles`
 --
 
+DROP TABLE IF EXISTS `roles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `roles` (
-  `role_id` tinyint(3) UNSIGNED NOT NULL,
-  `role_name` varchar(30) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `role_id` tinyint unsigned NOT NULL AUTO_INCREMENT,
+  `role_name` varchar(30) COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (`role_id`),
+  UNIQUE KEY `role_name` (`role_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `roles`
 --
 
-INSERT INTO `roles` (`role_id`, `role_name`) VALUES
-(1, 'Admin'),
-(3, 'Adviser'),
-(4, 'Clinic Staff'),
-(5, 'Parent'),
-(2, 'Student');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `students`
---
-
-CREATE TABLE `students` (
-  `student_id` int(10) UNSIGNED NOT NULL,
-  `student_number` varchar(30) NOT NULL,
-  `user_id` int(10) UNSIGNED DEFAULT NULL,
-  `first_name` varchar(80) NOT NULL,
-  `middle_name` varchar(80) DEFAULT NULL,
-  `last_name` varchar(80) NOT NULL,
-  `birth_date` date DEFAULT NULL,
-  `gender` enum('M','F','Other') DEFAULT 'Other',
-  `grade_level` varchar(20) DEFAULT NULL,
-  `section` varchar(50) DEFAULT NULL,
-  `address` text DEFAULT NULL,
-  `blood_type` varchar(5) DEFAULT NULL,
-  `emergency_contact` varchar(150) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `deleted_at` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `students`
---
-
-INSERT INTO `students` (`student_id`, `student_number`, `user_id`, `first_name`, `middle_name`, `last_name`, `birth_date`, `gender`, `grade_level`, `section`, `address`, `blood_type`, `emergency_contact`, `created_at`, `is_active`, `deleted_at`) VALUES
-(2, '2023-0048-TG-0', 2, 'Hannah Lorainne ', 'Manliquess', 'Genandoy', '2005-04-03', 'F', NULL, NULL, NULL, NULL, NULL, '2025-12-03 07:22:35', 1, NULL),
-(3, '2023-00435-TG-0', 5, 'Mikka Kette', 'Pacoma', 'Esparagoza', '2004-11-12', 'F', NULL, NULL, NULL, NULL, NULL, '2025-12-03 07:27:26', 1, NULL),
-(4, '2023-00124-TG-0', 6, 'Alyza ', 'Hipolito', 'Amen', '2005-01-24', 'F', NULL, NULL, NULL, NULL, NULL, '2025-12-03 09:49:07', 1, NULL);
-
--- --------------------------------------------------------
+LOCK TABLES `roles` WRITE;
+/*!40000 ALTER TABLE `roles` DISABLE KEYS */;
+INSERT INTO `roles` VALUES (1,'Admin'),(3,'Adviser'),(4,'Clinic Staff'),(5,'Parent'),(2,'Student');
+/*!40000 ALTER TABLE `roles` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `student_adviser`
 --
 
+DROP TABLE IF EXISTS `student_adviser`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `student_adviser` (
-  `student_id` int(10) UNSIGNED NOT NULL,
-  `adviser_id` int(10) UNSIGNED NOT NULL,
-  `assigned_date` date DEFAULT NULL
+  `student_id` int unsigned NOT NULL,
+  `adviser_id` int unsigned NOT NULL,
+  `assigned_date` date DEFAULT NULL,
+  PRIMARY KEY (`student_id`,`adviser_id`),
+  KEY `fk_sa_adviser` (`adviser_id`),
+  CONSTRAINT `fk_sa_adviser` FOREIGN KEY (`adviser_id`) REFERENCES `advisers` (`adviser_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sa_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `student_adviser`
+--
+
+LOCK TABLES `student_adviser` WRITE;
+/*!40000 ALTER TABLE `student_adviser` DISABLE KEYS */;
+/*!40000 ALTER TABLE `student_adviser` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `student_parent`
 --
 
+DROP TABLE IF EXISTS `student_parent`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `student_parent` (
-  `student_id` int(10) UNSIGNED NOT NULL,
-  `parent_id` int(10) UNSIGNED NOT NULL,
-  `relationship_note` varchar(255) DEFAULT NULL
+  `student_id` int unsigned NOT NULL,
+  `parent_id` int unsigned NOT NULL,
+  `relationship_note` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  PRIMARY KEY (`student_id`,`parent_id`),
+  KEY `fk_sp_parent` (`parent_id`),
+  CONSTRAINT `fk_sp_parent` FOREIGN KEY (`parent_id`) REFERENCES `parents` (`parent_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sp_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `student_parent`
+--
+
+LOCK TABLES `student_parent` WRITE;
+/*!40000 ALTER TABLE `student_parent` DISABLE KEYS */;
+/*!40000 ALTER TABLE `student_parent` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `students`
+--
+
+DROP TABLE IF EXISTS `students`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `students` (
+  `student_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `student_number` varchar(30) COLLATE utf8mb4_general_ci NOT NULL,
+  `user_id` int unsigned DEFAULT NULL,
+  `first_name` varchar(80) COLLATE utf8mb4_general_ci NOT NULL,
+  `middle_name` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `last_name` varchar(80) COLLATE utf8mb4_general_ci NOT NULL,
+  `birth_date` date DEFAULT NULL,
+  `gender` enum('M','F','Other') COLLATE utf8mb4_general_ci DEFAULT 'Other',
+  `grade_level` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `section` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_general_ci,
+  `blood_type` varchar(5) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `emergency_contact` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`student_id`),
+  UNIQUE KEY `student_number` (`student_number`),
+  KEY `fk_students_user` (`user_id`),
+  CONSTRAINT `fk_students_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `students`
+--
+
+LOCK TABLES `students` WRITE;
+/*!40000 ALTER TABLE `students` DISABLE KEYS */;
+INSERT INTO `students` VALUES (2,'2023-0048-TG-0',2,'Hannah Lorainne ','Manliquess','Genandoy','2005-04-03','F',NULL,NULL,NULL,NULL,NULL,'2025-12-03 07:22:35',1,NULL),(3,'2023-00435-TG-0',5,'Mikka Kette','Pacoma','Esparagoza','2004-11-12','F',NULL,NULL,NULL,NULL,NULL,'2025-12-03 07:27:26',1,NULL),(4,'2023-00124-TG-0',6,'Alyza ','Hipolito','Amen','2005-01-24','F',NULL,NULL,NULL,NULL,NULL,'2025-12-03 09:49:07',1,NULL),(5,'2023-00001-TG-0',7,'HANNAH LORAINNE','MANLIQUES','GENANDOY','2005-04-03','F',NULL,NULL,NULL,NULL,NULL,'2025-12-08 07:02:19',1,NULL);
+/*!40000 ALTER TABLE `students` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `treatments`
 --
 
+DROP TABLE IF EXISTS `treatments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `treatments` (
-  `treatment_id` bigint(20) UNSIGNED NOT NULL,
-  `visit_id` bigint(20) UNSIGNED NOT NULL,
-  `treatment_text` varchar(255) DEFAULT NULL,
-  `performed_by` int(10) UNSIGNED DEFAULT NULL
+  `treatment_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `visit_id` bigint unsigned NOT NULL,
+  `treatment_text` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `performed_by` int unsigned DEFAULT NULL,
+  PRIMARY KEY (`treatment_id`),
+  KEY `fk_treat_visit` (`visit_id`),
+  KEY `fk_treat_staff` (`performed_by`),
+  CONSTRAINT `fk_treat_staff` FOREIGN KEY (`performed_by`) REFERENCES `clinic_staff` (`clinic_staff_id`),
+  CONSTRAINT `fk_treat_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `treatments`
+--
+
+LOCK TABLES `treatments` WRITE;
+/*!40000 ALTER TABLE `treatments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `treatments` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `users`
 --
 
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
-  `user_id` int(10) UNSIGNED NOT NULL,
-  `role_id` tinyint(3) UNSIGNED NOT NULL,
-  `username` varchar(100) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `email` varchar(150) DEFAULT NULL,
-  `phone` varchar(30) DEFAULT NULL,
-  `full_name` varchar(150) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `deleted_at` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `user_id` int unsigned NOT NULL AUTO_INCREMENT,
+  `role_id` tinyint unsigned NOT NULL,
+  `username` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `phone` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `full_name` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `username` (`username`),
+  KEY `fk_users_role` (`role_id`),
+  CONSTRAINT `fk_users_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `role_id`, `username`, `password_hash`, `email`, `phone`, `full_name`, `created_at`, `is_active`, `deleted_at`) VALUES
-(1, 2, '2023-00438-TG-0', '$2y$10$icv4rEvWp5lzBgXNLok4YefYvAtTFUTwK/mSs2wfs4rbd.03.2hfK', 'lorainneh540@gmail.com', '09923663742', 'Hannah Lorainne  Manliquess Genandoy', '2025-12-03 07:08:26', 1, NULL),
-(2, 2, '2023-0048-TG-0', '$2y$10$oX1/Q/rGN9Lc.RPZKjN5P.ZLs/s4EspR5KYxda.d5Z8e.WNcBdwqK', 'lorainneh540@gmail.com', '09923663742', 'Hannah Lorainne  Manliquess Genandoy', '2025-12-03 07:22:35', 1, NULL),
-(3, 3, 'irene.delmonte', '$2y$10$uyVsJ2PPp3AZbo/Q7DzKb.K.Z.ixk6IrheT2AZpEfYrPRsyOlmUvq', 'irenedelmonte@gmail.com', '09123456789', 'Irene Merino DelMonte', '2025-12-03 07:24:35', 1, NULL),
-(4, 4, 'lulubelle.gabasa', '$2y$10$8pjD35qae4qUYqVgOakgOert5Qf.st0C.4WAPoE9NbgaiPjExoGpu', 'lulubelleg@gmail.com', '09789456123', 'Lulubelle Gapit Gabasa', '2025-12-03 07:25:47', 1, NULL),
-(5, 2, '2023-00435-TG-0', '$2y$10$vBCVL1PtulKU6/MmLECJFuLu/9A1MjGgHZmdEkbBZ.BWuCNr/.lOS', 'mikka@gmail.com', '09123456786', 'Mikka Kette Pacoma Esparagoza', '2025-12-03 07:27:26', 1, NULL),
-(6, 2, '2023-00124-TG-0', '$2y$10$MJ7vif2elgSF1f.tNKUrsumZ.Oi7lsjjStRtU4VnsRRgQMpHAthXS', 'alyza.a@gmail.com', '09123456789', 'Alyza  Hipolito Amen', '2025-12-03 09:49:07', 1, NULL);
-
--- --------------------------------------------------------
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,2,'2023-00438-TG-0','$2y$10$icv4rEvWp5lzBgXNLok4YefYvAtTFUTwK/mSs2wfs4rbd.03.2hfK','lorainneh540@gmail.com','09923663742','Hannah Lorainne  Manliquess Genandoy','2025-12-03 07:08:26',1,NULL),(2,2,'2023-0048-TG-0','$2y$10$oX1/Q/rGN9Lc.RPZKjN5P.ZLs/s4EspR5KYxda.d5Z8e.WNcBdwqK','lorainneh540@gmail.com','09923663742','Hannah Lorainne  Manliquess Genandoy','2025-12-03 07:22:35',1,NULL),(3,3,'irene.delmonte','$2y$10$uyVsJ2PPp3AZbo/Q7DzKb.K.Z.ixk6IrheT2AZpEfYrPRsyOlmUvq','irenedelmonte@gmail.com','09123456789','Irene Merino DelMonte','2025-12-03 07:24:35',1,NULL),(4,4,'lulubelle.gabasa','$2y$10$8pjD35qae4qUYqVgOakgOert5Qf.st0C.4WAPoE9NbgaiPjExoGpu','lulubelleg@gmail.com','09789456123','Lulubelle Gapit Gabasa','2025-12-03 07:25:47',1,NULL),(5,2,'2023-00435-TG-0','$2y$10$vBCVL1PtulKU6/MmLECJFuLu/9A1MjGgHZmdEkbBZ.BWuCNr/.lOS','mikka@gmail.com','09123456786','Mikka Kette Pacoma Esparagoza','2025-12-03 07:27:26',1,NULL),(6,2,'2023-00124-TG-0','$2y$10$MJ7vif2elgSF1f.tNKUrsumZ.Oi7lsjjStRtU4VnsRRgQMpHAthXS','alyza.a@gmail.com','09123456789','Alyza  Hipolito Amen','2025-12-03 09:49:07',1,NULL),(7,2,'2023-00001-TG-0','$2y$10$XDuLMzaLqIxTKJf4yLyEjeUMAz6UhX0vOmB0q/ntuyPfaU3viWGfa','HANNAHLORAINNEGENANDOY@GMAIL.COM','09260023267','HANNAH LORAINNE MANLIQUES GENANDOY','2025-12-08 07:02:19',1,NULL);
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `vitals`
 --
 
+DROP TABLE IF EXISTS `vitals`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `vitals` (
-  `vitals_id` bigint(20) UNSIGNED NOT NULL,
-  `visit_id` bigint(20) UNSIGNED NOT NULL,
-  `recorded_at` datetime DEFAULT current_timestamp(),
+  `vitals_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `visit_id` bigint unsigned NOT NULL,
+  `recorded_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `weight_kg` decimal(5,2) DEFAULT NULL,
   `height_cm` decimal(5,2) DEFAULT NULL,
   `temperature_c` decimal(4,2) DEFAULT NULL,
-  `bp_systolic` smallint(6) DEFAULT NULL,
-  `bp_diastolic` smallint(6) DEFAULT NULL,
-  `pulse_rate` smallint(6) DEFAULT NULL,
-  `respiration_rate` smallint(6) DEFAULT NULL,
-  `notes` varchar(255) DEFAULT NULL,
-  `bmi` decimal(5,2) GENERATED ALWAYS AS (case when `height_cm` > 0 and `weight_kg` > 0 then round(`weight_kg` / (`height_cm` / 100 * (`height_cm` / 100)),2) else NULL end) STORED,
-  `bmi_category` varchar(20) GENERATED ALWAYS AS (case when `height_cm` > 0 and `weight_kg` > 0 then case when round(`weight_kg` / (`height_cm` / 100 * (`height_cm` / 100)),2) < 18.5 then 'Underweight' when round(`weight_kg` / (`height_cm` / 100 * (`height_cm` / 100)),2) between 18.5 and 24.9 then 'Normal' when round(`weight_kg` / (`height_cm` / 100 * (`height_cm` / 100)),2) between 25.0 and 29.9 then 'Overweight' when round(`weight_kg` / (`height_cm` / 100 * (`height_cm` / 100)),2) >= 30.0 then 'Obese' else NULL end else NULL end) STORED
+  `bp_systolic` smallint DEFAULT NULL,
+  `bp_diastolic` smallint DEFAULT NULL,
+  `pulse_rate` smallint DEFAULT NULL,
+  `respiration_rate` smallint DEFAULT NULL,
+  `notes` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `bmi` decimal(5,2) GENERATED ALWAYS AS ((case when ((`height_cm` > 0) and (`weight_kg` > 0)) then round((`weight_kg` / ((`height_cm` / 100) * (`height_cm` / 100))),2) else NULL end)) STORED,
+  `bmi_category` varchar(20) COLLATE utf8mb4_general_ci GENERATED ALWAYS AS ((case when ((`height_cm` > 0) and (`weight_kg` > 0)) then (case when (round((`weight_kg` / ((`height_cm` / 100) * (`height_cm` / 100))),2) < 18.5) then _utf8mb4'Underweight' when (round((`weight_kg` / ((`height_cm` / 100) * (`height_cm` / 100))),2) between 18.5 and 24.9) then _utf8mb4'Normal' when (round((`weight_kg` / ((`height_cm` / 100) * (`height_cm` / 100))),2) between 25.0 and 29.9) then _utf8mb4'Overweight' when (round((`weight_kg` / ((`height_cm` / 100) * (`height_cm` / 100))),2) >= 30.0) then _utf8mb4'Obese' else NULL end) else NULL end)) STORED,
+  PRIMARY KEY (`vitals_id`),
+  KEY `fk_vitals_visit` (`visit_id`),
+  CONSTRAINT `fk_vitals_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Indexes for dumped tables
+-- Dumping data for table `vitals`
 --
 
---
--- Indexes for table `activity_logs`
---
-ALTER TABLE `activity_logs`
-  ADD PRIMARY KEY (`log_id`),
-  ADD KEY `fk_log_user` (`user_id`);
+LOCK TABLES `vitals` WRITE;
+/*!40000 ALTER TABLE `vitals` DISABLE KEYS */;
+/*!40000 ALTER TABLE `vitals` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
---
--- Indexes for table `advisers`
---
-ALTER TABLE `advisers`
-  ADD PRIMARY KEY (`adviser_id`),
-  ADD UNIQUE KEY `employee_number` (`employee_number`),
-  ADD KEY `fk_advisers_user` (`user_id`);
-
---
--- Indexes for table `allergies`
---
-ALTER TABLE `allergies`
-  ADD PRIMARY KEY (`allergy_id`),
-  ADD KEY `fk_allergy_student` (`student_id`);
-
---
--- Indexes for table `clinic_staff`
---
-ALTER TABLE `clinic_staff`
-  ADD PRIMARY KEY (`clinic_staff_id`),
-  ADD UNIQUE KEY `staff_code` (`staff_code`),
-  ADD KEY `fk_clinic_user` (`user_id`);
-
---
--- Indexes for table `diagnoses`
---
-ALTER TABLE `diagnoses`
-  ADD PRIMARY KEY (`diagnosis_id`),
-  ADD KEY `fk_diag_visit` (`visit_id`);
-
---
--- Indexes for table `immunizations`
---
-ALTER TABLE `immunizations`
-  ADD PRIMARY KEY (`immunization_id`),
-  ADD KEY `fk_immun_student` (`student_id`);
-
---
--- Indexes for table `medical_visits`
---
-ALTER TABLE `medical_visits`
-  ADD PRIMARY KEY (`visit_id`),
-  ADD KEY `fk_visit_staff` (`clinic_staff_id`),
-  ADD KEY `idx_visit_student_datetime` (`student_id`,`visit_datetime`);
-
---
--- Indexes for table `medications`
---
-ALTER TABLE `medications`
-  ADD PRIMARY KEY (`med_id`),
-  ADD KEY `fk_med_visit` (`visit_id`);
-
---
--- Indexes for table `notifications`
---
-ALTER TABLE `notifications`
-  ADD PRIMARY KEY (`notification_id`),
-  ADD KEY `fk_notif_parent` (`parent_id`),
-  ADD KEY `fk_notif_student` (`student_id`),
-  ADD KEY `fk_notif_visit` (`visit_id`),
-  ADD KEY `idx_notifications_status_sentat` (`status`,`sent_at`);
-
---
--- Indexes for table `parents`
---
-ALTER TABLE `parents`
-  ADD PRIMARY KEY (`parent_id`),
-  ADD KEY `fk_parents_user` (`user_id`);
-
---
--- Indexes for table `qr_codes`
---
-ALTER TABLE `qr_codes`
-  ADD PRIMARY KEY (`qr_id`),
-  ADD UNIQUE KEY `student_id` (`student_id`),
-  ADD UNIQUE KEY `qr_token` (`qr_token`);
-
---
--- Indexes for table `roles`
---
-ALTER TABLE `roles`
-  ADD PRIMARY KEY (`role_id`),
-  ADD UNIQUE KEY `role_name` (`role_name`);
-
---
--- Indexes for table `students`
---
-ALTER TABLE `students`
-  ADD PRIMARY KEY (`student_id`),
-  ADD UNIQUE KEY `student_number` (`student_number`),
-  ADD KEY `fk_students_user` (`user_id`);
-
---
--- Indexes for table `student_adviser`
---
-ALTER TABLE `student_adviser`
-  ADD PRIMARY KEY (`student_id`,`adviser_id`),
-  ADD KEY `fk_sa_adviser` (`adviser_id`);
-
---
--- Indexes for table `student_parent`
---
-ALTER TABLE `student_parent`
-  ADD PRIMARY KEY (`student_id`,`parent_id`),
-  ADD KEY `fk_sp_parent` (`parent_id`);
-
---
--- Indexes for table `treatments`
---
-ALTER TABLE `treatments`
-  ADD PRIMARY KEY (`treatment_id`),
-  ADD KEY `fk_treat_visit` (`visit_id`),
-  ADD KEY `fk_treat_staff` (`performed_by`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`user_id`),
-  ADD UNIQUE KEY `username` (`username`),
-  ADD KEY `fk_users_role` (`role_id`);
-
---
--- Indexes for table `vitals`
---
-ALTER TABLE `vitals`
-  ADD PRIMARY KEY (`vitals_id`),
-  ADD KEY `fk_vitals_visit` (`visit_id`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `activity_logs`
---
-ALTER TABLE `activity_logs`
-  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
-
---
--- AUTO_INCREMENT for table `advisers`
---
-ALTER TABLE `advisers`
-  MODIFY `adviser_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `allergies`
---
-ALTER TABLE `allergies`
-  MODIFY `allergy_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `clinic_staff`
---
-ALTER TABLE `clinic_staff`
-  MODIFY `clinic_staff_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `diagnoses`
---
-ALTER TABLE `diagnoses`
-  MODIFY `diagnosis_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `immunizations`
---
-ALTER TABLE `immunizations`
-  MODIFY `immunization_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `medical_visits`
---
-ALTER TABLE `medical_visits`
-  MODIFY `visit_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `medications`
---
-ALTER TABLE `medications`
-  MODIFY `med_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `notifications`
---
-ALTER TABLE `notifications`
-  MODIFY `notification_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `parents`
---
-ALTER TABLE `parents`
-  MODIFY `parent_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `qr_codes`
---
-ALTER TABLE `qr_codes`
-  MODIFY `qr_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `roles`
---
-ALTER TABLE `roles`
-  MODIFY `role_id` tinyint(3) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `students`
---
-ALTER TABLE `students`
-  MODIFY `student_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `treatments`
---
-ALTER TABLE `treatments`
-  MODIFY `treatment_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT for table `vitals`
---
-ALTER TABLE `vitals`
-  MODIFY `vitals_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `activity_logs`
---
-ALTER TABLE `activity_logs`
-  ADD CONSTRAINT `fk_log_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
-
---
--- Constraints for table `advisers`
---
-ALTER TABLE `advisers`
-  ADD CONSTRAINT `fk_advisers_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
-
---
--- Constraints for table `allergies`
---
-ALTER TABLE `allergies`
-  ADD CONSTRAINT `fk_allergy_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `clinic_staff`
---
-ALTER TABLE `clinic_staff`
-  ADD CONSTRAINT `fk_clinic_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
-
---
--- Constraints for table `diagnoses`
---
-ALTER TABLE `diagnoses`
-  ADD CONSTRAINT `fk_diag_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `immunizations`
---
-ALTER TABLE `immunizations`
-  ADD CONSTRAINT `fk_immun_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `medical_visits`
---
-ALTER TABLE `medical_visits`
-  ADD CONSTRAINT `fk_visit_staff` FOREIGN KEY (`clinic_staff_id`) REFERENCES `clinic_staff` (`clinic_staff_id`),
-  ADD CONSTRAINT `fk_visit_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`);
-
---
--- Constraints for table `medications`
---
-ALTER TABLE `medications`
-  ADD CONSTRAINT `fk_med_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `notifications`
---
-ALTER TABLE `notifications`
-  ADD CONSTRAINT `fk_notif_parent` FOREIGN KEY (`parent_id`) REFERENCES `parents` (`parent_id`),
-  ADD CONSTRAINT `fk_notif_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`),
-  ADD CONSTRAINT `fk_notif_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`);
-
---
--- Constraints for table `parents`
---
-ALTER TABLE `parents`
-  ADD CONSTRAINT `fk_parents_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
-
---
--- Constraints for table `qr_codes`
---
-ALTER TABLE `qr_codes`
-  ADD CONSTRAINT `fk_qr_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `students`
---
-ALTER TABLE `students`
-  ADD CONSTRAINT `fk_students_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
-
---
--- Constraints for table `student_adviser`
---
-ALTER TABLE `student_adviser`
-  ADD CONSTRAINT `fk_sa_adviser` FOREIGN KEY (`adviser_id`) REFERENCES `advisers` (`adviser_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_sa_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `student_parent`
---
-ALTER TABLE `student_parent`
-  ADD CONSTRAINT `fk_sp_parent` FOREIGN KEY (`parent_id`) REFERENCES `parents` (`parent_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_sp_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `treatments`
---
-ALTER TABLE `treatments`
-  ADD CONSTRAINT `fk_treat_staff` FOREIGN KEY (`performed_by`) REFERENCES `clinic_staff` (`clinic_staff_id`),
-  ADD CONSTRAINT `fk_treat_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `fk_users_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`);
-
---
--- Constraints for table `vitals`
---
-ALTER TABLE `vitals`
-  ADD CONSTRAINT `fk_vitals_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`) ON DELETE CASCADE;
-COMMIT;
-
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2025-12-08  7:40:13
