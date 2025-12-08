@@ -37,7 +37,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `username` (`username`),
   KEY `fk_users_role` (`role_id`),
   CONSTRAINT `fk_users_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -46,7 +46,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (8,2,'000001','$2y$10$WjonwJjRPYuw3tOL6tc1vu50GgI20.IxmqDD9e/ZZpSPOxt/wfTpy','genandoyhl@gmail.com','09260023267','Hannah  Lorainne Genandoy','2025-12-08 11:36:41',1,NULL),(9,2,'00001','$2y$10$RYEjUqzhsToAGk57nZSaHelW.yi89LXCzm9BIWxmWEUU0Q6Gcapke','johndoe@gmail.com','09923663742','Hannah Lorainne Genandoy','2025-12-08 11:44:28',1,NULL),(10,2,'00002','$2y$10$3YBMlPNPcjy6/SnCt4nrVe1vExw/rW62X33/RfgwYtm2wgzqqaMqi','lorainneh540@gmail.com','09236874125','KK GGG WEEW','2025-12-08 13:27:00',1,NULL);
+INSERT INTO `users` VALUES (8,2,'000001','$2y$10$WjonwJjRPYuw3tOL6tc1vu50GgI20.IxmqDD9e/ZZpSPOxt/wfTpy','genandoyhl@gmail.com','09260023267','Hannah  Lorainne Genandoy','2025-12-08 11:36:41',1,NULL),(9,2,'00001','$2y$10$RYEjUqzhsToAGk57nZSaHelW.yi89LXCzm9BIWxmWEUU0Q6Gcapke','johndoe@gmail.com','09923663742','Hannah Lorainne Genandoy','2025-12-08 11:44:28',1,NULL),(10,2,'00002','$2y$10$3YBMlPNPcjy6/SnCt4nrVe1vExw/rW62X33/RfgwYtm2wgzqqaMqi','lorainneh540@gmail.com','09236874125','KK GGG WEEW','2025-12-08 13:27:00',1,NULL),(11,3,'clarence.villas','$2y$10$nEoDgrAuR6/n85r129fr0.nnAIBSUwLrW8FxVXNeydOFYDfIenSfa','cla@gmail.com','0992665436','clarence fronda villas','2025-12-08 13:35:34',1,NULL),(12,2,'00003','$2y$10$l2lxeDqcTz4OvNXY59ynDexBmle6d9lJCw5eci8zr2JdovzUjDXU6','mads@gmail.com','93849349324','maddie  gonzales','2025-12-08 13:37:03',1,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -78,7 +78,7 @@ CREATE TABLE `students` (
   UNIQUE KEY `student_number` (`student_number`),
   KEY `fk_students_user` (`user_id`),
   CONSTRAINT `fk_students_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -87,7 +87,7 @@ CREATE TABLE `students` (
 
 LOCK TABLES `students` WRITE;
 /*!40000 ALTER TABLE `students` DISABLE KEYS */;
-INSERT INTO `students` VALUES (6,'000001',8,'Hannah ','Lorainne','Genandoy','2005-04-03','F',NULL,NULL,NULL,NULL,NULL,'2025-12-08 11:36:41',1,NULL),(7,'00001',9,'Hannah','Lorainne','Genandoy','2005-04-03','F',NULL,NULL,NULL,NULL,NULL,'2025-12-08 11:44:28',1,NULL),(8,'00002',10,'KK','GGG','WEEW','2009-01-02','M',NULL,NULL,NULL,NULL,NULL,'2025-12-08 13:27:00',1,NULL);
+INSERT INTO `students` VALUES (6,'000001',8,'Hannah ','Lorainne','Genandoy','2005-04-03','F',NULL,NULL,NULL,NULL,NULL,'2025-12-08 11:36:41',1,NULL),(7,'00001',9,'Hannah','Lorainne','Genandoy','2005-04-03','F',NULL,NULL,NULL,NULL,NULL,'2025-12-08 11:44:28',1,NULL),(8,'00002',10,'KK','GGG','WEEW','2009-01-02','M',NULL,NULL,NULL,NULL,NULL,'2025-12-08 13:27:00',1,NULL),(9,'00003',12,'maddie','','gonzales','2008-10-04','F',NULL,NULL,NULL,NULL,NULL,'2025-12-08 13:37:03',1,NULL);
 /*!40000 ALTER TABLE `students` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -112,7 +112,7 @@ CREATE TABLE `advisers` (
   UNIQUE KEY `employee_number` (`employee_number`),
   KEY `fk_advisers_user` (`user_id`),
   CONSTRAINT `fk_advisers_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -121,6 +121,7 @@ CREATE TABLE `advisers` (
 
 LOCK TABLES `advisers` WRITE;
 /*!40000 ALTER TABLE `advisers` DISABLE KEYS */;
+INSERT INTO `advisers` VALUES (2,11,'clarence','villas',NULL,'0992665436','2025-12-08 13:35:34',1,NULL);
 /*!40000 ALTER TABLE `advisers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -164,5 +165,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-08 13:29:49
-
+-- Dump completed on 2025-12-08 13:37:43
