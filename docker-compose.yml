@@ -23,7 +23,7 @@ services:
 
   # PHP Backend with Apache
   backend:
-    image: php:8.2-apache
+    build: ./backend
     container_name: 4seasons-backend
     ports:
       - "8080:80"
@@ -39,10 +39,6 @@ services:
       - DB_NAME=4seasons
       - DB_USER=root
       - DB_PASS=root
-    command: >
-      bash -c "docker-php-ext-install pdo pdo_mysql mysqli &&
-               a2enmod rewrite &&
-               apache2-foreground"
 
   # Angular Frontend
   frontend:

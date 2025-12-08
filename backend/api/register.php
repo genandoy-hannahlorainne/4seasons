@@ -1,15 +1,6 @@
 <?php
-// CORS headers - MUST be first
-header("Access-Control-Allow-Origin: http://localhost:4200");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Access-Control-Allow-Credentials: true");
-
-// Handle preflight immediately
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    die();
-}
+// Include CORS handler first
+require_once '../cors.php';
 
 header("Content-Type: application/json; charset=UTF-8");
 
