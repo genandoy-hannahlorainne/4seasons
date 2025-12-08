@@ -1,0 +1,46 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+export interface StaffDashboardData {
+  staff: {
+    clinic_staff_id: number;
+    staff_code: string;
+    position: string;
+    username: string;
+    full_name: string;
+  };
+  statistics: {
+    total_students: number;
+    fit_for_activities: number;
+    pending_assessment: number;
+    restricted_activities: number;
+    special_medical_needs: number;
+  };
+  students: StudentHealthRecord[];
+}
+
+export interface StudentHealthRecord {
+  student_id: number;
+  name: string;
+  lrn: string;
+  grade_level: string;
+  section: string;
+  status: string;
+  last_checkup: string;
+  notes: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class StaffService {
+  constructor(private http: HttpClient) {}
+
+  getStaffDashboard(userId: number): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/get-staff-dashboard.php`, {
+      user_id: userId
+    });
+  }
+}

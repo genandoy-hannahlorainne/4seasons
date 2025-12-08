@@ -3,15 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-
-interface StudentHealthRecord {
-  id: number;
-  name: string;
-  lrn: string;
-  status: string;
-  lastCheckup: string;
-  notes: string;
-}
+import { StaffService, StudentHealthRecord } from '../../../core/services/staff.service';
 
 @Component({
   selector: 'app-staff-dashboard',
@@ -21,15 +13,15 @@ interface StudentHealthRecord {
   styleUrls: ['./staff-dashboard.component.scss']
 })
 export class StaffDashboardComponent implements OnInit {
-  staffName = 'Mrs. User';
-  gradeLevel = 'Grade 10 - Humility';
-  studentCount = '42';
+  staffName = 'Staff User';
+  gradeLevel = 'All Students';
+  studentCount = '0';
   
   // Statistics
-  fitForActivities = '3,483';
-  pendingAssessment = '46';
-  restrictedActivities = '3';
-  specialMedicalNeeds = '21';
+  fitForActivities = '0';
+  pendingAssessment = '0';
+  restrictedActivities = '0';
+  specialMedicalNeeds = '0';
   
   // Student health records
   students: StudentHealthRecord[] = [];
@@ -39,7 +31,10 @@ export class StaffDashboardComponent implements OnInit {
   loading = true;
   error = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private staffService: StaffService
+  ) {}
 
   ngOnInit(): void {
     this.loadDashboardData();
@@ -57,44 +52,44 @@ export class StaffDashboardComponent implements OnInit {
     // Set staff name from current user
     this.staffName = currentUser.full_name || 'Staff User';
 
-    // Mock data - Replace with actual API calls
-    this.students = [
-      {
-        id: 1,
-        name: 'Hannah Genandoy',
-        lrn: '2023-00438-TG-O',
-        status: 'Fit',
-        lastCheckup: 'Oct 15, 2024',
-        notes: 'No restrictions'
+    // Fetch dashboard data from API
+    this.staffService.getStaffDashboard(currentUser.user_id).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const data = response.data;
+          
+          // Update staff info
+          if (data.staff) {
+            this.staffName = data.staff.full_name || currentUser.full_name || 'Staff User';
+          }
+          
+          // Update statistics
+          if (data.statistics) {
+            this.studentCount = data.statistics.total_students.toString();
+            this.fitForActivities = this.formatNumber(data.statistics.fit_for_activities);
+            this.pendingAssessment = data.statistics.pending_assessment.toString();
+            this.restrictedActivities = data.statistics.restricted_activities.toString();
+            this.specialMedicalNeeds = data.statistics.special_medical_needs.toString();
+          }
+          
+          // Update student records
+          if (data.students) {
+            this.students = data.students;
+            this.filteredStudents = [...this.students];
+          }
+        }
+        this.loading = false;
       },
-      {
-        id: 2,
-        name: 'Mik Esparagoza',
-        lrn: '2023-00435-TG-O',
-        status: 'Restricted',
-        lastCheckup: 'Oct 15, 2024',
-        notes: 'No restrictions'
-      },
-      {
-        id: 3,
-        name: 'Mik Esparagoza',
-        lrn: '2023-00435-TG-O',
-        status: 'Restricted',
-        lastCheckup: 'Oct 15, 2024',
-        notes: 'No restrictions'
-      },
-      {
-        id: 4,
-        name: 'Mik Esparagoza',
-        lrn: '2023-00435-TG-O',
-        status: 'Restricted',
-        lastCheckup: 'Oct 15, 2024',
-        notes: 'No restrictions'
+      error: (error) => {
+        console.error('Error loading dashboard data:', error);
+        this.error = 'Failed to load dashboard data';
+        this.loading = false;
       }
-    ];
+    });
+  }
 
-    this.filteredStudents = [...this.students];
-    this.loading = false;
+  formatNumber(num: number): string {
+    return num.toLocaleString();
   }
 
   filterStudents(): void {
@@ -115,5 +110,6 @@ export class StaffDashboardComponent implements OnInit {
   viewStudent(student: StudentHealthRecord): void {
     console.log('View student:', student);
     // Navigate to student detail page or open modal
+    // TODO: Implement navigation to student detail view
   }
 }

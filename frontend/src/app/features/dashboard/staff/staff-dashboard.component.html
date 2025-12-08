@@ -82,12 +82,17 @@
                   {{ student.status }}
                 </span>
               </td>
-              <td class="last-checkup">{{ student.lastCheckup }}</td>
+              <td class="last-checkup">{{ student.last_checkup }}</td>
               <td class="notes">{{ student.notes }}</td>
               <td class="actions">
                 <button class="action-btn view" (click)="viewStudent(student)">
                   <img src="assets/eye-icon.png" alt="View" class="action-icon">
                 </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredStudents.length === 0 && !loading">
+              <td colspan="6" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                No students found
               </td>
             </tr>
           </tbody>

@@ -1,0 +1,3 @@
+<br />
+<b>Warning</b>:  file_get_contents(https://chart.googleapis.com/chart?chs=300x300&amp;cht=qr&amp;chl=%7B%22student_id%22%3A9%2C%22student_number%22%3A%2200003%22%2C%22token%22%3A%22cfc773cbb2b3d2ec1ffed01475508a15%22%7D): Failed to open stream: HTTP request failed! HTTP/1.1 404 Not Found
+ in <b>/var/www/html/api/generate-qr-image.php</b> on line <b>65</b><br />
