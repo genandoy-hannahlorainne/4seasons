@@ -1,62 +1,97 @@
 <div class="staff-dashboard">
-  <div class="dashboard-header">
-    <h1>Staff Dashboard</h1>
-    <p>Welcome, {{ staffName }}!</p>
-  </div>
-
-  <div class="statistics">
-    <div class="stat-card">
-      <div class="stat-value">{{ statistics.totalAppointments }}</div>
-      <div class="stat-label">Total Appointments</div>
+  <nav class="top-nav">
+    <div class="nav-links">
+      <a href="#" class="nav-link active">Home</a>
+      <a href="#" class="nav-link">Visit</a>
+      <a href="#" class="nav-link">Contacts</a>
+      <a href="#" class="nav-link">Information</a>
     </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ statistics.completedToday }}</div>
-      <div class="stat-label">Completed Today</div>
+    <div class="nav-icons">
+      <button class="icon-btn notification">
+        <img src="assets/notification-icon.png" alt="Notifications" class="icon-img">
+      </button>
+      <button class="icon-btn profile">
+        <img src="assets/user-male.png" alt="Profile" class="icon-img">
+      </button>
     </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ statistics.pendingRecords }}</div>
-      <div class="stat-label">Pending Records</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ statistics.activeStudents }}</div>
-      <div class="stat-label">Active Students</div>
-    </div>
-  </div>
+  </nav>
 
   <div class="dashboard-content">
-    <div class="card">
-      <h2>Today's Appointments</h2>
-      <div class="appointments-list">
-        <div *ngFor="let appointment of todayAppointments" class="appointment-item">
-          <div class="appointment-time">{{ appointment.time }}</div>
-          <div class="appointment-student">{{ appointment.student }}</div>
-          <div class="appointment-type">{{ appointment.type }}</div>
-          <div class="appointment-status" [class]="appointment.status.toLowerCase().replace(' ', '-')">
-            {{ appointment.status }}
-          </div>
-        </div>
+    <div *ngIf="loading" class="loading-message">Loading dashboard data...</div>
+    <div *ngIf="error" class="error-message">{{ error }}</div>
+    
+    <div class="overview-section">
+      <h1>Dashboard Overview</h1>
+      <p class="welcome-text">Welcome back, {{ staffName }}!</p>
+      <p class="class-info">{{ gradeLevel }} • {{ studentCount }} Students</p>
+    </div>
+
+    <div class="stats-cards">
+      <div class="stat-card fit-activities">
+        <div class="card-value">{{ fitForActivities }}</div>
+        <div class="card-label">Fit for Activities</div>
+      </div>
+      <div class="stat-card pending-assessment">
+        <div class="card-value">{{ pendingAssessment }}</div>
+        <div class="card-label">Pending Assessment</div>
+      </div>
+      <div class="stat-card restricted-activities">
+        <div class="card-value">{{ restrictedActivities }}</div>
+        <div class="card-label">Restricted Activities</div>
+      </div>
+      <div class="stat-card special-needs">
+        <div class="card-value">{{ specialMedicalNeeds }}</div>
+        <div class="card-label">Special Medical Needs</div>
       </div>
     </div>
 
-    <div class="card">
-      <h2>Pending Records</h2>
-      <div class="records-list">
-        <div *ngFor="let record of pendingRecords" class="record-item">
-          <div class="record-student">{{ record.student }}</div>
-          <div class="record-type">{{ record.type }}</div>
-          <div class="record-date">{{ record.date }}</div>
-          <button class="process-btn">Process</button>
+    <div class="student-health-section">
+      <div class="section-header">
+        <h2>Student Health Status</h2>
+        <div class="search-box">
+          <input 
+            type="text" 
+            placeholder="Search" 
+            [(ngModel)]="searchTerm"
+            (input)="filterStudents()"
+            class="search-input">
+          <button class="search-btn">
+            <img src="assets/search-icon.png" alt="Search" class="search-icon">
+          </button>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h2>Quick Actions</h2>
-      <div class="actions">
-        <button class="action-btn">Add New Record</button>
-        <button class="action-btn">Schedule Appointment</button>
-        <button class="action-btn">View All Students</button>
-        <button class="action-btn">Generate Reports</button>
+      <div class="student-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>LRN</th>
+              <th>Status</th>
+              <th>Last Check-up</th>
+              <th>Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let student of filteredStudents">
+              <td class="student-name">{{ student.name }}</td>
+              <td class="lrn">{{ student.lrn }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="student.status.toLowerCase()">
+                  {{ student.status }}
+                </span>
+              </td>
+              <td class="last-checkup">{{ student.lastCheckup }}</td>
+              <td class="notes">{{ student.notes }}</td>
+              <td class="actions">
+                <button class="action-btn view" (click)="viewStudent(student)">
+                  <img src="assets/eye-icon.png" alt="View" class="action-icon">
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
