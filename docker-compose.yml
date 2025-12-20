@@ -2,9 +2,9 @@ version: '3.8'
 
 services:
   # MySQL Database
-  db:
+  mysql:
     image: mysql:8.0
-    container_name: 4seasons-db
+    container_name: 4seasons-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: 4seasons
@@ -21,24 +21,24 @@ services:
       timeout: 5s
       retries: 5
 
-  # PHP Backend with Apache
+  # Laravel Backend with Apache
   backend:
-    build: ./backend
-    container_name: 4seasons-backend
+    build: ./backend-laravel
+    container_name: 4seasons-laravel
     ports:
       - "8080:80"
-    volumes:
-      - ./backend:/var/www/html
     networks:
       - 4seasons-network
     depends_on:
-      db:
+      mysql:
         condition: service_healthy
     environment:
-      - DB_HOST=db
-      - DB_NAME=4seasons
-      - DB_USER=root
-      - DB_PASS=root
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=4seasons
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
 
   # Angular Frontend
   frontend:
