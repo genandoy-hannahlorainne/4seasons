@@ -25,7 +25,7 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<User> {
-    return this.http.post<any>(`${environment.apiUrl}/login.php`, { username, password })
+    return this.http.post<any>(`${environment.apiUrl}/login`, { username, password })
       .pipe(map(response => {
         if (response && response.success && response.user) {
           localStorage.setItem('currentUser', JSON.stringify(response.user));
@@ -36,7 +36,7 @@ export class AuthService {
   }
 
   register(userData: any): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/register.php`, userData);
+    return this.http.post<any>(`${environment.apiUrl}/register`, userData);
   }
 
   logout(): void {
@@ -50,7 +50,7 @@ export class AuthService {
   }
 
   changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/change-password.php`, {
+    return this.http.post<any>(`${environment.apiUrl}/change-password`, {
       user_id: userId,
       current_password: currentPassword,
       new_password: newPassword

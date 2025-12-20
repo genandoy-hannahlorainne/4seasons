@@ -39,8 +39,6 @@ export class StaffService {
   constructor(private http: HttpClient) {}
 
   getStaffDashboard(userId: number): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/get-staff-dashboard.php`, {
-      user_id: userId
-    });
+    return this.http.get<any>(`${environment.apiUrl}/staff/dashboard?user_id=${userId}`);
   }
 }
