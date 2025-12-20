@@ -58,16 +58,6 @@ RUN echo '<VirtualHost *:80>\n\
         RewriteRule ^(.*)$ index.php [QSA,L]\n\
     </Directory>\n\
     \n\
-    # CORS Headers for Angular\n\
-    Header always set Access-Control-Allow-Origin "http://localhost:4200"\n\
-    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"\n\
-    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"\n\
-    Header always set Access-Control-Allow-Credentials "true"\n\
-    \n\
-    # Handle preflight requests\n\
-    RewriteCond %{REQUEST_METHOD} OPTIONS\n\
-    RewriteRule ^(.*)$ $1 [R=200,L]\n\
-    \n\
     ErrorLog ${APACHE_LOG_DIR}/error.log\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf

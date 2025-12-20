@@ -58,8 +58,6 @@ export class AdviserService {
   constructor(private http: HttpClient) {}
 
   getAdviserDashboard(userId: number): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/get-adviser-dashboard.php`, {
-      user_id: userId
-    });
+    return this.http.get<any>(`${environment.apiUrl}/adviser/dashboard?user_id=${userId}`);
   }
 }

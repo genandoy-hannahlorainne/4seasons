@@ -27,34 +27,32 @@ export class StudentService {
   constructor(private http: HttpClient) {}
 
   getStudentProfile(userId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/get-student-profile.php?user_id=${userId}`);
+    return this.http.get<any>(`${environment.apiUrl}/student/profile?user_id=${userId}`);
   }
 
   updateStudentProfile(userId: number, profileData: any): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/update-student-profile.php`, {
+    return this.http.put<any>(`${environment.apiUrl}/student/profile`, {
       user_id: userId,
       ...profileData
     });
   }
 
   getStudentMedicalData(studentId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/get-student-medical-data.php?student_id=${studentId}`);
+    return this.http.get<any>(`${environment.apiUrl}/student/medical-data?student_id=${studentId}`);
   }
 
   getStudentQRCode(studentId: number): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/get-student-qr.php`, {
-      student_id: studentId
-    });
+    return this.http.get<any>(`${environment.apiUrl}/student/qr?student_id=${studentId}`);
   }
 
   // TODO: Implement these methods when backend APIs are ready
   getAll(): Observable<any> {
     // Placeholder - return empty array for now
-    return this.http.get<any>(`${environment.apiUrl}/get-all-students.php`);
+    return this.http.get<any>(`${environment.apiUrl}/students`);
   }
 
   getById(id: number): Observable<any> {
     // Placeholder - return student by ID
-    return this.http.get<any>(`${environment.apiUrl}/get-student.php?id=${id}`);
+    return this.http.get<any>(`${environment.apiUrl}/students/${id}`);
   }
 }
