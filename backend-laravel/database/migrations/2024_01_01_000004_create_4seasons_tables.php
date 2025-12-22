@@ -43,7 +43,7 @@ return new class extends Migration
         Schema::create('students', function (Blueprint $table) {
             $table->increments('student_id');
             $table->string('student_number', 30)->unique();
-            $table->unsignedBigInteger('user_id')->nullable(); // Changed to match Laravel's users.id
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('first_name', 80);
             $table->string('middle_name', 80)->nullable();
             $table->string('last_name', 80);
@@ -58,13 +58,13 @@ return new class extends Migration
             $table->boolean('is_active')->default(1);
             $table->datetime('deleted_at')->nullable();
             
-            $table->foreign('user_id')->references('id')->on('users'); // Reference Laravel's users.id
+            $table->foreign('user_id')->references('id')->on('users');
         });
 
         // Create advisers table
         Schema::create('advisers', function (Blueprint $table) {
             $table->increments('adviser_id');
-            $table->unsignedBigInteger('user_id')->nullable(); // Changed to match Laravel's users.id
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('first_name', 80)->nullable();
             $table->string('last_name', 80)->nullable();
             $table->string('employee_number', 50)->nullable()->unique();
@@ -73,26 +73,26 @@ return new class extends Migration
             $table->boolean('is_active')->default(1);
             $table->datetime('deleted_at')->nullable();
             
-            $table->foreign('user_id')->references('id')->on('users'); // Reference Laravel's users.id
+            $table->foreign('user_id')->references('id')->on('users');
         });
 
         // Create clinic_staff table
         Schema::create('clinic_staff', function (Blueprint $table) {
             $table->increments('clinic_staff_id');
-            $table->unsignedBigInteger('user_id')->nullable(); // Changed to match Laravel's users.id
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('staff_code', 50)->nullable()->unique();
             $table->string('position', 80)->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->boolean('is_active')->default(1);
             $table->datetime('deleted_at')->nullable();
             
-            $table->foreign('user_id')->references('id')->on('users'); // Reference Laravel's users.id
+            $table->foreign('user_id')->references('id')->on('users');
         });
 
         // Create parents table
         Schema::create('parents', function (Blueprint $table) {
             $table->increments('parent_id');
-            $table->unsignedBigInteger('user_id')->nullable(); // Changed to match Laravel's users.id
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('first_name', 80);
             $table->string('last_name', 80);
             $table->string('relation', 50)->nullable();
@@ -103,19 +103,19 @@ return new class extends Migration
             $table->boolean('is_active')->default(1);
             $table->datetime('deleted_at')->nullable();
             
-            $table->foreign('user_id')->references('id')->on('users'); // Reference Laravel's users.id
+            $table->foreign('user_id')->references('id')->on('users');
         });
 
         // Create activity_logs table
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->bigIncrements('log_id');
-            $table->unsignedBigInteger('user_id')->nullable(); // Changed to match Laravel's users.id
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('action', 150)->nullable();
             $table->text('details')->nullable();
             $table->string('ip_address', 50)->nullable();
             $table->timestamp('created_at')->useCurrent();
             
-            $table->foreign('user_id')->references('id')->on('users'); // Reference Laravel's users.id
+            $table->foreign('user_id')->references('id')->on('users');
         });
 
         // Create medical_visits table

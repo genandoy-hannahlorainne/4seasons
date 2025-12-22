@@ -36,5 +36,9 @@ export const routes: Routes = [
     path: 'medical-visits',
     loadChildren: () => import('./features/medical-visits/medical-visits.routes').then(m => m.MEDICAL_VISIT_ROUTES),
     canActivate: [authGuard]
+  },
+  {
+    path: '**',
+    redirectTo: ''
   }
 ];

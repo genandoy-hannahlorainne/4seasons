@@ -52,355 +52,273 @@ $font-size-4xl: 2.9rem;
 $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
 .student-dashboard {
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  background: $color-background;
-  font-family: $font-primary;
+  padding: 2rem;
+  background: #f8f9fa;
+  min-height: 100vh;
 
-    .top-nav {
-      background: $gradient-nav;
-      padding: 0.75rem $spacing-lg;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: $color-white;
-      flex-shrink: 0;
+  .welcome-section {
+    margin-bottom: 1rem;
+    background: $color-white;
+    padding: 1.5rem;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
 
-      .nav-links {
-        display: flex;
-        gap: $spacing-lg;
-
-        .nav-link {
-          color: $color-white;
-          text-decoration: none;
-          font-size: $font-size-xl;
-          font-family: $font-secondary;
-          font-weight: 600;
-          padding: $spacing-xs 0;
-          border-bottom: 2px solid transparent;
-          transition: border-color 0.3s;
-
-          &.active,
-          &:hover {
-            border-bottom-color: $color-white;
-          }
-        }
-      }
-
-      .nav-icons {
-        display: flex;
-        gap: $spacing-sm;
-
-        .icon-btn {
-          background: rgba(255, 255, 255, 0.2);
-          border: none;
-          border-radius: 50%;
-          width: 40px;
-          height: 40px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.3s;
-          padding: 8px;
-
-          &:hover {
-            background: rgba(255, 255, 255, 0.3);
-          }
-
-          .icon-img {
-            width: 30px;
-            height: 30px;
-            object-fit: contain;
-          }
-
-          &.notification .icon-img {
-            filter: brightness(0) invert(1);
-          }
-
-          &.profile .icon-img {
-            border-radius: 50%;
-          }
-
-        }
-      }
+    h1 {
+      font-size: 2rem;
+      font-family: $font-secondary;
+      color: $color-text-dark;
+      margin-bottom: 0.25rem;
+      font-weight: 1000;
     }
 
-    .dashboard-content {
-      padding: 1rem $spacing-lg;
-      max-width: 1400px;
-      margin: 0 auto;
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
+    .student-info {
+      color: $color-text-muted;
+      font-size: $font-size-base;
+      font-family: $font-primary;
     }
+  }
 
-    .welcome-section {
-      margin-bottom: 1rem;
+  .info-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    .info-card {
       background: $color-white;
-      padding: 1.5rem;
       border-radius: $radius-lg;
+      padding: 1.25rem 1rem;
       box-shadow: $shadow-card;
+      position: relative;
+      overflow: hidden;
 
-      h1 {
-        font-size: 2rem;
-        font-family: $font-secondary;
-        color: $color-text-dark;
-        margin-bottom: 0.25rem;
-        font-weight: 1000;
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        opacity: 0.1;
+        z-index: 0;
       }
 
-      .student-info {
-        color: $color-text-muted;
+      &.bmi {
+        background: $gradient-bmi;
+        color: $color-white;
+      }
+
+      &.blood-type {
+        background: $gradient-blood-type;
+        color: $color-white;
+      }
+
+      &.allergies {
+        background: $gradient-allergies;
+        color: $color-white;
+      }
+
+      &.last-visit {
+        background: $gradient-last-visit;
+        color: $color-white;
+      }
+
+      .card-value {
+        font-size: 2.25rem;
+        font-family: $font-secondary;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .card-label {
         font-size: $font-size-base;
         font-family: $font-primary;
-      }
-    }
-
-    .info-cards {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
-      margin-bottom: 1rem;
-
-      .info-card {
-        background: $color-white;
-        border-radius: $radius-lg;
-        padding: 1.25rem 1rem;
-        box-shadow: $shadow-card;
+        opacity: 0.9;
         position: relative;
-        overflow: hidden;
+        z-index: 1;
+      }
+    }
+  }
 
-        &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          opacity: 0.1;
-          z-index: 0;
-        }
+  .main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+    flex: 1;
+    min-height: 0;
 
-        &.bmi {
-          background: $gradient-bmi;
-          color: $color-white;
-        }
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+  }
 
-        &.blood-type {
-          background: $gradient-blood-type;
-          color: $color-white;
-        }
+  .left-column,
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 0;
+  }
 
-        &.allergies {
-          background: $gradient-allergies;
-          color: $color-white;
-        }
+  .card {
+    background: $color-white;
+    border-radius: $radius-lg;
+    padding: 1rem;
+    box-shadow: $shadow-card;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 
-        &.last-visit {
-          background: $gradient-last-visit;
-          color: $color-white;
-        }
+    h2 {
+      font-size: $font-size-xl;
+      font-family: $font-secondary;
+      color: $color-primary;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
 
-        .card-value {
-          font-size: 2.25rem;
-          font-family: $font-secondary;
-          font-weight: 700;
-          margin-bottom: 0.25rem;
-          position: relative;
-          z-index: 1;
-        }
+    &.medical-info {
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
 
-        .card-label {
-          font-size: $font-size-base;
-          font-family: $font-primary;
-          opacity: 0.9;
-          position: relative;
-          z-index: 1;
+        .info-item {
+          .info-label {
+            color: $color-text-muted;
+            font-size: $font-size-sm;
+            font-family: $font-primary;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+          }
+
+          .info-value {
+            color: $color-text-dark;
+            font-size: $font-size-lg;
+            font-family: $font-secondary;
+            font-weight: 700;
+          }
         }
       }
     }
 
-    .main-content {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 1rem;
+    &.immunization-records {
       flex: 1;
       min-height: 0;
 
-      @media (max-width: 1024px) {
-        grid-template-columns: 1fr;
-      }
-    }
+      .immunization-list {
+        overflow-y: auto;
 
-    .left-column,
-    .right-column {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      min-height: 0;
-    }
-
-    .card {
-      background: $color-white;
-      border-radius: $radius-lg;
-      padding: 1rem;
-      box-shadow: $shadow-card;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-
-      h2 {
-        font-size: $font-size-xl;
-        font-family: $font-secondary;
-        color: $color-primary;
-        margin-bottom: 1rem;
-        font-weight: 700;
-      }
-
-      &.medical-info {
-        .info-grid {
-          display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          gap: 1rem;
-
-          .info-item {
-            .info-label {
-              color: $color-text-muted;
-              font-size: $font-size-sm;
-              font-family: $font-primary;
-              font-weight: 500;
-              margin-bottom: 0.25rem;
-            }
-
-            .info-value {
-              color: $color-text-dark;
-              font-size: $font-size-lg;
-              font-family: $font-secondary;
-              font-weight: 700;
-            }
-          }
-        }
-      }
-
-      &.immunization-records {
-        flex: 1;
-        min-height: 0;
-
-        .immunization-list {
-          overflow-y: auto;
-
-          .immunization-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid $color-border;
-
-            &:last-child {
-              border-bottom: none;
-            }
-
-            .immunization-info {
-              .immunization-name {
-                font-weight: 700;
-                font-family: $font-secondary;
-                font-size: $font-size-base;
-                color: $color-text-dark;
-                margin-bottom: 0.15rem;
-              }
-
-              .immunization-date {
-                font-size: $font-size-xs;
-                font-family: $font-primary;
-                font-weight: 500;
-                color: $color-text-muted;
-              }
-            }
-
-            .status-badge {
-              padding: 0.35rem 0.75rem;
-              border-radius: $radius-xl;
-              font-size: $font-size-xs;
-              font-family: $font-primary;
-              font-weight: 500;
-
-              &.updated {
-                background: $status-success-bg;
-                color: $status-success-text;
-              }
-
-              &.outdated {
-                background: $status-error-bg;
-                color: $status-error-text;
-              }
-            }
-          }
-        }
-      }
-
-      &.known-allergies {
-        .card-header {
+        .immunization-item {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 1rem;
+          padding: 0.75rem 0;
+          border-bottom: 1px solid $color-border;
 
-          h2 {
-            margin-bottom: 0;
+          &:last-child {
+            border-bottom: none;
           }
 
-          .edit-btn {
-            background: transparent;
-            border: 1px solid $color-primary;
-            color: $color-primary;
-            padding: 0.4rem 0.75rem;
-            border-radius: $radius-sm;
-            cursor: pointer;
-            font-size: $font-size-xs;
-            font-family: $font-primary;
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            transition: all 0.3s;
-
-            &:hover {
-              background: $color-primary;
-              color: $color-white;
-
-              .edit-icon-img {
-                filter: brightness(0) invert(1);
-              }
+          .immunization-info {
+            .immunization-name {
+              font-weight: 700;
+              font-family: $font-secondary;
+              font-size: $font-size-base;
+              color: $color-text-dark;
+              margin-bottom: 0.15rem;
             }
 
-            .edit-icon-img {
-              width: 18px;
-              height: 18px;
-              object-fit: contain;
-              transition: filter 0.3s;
+            .immunization-date {
+              font-size: $font-size-xs;
+              font-family: $font-primary;
+              font-weight: 500;
+              color: $color-text-muted;
+            }
+          }
+
+          .status-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: $radius-xl;
+            font-size: $font-size-xs;
+            font-family: $font-primary;
+            font-weight: 500;
+
+            &.updated {
+              background: $status-success-bg;
+              color: $status-success-text;
+            }
+
+            &.outdated {
+              background: $status-error-bg;
+              color: $status-error-text;
             }
           }
         }
+      }
+    }
 
-        .allergies-list {
-          .allergy-item {
-            padding: 0.75rem;
-            background: $color-light-bg;
-            border-radius: $radius-md;
-            margin-bottom: 0.65rem;
-            color: $color-text-dark;
-            font-size: $font-size-base;
-            font-family: $font-primary;
-            font-weight: 600;
+    &.known-allergies {
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
 
-            &:last-child {
-              margin-bottom: 0;
+        h2 {
+          margin-bottom: 0;
+        }
+
+        .edit-btn {
+          background: transparent;
+          border: 1px solid $color-primary;
+          color: $color-primary;
+          padding: 0.4rem 0.75rem;
+          border-radius: $radius-sm;
+          cursor: pointer;
+          font-size: $font-size-xs;
+          font-family: $font-primary;
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          transition: all 0.3s;
+
+          &:hover {
+            background: $color-primary;
+            color: $color-white;
+
+            .edit-icon-img {
+              filter: brightness(0) invert(1);
             }
+          }
+
+          .edit-icon-img {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+            transition: filter 0.3s;
+          }
+        }
+      }
+
+      .allergies-list {
+        .allergy-item {
+          padding: 0.75rem;
+          background: $color-light-bg;
+          border-radius: $radius-md;
+          margin-bottom: 0.65rem;
+          color: $color-text-dark;
+          font-size: $font-size-base;
+          font-family: $font-primary;
+          font-weight: 600;
+
+          &:last-child {
+            margin-bottom: 0;
           }
         }
       }
     }
   }
+}
