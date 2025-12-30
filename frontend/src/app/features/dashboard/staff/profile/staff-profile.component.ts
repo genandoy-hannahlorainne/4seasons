@@ -140,6 +140,14 @@ import { AuthService } from '../../../../core/services/auth.service';
         </div>
       </div>
     </div>
+
+    <!-- Logout Modal -->
+    <div class="modal-overlay" *ngIf="showLogoutModal">
+      <div class="modal-content logout-modal">
+        <div class="spinner"></div>
+        <p>Logging out...</p>
+      </div>
+    </div>
   `,
   styles: [`
     .staff-profile {
@@ -337,6 +345,29 @@ import { AuthService } from '../../../../core/services/auth.service';
         gap: 1rem;
         margin-top: 1.5rem;
       }
+
+      &.logout-modal {
+        max-width: 300px;
+        text-align: center;
+        padding: 3rem 2rem;
+
+        .spinner {
+          width: 50px;
+          height: 50px;
+          margin: 0 auto 1rem;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #007bff;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        p { font-size: 1.1rem; color: #2c3e50; margin: 0; font-weight: 600; }
+      }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     @media (max-width: 768px) {
@@ -349,6 +380,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class StaffProfileComponent implements OnInit {
   editMode = false;
   showPasswordModal = false;
+  showLogoutModal = false;
   originalProfileData: any = {};
 
   profileData = {
@@ -423,7 +455,10 @@ export class StaffProfileComponent implements OnInit {
   }
 
   logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+    this.showLogoutModal = true;
+    setTimeout(() => {
+      this.authService.logout();
+      this.router.navigate(['/login']);
+    }, 1500);
   }
 }

@@ -55,4 +55,8 @@ export const dashboardRoutes: Routes = [
       { path: 'profile', component: StaffProfileComponent }
     ]
   },
+  {
+    path: 'admin',
+    component: AdminDashboardComponent
+  }
 ];
