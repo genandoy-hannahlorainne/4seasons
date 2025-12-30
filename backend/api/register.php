@@ -106,8 +106,8 @@ if (!empty($data->role) && !empty($data->password)) {
             }
             
             $studentQuery = "INSERT INTO students 
-                           (user_id, student_number, first_name, middle_name, last_name, birth_date, gender) 
-                           VALUES (:user_id, :student_number, :first_name, :middle_name, :last_name, :birth_date, :gender)";
+                           (user_id, student_number, first_name, middle_name, last_name, birth_date, gender, grade_level, section) 
+                           VALUES (:user_id, :student_number, :first_name, :middle_name, :last_name, :birth_date, :gender, :grade_level, :section)";
             $studentStmt = $db->prepare($studentQuery);
             $studentStmt->bindParam(":user_id", $user_id);
             $studentStmt->bindParam(":student_number", $data->studentNumber);
@@ -122,18 +122,28 @@ if (!empty($data->role) && !empty($data->password)) {
             $genderMap = ['male' => 'M', 'female' => 'F', 'other' => 'Other'];
             $gender = $genderMap[strtolower($data->gender ?? '')] ?? 'Other';
             $studentStmt->bindParam(":gender", $gender);
+            
+            // Grade level and section
+            $gradeLevel = $data->gradeLevel ?? null;
+            $studentStmt->bindParam(":grade_level", $gradeLevel);
+            $section = $data->section ?? null;
+            $studentStmt->bindParam(":section", $section);
             $studentStmt->execute();
             
         } elseif ($data->role === 'adviser') {
             $adviserQuery = "INSERT INTO advisers 
-                           (user_id, first_name, last_name, contact_phone) 
-                           VALUES (:user_id, :first_name, :last_name, :contact_phone)";
+                           (user_id, first_name, last_name, contact_phone, grade_level, section) 
+                           VALUES (:user_id, :first_name, :last_name, :contact_phone, :grade_level, :section)";
             $adviserStmt = $db->prepare($adviserQuery);
             $adviserStmt->bindParam(":user_id", $user_id);
             $adviserStmt->bindParam(":first_name", $data->firstName);
             $adviserStmt->bindParam(":last_name", $data->lastName);
             $contactPhone = $data->contactNumber ?? null;
             $adviserStmt->bindParam(":contact_phone", $contactPhone);
+            $gradeLevel = $data->gradeLevel ?? null;
+            $adviserStmt->bindParam(":grade_level", $gradeLevel);
+            $section = $data->section ?? null;
+            $adviserStmt->bindParam(":section", $section);
             $adviserStmt->execute();
             
         } elseif ($data->role === 'clinic-staff') {

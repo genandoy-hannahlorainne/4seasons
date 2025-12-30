@@ -1,8 +1,8 @@
 <?php
 // Handle CORS - must be first thing before any output
-header("Access-Control-Allow-Origin: http://localhost:4200");
+header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, X-Requested-With");
 header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json; charset=UTF-8");
 
@@ -57,7 +57,7 @@ if (!empty($data->username) && !empty($data->password)) {
                     $userInfo['student_info'] = $studentStmt->fetch(PDO::FETCH_ASSOC);
                 }
             } elseif ($row['role_name'] === 'Adviser') {
-                $adviserQuery = "SELECT adviser_id, first_name, last_name, employee_number 
+                $adviserQuery = "SELECT adviser_id, first_name, last_name, employee_number, grade_level, section 
                                 FROM advisers WHERE user_id = :user_id AND is_active = 1";
                 $adviserStmt = $db->prepare($adviserQuery);
                 $adviserStmt->bindParam(":user_id", $row['user_id']);

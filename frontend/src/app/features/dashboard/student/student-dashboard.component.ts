@@ -106,6 +106,12 @@ export class StudentDashboardComponent implements OnInit {
             this.weight = data.vitals.weight_kg ? `${data.vitals.weight_kg} kg` : '--';
             this.bmi = data.vitals.bmi || '--';
             this.bmiPercentage = data.vitals.bmi ? `${data.vitals.bmi}%` : '--';
+          } else {
+            // Use default values when no vitals are available
+            this.height = '--';
+            this.weight = '--';
+            this.bmi = '--';
+            this.bmiPercentage = '--';
           }
           
           // Set allergies
@@ -124,6 +130,8 @@ export class StudentDashboardComponent implements OnInit {
               lastDate: this.formatDate(imm.date_administered),
               status: this.getImmunizationStatus(imm.date_administered)
             }));
+          } else {
+            this.immunizationRecords = [];
           }
           
           // Set last visit

@@ -1,0 +1,485 @@
+.personal-info-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.header {
+  margin-bottom: 3rem;
+
+  .back-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+    text-decoration: none;
+    display: inline-block;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #0056b3;
+      text-decoration: underline;
+    }
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin: 0;
+  }
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e9ecef;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: #6c757d;
+    font-size: 1.1rem;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #f5c6cb;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.success-message {
+  background: #d4edda;
+  color: #155724;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #c3e6cb;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.content {
+  display: grid;
+  gap: 2rem;
+}
+
+.info-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  .card-header {
+    background: #f8f9fa;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin: 0;
+    }
+
+    .readonly-badge {
+      background: #6c757d;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .edit-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background: #0056b3;
+      }
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 0.5rem;
+
+      .save-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.2s ease;
+
+        &:hover:not(:disabled) {
+          background: #218838;
+        }
+
+        &:disabled {
+          background: #6c757d;
+          cursor: not-allowed;
+        }
+      }
+
+      .cancel-btn {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background: #5a6268;
+        }
+      }
+    }
+  }
+
+  .form-grid {
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+
+    .form-group {
+      &.full-width {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      input, textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s ease;
+        box-sizing: border-box;
+
+        &:focus {
+          outline: none;
+          border-color: #007bff;
+        }
+
+        &[readonly] {
+          background: #f8f9fa;
+          color: #6c757d;
+          cursor: not-allowed;
+        }
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+    }
+  }
+}
+
+// Medical History Specific Styles
+.medical-section {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e9ecef;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+  }
+
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.75rem;
+  }
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.checkbox-group {
+  label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .checkbox-options {
+    display: flex;
+    gap: 1rem;
+
+    label {
+      font-weight: normal;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0;
+    }
+  }
+}
+
+.checkbox-item {
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: normal;
+    color: #495057;
+    cursor: pointer;
+
+    input[type="checkbox"] {
+      margin: 0;
+    }
+  }
+}
+
+.radio-options {
+  display: flex;
+  gap: 2rem;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: normal;
+    color: #495057;
+    cursor: pointer;
+
+    input[type="radio"] {
+      margin: 0;
+    }
+  }
+}
+
+.allergies-display {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+
+  h4 {
+    margin-bottom: 0.75rem;
+    color: #2c3e50;
+  }
+
+  .allergy-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+
+    .allergy-text {
+      font-weight: 500;
+      color: #2c3e50;
+    }
+
+    .allergy-severity {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+
+      &.severity-mild {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      &.severity-moderate {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      &.severity-severe {
+        background: #f8d7da;
+        color: #721c24;
+      }
+    }
+  }
+
+  .no-allergies {
+    padding: 1rem;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    background: white;
+    border-radius: 6px;
+  }
+}
+
+// Vaccination Table
+.vaccination-table {
+  padding: 2rem;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    td {
+      color: #495057;
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+  }
+}
+
+// Medication Section
+.medication-section {
+  padding: 2rem;
+
+  p {
+    margin-bottom: 1rem;
+    color: #495057;
+    line-height: 1.5;
+  }
+
+  .medication-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+
+  .medication-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: normal;
+      color: #495057;
+      cursor: pointer;
+
+      input[type="checkbox"] {
+        margin: 0;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .personal-info-container {
+    padding: 1rem;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .info-card .form-grid {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+
+  .info-card .card-header {
+    padding: 1rem 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+
+    .edit-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
+  .checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vaccination-table {
+    padding: 1rem;
+    overflow-x: auto;
+
+    table {
+      min-width: 600px;
+    }
+  }
+
+  .medication-options {
+    grid-template-columns: 1fr;
+  }
+}

@@ -2,47 +2,85 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    // Use user_id as primary key (matches existing database)
+    protected $primaryKey = 'user_id';
+
     protected $fillable = [
-        'name',
+        'role_id',
+        'username',
+        'password_hash',
         'email',
-        'password',
+        'phone',
+        'full_name',
+        'is_active'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
-        'password',
+        'password_hash',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'is_active' => 'boolean',
+        'deleted_at' => 'datetime'
+    ];
+
+    // Override the password attribute name
+    public function getAuthPassword()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->password_hash;
+    }
+
+    // Relationships
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'role_id');
+    }
+
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'user_id', 'user_id');
+    }
+
+    public function adviser()
+    {
+        return $this->hasOne(Adviser::class, 'user_id', 'user_id');
+    }
+
+    public function clinicStaff()
+    {
+        return $this->hasOne(ClinicStaff::class, 'user_id', 'user_id');
+    }
+
+    public function parent()
+    {
+        return $this->hasOne(ParentModel::class, 'user_id', 'user_id');
+    }
+
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class, 'user_id', 'user_id');
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', 1)->whereNull('deleted_at');
+    }
+
+    public function scopeByRole($query, $roleName)
+    {
+        return $query->whereHas('role', function ($q) use ($roleName) {
+            $q->where('role_name', $roleName);
+        });
     }
 }
