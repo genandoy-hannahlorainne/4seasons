@@ -2,7 +2,7 @@
 // CORS headers
 header("Access-Control-Allow-Origin: http://localhost:4200");
 header("Access-Control-Allow-Methods: GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id");
 header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json; charset=UTF-8");
 
@@ -17,38 +17,111 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
-$student_id = isset($_GET['student_id']) ? $_GET['student_id'] : null;
+// Get student_id from query parameter (direct) or user_id (indirect)
+$student_id = null;
+$student = null;
 
-if (!$student_id) {
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Student ID is required'
-    ]);
-    exit();
+if (isset($_GET['student_id'])) {
+    // Direct student_id provided
+    $student_id = $_GET['student_id'];
+    
+    // Get student info
+    $studentQuery = "SELECT 
+                        s.student_id,
+                        s.student_number,
+                        s.first_name,
+                        s.middle_name,
+                        s.last_name,
+                        s.birth_date,
+                        s.gender,
+                        s.blood_type,
+                        s.address,
+                        s.emergency_contact,
+                        s.grade_level,
+                        s.section
+                     FROM students s
+                     WHERE s.student_id = :student_id AND s.is_active = 1";
+    
+    $studentStmt = $db->prepare($studentQuery);
+    $studentStmt->bindParam(":student_id", $student_id);
+    $studentStmt->execute();
+    $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
+    
+} elseif (isset($_GET['user_id']) || isset($_SERVER['HTTP_USER_ID'])) {
+    // Get user_id from header or query parameter
+    $user_id = isset($_SERVER['HTTP_USER_ID']) ? $_SERVER['HTTP_USER_ID'] : $_GET['user_id'];
+    
+    // Get student info from user_id
+    $studentQuery = "SELECT 
+                        s.student_id,
+                        s.student_number,
+                        s.first_name,
+                        s.middle_name,
+                        s.last_name,
+                        s.birth_date,
+                        s.gender,
+                        s.blood_type,
+                        s.address,
+                        s.emergency_contact,
+                        s.grade_level,
+                        s.section
+                     FROM students s
+                     WHERE s.user_id = :user_id AND s.is_active = 1";
+    
+    $studentStmt = $db->prepare($studentQuery);
+    $studentStmt->bindParam(":user_id", $user_id);
+    $studentStmt->execute();
+    $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($student) {
+        $student_id = $student['student_id'];
+    }
+} else {
+    // Default for testing
+    $user_id = 19;
+    $studentQuery = "SELECT 
+                        s.student_id,
+                        s.student_number,
+                        s.first_name,
+                        s.middle_name,
+                        s.last_name,
+                        s.birth_date,
+                        s.gender,
+                        s.blood_type,
+                        s.address,
+                        s.emergency_contact,
+                        s.grade_level,
+                        s.section
+                     FROM students s
+                     WHERE s.user_id = :user_id AND s.is_active = 1";
+    
+    $studentStmt = $db->prepare($studentQuery);
+    $studentStmt->bindParam(":user_id", $user_id);
+    $studentStmt->execute();
+    $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($student) {
+        $student_id = $student['student_id'];
+    }
 }
 
 try {
-    // Get latest vitals
-    $vitalsQuery = "SELECT 
-                        v.weight_kg,
-                        v.height_cm,
-                        v.bmi,
-                        v.bmi_category,
-                        v.recorded_at
-                    FROM vitals v
-                    INNER JOIN medical_visits mv ON v.visit_id = mv.visit_id
-                    WHERE mv.student_id = :student_id
-                    ORDER BY v.recorded_at DESC
-                    LIMIT 1";
-    
-    $vitalsStmt = $db->prepare($vitalsQuery);
-    $vitalsStmt->bindParam(":student_id", $student_id);
-    $vitalsStmt->execute();
-    $vitals = $vitalsStmt->fetch(PDO::FETCH_ASSOC);
-    
+    if (!$student || !$student_id) {
+        http_response_code(404);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Student not found'
+        ]);
+        exit();
+    }
+
+    // Get vitals - for now, we'll return null since vitals aren't stored in separate columns
+    // In the future, vitals could be stored in a separate table or added to medical_visits
+    $vitals = null;
+
     // Get allergies
     $allergiesQuery = "SELECT 
+                          allergy_id,
                           allergy_text,
                           severity,
                           recorded_at
@@ -61,8 +134,9 @@ try {
     $allergiesStmt->execute();
     $allergies = $allergiesStmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Get immunizations
+    // Get immunizations from the immunizations table
     $immunizationsQuery = "SELECT 
+                              immunization_id,
                               vaccine_name,
                               date_administered,
                               administered_by,
@@ -80,7 +154,8 @@ try {
     $lastVisitQuery = "SELECT 
                           visit_datetime,
                           visit_type,
-                          chief_complaint
+                          chief_complaint,
+                          notes
                        FROM medical_visits
                        WHERE student_id = :student_id
                        ORDER BY visit_datetime DESC
@@ -91,16 +166,73 @@ try {
     $lastVisitStmt->execute();
     $lastVisit = $lastVisitStmt->fetch(PDO::FETCH_ASSOC);
     
-    http_response_code(200);
-    echo json_encode([
+    // Get visit counts
+    $recentVisitsQuery = "SELECT COUNT(*) as count
+                         FROM medical_visits
+                         WHERE student_id = :student_id
+                         AND visit_datetime >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+    
+    $recentVisitsStmt = $db->prepare($recentVisitsQuery);
+    $recentVisitsStmt->bindParam(":student_id", $student_id);
+    $recentVisitsStmt->execute();
+    $recentVisitsCount = $recentVisitsStmt->fetch(PDO::FETCH_ASSOC)['count'];
+    
+    $totalVisitsQuery = "SELECT COUNT(*) as count
+                        FROM medical_visits
+                        WHERE student_id = :student_id";
+    
+    $totalVisitsStmt = $db->prepare($totalVisitsQuery);
+    $totalVisitsStmt->bindParam(":student_id", $student_id);
+    $totalVisitsStmt->execute();
+    $totalVisitsCount = $totalVisitsStmt->fetch(PDO::FETCH_ASSOC)['count'];
+    
+    // Format response for dashboard
+    $response = [
         'success' => true,
         'data' => [
-            'vitals' => $vitals ?: null,
-            'allergies' => $allergies,
-            'immunizations' => $immunizations,
-            'last_visit' => $lastVisit ?: null
+            'vitals' => $vitals,
+            'allergies' => array_map(function($allergy) {
+                return [
+                    'allergy_id' => (int)$allergy['allergy_id'],
+                    'allergy_text' => $allergy['allergy_text'],
+                    'severity' => $allergy['severity'],
+                    'recorded_at' => $allergy['recorded_at']
+                ];
+            }, $allergies),
+            'immunizations' => array_map(function($imm) {
+                return [
+                    'immunization_id' => (int)$imm['immunization_id'],
+                    'vaccine_name' => $imm['vaccine_name'],
+                    'date_administered' => $imm['date_administered'],
+                    'administered_by' => $imm['administered_by'],
+                    'notes' => $imm['notes']
+                ];
+            }, $immunizations),
+            'last_visit' => $lastVisit ? [
+                'visit_datetime' => $lastVisit['visit_datetime'],
+                'visit_type' => $lastVisit['visit_type'],
+                'chief_complaint' => $lastVisit['chief_complaint'],
+                'notes' => $lastVisit['notes']
+            ] : null,
+            'personal_info' => [
+                'student_id' => (int)$student['student_id'],
+                'student_number' => $student['student_number'],
+                'full_name' => trim($student['first_name'] . ' ' . ($student['middle_name'] ? $student['middle_name'] . ' ' : '') . $student['last_name']),
+                'birth_date' => $student['birth_date'],
+                'gender' => $student['gender'],
+                'blood_type' => $student['blood_type'],
+                'address' => $student['address'],
+                'emergency_contact' => $student['emergency_contact'],
+                'grade_level' => $student['grade_level'],
+                'section' => $student['section']
+            ],
+            'recent_visits_count' => (int)$recentVisitsCount,
+            'total_visits_count' => (int)$totalVisitsCount
         ]
-    ]);
+    ];
+    
+    http_response_code(200);
+    echo json_encode($response);
     
 } catch (Exception $e) {
     http_response_code(500);

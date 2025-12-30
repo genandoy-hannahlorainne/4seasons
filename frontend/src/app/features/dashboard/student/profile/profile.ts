@@ -30,7 +30,6 @@ export class StudentProfileComponent implements OnInit {
   // QR Code data
   qrCodeData = '';
   qrCodeLoading = false;
-  qrImageLoading = true;
   showQRModal = false;
   studentId: number | null = null;
 
@@ -292,62 +291,45 @@ export class StudentProfileComponent implements OnInit {
     console.log('Loading QR code for student_id:', this.studentId);
     this.qrCodeLoading = true;
     
-    // Set qrCodeData to trigger the image display
-    // The actual QR code will be loaded via the image URL
-    this.qrCodeData = 'loaded';
+    // Generate QR code data as JSON string
+    const qrData = {
+      student_id: this.studentId,
+      student_number: this.profileForm.get('studentNumber')?.value,
+      name: `${this.profileForm.get('firstName')?.value} ${this.profileForm.get('lastName')?.value}`,
+      timestamp: new Date().toISOString()
+    };
+    
+    this.qrCodeData = JSON.stringify(qrData);
     this.qrCodeLoading = false;
     
-    console.log('QR Code ready to display');
+    console.log('QR Code data:', this.qrCodeData);
   }
 
   viewQRCode(): void {
     this.showQRModal = true;
-    this.qrImageLoading = true;
-  }
-
-  onQRImageLoad(event: any): void {
-    console.log('QR Code image loaded successfully');
-    this.qrImageLoading = false;
   }
 
   closeQRModal(): void {
     this.showQRModal = false;
   }
 
-  getQRCodeImageUrl(): string {
-    if (!this.studentId) {
-      return '';
-    }
-    return `http://localhost:8080/api/generate-qr-image.php?student_id=${this.studentId}`;
-  }
-
-  onQRImageError(event: any): void {
-    console.error('Failed to load QR code image');
-    console.error('Image URL:', this.getQRCodeImageUrl());
-    console.error('Student ID:', this.studentId);
-    
-    // Try to reload once
-    if (!event.target.dataset.retried) {
-      event.target.dataset.retried = 'true';
-      setTimeout(() => {
-        event.target.src = this.getQRCodeImageUrl() + '&retry=' + Date.now();
-      }, 1000);
-    } else {
-      // Show error message
-      event.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="300" height="300" fill="white"/><text x="150" y="150" text-anchor="middle" fill="red" font-size="16">QR Code Load Error</text></svg>';
-    }
-  }
-
   downloadQRCode(): void {
-    if (!this.studentId) {
-      return;
+    // Get the QR code canvas element and download it
+    const canvas = document.querySelector('.qr-code-container canvas') as HTMLCanvasElement;
+    if (canvas) {
+      const link = document.createElement('a');
+      link.download = `student-qr-${this.profileForm.get('studentNumber')?.value}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } else {
+      // Fallback: try to get the image
+      const img = document.querySelector('.qr-code-container img') as HTMLImageElement;
+      if (img) {
+        const link = document.createElement('a');
+        link.download = `student-qr-${this.profileForm.get('studentNumber')?.value}.png`;
+        link.href = img.src;
+        link.click();
+      }
     }
-    
-    const url = this.getQRCodeImageUrl();
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `student-qr-${this.profileForm.get('studentNumber')?.value}.png`;
-    link.target = '_blank';
-    link.click();
   }
 }
