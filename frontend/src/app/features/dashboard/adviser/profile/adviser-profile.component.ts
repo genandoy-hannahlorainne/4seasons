@@ -276,7 +276,7 @@ export class AdviserProfileComponent implements OnInit {
       // Fetch advisory class from API (same as dashboard)
       if (currentUser.user_id) {
         this.adviserService.getAdvisoryStudents(currentUser.user_id).subscribe({
-          next: (response) => {
+          next: (response: any) => {
             if (response.success && response.adviser) {
               this.profileData.advisoryClass = response.adviser.advisory_class || 'Not assigned';
             }
