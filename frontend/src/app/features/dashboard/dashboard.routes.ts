@@ -22,35 +22,12 @@ import { AdminDashboardComponent } from './admin/admin-dashboard.component';
 export const dashboardRoutes: Routes = [
   { path: '', component: DashboardComponent, pathMatch: 'full' },
   {
-<<<<<<< HEAD
-    path: '',
-    component: DashboardComponent,
-    pathMatch: 'full'
-  },
-  {
-    path: 'student',
-    component: StudentLayoutComponent,
-    children: [
-      {
-        path: '',
-        component: StudentDashboardComponent
-      },
-      {
-        path: 'profile',
-        component: StudentProfileComponent
-      },
-      {
-        path: 'medical-records',
-        loadChildren: () => import('../medical-records/medical-records.routes').then(m => m.medicalRecordsRoutes)
-      }
-=======
     path: 'student',
     component: StudentLayoutComponent,
     children: [
       { path: '', component: StudentDashboardComponent },
       { path: 'profile', component: StudentProfileComponent },
       { path: 'medical-records', loadChildren: () => import('../medical-records/medical-records.routes').then(m => m.medicalRecordsRoutes) }
->>>>>>> 7ea2e6840451da15dacdbace72f4b619a61717b7
     ]
   },
   {
@@ -78,12 +55,4 @@ export const dashboardRoutes: Routes = [
       { path: 'profile', component: StaffProfileComponent }
     ]
   },
-<<<<<<< HEAD
-  {
-    path: 'admin',
-    component: AdminDashboardComponent
-  }
-=======
-  { path: 'admin', component: AdminDashboardComponent }
->>>>>>> 7ea2e6840451da15dacdbace72f4b619a61717b7
 ];

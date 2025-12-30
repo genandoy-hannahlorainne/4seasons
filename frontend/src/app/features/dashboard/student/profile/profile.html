@@ -1,26 +1,8 @@
-<<<<<<< HEAD
-<div class="profile-container">
-  <nav class="top-nav">
-    <div class="nav-links">
-      <a (click)="goBack()" class="nav-link">Dashboard</a>
-      <a href="#" class="nav-link active">MyMedical</a>
-    </div>
-    <div class="nav-icons">
-      <button class="icon-btn notification">
-        <img src="assets/notification-icon.png" alt="Notifications" class="icon-img">
-      </button>
-      <button class="icon-btn profile active">
-        <img [src]="getProfileIcon()" alt="Profile" class="icon-img">
-      </button>
-    </div>
-  </nav>
-=======
 <div class="student-profile">
   <div class="profile-header">
     <h1>Profile Settings</h1>
     <p>Manage your account information</p>
   </div>
->>>>>>> 7ea2e6840451da15dacdbace72f4b619a61717b7
 
   <!-- Loading State -->
   <div *ngIf="loading && !isEditing" class="loading-state">
@@ -28,6 +10,12 @@
     <p>Loading profile...</p>
   </div>
 
+  <!-- Loading State -->
+  <div *ngIf="loading && !isEditing" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading profile...</p>
+  </div>
+  
   <!-- Success/Error Messages -->
   <div *ngIf="successMessage" class="alert alert-success">✓ {{ successMessage }}</div>
   <div *ngIf="errorMessage" class="alert alert-danger">✕ {{ errorMessage }}</div>

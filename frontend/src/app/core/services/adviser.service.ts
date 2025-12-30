@@ -90,12 +90,10 @@ export class AdviserService {
 
   getAdviserDashboard(userId: number): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/get-adviser-dashboard.php?user_id=${userId}`);
-<<<<<<< HEAD
-=======
+
   }
 
   getAdvisoryStudents(userId: number): Observable<AdvisoryStudentsResponse> {
     return this.http.get<AdvisoryStudentsResponse>(`${environment.apiUrl}/get-advisory-students.php?user_id=${userId}`);
->>>>>>> 7ea2e6840451da15dacdbace72f4b619a61717b7
   }
 }
