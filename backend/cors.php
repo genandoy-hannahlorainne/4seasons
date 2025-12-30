@@ -1,9 +1,9 @@
 <?php
 // Global CORS handler - include this at the top of every API file
 if (!headers_sent()) {
-    header("Access-Control-Allow-Origin: http://localhost:4200");
+    header("Access-Control-Allow-Origin: *");
     header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, user_id");
     header("Access-Control-Allow-Credentials: true");
     
     // Handle preflight OPTIONS request

@@ -26,15 +26,46 @@ export interface AdviserDashboardData {
 
 export interface AdvisedStudent {
   student_id: number;
-  name: string;
   student_number: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  full_name: string;
+  birth_date: string;
+  gender: string;
   grade_level: string;
   section: string;
-  gender: string;
+  grade_section: string;
   blood_type: string;
-  status: string;
-  last_visit: string;
-  allergy_count: number;
+  emergency_contact: string;
+  email: string;
+  phone: string;
+  allergies: string[];
+  last_visit: {
+    visit_id: number;
+    visit_date: string;
+    reason: string;
+    diagnosis: string;
+    treatment: string;
+    status: string;
+  } | null;
+}
+
+export interface AdvisoryStudentsResponse {
+  success: boolean;
+  adviser: {
+    adviser_id: number;
+    name: string;
+    grade_level: string;
+    section: string;
+    advisory_class: string;
+  };
+  students: AdvisedStudent[];
+  stats: {
+    total_students: number;
+    clinic_visits_this_month: number;
+    students_with_allergies: number;
+  };
 }
 
 export interface RecentVisit {
@@ -59,5 +90,12 @@ export class AdviserService {
 
   getAdviserDashboard(userId: number): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/get-adviser-dashboard.php?user_id=${userId}`);
+<<<<<<< HEAD
+=======
+  }
+
+  getAdvisoryStudents(userId: number): Observable<AdvisoryStudentsResponse> {
+    return this.http.get<AdvisoryStudentsResponse>(`${environment.apiUrl}/get-advisory-students.php?user_id=${userId}`);
+>>>>>>> 7ea2e6840451da15dacdbace72f4b619a61717b7
   }
 }

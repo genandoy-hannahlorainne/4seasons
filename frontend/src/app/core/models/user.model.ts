@@ -10,6 +10,7 @@ export interface User {
   student_info?: any;
   adviser_info?: any;
   staff_info?: any;
+  advisory_class?: string;
 }
 
 export interface Role {

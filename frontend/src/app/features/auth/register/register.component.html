@@ -136,6 +136,41 @@
             />
           </div>
 
+          <!-- Grade and Section -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="gradeLevel">Grade Level *</label>
+              <select 
+                id="gradeLevel" 
+                formControlName="gradeLevel" 
+                class="form-control"
+                (change)="onGradeChange()"
+                [class.is-invalid]="registerForm.get('gradeLevel')?.invalid && registerForm.get('gradeLevel')?.touched"
+              >
+                <option value="">Select Grade</option>
+                @for (grade of gradeOptions; track grade.value) {
+                  <option [value]="grade.value">{{ grade.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="section">Section *</label>
+              <select 
+                id="section" 
+                formControlName="section" 
+                class="form-control"
+                [class.is-invalid]="registerForm.get('section')?.invalid && registerForm.get('section')?.touched"
+                [disabled]="sectionOptions.length === 0"
+              >
+                <option value="">Select Section</option>
+                @for (section of sectionOptions; track section.value) {
+                  <option [value]="section.value">{{ section.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
           <div class="form-group">
             <label for="email">Email *</label>
             <input 
@@ -146,8 +181,64 @@
               [class.is-invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
             />
           </div>
+        } @else if (selectedRole === 'adviser') {
+          <!-- Adviser fields - Advisory Class -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="gradeLevel">Advisory Grade Level *</label>
+              <select 
+                id="gradeLevel" 
+                formControlName="gradeLevel" 
+                class="form-control"
+                (change)="onGradeChange()"
+                [class.is-invalid]="registerForm.get('gradeLevel')?.invalid && registerForm.get('gradeLevel')?.touched"
+              >
+                <option value="">Select Grade</option>
+                @for (grade of gradeOptions; track grade.value) {
+                  <option [value]="grade.value">{{ grade.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="section">Advisory Section *</label>
+              <select 
+                id="section" 
+                formControlName="section" 
+                class="form-control"
+                [class.is-invalid]="registerForm.get('section')?.invalid && registerForm.get('section')?.touched"
+                [disabled]="sectionOptions.length === 0"
+              >
+                <option value="">Select Section</option>
+                @for (section of sectionOptions; track section.value) {
+                  <option [value]="section.value">{{ section.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input 
+              type="email" 
+              id="email" 
+              formControlName="email" 
+              class="form-control"
+              [class.is-invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="contactNumber">Contact Number</label>
+            <input 
+              type="tel" 
+              id="contactNumber" 
+              formControlName="contactNumber" 
+              class="form-control"
+            />
+          </div>
         } @else {
-          <!-- Adviser/Clinic Staff fields (optional) -->
+          <!-- Clinic Staff fields (optional) -->
           <div class="form-group">
             <label for="email">Email</label>
             <input 
