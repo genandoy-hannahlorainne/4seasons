@@ -16,8 +16,10 @@ import { VisitsListComponent } from './staff/visits/visits-list.component';
 import { VisitFormComponent } from './staff/visits/visit-form.component';
 import { ReportsComponent } from './staff/reports/reports.component';
 import { StaffProfileComponent } from './staff/profile/staff-profile.component';
+import { AdminLayoutComponent } from './admin/admin-layout.component';
 import { AdminDashboardComponent } from './admin/admin-dashboard.component';
-
+import { AdminProfileComponent } from './admin/profile/admin-profile.component';
+import { AdminGuard } from '../../core/guards/admin.guard';
 
 export const dashboardRoutes: Routes = [
   { path: '', component: DashboardComponent, pathMatch: 'full' },
@@ -84,7 +86,12 @@ export const dashboardRoutes: Routes = [
 >>>>>>> 5a7aa14aa0f7f702115602e2e3e7f86efae9c81a
   {
     path: 'admin',
-    component: AdminDashboardComponent
+    component: AdminLayoutComponent,
+    canActivate: [AdminGuard],
+    children: [
+      { path: '', component: AdminDashboardComponent },
+      { path: 'profile', component: AdminProfileComponent }
+    ]
   }
 <<<<<<< HEAD
 =======
