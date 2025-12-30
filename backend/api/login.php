@@ -74,6 +74,11 @@ if (!empty($data->username) && !empty($data->password)) {
                 if ($staffStmt->rowCount() > 0) {
                     $userInfo['staff_info'] = $staffStmt->fetch(PDO::FETCH_ASSOC);
                 }
+            } elseif ($row['role_name'] === 'Admin' || $row['role_name'] === 'admin') {
+                // Admin doesn't need additional info
+                $userInfo['admin_info'] = [
+                    'is_admin' => true
+                ];
             }
             
             // Log activity
