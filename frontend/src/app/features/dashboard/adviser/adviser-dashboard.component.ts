@@ -332,7 +332,7 @@ export class AdviserDashboardComponent implements OnInit {
     }
 
     this.adviserService.getAdvisoryStudents(currentUser.user_id).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         if (response.success) {
           this.advisoryClass = response.adviser.advisory_class;
           this.advisoryStudents = response.students;
@@ -347,7 +347,7 @@ export class AdviserDashboardComponent implements OnInit {
         }
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading students:', err);
         this.error = 'Failed to load students. Please try again.';
         this.loading = false;

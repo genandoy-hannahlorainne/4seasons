@@ -79,10 +79,16 @@ export const dashboardRoutes: Routes = [
     ]
   },
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 5a7aa14aa0f7f702115602e2e3e7f86efae9c81a
   {
     path: 'admin',
     component: AdminDashboardComponent
   }
+<<<<<<< HEAD
 =======
 >>>>>>> 0e1742c39309cc3f12e778218b94c928db040d2e
+=======
+>>>>>>> 5a7aa14aa0f7f702115602e2e3e7f86efae9c81a
 ];

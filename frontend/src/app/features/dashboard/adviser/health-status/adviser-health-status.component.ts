@@ -97,7 +97,7 @@ import { StudentProfileModalComponent } from '../student-profile-modal/student-p
                   <span class="visit-icon">📋</span>
                   {{ student.last_visit.reason }}
                 </div>
-                <div class="visit-status" [ngClass]="student.last_visit.status?.toLowerCase()">
+                <div class="visit-status" [ngClass]="student.last_visit.status.toLowerCase()">
                   {{ student.last_visit.status }}
                 </div>
               </div>
@@ -358,7 +358,7 @@ export class AdviserHealthStatusComponent implements OnInit {
     }
 
     this.adviserService.getAdvisoryStudents(currentUser.user_id).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         if (response.success) {
           this.studentsHealth = response.students;
         } else {
@@ -366,7 +366,7 @@ export class AdviserHealthStatusComponent implements OnInit {
         }
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading students:', err);
         this.error = 'Failed to load students. Please try again.';
         this.loading = false;
