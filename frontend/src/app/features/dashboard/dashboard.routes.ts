@@ -16,41 +16,20 @@ import { VisitsListComponent } from './staff/visits/visits-list.component';
 import { VisitFormComponent } from './staff/visits/visit-form.component';
 import { ReportsComponent } from './staff/reports/reports.component';
 import { StaffProfileComponent } from './staff/profile/staff-profile.component';
+import { AdminLayoutComponent } from './admin/admin-layout.component';
 import { AdminDashboardComponent } from './admin/admin-dashboard.component';
-
+import { AdminProfileComponent } from './admin/profile/admin-profile.component';
+import { AdminGuard } from '../../core/guards/admin.guard';
 
 export const dashboardRoutes: Routes = [
   { path: '', component: DashboardComponent, pathMatch: 'full' },
   {
-<<<<<<< HEAD
-    path: '',
-    component: DashboardComponent,
-    pathMatch: 'full'
-  },
-  {
-    path: 'student',
-    component: StudentLayoutComponent,
-    children: [
-      {
-        path: '',
-        component: StudentDashboardComponent
-      },
-      {
-        path: 'profile',
-        component: StudentProfileComponent
-      },
-      {
-        path: 'medical-records',
-        loadChildren: () => import('../medical-records/medical-records.routes').then(m => m.medicalRecordsRoutes)
-      }
-=======
     path: 'student',
     component: StudentLayoutComponent,
     children: [
       { path: '', component: StudentDashboardComponent },
       { path: 'profile', component: StudentProfileComponent },
       { path: 'medical-records', loadChildren: () => import('../medical-records/medical-records.routes').then(m => m.medicalRecordsRoutes) }
->>>>>>> 0e1742c39309cc3f12e778218b94c928db040d2e
     ]
   },
   {
@@ -78,17 +57,13 @@ export const dashboardRoutes: Routes = [
       { path: 'profile', component: StaffProfileComponent }
     ]
   },
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 5a7aa14aa0f7f702115602e2e3e7f86efae9c81a
   {
     path: 'admin',
-    component: AdminDashboardComponent
+    component: AdminLayoutComponent,
+    canActivate: [AdminGuard],
+    children: [
+      { path: '', component: AdminDashboardComponent },
+      { path: 'profile', component: AdminProfileComponent }
+    ]
   }
-<<<<<<< HEAD
-=======
->>>>>>> 0e1742c39309cc3f12e778218b94c928db040d2e
-=======
->>>>>>> 5a7aa14aa0f7f702115602e2e3e7f86efae9c81a
 ];
