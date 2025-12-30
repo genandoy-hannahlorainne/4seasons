@@ -44,8 +44,7 @@ export class LoginComponent implements OnInit {
     const roleMap: { [key: string]: string } = {
       'student': 'Student',
       'adviser': 'Adviser',
-      'clinic-staff': 'Clinic Staff',
-      'admin': 'Admin'
+      'clinic-staff': 'Clinic Staff'
     };
     return roleMap[this.selectedRole] || '';
   }
@@ -62,12 +61,19 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(username, password).subscribe({
       next: (user) => {
-        // Redirect based on user role
+        // Check if admin - redirect to admin login instead
+        if (user.role_name === 'admin' || user.role_name === 'Admin') {
+          this.authService.logout();
+          this.error = 'Please use the admin portal to login.';
+          this.loading = false;
+          return;
+        }
+
+        // Redirect based on user role (no admin here)
         const roleRoutes: { [key: string]: string } = {
           'Student': '/dashboard/student',
           'Adviser': '/dashboard/adviser',
-          'Clinic Staff': '/dashboard/staff',
-          'Admin': '/dashboard/admin'
+          'Clinic Staff': '/dashboard/staff'
         };
         
         const route = roleRoutes[user.role_name] || '/dashboard/student';
