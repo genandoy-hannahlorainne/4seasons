@@ -23,6 +23,18 @@ export class RegisterComponent {
   modalSuccess = false;
   registeredUsername = '';
 
+  // Grade and Section options
+  gradeOptions = [
+    { value: '7', label: 'Grade 7' },
+    { value: '8', label: 'Grade 8' },
+    { value: '9', label: 'Grade 9' },
+    { value: '10', label: 'Grade 10' },
+    { value: '11', label: 'Grade 11' },
+    { value: '12', label: 'Grade 12' }
+  ];
+
+  sectionOptions: { value: string; label: string }[] = [];
+
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
@@ -45,12 +57,26 @@ export class RegisterComponent {
         lastName: ['', Validators.required],
         gender: ['', Validators.required],
         birthday: ['', Validators.required],
+        gradeLevel: ['', Validators.required],
+        section: ['', Validators.required],
         contactNumber: ['', Validators.required],
         email: ['', [Validators.required, Validators.email]],
         password: ['', [Validators.required, Validators.minLength(6)]]
       });
+    } else if (this.selectedRole === 'adviser') {
+      // Adviser - with grade and section (advisory class)
+      this.registerForm = this.fb.group({
+        firstName: ['', Validators.required],
+        middleName: [''],
+        lastName: ['', Validators.required],
+        gradeLevel: ['', Validators.required],
+        section: ['', Validators.required],
+        email: ['', Validators.email],
+        contactNumber: [''],
+        password: ['', [Validators.required, Validators.minLength(6)]]
+      });
     } else {
-      // Adviser or Clinic Staff
+      // Clinic Staff
       this.registerForm = this.fb.group({
         firstName: ['', Validators.required],
         middleName: [''],
@@ -59,6 +85,36 @@ export class RegisterComponent {
         contactNumber: [''],
         password: ['', [Validators.required, Validators.minLength(6)]]
       });
+    }
+  }
+
+  onGradeChange(): void {
+    const grade = this.registerForm.get('gradeLevel')?.value;
+    this.registerForm.get('section')?.setValue('');
+    
+    if (['7', '8', '9', '10'].includes(grade)) {
+      // Junior High: Section 1-5
+      this.sectionOptions = [
+        { value: '1', label: 'Section 1' },
+        { value: '2', label: 'Section 2' },
+        { value: '3', label: 'Section 3' },
+        { value: '4', label: 'Section 4' },
+        { value: '5', label: 'Section 5' }
+      ];
+    } else if (['11', '12'].includes(grade)) {
+      // Senior High: Strands with Section 1-2
+      this.sectionOptions = [
+        { value: 'STEM-1', label: 'STEM - Section 1' },
+        { value: 'STEM-2', label: 'STEM - Section 2' },
+        { value: 'ABM-1', label: 'ABM - Section 1' },
+        { value: 'ABM-2', label: 'ABM - Section 2' },
+        { value: 'HUMSS-1', label: 'HUMSS - Section 1' },
+        { value: 'HUMSS-2', label: 'HUMSS - Section 2' },
+        { value: 'TVL-HE-1', label: 'TVL-HE - Section 1' },
+        { value: 'TVL-HE-2', label: 'TVL-HE - Section 2' }
+      ];
+    } else {
+      this.sectionOptions = [];
     }
   }
 
