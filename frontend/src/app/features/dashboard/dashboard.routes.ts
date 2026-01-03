@@ -22,9 +22,7 @@ import { AdminProfileComponent } from './admin/profile/admin-profile.component';
 import { AdminGuard } from '../../core/guards/admin.guard';
 
 export const dashboardRoutes: Routes = [
-  { path: '', component: DashboardComponent, pathMatch: 'full' },
   {
-<<<<<<< HEAD
     path: '',
     component: DashboardComponent,
     pathMatch: 'full'
@@ -33,26 +31,9 @@ export const dashboardRoutes: Routes = [
     path: 'student',
     component: StudentLayoutComponent,
     children: [
-      {
-        path: '',
-        component: StudentDashboardComponent
-      },
-      {
-        path: 'profile',
-        component: StudentProfileComponent
-      },
-      {
-        path: 'medical-records',
-        loadChildren: () => import('../medical-records/medical-records.routes').then(m => m.medicalRecordsRoutes)
-      }
-=======
-    path: 'student',
-    component: StudentLayoutComponent,
-    children: [
       { path: '', component: StudentDashboardComponent },
       { path: 'profile', component: StudentProfileComponent },
       { path: 'medical-records', loadChildren: () => import('../medical-records/medical-records.routes').then(m => m.medicalRecordsRoutes) }
->>>>>>> 0e1742c39309cc3f12e778218b94c928db040d2e
     ]
   },
   {
@@ -80,10 +61,6 @@ export const dashboardRoutes: Routes = [
       { path: 'profile', component: StaffProfileComponent }
     ]
   },
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 5a7aa14aa0f7f702115602e2e3e7f86efae9c81a
   {
     path: 'admin',
     component: AdminLayoutComponent,
@@ -93,9 +70,4 @@ export const dashboardRoutes: Routes = [
       { path: 'profile', component: AdminProfileComponent }
     ]
   }
-<<<<<<< HEAD
-=======
->>>>>>> 0e1742c39309cc3f12e778218b94c928db040d2e
-=======
->>>>>>> 5a7aa14aa0f7f702115602e2e3e7f86efae9c81a
 ];
