@@ -12,4 +12,24 @@ export class AdminService {
   getDashboardStats(): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/get-admin-dashboard-stats.php`);
   }
+
+  getAllUsers(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/get-all-users.php`);
+  }
+
+  getUsersByRole(role: 'student' | 'adviser' | 'faculty' | 'clinic_staff' | 'staff'): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/get-all-users.php?role=${role}`);
+  }
+
+  getStudents(): Observable<any> {
+    return this.getUsersByRole('student');
+  }
+
+  getAdvisers(): Observable<any> {
+    return this.getUsersByRole('adviser');
+  }
+
+  getClinicStaff(): Observable<any> {
+    return this.getUsersByRole('clinic_staff');
+  }
 }

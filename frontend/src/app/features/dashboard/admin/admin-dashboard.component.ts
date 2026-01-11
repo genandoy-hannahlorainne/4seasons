@@ -479,12 +479,7 @@ export class AdminDashboardComponent implements OnInit {
     totalAdvisers: 45
   };
 
-  recentUsers = [
-    { name: 'John Doe', role: 'Student', registeredDate: '2024-12-01', status: 'Active' },
-    { name: 'Dr. Smith', role: 'Staff', registeredDate: '2024-11-30', status: 'Active' },
-    { name: 'Prof. Johnson', role: 'Adviser', registeredDate: '2024-11-29', status: 'Active' },
-    { name: 'Jane Wilson', role: 'Student', registeredDate: '2024-11-28', status: 'Active' }
-  ];
+  recentUsers: any[] = [];
 
   systemAlerts = [
     { type: 'warning', message: 'Database backup pending', date: '2024-12-03' },
@@ -510,29 +505,53 @@ export class AdminDashboardComponent implements OnInit {
 
   loadDashboardData(): void {
     this.loading = true;
-    this.adminService.getDashboardStats().subscribe({
+    
+    // Fetch all users
+    this.adminService.getAllUsers().subscribe({
       next: (response) => {
         if (response.success) {
-          this.systemStats = response.stats;
-          this.recentUsers = response.recentUsers.map((user: any) => ({
+          // Combine all users and get the most recent ones
+          const allUsers: any[] = [
+            ...response.users.student,
+            ...response.users.adviser,
+            ...response.users.clinic_staff
+          ];
+          
+          // Sort by created_at (most recent first) and take top 10
+          const sortedUsers = allUsers
+            .sort((a, b) => {
+              const dateA = new Date(a.created_at || 0).getTime();
+              const dateB = new Date(b.created_at || 0).getTime();
+              return dateB - dateA;
+            })
+            .slice(0, 10);
+          
+          // Format for display
+          this.recentUsers = sortedUsers.map((user: any) => ({
             name: user.full_name || user.username,
-            role: user.role_name,
-            registeredDate: new Date(user.created_at).toLocaleDateString(),
+            role: user.role.charAt(0).toUpperCase() + user.role.slice(1),
+            registeredDate: user.created_at 
+              ? new Date(user.created_at).toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: '2-digit', 
+                  day: '2-digit' 
+                })
+              : 'N/A',
             status: user.is_active ? 'Active' : 'Inactive'
           }));
           
-          // Format recent visits as activity log
-          this.activityLog = response.recentVisits.map((visit: any) => ({
-            type: 'record',
-            action: `Medical visit - ${visit.reason_for_visit}`,
-            user: `${visit.first_name} ${visit.last_name}`,
-            timestamp: new Date(visit.visit_date).toLocaleDateString()
-          }));
+          // Update stats
+          this.systemStats = {
+            totalUsers: response.totals.total,
+            totalStudents: response.totals.students,
+            totalAdvisers: response.totals.advisers,
+            totalStaff: response.totals.clinic_staff
+          };
         }
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading dashboard stats:', err);
+        console.error('Error loading users:', err);
         this.loading = false;
       }
     });
