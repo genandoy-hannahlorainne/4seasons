@@ -66,7 +66,7 @@ try {
     $stmt->execute();
     
     $visits = [];
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) { 
         $visitId = $row['visit_id'];
         $fullName = trim($row['first_name'] . ' ' . $row['last_name']);
         $gradeSection = 'Grade ' . $row['grade_level'] . ' - ' . $row['section'];

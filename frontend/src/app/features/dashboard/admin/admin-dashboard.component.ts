@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { AdminService } from '../../../core/services/admin.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -499,7 +500,8 @@ export class AdminDashboardComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private adminService: AdminService
   ) {}
 
   ngOnInit(): void {
@@ -508,10 +510,32 @@ export class AdminDashboardComponent implements OnInit {
 
   loadDashboardData(): void {
     this.loading = true;
-    // Simulate API call
-    setTimeout(() => {
-      this.loading = false;
-    }, 500);
+    this.adminService.getDashboardStats().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.systemStats = response.stats;
+          this.recentUsers = response.recentUsers.map((user: any) => ({
+            name: user.full_name || user.username,
+            role: user.role_name,
+            registeredDate: new Date(user.created_at).toLocaleDateString(),
+            status: user.is_active ? 'Active' : 'Inactive'
+          }));
+          
+          // Format recent visits as activity log
+          this.activityLog = response.recentVisits.map((visit: any) => ({
+            type: 'record',
+            action: `Medical visit - ${visit.reason_for_visit}`,
+            user: `${visit.first_name} ${visit.last_name}`,
+            timestamp: new Date(visit.visit_date).toLocaleDateString()
+          }));
+        }
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading dashboard stats:', err);
+        this.loading = false;
+      }
+    });
   }
 
   getActivityIcon(type: string): string {
