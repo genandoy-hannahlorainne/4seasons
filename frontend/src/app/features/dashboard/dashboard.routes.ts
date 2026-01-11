@@ -19,6 +19,7 @@ import { StaffProfileComponent } from './staff/profile/staff-profile.component';
 import { AdminLayoutComponent } from './admin/admin-layout.component';
 import { AdminDashboardComponent } from './admin/admin-dashboard.component';
 import { AdminProfileComponent } from './admin/profile/admin-profile.component';
+import { ManageUsersComponent } from './admin/manage-users/manage-users.component';
 import { AdminGuard } from '../../core/guards/admin.guard';
 
 export const dashboardRoutes: Routes = [
@@ -67,7 +68,8 @@ export const dashboardRoutes: Routes = [
     canActivate: [AdminGuard],
     children: [
       { path: '', component: AdminDashboardComponent },
-      { path: 'profile', component: AdminProfileComponent }
+      { path: 'profile', component: AdminProfileComponent },
+      { path: 'manage-users', component: ManageUsersComponent }
     ]
   }
 ];

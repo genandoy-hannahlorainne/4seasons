@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdminService } from '../../../core/services/admin.service';
+import { ManageUsersComponent } from './manage-users/manage-users.component';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -134,31 +135,49 @@ import { AdminService } from '../../../core/services/admin.service';
               <h2>Quick Actions</h2>
             </div>
             <div class="actions-grid">
-              <button class="action-btn">
+              <button class="action-btn" (click)="navigateTo('/dashboard/admin/manage-users')">
                 <span class="action-icon">👤</span>
                 <span class="action-label">Manage Users</span>
               </button>
-              <button class="action-btn">
+              <button class="action-btn" (click)="navigateTo('/dashboard/admin/settings')">
                 <span class="action-icon">⚙️</span>
                 <span class="action-label">System Settings</span>
               </button>
-              <button class="action-btn">
+              <button class="action-btn" (click)="navigateTo('/dashboard/admin/reports')">
                 <span class="action-icon">📊</span>
                 <span class="action-label">View Reports</span>
               </button>
-              <button class="action-btn">
+              <button class="action-btn" (click)="showBackupModal = true">
                 <span class="action-icon">💾</span>
                 <span class="action-label">Database Backup</span>
               </button>
-              <button class="action-btn">
+              <button class="action-btn" (click)="navigateTo('/dashboard/admin/audit-logs')">
                 <span class="action-icon">📋</span>
                 <span class="action-label">Audit Logs</span>
               </button>
-              <button class="action-btn">
+              <button class="action-btn" (click)="navigateTo('/dashboard/admin/security')">
                 <span class="action-icon">🔒</span>
                 <span class="action-label">Security</span>
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backup Modal -->
+      <div class="modal-overlay" *ngIf="showBackupModal" (click)="closeBackupModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <button class="close-btn" (click)="closeBackupModal()">×</button>
+          <div class="modal-header">
+            <h2>Database Backup</h2>
+          </div>
+          <div class="modal-body">
+            <p>Are you sure you want to create a database backup?</p>
+            <p class="backup-info">This process may take a few minutes depending on the database size.</p>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-primary" (click)="performBackup()">Start Backup</button>
+            <button class="btn btn-outline" (click)="closeBackupModal()">Cancel</button>
           </div>
         </div>
       </div>
@@ -467,10 +486,107 @@ import { AdminService } from '../../../core/services/admin.service';
         .user-date, .user-status { display: none; }
       }
     }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 90%;
+      position: relative;
+
+      .close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #7f8c8d;
+        cursor: pointer;
+        transition: color 0.2s ease;
+
+        &:hover { color: #2c3e50; }
+      }
+
+      .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+
+        h2 {
+          margin: 0;
+          color: #2c3e50;
+          font-size: 1.3rem;
+          font-weight: 700;
+        }
+      }
+
+      .modal-body {
+        padding: 1.5rem;
+
+        p {
+          color: #2c3e50;
+          margin-bottom: 1rem;
+
+          &.backup-info {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+          }
+        }
+      }
+
+      .modal-actions {
+        padding: 1.5rem;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        gap: 0.75rem;
+
+        .btn {
+          flex: 1;
+          padding: 0.75rem 1rem;
+          border: none;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-size: 0.95rem;
+
+          &.btn-primary {
+            background: #3498db;
+            color: white;
+
+            &:hover { background: #2980b9; }
+          }
+
+          &.btn-outline {
+            background: #f8f9fa;
+            color: #2c3e50;
+            border: 1px solid #e9ecef;
+
+            &:hover { background: #e9ecef; }
+          }
+        }
+      }
+    }
   `]
 })
 export class AdminDashboardComponent implements OnInit {
   loading = false;
+  showBackupModal = false;
 
   systemStats = {
     totalUsers: 450,
@@ -501,6 +617,10 @@ export class AdminDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDashboardData();
+  }
+
+  navigateTo(route: string): void {
+    this.router.navigate([route]);
   }
 
   loadDashboardData(): void {
@@ -555,6 +675,16 @@ export class AdminDashboardComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  performBackup(): void {
+    // Placeholder for backup functionality
+    alert('Database backup initiated. This may take a few minutes...');
+    this.showBackupModal = false;
+  }
+
+  closeBackupModal(): void {
+    this.showBackupModal = false;
   }
 
   getActivityIcon(type: string): string {

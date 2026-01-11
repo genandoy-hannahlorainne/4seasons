@@ -32,4 +32,29 @@ export class AdminService {
   getClinicStaff(): Observable<any> {
     return this.getUsersByRole('clinic_staff');
   }
+
+  // User Management
+  getUserDetails(userId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/manage-user.php?action=view&user_id=${userId}`);
+  }
+
+  updateUser(userId: number, userData: any): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/manage-user.php?action=update&user_id=${userId}`, userData);
+  }
+
+  resetPassword(userId: number, newPassword: string): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/manage-user.php?action=reset-password&user_id=${userId}`, { password: newPassword });
+  }
+
+  deactivateUser(userId: number): Observable<any> {
+    return this.http.delete<any>(`${environment.apiUrl}/manage-user.php?action=deactivate&user_id=${userId}`);
+  }
+
+  activateUser(userId: number): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/manage-user.php?action=activate&user_id=${userId}`, {});
+  }
+
+  deleteUser(userId: number): Observable<any> {
+    return this.http.delete<any>(`${environment.apiUrl}/manage-user.php?action=delete&user_id=${userId}`);
+  }
 }
