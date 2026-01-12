@@ -1,0 +1,108 @@
+<div class="backup-recovery-page">
+  <div class="page-header">
+    <h1>Backup & Recovery</h1>
+    <p>Manage database backups and system recovery</p>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div class="alert alert-success" *ngIf="success">
+    ✓ {{ success }}
+  </div>
+  <div class="alert alert-error" *ngIf="error">
+    ⚠️ {{ error }}
+  </div>
+
+  <!-- Create Backup Section -->
+  <div class="card">
+    <h2>Create New Backup</h2>
+    <p>Create a complete backup of the database. This may take a few moments.</p>
+    <button class="btn btn-primary" (click)="createBackup()" [disabled]="creating">
+      <span *ngIf="!creating">📦 Create Backup</span>
+      <span *ngIf="creating">⏳ Creating Backup...</span>
+    </button>
+  </div>
+
+  <!-- Backup History -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Backup History</h2>
+      <button class="btn btn-secondary" (click)="loadBackups()" [disabled]="loading">
+        🔄 Refresh
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading backups...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!loading && backups.length === 0">
+      <p>No backups found. Create your first backup above.</p>
+    </div>
+
+    <!-- Backup List -->
+    <div class="backup-list" *ngIf="!loading && backups.length > 0">
+      <table class="backup-table">
+        <thead>
+          <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let backup of backups">
+            <td>{{ backup.filename }}</td>
+            <td>{{ backup.size }}</td>
+            <td>{{ backup.created }}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn btn-sm btn-success" (click)="restoreBackup(backup.filename)" title="Restore this backup">
+                  🔄 Restore
+                </button>
+                <button class="btn btn-sm btn-outline" (click)="downloadBackup(backup.filename)">
+                  ⬇️ Download
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="deleteBackup(backup.filename)">
+                  🗑️ Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Info Section -->
+  <div class="card info-card">
+    <h3>ℹ️ Backup Information</h3>
+    <ul>
+      <li>Backups are stored securely on the server</li>
+      <li>Download backups to keep an offline copy</li>
+      <li>Old backups are automatically cleaned up after 30 days</li>
+      <li>Backups include all database tables and data</li>
+      <li><strong>⚠️ Restore will replace ALL current data with backup data</strong></li>
+    </ul>
+  </div>
+
+  <!-- Restore Warning -->
+  <div class="card warning-card">
+    <h3>⚠️ Important: About Restore</h3>
+    <p><strong>Restoring a backup will:</strong></p>
+    <ul>
+      <li>Replace ALL current database data with the backup data</li>
+      <li>Delete any changes made after the backup date</li>
+      <li>Cannot be undone once completed</li>
+    </ul>
+    <p><strong>Before restoring:</strong></p>
+    <ul>
+      <li>Create a new backup of current data first</li>
+      <li>Ensure you selected the correct backup file</li>
+      <li>Notify all users that the system will be temporarily unavailable</li>
+    </ul>
+  </div>
+</div>
