@@ -19,10 +19,17 @@ import { StaffProfileComponent } from './staff/profile/staff-profile.component';
 import { AdminLayoutComponent } from './admin/admin-layout.component';
 import { AdminDashboardComponent } from './admin/admin-dashboard.component';
 import { AdminProfileComponent } from './admin/profile/admin-profile.component';
+import { ManageUsersComponent } from './admin/manage-users/manage-users.component';
+import { SystemSettingsComponent } from './admin/system-settings/system-settings.component';
+import { ViewReportsComponent } from './admin/view-reports/view-reports.component';
 import { AdminGuard } from '../../core/guards/admin.guard';
 
 export const dashboardRoutes: Routes = [
-  { path: '', component: DashboardComponent, pathMatch: 'full' },
+  {
+    path: '',
+    component: DashboardComponent,
+    pathMatch: 'full'
+  },
   {
     path: 'student',
     component: StudentLayoutComponent,
@@ -63,7 +70,10 @@ export const dashboardRoutes: Routes = [
     canActivate: [AdminGuard],
     children: [
       { path: '', component: AdminDashboardComponent },
-      { path: 'profile', component: AdminProfileComponent }
+      { path: 'profile', component: AdminProfileComponent },
+      { path: 'manage-users', component: ManageUsersComponent },
+      { path: 'settings', component: SystemSettingsComponent },
+      { path: 'reports', component: ViewReportsComponent }
     ]
   }
 ];

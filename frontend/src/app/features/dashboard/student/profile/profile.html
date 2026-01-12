@@ -1,26 +1,9 @@
-<<<<<<< HEAD
 <div class="profile-container">
-  <nav class="top-nav">
-    <div class="nav-links">
-      <a (click)="goBack()" class="nav-link">Dashboard</a>
-      <a href="#" class="nav-link active">MyMedical</a>
-    </div>
-    <div class="nav-icons">
-      <button class="icon-btn notification">
-        <img src="assets/notification-icon.png" alt="Notifications" class="icon-img">
-      </button>
-      <button class="icon-btn profile active">
-        <img [src]="getProfileIcon()" alt="Profile" class="icon-img">
-      </button>
-    </div>
-  </nav>
-=======
-<div class="student-profile">
+  <div class="student-profile">
   <div class="profile-header">
     <h1>Profile Settings</h1>
     <p>Manage your account information</p>
   </div>
->>>>>>> 0e1742c39309cc3f12e778218b94c928db040d2e
 
   <!-- Loading State -->
   <div *ngIf="loading && !isEditing" class="loading-state">
@@ -111,11 +94,6 @@
           <div class="form-group full-width">
             <label for="address">Address</label>
             <textarea id="address" formControlName="address" class="form-control" rows="2"></textarea>
-          </div>
-
-          <div class="form-group full-width">
-            <label for="emergencyContact">Emergency Contact</label>
-            <input type="text" id="emergencyContact" formControlName="emergencyContact" class="form-control">
           </div>
 
           <div class="form-actions">

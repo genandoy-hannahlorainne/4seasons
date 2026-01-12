@@ -235,20 +235,15 @@ export class AdminLoginComponent {
 
     const { username, password } = this.loginForm.value;
 
-    // Direct API call to get full response
-    this.http.post<any>(`${environment.apiUrl}/login.php`, { username, password }).subscribe({
-      next: (response) => {
+    // Use AuthService login method
+    this.authService.login(username, password).subscribe({
+      next: (user) => {
         this.loading = false;
-        if (response.success && response.user) {
-          // Check if user is admin
-          if (response.user.role_name === 'admin') {
-            localStorage.setItem('currentUser', JSON.stringify(response.user));
-            this.router.navigate(['/dashboard/admin']);
-          } else {
-            this.error = 'Access denied. Admin credentials required.';
-          }
+        if (user && (user.role_name === 'admin' || user.role_name === 'Admin')) {
+          this.router.navigate(['/dashboard/admin']);
         } else {
-          this.error = response.message || 'Invalid credentials';
+          this.error = 'Access denied. Admin credentials required.';
+          this.authService.logout();
         }
       },
       error: (err) => {

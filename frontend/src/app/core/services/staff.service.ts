@@ -41,4 +41,20 @@ export class StaffService {
   getStaffDashboard(userId: number): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/get-staff-dashboard.php?user_id=${userId}`);
   }
+
+  getStudentProfile(studentId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/get-student-profile.php?student_id=${studentId}`);
+  }
+
+  getAllStudents(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/get-all-students.php`);
+  }
+
+  getReportsData(startDate: string, endDate: string, gradeLevel?: string): Observable<any> {
+    let url = `${environment.apiUrl}/get-reports-data.php?start_date=${startDate}&end_date=${endDate}`;
+    if (gradeLevel) {
+      url += `&grade_level=${gradeLevel}`;
+    }
+    return this.http.get<any>(url);
+  }
 }

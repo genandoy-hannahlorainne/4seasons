@@ -60,6 +60,7 @@ export class StudentDashboardComponent implements OnInit {
     // Fetch student profile
     this.studentService.getStudentProfile(currentUser.user_id).subscribe({
       next: (response) => {
+        console.log('Profile response:', response);
         if (response.success && response.profile) {
           const profile = response.profile;
           
@@ -83,12 +84,17 @@ export class StudentDashboardComponent implements OnInit {
           
           // Fetch medical data (vitals, allergies, immunizations)
           this.loadMedicalData(profile.student_id);
+        } else {
+          this.error = 'Failed to load student profile: ' + (response.message || 'Unknown error');
+          this.loading = false;
         }
-        this.loading = false;
       },
       error: (error) => {
         console.error('Error loading student profile:', error);
-        this.error = 'Failed to load student data';
+        console.error('Error status:', error.status);
+        console.error('Error message:', error.message);
+        console.error('Error response:', error.error);
+        this.error = 'Failed to load student data: ' + (error.error?.message || error.message || 'Unknown error');
         this.loading = false;
       }
     });
@@ -97,10 +103,12 @@ export class StudentDashboardComponent implements OnInit {
   loadMedicalData(studentId: number): void {
     this.studentService.getStudentMedicalData(studentId).subscribe({
       next: (response) => {
+        console.log('Medical data response:', response);
         if (response.success && response.data) {
           const data = response.data;
           
-          // Set vitals data
+          // Set vitals data - vitals is null in current implementation
+          // In future, vitals could be stored in a separate table
           if (data.vitals) {
             this.height = data.vitals.height_cm ? `${data.vitals.height_cm} cm` : '--';
             this.weight = data.vitals.weight_kg ? `${data.vitals.weight_kg} kg` : '--';
@@ -138,10 +146,21 @@ export class StudentDashboardComponent implements OnInit {
           if (data.last_visit) {
             this.lastVisit = this.formatDate(data.last_visit.visit_datetime);
           }
+          
+          this.loading = false;
+        } else {
+          console.warn('Medical data response not successful:', response);
+          this.loading = false;
         }
       },
       error: (error) => {
         console.error('Error loading medical data:', error);
+        console.error('Error status:', error.status);
+        console.error('Error message:', error.message);
+        console.error('Error response:', error.error);
+        // Don't set error state here - medical data is secondary
+        // Dashboard should still show basic student info
+        this.loading = false;
       }
     });
   }

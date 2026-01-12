@@ -57,7 +57,7 @@ if (!empty($data->username) && !empty($data->password)) {
                     $userInfo['student_info'] = $studentStmt->fetch(PDO::FETCH_ASSOC);
                 }
             } elseif ($row['role_name'] === 'Adviser') {
-                $adviserQuery = "SELECT adviser_id, first_name, last_name, employee_number, grade_level, section 
+                $adviserQuery = "SELECT adviser_id, first_name, last_name, contact_phone 
                                 FROM advisers WHERE user_id = :user_id AND is_active = 1";
                 $adviserStmt = $db->prepare($adviserQuery);
                 $adviserStmt->bindParam(":user_id", $row['user_id']);
@@ -67,12 +67,15 @@ if (!empty($data->username) && !empty($data->password)) {
                 }
             } elseif ($row['role_name'] === 'Clinic Staff') {
                 $staffQuery = "SELECT clinic_staff_id, staff_code, position 
-                              FROM clinic_staff WHERE user_id = :user_id AND is_active = 1";
+                              FROM clinic_staff WHERE user_id = :user_id AND is_active = 1 AND deleted_at IS NULL";
                 $staffStmt = $db->prepare($staffQuery);
                 $staffStmt->bindParam(":user_id", $row['user_id']);
                 $staffStmt->execute();
                 if ($staffStmt->rowCount() > 0) {
                     $userInfo['staff_info'] = $staffStmt->fetch(PDO::FETCH_ASSOC);
+                } else {
+                    // If clinic_staff record doesn't exist or is inactive, still allow login but without staff_info
+                    $userInfo['staff_info'] = ['clinic_staff_id' => null];
                 }
             } elseif ($row['role_name'] === 'Admin' || $row['role_name'] === 'admin') {
                 // Admin doesn't need additional info

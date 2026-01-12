@@ -1,7 +1,8 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, X-Requested-With");
+header("Access-Control-Max-Age: 3600");
 header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -14,21 +15,42 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
-// Optional filters
 $studentId = isset($_GET['student_id']) ? $_GET['student_id'] : null;
+$userId = isset($_GET['user_id']) ? $_GET['user_id'] : null;
 $status = isset($_GET['status']) ? $_GET['status'] : null;
 $date = isset($_GET['date']) ? $_GET['date'] : null;
 $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 50;
 
+if (!$studentId && $userId) {
+    $userStudentQuery = "SELECT student_id FROM students WHERE user_id = :user_id AND is_active = 1 LIMIT 1";
+    $userStudentStmt = $db->prepare($userStudentQuery);
+    $userStudentStmt->bindParam(':user_id', $userId);
+    $userStudentStmt->execute();
+    
+    if ($userStudentStmt->rowCount() > 0) {
+        $row = $userStudentStmt->fetch(PDO::FETCH_ASSOC);
+        $studentId = intval($row['student_id']);
+    }
+}
+
 try {
-    // Main query - get visits with student info
-    $query = "SELECT mv.visit_id, mv.student_id, mv.visit_datetime, mv.visit_type,
+    // Optimized query using LEFT JOINs to fetch all data in one query
+    $query = "SELECT DISTINCT
+                     mv.visit_id, mv.student_id, mv.visit_datetime, mv.visit_type,
                      mv.chief_complaint, mv.notes, mv.status,
                      s.student_number, s.first_name, s.last_name, s.gender,
-                     s.grade_level, s.section
+                     s.grade_level, s.section,
+                     v.temperature_c, v.bp_systolic, v.bp_diastolic, v.pulse_rate, v.respiration_rate,
+                     d.diagnosis_text,
+                     t.treatment_text,
+                     m.medication_name, m.notes as medication_notes
               FROM medical_visits mv
-              JOIN students s ON mv.student_id = s.student_id
-              WHERE 1=1";
+              INNER JOIN students s ON mv.student_id = s.student_id
+              LEFT JOIN vitals v ON mv.visit_id = v.visit_id
+              LEFT JOIN diagnoses d ON mv.visit_id = d.visit_id
+              LEFT JOIN treatments t ON mv.visit_id = t.visit_id
+              LEFT JOIN medications m ON mv.visit_id = m.visit_id
+              WHERE s.is_active = 1";
     
     $params = [];
     
@@ -38,12 +60,7 @@ try {
     }
     
     if ($status) {
-        // Map frontend status to database enum
-        $statusMap = [
-            'pending' => 'Open',
-            'completed' => 'Closed',
-            'referred' => 'Referred'
-        ];
+        $statusMap = ['pending' => 'Open', 'completed' => 'Closed', 'referred' => 'Referred'];
         $dbStatus = isset($statusMap[$status]) ? $statusMap[$status] : $status;
         $query .= " AND mv.status = :status";
         $params[':status'] = $dbStatus;
@@ -56,71 +73,43 @@ try {
     
     $query .= " ORDER BY mv.visit_datetime DESC LIMIT :limit";
     
+    error_log("Query: " . $query);
+    error_log("Params: " . json_encode($params));
+    
     $stmt = $db->prepare($query);
     
     foreach ($params as $key => $value) {
         $stmt->bindValue($key, $value);
     }
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-    
     $stmt->execute();
     
+    error_log("Rows returned: " . $stmt->rowCount());
+    
     $visits = [];
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $processedVisits = [];
+    
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) { 
         $visitId = $row['visit_id'];
+        
+        // Skip if we've already processed this visit (due to multiple rows from JOINs)
+        if (isset($processedVisits[$visitId])) {
+            continue;
+        }
+        $processedVisits[$visitId] = true;
+        
         $fullName = trim($row['first_name'] . ' ' . $row['last_name']);
         $gradeSection = 'Grade ' . $row['grade_level'] . ' - ' . $row['section'];
         
-        // Get vitals for this visit
-        $vitalsQuery = "SELECT temperature_c, bp_systolic, bp_diastolic, pulse_rate, respiration_rate 
-                        FROM vitals WHERE visit_id = :visit_id ORDER BY recorded_at DESC LIMIT 1";
-        $vitalsStmt = $db->prepare($vitalsQuery);
-        $vitalsStmt->bindParam(':visit_id', $visitId);
-        $vitalsStmt->execute();
-        $vitals = $vitalsStmt->fetch(PDO::FETCH_ASSOC);
-        
-        // Get diagnosis for this visit
-        $diagQuery = "SELECT diagnosis_text FROM diagnoses WHERE visit_id = :visit_id LIMIT 1";
-        $diagStmt = $db->prepare($diagQuery);
-        $diagStmt->bindParam(':visit_id', $visitId);
-        $diagStmt->execute();
-        $diagnosis = $diagStmt->fetch(PDO::FETCH_ASSOC);
-        
-        // Get treatment for this visit
-        $treatQuery = "SELECT treatment_text FROM treatments WHERE visit_id = :visit_id LIMIT 1";
-        $treatStmt = $db->prepare($treatQuery);
-        $treatStmt->bindParam(':visit_id', $visitId);
-        $treatStmt->execute();
-        $treatment = $treatStmt->fetch(PDO::FETCH_ASSOC);
-        
-        // Get medications for this visit
-        $medQuery = "SELECT medication_name, notes FROM medications WHERE visit_id = :visit_id LIMIT 1";
-        $medStmt = $db->prepare($medQuery);
-        $medStmt->bindParam(':visit_id', $visitId);
-        $medStmt->execute();
-        $medication = $medStmt->fetch(PDO::FETCH_ASSOC);
-        
-        // Format blood pressure
         $bloodPressure = null;
-        if ($vitals && $vitals['bp_systolic'] && $vitals['bp_diastolic']) {
-            $bloodPressure = $vitals['bp_systolic'] . '/' . $vitals['bp_diastolic'];
+        if ($row['bp_systolic'] && $row['bp_diastolic']) {
+            $bloodPressure = $row['bp_systolic'] . '/' . $row['bp_diastolic'];
         }
         
-        // Map database status to frontend status
-        $statusMap = [
-            'Open' => 'pending',
-            'Closed' => 'completed',
-            'Referred' => 'referred'
-        ];
+        $statusMap = ['Open' => 'pending', 'Closed' => 'completed', 'Referred' => 'referred'];
         $frontendStatus = isset($statusMap[$row['status']]) ? $statusMap[$row['status']] : strtolower($row['status']);
         
-        // Map database visit_type to frontend format
-        $visitTypeMap = [
-            'Routine' => 'walk-in',
-            'Emergency' => 'emergency',
-            'Follow-up' => 'follow-up',
-            'Referral' => 'referred'
-        ];
+        $visitTypeMap = ['Routine' => 'walk-in', 'Emergency' => 'emergency', 'Follow-up' => 'follow-up', 'Referral' => 'referred'];
         $frontendVisitType = isset($visitTypeMap[$row['visit_type']]) ? $visitTypeMap[$row['visit_type']] : strtolower($row['visit_type']);
         
         $visits[] = [
@@ -135,25 +124,24 @@ try {
             'visitType' => $frontendVisitType,
             'chiefComplaint' => $row['chief_complaint'],
             'notes' => $row['notes'],
-            'diagnosis' => $diagnosis ? $diagnosis['diagnosis_text'] : null,
-            'treatment' => $treatment ? $treatment['treatment_text'] : null,
+            'diagnosis' => $row['diagnosis_text'] ?: null,
+            'treatment' => $row['treatment_text'] ?: null,
             'status' => $frontendStatus,
             'vitals' => [
-                'temperature' => $vitals ? $vitals['temperature_c'] : null,
+                'temperature' => $row['temperature_c'] ?: null,
                 'bloodPressure' => $bloodPressure,
-                'pulseRate' => $vitals ? $vitals['pulse_rate'] : null,
-                'respiratoryRate' => $vitals ? $vitals['respiration_rate'] : null
+                'pulseRate' => $row['pulse_rate'] ?: null,
+                'respiratoryRate' => $row['respiration_rate'] ?: null
             ],
-            'medications' => $medication ? $medication['medication_name'] : null,
-            'recommendations' => $medication ? $medication['notes'] : null
+            'medications' => $row['medication_name'] ?: null,
+            'recommendations' => $row['medication_notes'] ?: null
         ];
     }
     
-    echo json_encode([
-        'success' => true,
-        'visits' => $visits,
-        'total' => count($visits)
-    ]);
+    error_log("Visits processed: " . count($visits));
+    
+    http_response_code(200);
+    echo json_encode(['success' => true, 'data' => $visits, 'visits' => $visits, 'total' => count($visits)]);
     
 } catch (PDOException $e) {
     http_response_code(500);

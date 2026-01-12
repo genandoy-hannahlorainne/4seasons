@@ -22,8 +22,8 @@ if (empty($user_id)) {
 }
 
 try {
-    // First get the adviser's grade_level and section
-    $adviserQuery = "SELECT a.adviser_id, a.first_name, a.last_name, a.grade_level, a.section 
+    // First get the adviser info
+    $adviserQuery = "SELECT a.adviser_id, a.first_name, a.last_name, a.employee_number, a.grade_level, a.section
                      FROM advisers a 
                      WHERE a.user_id = :user_id AND a.is_active = 1";
     $adviserStmt = $db->prepare($adviserQuery);
@@ -40,7 +40,8 @@ try {
         exit;
     }
 
-    // Get students with matching grade_level and section
+    // Get students assigned to this adviser through student_adviser junction table
+    // Also filter by grade_level and section if adviser has them set
     $studentsQuery = "SELECT 
                         s.student_id,
                         s.student_number,
@@ -58,14 +59,31 @@ try {
                         u.phone
                       FROM students s
                       LEFT JOIN users u ON s.user_id = u.user_id
-                      WHERE s.grade_level = :grade_level 
-                        AND s.section = :section 
-                        AND s.is_active = 1
-                      ORDER BY s.last_name, s.first_name";
+                      INNER JOIN student_adviser sa ON s.student_id = sa.student_id
+                      WHERE sa.adviser_id = :adviser_id 
+                        AND s.is_active = 1";
+    
+    // Add grade and section filters if adviser has them set
+    if (!empty($adviser['grade_level'])) {
+        $studentsQuery .= " AND s.grade_level = :grade_level";
+    }
+    if (!empty($adviser['section'])) {
+        $studentsQuery .= " AND s.section = :section";
+    }
+    
+    $studentsQuery .= " ORDER BY s.last_name, s.first_name";
     
     $studentsStmt = $db->prepare($studentsQuery);
-    $studentsStmt->bindParam(":grade_level", $adviser['grade_level']);
-    $studentsStmt->bindParam(":section", $adviser['section']);
+    $studentsStmt->bindParam(":adviser_id", $adviser['adviser_id']);
+    
+    // Bind grade and section if they exist
+    if (!empty($adviser['grade_level'])) {
+        $studentsStmt->bindParam(":grade_level", $adviser['grade_level']);
+    }
+    if (!empty($adviser['section'])) {
+        $studentsStmt->bindParam(":section", $adviser['section']);
+    }
+    
     $studentsStmt->execute();
     $students = $studentsStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -104,17 +122,15 @@ try {
         }
     }
 
-    // Get clinic visit count for this month
+    // Get clinic visit count for this month for all students under this adviser
     $visitCountQuery = "SELECT COUNT(*) as count 
                         FROM medical_visits mv
-                        JOIN students s ON mv.student_id = s.student_id
-                        WHERE s.grade_level = :grade_level 
-                          AND s.section = :section
+                        INNER JOIN student_adviser sa ON mv.student_id = sa.student_id
+                        WHERE sa.adviser_id = :adviser_id
                           AND MONTH(mv.visit_datetime) = MONTH(CURRENT_DATE())
                           AND YEAR(mv.visit_datetime) = YEAR(CURRENT_DATE())";
     $visitCountStmt = $db->prepare($visitCountQuery);
-    $visitCountStmt->bindParam(":grade_level", $adviser['grade_level']);
-    $visitCountStmt->bindParam(":section", $adviser['section']);
+    $visitCountStmt->bindParam(":adviser_id", $adviser['adviser_id']);
     $visitCountStmt->execute();
     $visitCount = $visitCountStmt->fetch(PDO::FETCH_ASSOC)['count'];
 
@@ -123,9 +139,9 @@ try {
         'adviser' => [
             'adviser_id' => $adviser['adviser_id'],
             'name' => $adviser['first_name'] . ' ' . $adviser['last_name'],
-            'grade_level' => $adviser['grade_level'],
-            'section' => $adviser['section'],
-            'advisory_class' => 'Grade ' . $adviser['grade_level'] . ' - ' . (in_array($adviser['grade_level'], ['11', '12']) ? $adviser['section'] : 'Section ' . $adviser['section'])
+            'grade_level' => $adviser['grade_level'] ?? '',
+            'section' => $adviser['section'] ?? '',
+            'advisory_class' => 'Grade ' . ($adviser['grade_level'] ?? 'N/A') . ' - ' . ($adviser['section'] ?? 'N/A')
         ],
         'students' => $students,
         'stats' => [
