@@ -72,7 +72,7 @@
             </td>
             <td class="user-actions">
               <button class="action-btn view-btn" (click)="viewUser(user)" title="View/Edit">
-                ✎
+                <i class="fa-solid fa-pen-to-square"></i>
               </button>
             </td>
           </tr>
@@ -88,15 +88,15 @@
   <!-- User Details Modal -->
   <div class="modal-overlay" *ngIf="showUserModal" (click)="closeUserModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
-      <button class="close-btn" (click)="closeUserModal()">×</button>
+      <button class="close-btn" (click)="closeUserModal()"><i class="fa-solid fa-xmark"></i></button>
 
       <div class="modal-header">
         <h2>User Details</h2>
       </div>
 
       <!-- Messages -->
-      <div *ngIf="successMessage" class="alert alert-success">✓ {{ successMessage }}</div>
-      <div *ngIf="errorMessage" class="alert alert-danger">✕ {{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}</div>
 
       <!-- User Info -->
       <div class="modal-body">
@@ -151,14 +151,14 @@
   <!-- Password Reset Modal -->
   <div class="modal-overlay" *ngIf="showPasswordModal" (click)="closePasswordModal()">
     <div class="modal-content password-modal" (click)="$event.stopPropagation()">
-      <button class="close-btn" (click)="closePasswordModal()">×</button>
+      <button class="close-btn" (click)="closePasswordModal()"><i class="fa-solid fa-xmark"></i></button>
 
       <div class="modal-header">
         <h2>Reset Password</h2>
       </div>
 
-      <div *ngIf="successMessage" class="alert alert-success">✓ {{ successMessage }}</div>
-      <div *ngIf="errorMessage" class="alert alert-danger">✕ {{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}</div>
 
       <div class="modal-body">
         <p class="password-info">Enter a new password for <strong>{{ selectedUser?.full_name }}</strong></p>

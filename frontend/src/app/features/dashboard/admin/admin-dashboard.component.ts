@@ -26,28 +26,28 @@ import { ManageUsersComponent } from './manage-users/manage-users.component';
         <!-- Statistics Cards -->
         <div class="stats-grid">
           <div class="stat-card users">
-            <div class="stat-icon">👥</div>
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalUsers }}</div>
               <div class="stat-label">Total Users</div>
             </div>
           </div>
           <div class="stat-card students">
-            <div class="stat-icon">🎓</div>
+            <div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalStudents }}</div>
               <div class="stat-label">Students</div>
             </div>
           </div>
           <div class="stat-card faculty">
-            <div class="stat-icon">👨‍🏫</div>
+            <div class="stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalAdvisers }}</div>
               <div class="stat-label">Faculty</div>
             </div>
           </div>
           <div class="stat-card staff">
-            <div class="stat-icon">🏥</div>
+            <div class="stat-icon"><i class="fa-solid fa-notes-medical"></i></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalStaff }}</div>
               <div class="stat-label">Clinic Staff</div>
@@ -66,7 +66,7 @@ import { ManageUsersComponent } from './manage-users/manage-users.component';
             <div class="activity-list">
               <div *ngFor="let activity of activityLog" class="activity-item">
                 <div class="activity-icon" [ngClass]="activity.type">
-                  {{ getActivityIcon(activity.type) }}
+                  <i [ngClass]="getActivityIconClass(activity.type)"></i>
                 </div>
                 <div class="activity-details">
                   <div class="activity-action">{{ activity.action }}</div>
@@ -88,7 +88,7 @@ import { ManageUsersComponent } from './manage-users/manage-users.component';
             <div class="alerts-list">
               <div *ngFor="let alert of systemAlerts" class="alert-item" [ngClass]="alert.type">
                 <div class="alert-icon">
-                  {{ getAlertIcon(alert.type) }}
+                  <i [ngClass]="getAlertIconClass(alert.type)"></i>
                 </div>
                 <div class="alert-content">
                   <div class="alert-message">{{ alert.message }}</div>
@@ -97,7 +97,7 @@ import { ManageUsersComponent } from './manage-users/manage-users.component';
                 <button class="alert-dismiss" (click)="dismissAlert(alert)">×</button>
               </div>
               <div *ngIf="systemAlerts.length === 0" class="no-alerts">
-                <span>✓</span> No active alerts
+                <span><i class="fa-solid fa-check"></i></span> No active alerts
               </div>
             </div>
           </div>
@@ -136,16 +136,28 @@ import { ManageUsersComponent } from './manage-users/manage-users.component';
             </div>
             <div class="actions-grid">
               <button class="action-btn" (click)="navigateTo('/dashboard/admin/manage-users')">
-                <span class="action-icon">👤</span>
+                <span class="action-icon"><i class="fa-solid fa-users-gear"></i></span>
                 <span class="action-label">Manage Users</span>
               </button>
               <button class="action-btn" (click)="navigateTo('/dashboard/admin/settings')">
-                <span class="action-icon">⚙️</span>
+                <span class="action-icon"><i class="fa-solid fa-gear"></i></span>
                 <span class="action-label">System Settings</span>
               </button>
               <button class="action-btn" (click)="navigateTo('/dashboard/admin/reports')">
-                <span class="action-icon">📊</span>
+                <span class="action-icon"><i class="fa-solid fa-chart-column"></i></span>
                 <span class="action-label">View Reports</span>
+              </button>
+              <button class="action-btn" (click)="navigateTo('/dashboard/admin/backup-recovery')">
+                <span class="action-icon"><i class="fa-solid fa-database"></i></span>
+                <span class="action-label">Database Backup</span>
+              </button>
+              <button class="action-btn" (click)="navigateTo('/dashboard/admin/audit-logs')">
+                <span class="action-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+                <span class="action-label">Audit Logs</span>
+              </button>
+              <button class="action-btn" (click)="navigateTo('/dashboard/admin/security')">
+                <span class="action-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                <span class="action-label">Security</span>
               </button>
             </div>
           </div>
@@ -671,23 +683,23 @@ export class AdminDashboardComponent implements OnInit {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  getActivityIcon(type: string): string {
+  getActivityIconClass(type: string): string {
     const icons: { [key: string]: string } = {
-      user: '👤',
-      record: '📋',
-      report: '📊',
-      system: '⚙️'
+      user: 'fa-solid fa-user',
+      record: 'fa-solid fa-file-medical',
+      report: 'fa-solid fa-chart-column',
+      system: 'fa-solid fa-gear'
     };
-    return icons[type] || '📌';
+    return icons[type] || 'fa-solid fa-circle-info';
   }
 
-  getAlertIcon(type: string): string {
+  getAlertIconClass(type: string): string {
     const icons: { [key: string]: string } = {
-      warning: '⚠️',
-      info: 'ℹ️',
-      error: '❌'
+      warning: 'fa-solid fa-triangle-exclamation',
+      info: 'fa-solid fa-circle-info',
+      error: 'fa-solid fa-circle-xmark'
     };
-    return icons[type] || '📢';
+    return icons[type] || 'fa-solid fa-bell';
   }
 
   dismissAlert(alert: any): void {

@@ -19,11 +19,11 @@ export class ViewReportsComponent implements OnInit {
   errorMessage = '';
 
   reportTypes = [
-    { id: 'summary', label: 'Summary', icon: '📊' },
-    { id: 'users', label: 'Users', icon: '👥' },
-    { id: 'medical', label: 'Medical Records', icon: '🏥' },
-    { id: 'registration', label: 'Registrations', icon: '📝' },
-    { id: 'allergies', label: 'Allergies', icon: '⚠️' }
+    { id: 'summary', label: 'Summary', icon: 'fa-solid fa-chart-column' },
+    { id: 'users', label: 'Users', icon: 'fa-solid fa-users' },
+    { id: 'medical', label: 'Medical Records', icon: 'fa-solid fa-notes-medical' },
+    { id: 'registration', label: 'Registrations', icon: 'fa-solid fa-user-plus' },
+    { id: 'allergies', label: 'Allergies', icon: 'fa-solid fa-triangle-exclamation' }
   ];
 
   constructor(private adminService: AdminService) {
@@ -106,8 +106,8 @@ export class ViewReportsComponent implements OnInit {
     return report ? report.label : reportId;
   }
 
-  getReportIcon(reportId: string): string {
+  getReportIconClass(reportId: string): string {
     const report = this.reportTypes.find(r => r.id === reportId);
-    return report ? report.icon : '📄';
+    return report ? report.icon : 'fa-solid fa-file-lines';
   }
 }

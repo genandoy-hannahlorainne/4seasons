@@ -132,14 +132,14 @@ interface Alert {
 
         <!-- Empty State -->
         <div class="empty-state" *ngIf="alerts.length === 0">
-          <div class="empty-icon">📭</div>
+          <div class="empty-icon" aria-hidden="true"><i class="fa-solid fa-inbox"></i></div>
           <div class="empty-title">No Alerts Yet</div>
           <div class="empty-text">You will receive notifications here when clinic staff sends updates about your students' health visits.</div>
         </div>
 
         <!-- Filtered Empty State -->
         <div class="empty-state" *ngIf="alerts.length > 0 && filteredAlerts.length === 0">
-          <div class="empty-icon">✓</div>
+          <div class="empty-icon" aria-hidden="true"><i class="fa-solid fa-circle-check"></i></div>
           <div class="empty-text">No {{ activeFilter }} alerts</div>
         </div>
       </div>
@@ -357,7 +357,7 @@ interface Alert {
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       
-      .empty-icon { font-size: 4rem; margin-bottom: 1rem; }
+      .empty-icon { font-size: 3.25rem; margin-bottom: 1rem; color: #4f7ea9; }
       .empty-title { font-size: 1.3rem; font-weight: 600; color: #2c3e50; margin-bottom: 0.5rem; }
       .empty-text { color: #7f8c8d; font-size: 1rem; max-width: 400px; margin: 0 auto; line-height: 1.5; }
     }
