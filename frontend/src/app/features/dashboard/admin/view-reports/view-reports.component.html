@@ -12,7 +12,7 @@
       [class.active]="activeReport === report.id"
       (click)="selectReport(report.id)"
     >
-      <span class="report-icon">{{ report.icon }}</span>
+      <span class="report-icon"><i [ngClass]="report.icon"></i></span>
       <span class="report-label">{{ report.label }}</span>
     </button>
   </div>
@@ -31,7 +31,7 @@
   </div>
 
   <!-- Error Message -->
-  <div *ngIf="errorMessage" class="alert alert-danger">✕ {{ errorMessage }}</div>
+  <div *ngIf="errorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}</div>
 
   <!-- Loading State -->
   <div *ngIf="loading" class="loading-state">
@@ -43,11 +43,11 @@
   <div *ngIf="!loading && reportData" class="report-content">
     <!-- Report Header -->
     <div class="report-header">
-      <h2>{{ getReportIcon(activeReport) }} {{ getReportLabel(activeReport) }} Report</h2>
+      <h2><i [ngClass]="getReportIconClass(activeReport)"></i> {{ getReportLabel(activeReport) }} Report</h2>
       <div class="report-actions">
-        <button class="btn btn-secondary" (click)="refreshReport()" title="Refresh">🔄 Refresh</button>
-        <button class="btn btn-secondary" (click)="exportReport()" title="Export">📥 Export</button>
-        <button class="btn btn-secondary" (click)="printReport()" title="Print">🖨️ Print</button>
+        <button class="btn btn-secondary" (click)="refreshReport()" title="Refresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        <button class="btn btn-secondary" (click)="exportReport()" title="Export"><i class="fa-solid fa-file-arrow-down"></i> Export</button>
+        <button class="btn btn-secondary" (click)="printReport()" title="Print"><i class="fa-solid fa-print"></i> Print</button>
       </div>
     </div>
 

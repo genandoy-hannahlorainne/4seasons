@@ -6,10 +6,10 @@
 
   <!-- Success/Error Messages -->
   <div class="alert alert-success" *ngIf="success">
-    ✓ {{ success }}
+    <i class="fa-solid fa-circle-check"></i> {{ success }}
   </div>
   <div class="alert alert-error" *ngIf="error">
-    ⚠️ {{ error }}
+    <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
   </div>
 
   <!-- Create Backup Section -->
@@ -17,8 +17,8 @@
     <h2>Create New Backup</h2>
     <p>Create a complete backup of the database. This may take a few moments.</p>
     <button class="btn btn-primary" (click)="createBackup()" [disabled]="creating">
-      <span *ngIf="!creating">📦 Create Backup</span>
-      <span *ngIf="creating">⏳ Creating Backup...</span>
+      <span *ngIf="!creating"><i class="fa-solid fa-box-archive"></i> Create Backup</span>
+      <span *ngIf="creating"><i class="fa-solid fa-hourglass-half"></i> Creating Backup...</span>
     </button>
   </div>
 
@@ -27,7 +27,7 @@
     <div class="card-header">
       <h2>Backup History</h2>
       <button class="btn btn-secondary" (click)="loadBackups()" [disabled]="loading">
-        🔄 Refresh
+        <i class="fa-solid fa-rotate"></i> Refresh
       </button>
     </div>
 
@@ -61,13 +61,13 @@
             <td>
               <div class="action-buttons">
                 <button class="btn btn-sm btn-success" (click)="restoreBackup(backup.filename)" title="Restore this backup">
-                  🔄 Restore
+                  <i class="fa-solid fa-rotate"></i> Restore
                 </button>
                 <button class="btn btn-sm btn-outline" (click)="downloadBackup(backup.filename)">
-                  ⬇️ Download
+                  <i class="fa-solid fa-download"></i> Download
                 </button>
                 <button class="btn btn-sm btn-danger" (click)="deleteBackup(backup.filename)">
-                  🗑️ Delete
+                  <i class="fa-solid fa-trash"></i> Delete
                 </button>
               </div>
             </td>
@@ -79,19 +79,19 @@
 
   <!-- Info Section -->
   <div class="card info-card">
-    <h3>ℹ️ Backup Information</h3>
+    <h3><i class="fa-solid fa-circle-info"></i> Backup Information</h3>
     <ul>
       <li>Backups are stored securely on the server</li>
       <li>Download backups to keep an offline copy</li>
       <li>Old backups are automatically cleaned up after 30 days</li>
       <li>Backups include all database tables and data</li>
-      <li><strong>⚠️ Restore will replace ALL current data with backup data</strong></li>
+      <li><strong><i class="fa-solid fa-triangle-exclamation"></i> Restore will replace ALL current data with backup data</strong></li>
     </ul>
   </div>
 
   <!-- Restore Warning -->
   <div class="card warning-card">
-    <h3>⚠️ Important: About Restore</h3>
+    <h3><i class="fa-solid fa-triangle-exclamation"></i> Important: About Restore</h3>
     <p><strong>Restoring a backup will:</strong></p>
     <ul>
       <li>Replace ALL current database data with the backup data</li>
