@@ -28,21 +28,18 @@ import * as XLSX from 'xlsx';
           <div class="filter-group">
             <label>Date Range</label>
             <div class="date-range">
-              <input type="date" [(ngModel)]="startDate" class="filter-input" [disabled]="loading">
+              <input type="date" [(ngModel)]="startDate" (change)="onFilterChange()" class="filter-input" [disabled]="loading">
               <span>to</span>
-              <input type="date" [(ngModel)]="endDate" class="filter-input" [disabled]="loading">
+              <input type="date" [(ngModel)]="endDate" (change)="onFilterChange()" class="filter-input" [disabled]="loading">
             </div>
           </div>
           <div class="filter-group">
             <label>Grade Level</label>
-            <select [(ngModel)]="gradeFilter" class="filter-select" [disabled]="loading">
+            <select [(ngModel)]="gradeFilter" (change)="onFilterChange()" class="filter-select" [disabled]="loading">
               <option value="">All Grades</option>
               <option *ngFor="let grade of grades" [value]="grade">Grade {{ grade }}</option>
             </select>
           </div>
-          <button class="btn btn-primary" (click)="generateReport()" [disabled]="loading">
-            {{ loading ? 'Loading...' : 'Generate Report' }}
-          </button>
         </div>
       </div>
 
@@ -323,8 +320,15 @@ export class ReportsComponent implements OnInit {
     this.endDate = end.toISOString().split('T')[0];
     this.startDate = start.toISOString().split('T')[0];
 
-    // Load initial report
+    // Auto-load initial report
     this.generateReport();
+  }
+
+  onFilterChange(): void {
+    // Auto-generate report when filters change
+    if (this.startDate && this.endDate) {
+      this.generateReport();
+    }
   }
 
   generateReport(): void {

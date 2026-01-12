@@ -35,7 +35,7 @@ import { QrScannerComponent } from './qr-scanner.component';
           <!-- Scan QR Button -->
           <div class="scan-section" *ngIf="!selectedStudent">
             <button type="button" class="btn btn-scan" (click)="openScanner()">
-              📷 Scan Student QR Code
+              Scan Student QR Code
             </button>
             <span class="or-divider">or search manually</span>
           </div>
