@@ -16,6 +16,10 @@ import { RouterModule, RouterOutlet } from '@angular/router';
         </div>
         <div class="nav-links">
           <a routerLink="/dashboard/admin" class="nav-link" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
+          <a routerLink="/dashboard/admin/manage-users" class="nav-link" routerLinkActive="active">Users</a>
+          <a routerLink="/dashboard/admin/settings" class="nav-link" routerLinkActive="active">Settings</a>
+          <a routerLink="/dashboard/admin/backup-recovery" class="nav-link" routerLinkActive="active">Backup</a>
+          <a routerLink="/dashboard/admin/reports" class="nav-link" routerLinkActive="active">Reports</a>
         </div>
         <div class="nav-icons">
           <button class="icon-btn profile" routerLink="/dashboard/admin/profile" title="Profile">
