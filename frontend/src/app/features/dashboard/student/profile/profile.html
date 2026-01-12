@@ -1,139 +1,101 @@
-<div class="profile-container">
-  <div class="student-profile">
+<div class="student-profile">
   <div class="profile-header">
     <h1>Profile Settings</h1>
-    <p>Manage your account information</p>
   </div>
 
-  <!-- Loading State -->
   <div *ngIf="loading && !isEditing" class="loading-state">
     <div class="spinner"></div>
     <p>Loading profile...</p>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="loading && !isEditing" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading profile...</p>
-  </div>
-  
-  <!-- Success/Error Messages -->
   <div *ngIf="successMessage" class="alert alert-success">✓ {{ successMessage }}</div>
   <div *ngIf="errorMessage" class="alert alert-danger">✕ {{ errorMessage }}</div>
 
   <div class="profile-content" *ngIf="!loading || isEditing">
-    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-      <div class="profile-card">
+    <div class="profile-settings card" role="region" aria-label="Profile Settings">
+      <div class="profile-settings-left">
         <div class="profile-avatar">
           <img [src]="getProfileIcon()" [alt]="profileForm.get('firstName')?.value" class="avatar-img">
         </div>
+      </div>
+
+      <div class="profile-settings-main">
+        <div class="profile-grid">
+          <div class="profile-item">
+            <div class="profile-label">Full Name</div>
+            <div class="profile-value">
+              {{ profileForm.get('firstName')?.value }} {{ profileForm.get('middleName')?.value }} {{ profileForm.get('lastName')?.value }}
+            </div>
+            <div class="profile-label">Sex</div>
+            <div class="profile-value">{{ (profileForm.get('gender')?.value || '') | titlecase }}</div>
+          </div>
+
+          <div class="profile-item">
+            <div class="profile-label">Date of Birth</div>
+            <div class="profile-value">{{ profileForm.get('birthday')?.value }}</div>
+            <div class="profile-label">Student ID</div>
+            <div class="profile-value">{{ profileForm.get('studentNumber')?.value }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-settings-actions">
         
-        <div class="profile-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="firstName">First Name</label>
-              <input type="text" id="firstName" formControlName="firstName" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="middleName">Middle Name</label>
-              <input type="text" id="middleName" formControlName="middleName" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="lastName">Last Name</label>
-              <input type="text" id="lastName" formControlName="lastName" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="studentNumber">Student Number</label>
-              <input type="text" id="studentNumber" formControlName="studentNumber" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="gender">Gender</label>
-              <select id="gender" formControlName="gender" class="form-control">
-                <option value="">Select</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="birthday">Birthday</label>
-              <input type="date" id="birthday" formControlName="birthday" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="gradeLevel">Grade Level</label>
-              <input type="text" id="gradeLevel" formControlName="gradeLevel" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="section">Section</label>
-              <input type="text" id="section" formControlName="section" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="bloodType">Blood Type</label>
-              <input type="text" id="bloodType" formControlName="bloodType" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="email">Email Address</label>
-              <input type="email" id="email" formControlName="email" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="contactNumber">Phone Number</label>
-              <input type="tel" id="contactNumber" formControlName="contactNumber" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-group full-width">
-            <label for="address">Address</label>
-            <textarea id="address" formControlName="address" class="form-control" rows="2"></textarea>
-          </div>
-
-          <div class="form-actions">
-            <button *ngIf="!isEditing" type="button" class="btn btn-primary" (click)="toggleEdit()">Edit Profile</button>
-            <div *ngIf="isEditing" class="edit-actions">
-              <button type="submit" class="btn btn-success" [disabled]="loading || profileForm.invalid">Save Changes</button>
-              <button type="button" class="btn btn-secondary" (click)="toggleEdit()">Cancel</button>
-            </div>
-          </div>
-        </div>
       </div>
-    </form>
+    </div>
 
-    <div class="additional-settings">
-      <div class="settings-card">
-        <h3>Account Settings</h3>
-        <div class="setting-item">
-          <div class="setting-info">
-            <div class="setting-title">Change Password</div>
-            <div class="setting-description">Update your account password</div>
-          </div>
-          <button class="btn btn-outline" (click)="changePassword()">Change</button>
+    <div class="profile-bottom-grid">
+      <form class="contact-card card" [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+        <div class="contact-header">
+          <div class="card-title">Contact Information</div>
+          <button type="button" class="btn btn-outline edit-btn" (click)="toggleEdit()">
+            <img src="assets/edit-icon.png" alt="" class="edit-btn-icon">
+            <span>{{ isEditing ? 'Cancel' : 'Edit' }}</span>
+          </button>
         </div>
-        <div class="setting-item">
-          <div class="setting-info">
-            <div class="setting-title">View QR Code</div>
-            <div class="setting-description">Show your student QR code</div>
-          </div>
-          <button class="btn btn-outline" (click)="viewQRCode()" [disabled]="qrCodeLoading">View</button>
-        </div>
-      </div>
 
-      <div class="settings-card">
-        <h3>Session</h3>
-        <div class="setting-item">
-          <div class="setting-info">
-            <div class="setting-title">Logout</div>
-            <div class="setting-description">Sign out of your account</div>
+        <div class="field">
+          <label for="email">Email Address</label>
+          <div class="input-with-icon">
+            <span class="input-icon" aria-hidden="true">
+              <img src="assets/message-icon.png" alt="" class="input-icon-img">
+            </span>
+            <input type="email" id="email" formControlName="email" class="form-control" [readonly]="!isEditing">
           </div>
-          <button class="btn btn-danger" (click)="logout()">Logout</button>
         </div>
+
+        <div class="field">
+          <label for="contactNumber">Phone Number</label>
+          <div class="input-with-icon">
+            <span class="input-icon" aria-hidden="true">
+              <img src="assets/contact-icon.png" alt="" class="input-icon-img">
+            </span>
+            <input type="tel" id="contactNumber" formControlName="contactNumber" class="form-control" [readonly]="!isEditing">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="address">Residential Address</label>
+          <div class="input-with-icon">
+            <span class="input-icon" aria-hidden="true">
+              <img src="assets/address-icon.png" alt="" class="input-icon-img">
+            </span>
+            <textarea id="address" formControlName="address" class="form-control" rows="2" [readonly]="!isEditing"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary save-btn" [disabled]="loading || profileForm.invalid || !isEditing">
+          Save Changes
+        </button>
+      </form>
+
+      <div class="others-card card">
+        <div class="card-title">Others</div>
+        <button type="button" class="other-link" (click)="changePassword()">Change Password</button>
+        <button type="button" class="other-link" (click)="viewQRCode()" [disabled]="qrCodeLoading">View QR Code</button>
+        <button type="button" class="other-link" (click)="toggleEdit()">Update Information</button>
+        <div class="others-sep"></div>
+        <button type="button" class="other-link danger" (click)="logout()">Logout</button>
       </div>
     </div>
   </div>
