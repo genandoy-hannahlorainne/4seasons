@@ -23,6 +23,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
   
   if (Object.keys(headers).length > 0) {
+    console.log('Adding headers to request:', headers);
     req = req.clone({
       setHeaders: headers
     });

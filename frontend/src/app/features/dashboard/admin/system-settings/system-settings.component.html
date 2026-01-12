@@ -1,0 +1,177 @@
+<div class="settings-container">
+  <div class="page-header">
+    <h1>System Settings</h1>
+    <p>Configure system parameters and preferences</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading settings...</p>
+  </div>
+
+  <div *ngIf="!loading" class="settings-content">
+    <!-- Messages -->
+    <div *ngIf="successMessage" class="alert alert-success">✓ {{ successMessage }}</div>
+    <div *ngIf="errorMessage" class="alert alert-danger">✕ {{ errorMessage }}</div>
+
+    <!-- Tabs -->
+    <div class="settings-tabs">
+      <button 
+        *ngFor="let tab of ['system', 'email', 'notifications', 'security', 'backup']"
+        class="tab-btn"
+        [class.active]="activeTab === tab"
+        (click)="selectTab(tab)"
+      >
+        {{ tab | titlecase }}
+      </button>
+    </div>
+
+    <!-- Settings Panels -->
+    <div class="settings-panel">
+      <!-- System Settings -->
+      <div *ngIf="activeTab === 'system'" class="panel-content">
+        <h2>System Configuration</h2>
+        <div class="form-group">
+          <label>Application Name</label>
+          <input type="text" [(ngModel)]="settings.system.app_name" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Application Version</label>
+          <input type="text" [(ngModel)]="settings.system.app_version" class="form-control" disabled>
+        </div>
+        <div class="form-group">
+          <label>Timezone</label>
+          <select [(ngModel)]="settings.system.timezone" class="form-control">
+            <option value="Asia/Manila">Asia/Manila (PHT)</option>
+            <option value="UTC">UTC</option>
+            <option value="America/New_York">America/New_York (EST)</option>
+            <option value="Europe/London">Europe/London (GMT)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date Format</label>
+          <input type="text" [(ngModel)]="settings.system.date_format" class="form-control" placeholder="Y-m-d">
+        </div>
+        <div class="form-group">
+          <label>Time Format</label>
+          <input type="text" [(ngModel)]="settings.system.time_format" class="form-control" placeholder="H:i:s">
+        </div>
+      </div>
+
+      <!-- Email Settings -->
+      <div *ngIf="activeTab === 'email'" class="panel-content">
+        <h2>Email Configuration</h2>
+        <div class="form-group">
+          <label>SMTP Host</label>
+          <input type="text" [(ngModel)]="settings.email.smtp_host" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>SMTP Port</label>
+          <input type="number" [(ngModel)]="settings.email.smtp_port" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>SMTP Username</label>
+          <input type="email" [(ngModel)]="settings.email.smtp_username" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>From Name</label>
+          <input type="text" [(ngModel)]="settings.email.smtp_from_name" class="form-control">
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" [(ngModel)]="settings.email.smtp_enabled" id="emailEnabled">
+          <label for="emailEnabled">Enable Email Notifications</label>
+        </div>
+        <button class="btn btn-secondary" (click)="testEmailConnection()">Test Connection</button>
+      </div>
+
+      <!-- Notification Settings -->
+      <div *ngIf="activeTab === 'notifications'" class="panel-content">
+        <h2>Notification Preferences</h2>
+        <div class="form-group checkbox">
+          <input type="checkbox" [(ngModel)]="settings.notifications.email_on_registration" id="regEmail">
+          <label for="regEmail">Send email on user registration</label>
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" [(ngModel)]="settings.notifications.email_on_password_reset" id="pwdEmail">
+          <label for="pwdEmail">Send email on password reset</label>
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" [(ngModel)]="settings.notifications.email_on_medical_visit" id="visitEmail">
+          <label for="visitEmail">Send email on medical visit</label>
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" [(ngModel)]="settings.notifications.sms_enabled" id="smsEnabled">
+          <label for="smsEnabled">Enable SMS notifications</label>
+        </div>
+        <div class="form-group">
+          <label>Notification Retention (days)</label>
+          <input type="number" [(ngModel)]="settings.notifications.notification_retention_days" class="form-control">
+        </div>
+      </div>
+
+      <!-- Security Settings -->
+      <div *ngIf="activeTab === 'security'" class="panel-content">
+        <h2>Security Configuration</h2>
+        <div class="form-group">
+          <label>Minimum Password Length</label>
+          <input type="number" [(ngModel)]="settings.security.password_min_length" class="form-control">
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" [(ngModel)]="settings.security.password_require_uppercase" id="uppercase">
+          <label for="uppercase">Require uppercase letters in password</label>
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" [(ngModel)]="settings.security.password_require_numbers" id="numbers">
+          <label for="numbers">Require numbers in password</label>
+        </div>
+        <div class="form-group">
+          <label>Session Timeout (minutes)</label>
+          <input type="number" [(ngModel)]="settings.security.session_timeout_minutes" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Max Login Attempts</label>
+          <input type="number" [(ngModel)]="settings.security.max_login_attempts" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Lockout Duration (minutes)</label>
+          <input type="number" [(ngModel)]="settings.security.lockout_duration_minutes" class="form-control">
+        </div>
+      </div>
+
+      <!-- Backup Settings -->
+      <div *ngIf="activeTab === 'backup'" class="panel-content">
+        <h2>Backup Configuration</h2>
+        <div class="form-group checkbox">
+          <input type="checkbox" [(ngModel)]="settings.backup.auto_backup_enabled" id="autoBackup">
+          <label for="autoBackup">Enable automatic backups</label>
+        </div>
+        <div class="form-group">
+          <label>Backup Frequency</label>
+          <select [(ngModel)]="settings.backup.backup_frequency" class="form-control">
+            <option value="hourly">Hourly</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Backup Time (HH:MM)</label>
+          <input type="time" [(ngModel)]="settings.backup.backup_time" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Backup Retention (days)</label>
+          <input type="number" [(ngModel)]="settings.backup.backup_retention_days" class="form-control">
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="settings-actions">
+      <button class="btn btn-primary" (click)="saveSettings()" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save Changes' }}
+      </button>
+      <button class="btn btn-secondary" (click)="resetSettings()">Reset to Defaults</button>
+    </div>
+  </div>
+</div>

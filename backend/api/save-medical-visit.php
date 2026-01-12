@@ -1,13 +1,8 @@
 <?php
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, X-Requested-With");
-header("Content-Type: application/json; charset=UTF-8");
+// Include CORS handler first
+require_once '../cors.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
+header("Content-Type: application/json; charset=UTF-8");
 
 require_once '../config/database.php';
 
@@ -25,6 +20,9 @@ if (empty($data->student_id) || empty($data->chief_complaint) || empty($data->vi
 
 try {
     $db->beginTransaction();
+    
+    // Log incoming data for debugging
+    error_log("Save visit request: " . json_encode($data));
     
     // Map visit_type from form to database enum
     // Form sends: walk-in, emergency, scheduled, follow-up
@@ -99,6 +97,8 @@ try {
     
     $stmt->execute();
     $visitId = $db->lastInsertId();
+    
+    error_log("Visit saved with ID: " . $visitId);
     
     // Insert vitals into vitals table if provided
     $hasVitals = !empty($data->vitals) && (

@@ -20,6 +20,8 @@ import { AdminLayoutComponent } from './admin/admin-layout.component';
 import { AdminDashboardComponent } from './admin/admin-dashboard.component';
 import { AdminProfileComponent } from './admin/profile/admin-profile.component';
 import { ManageUsersComponent } from './admin/manage-users/manage-users.component';
+import { SystemSettingsComponent } from './admin/system-settings/system-settings.component';
+import { ViewReportsComponent } from './admin/view-reports/view-reports.component';
 import { AdminGuard } from '../../core/guards/admin.guard';
 
 export const dashboardRoutes: Routes = [
@@ -69,7 +71,9 @@ export const dashboardRoutes: Routes = [
     children: [
       { path: '', component: AdminDashboardComponent },
       { path: 'profile', component: AdminProfileComponent },
-      { path: 'manage-users', component: ManageUsersComponent }
+      { path: 'manage-users', component: ManageUsersComponent },
+      { path: 'settings', component: SystemSettingsComponent },
+      { path: 'reports', component: ViewReportsComponent }
     ]
   }
 ];

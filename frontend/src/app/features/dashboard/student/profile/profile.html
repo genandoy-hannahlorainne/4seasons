@@ -96,11 +96,6 @@
             <textarea id="address" formControlName="address" class="form-control" rows="2"></textarea>
           </div>
 
-          <div class="form-group full-width">
-            <label for="emergencyContact">Emergency Contact</label>
-            <input type="text" id="emergencyContact" formControlName="emergencyContact" class="form-control">
-          </div>
-
           <div class="form-actions">
             <button *ngIf="!isEditing" type="button" class="btn btn-primary" (click)="toggleEdit()">Edit Profile</button>
             <div *ngIf="isEditing" class="edit-actions">

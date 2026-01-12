@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { StaffService } from '../../../../core/services/staff.service';
 
 interface Student {
   id: number;
@@ -245,7 +244,7 @@ export class StudentListComponent implements OnInit {
   students: Student[] = [];
   filteredStudents: Student[] = [];
 
-  constructor(private http: HttpClient) {}
+  constructor(private staffService: StaffService) {}
 
   ngOnInit(): void {
     this.loadStudents();
@@ -253,7 +252,7 @@ export class StudentListComponent implements OnInit {
 
   loadStudents(): void {
     this.loading = true;
-    this.http.get<any>(`${environment.apiUrl}/get-all-students.php`)
+    this.staffService.getAllStudents()
       .subscribe({
         next: (response) => {
           this.loading = false;

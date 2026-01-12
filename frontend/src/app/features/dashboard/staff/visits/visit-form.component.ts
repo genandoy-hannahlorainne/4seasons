@@ -96,10 +96,6 @@ import { QrScannerComponent } from './qr-scanner.component';
               </select>
             </div>
           </div>
-          <div class="form-group">
-            <label>Chief Complaint *</label>
-            <textarea [(ngModel)]="visit.chiefComplaint" name="chiefComplaint" class="form-control" rows="3" required placeholder="Describe the main reason for the visit"></textarea>
-          </div>
         </div>
 
         <!-- Vitals -->
@@ -118,10 +114,6 @@ import { QrScannerComponent } from './qr-scanner.component';
               <label>Pulse Rate (bpm)</label>
               <input type="number" [(ngModel)]="visit.vitals.pulseRate" name="pulseRate" class="form-control" placeholder="72">
             </div>
-            <div class="form-group">
-              <label>Respiratory Rate</label>
-              <input type="number" [(ngModel)]="visit.vitals.respiratoryRate" name="respiratoryRate" class="form-control" placeholder="16">
-            </div>
           </div>
         </div>
 
@@ -129,20 +121,24 @@ import { QrScannerComponent } from './qr-scanner.component';
         <div class="form-section">
           <h3>Assessment & Treatment</h3>
           <div class="form-group">
-            <label>Diagnosis</label>
-            <input type="text" [(ngModel)]="visit.diagnosis" name="diagnosis" class="form-control" placeholder="Enter diagnosis">
-          </div>
-          <div class="form-group">
-            <label>Treatment Given</label>
-            <textarea [(ngModel)]="visit.treatment" name="treatment" class="form-control" rows="3" placeholder="Describe treatment provided"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Medications Administered</label>
-            <textarea [(ngModel)]="visit.medications" name="medications" class="form-control" rows="2" placeholder="List medications given"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Recommendations</label>
-            <textarea [(ngModel)]="visit.recommendations" name="recommendations" class="form-control" rows="2" placeholder="Follow-up instructions, rest, etc."></textarea>
+            <label>Diagnosis Category *</label>
+            <select [(ngModel)]="visit.diagnosis" name="diagnosis" class="form-control" required>
+              <option value="">Select diagnosis category</option>
+              <option value="Fever">Fever</option>
+              <option value="Cough">Cough</option>
+              <option value="Headache">Headache</option>
+              <option value="Sore Throat">Sore Throat</option>
+              <option value="Stomach Ache">Stomach Ache</option>
+              <option value="Diarrhea">Diarrhea</option>
+              <option value="Vomiting">Vomiting</option>
+              <option value="Rash">Rash</option>
+              <option value="Injury">Injury</option>
+              <option value="Allergy">Allergy</option>
+              <option value="Asthma">Asthma</option>
+              <option value="Diabetes">Diabetes</option>
+              <option value="Hypertension">Hypertension</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
         </div>
 
@@ -422,17 +418,12 @@ export class VisitFormComponent implements OnInit {
   visit = {
     dateTime: '',
     visitType: '',
-    chiefComplaint: '',
     vitals: {
       temperature: null as number | null,
       bloodPressure: '',
-      pulseRate: null as number | null,
-      respiratoryRate: null as number | null
+      pulseRate: null as number | null
     },
     diagnosis: '',
-    treatment: '',
-    medications: '',
-    recommendations: '',
     status: 'pending',
     notifyParent: false
   };
@@ -576,8 +567,8 @@ export class VisitFormComponent implements OnInit {
       return;
     }
 
-    if (!this.visit.chiefComplaint || !this.visit.visitType) {
-      alert('Please fill in required fields (Visit Type and Chief Complaint)');
+    if (!this.visit.visitType || !this.visit.diagnosis) {
+      alert('Please fill in required fields (Visit Type and Diagnosis)');
       return;
     }
 
@@ -587,17 +578,12 @@ export class VisitFormComponent implements OnInit {
       student_id: this.selectedStudent.student_id,
       date_time: this.visit.dateTime,
       visit_type: this.visit.visitType,
-      chief_complaint: this.visit.chiefComplaint,
       vitals: {
         temperature: this.visit.vitals.temperature,
         blood_pressure: this.visit.vitals.bloodPressure,
-        pulse_rate: this.visit.vitals.pulseRate,
-        respiratory_rate: this.visit.vitals.respiratoryRate
+        pulse_rate: this.visit.vitals.pulseRate
       },
       diagnosis: this.visit.diagnosis,
-      treatment: this.visit.treatment,
-      medications: this.visit.medications,
-      recommendations: this.visit.recommendations,
       status: this.visit.status,
       notify_parent: this.visit.notifyParent,
       parent_phone: this.selectedStudent?.parentPhone || null

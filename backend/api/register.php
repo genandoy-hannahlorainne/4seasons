@@ -83,8 +83,8 @@ if (!empty($data->role) && !empty($data->password)) {
         $full_name = trim($data->firstName . ' ' . ($data->middleName ?? '') . ' ' . $data->lastName);
         
         // Insert into users table
-        $userQuery = "INSERT INTO users (role_id, username, password_hash, email, phone, full_name) 
-                     VALUES (:role_id, :username, :password_hash, :email, :phone, :full_name)";
+        $userQuery = "INSERT INTO users (role_id, username, password_hash, email, phone, full_name, is_active) 
+                     VALUES (:role_id, :username, :password_hash, :email, :phone, :full_name, 1)";
         $userStmt = $db->prepare($userQuery);
         $userStmt->bindParam(":role_id", $role_id);
         $userStmt->bindParam(":username", $username);
@@ -105,9 +105,19 @@ if (!empty($data->role) && !empty($data->password)) {
                 throw new Exception("Student number, first name, and last name are required");
             }
             
+            // Check if student number already exists
+            $checkStudentQuery = "SELECT student_id FROM students WHERE student_number = :student_number";
+            $checkStudentStmt = $db->prepare($checkStudentQuery);
+            $checkStudentStmt->bindParam(":student_number", $data->studentNumber);
+            $checkStudentStmt->execute();
+            
+            if ($checkStudentStmt->rowCount() > 0) {
+                throw new Exception("Student number already exists");
+            }
+            
             $studentQuery = "INSERT INTO students 
-                           (user_id, student_number, first_name, middle_name, last_name, birth_date, gender, grade_level, section) 
-                           VALUES (:user_id, :student_number, :first_name, :middle_name, :last_name, :birth_date, :gender, :grade_level, :section)";
+                           (user_id, student_number, first_name, middle_name, last_name, birth_date, gender, grade_level, section, is_active) 
+                           VALUES (:user_id, :student_number, :first_name, :middle_name, :last_name, :birth_date, :gender, :grade_level, :section, 1)";
             $studentStmt = $db->prepare($studentQuery);
             $studentStmt->bindParam(":user_id", $user_id);
             $studentStmt->bindParam(":student_number", $data->studentNumber);
@@ -132,8 +142,8 @@ if (!empty($data->role) && !empty($data->password)) {
             
         } elseif ($data->role === 'adviser') {
             $adviserQuery = "INSERT INTO advisers 
-                           (user_id, first_name, last_name, contact_phone, grade_level, section) 
-                           VALUES (:user_id, :first_name, :last_name, :contact_phone, :grade_level, :section)";
+                           (user_id, first_name, last_name, contact_phone, grade_level, section, is_active) 
+                           VALUES (:user_id, :first_name, :last_name, :contact_phone, :grade_level, :section, 1)";
             $adviserStmt = $db->prepare($adviserQuery);
             $adviserStmt->bindParam(":user_id", $user_id);
             $adviserStmt->bindParam(":first_name", $data->firstName);
@@ -147,11 +157,18 @@ if (!empty($data->role) && !empty($data->password)) {
             $adviserStmt->execute();
             
         } elseif ($data->role === 'clinic-staff') {
+            // Validate required clinic staff fields
+            if (empty($data->firstName) || empty($data->lastName)) {
+                throw new Exception("First name and last name are required for clinic staff");
+            }
+            
             $staffQuery = "INSERT INTO clinic_staff 
-                         (user_id, position) 
-                         VALUES (:user_id, 'Staff')";
+                         (user_id, position, is_active) 
+                         VALUES (:user_id, :position, 1)";
             $staffStmt = $db->prepare($staffQuery);
             $staffStmt->bindParam(":user_id", $user_id);
+            $position = $data->position ?? 'Staff';
+            $staffStmt->bindParam(":position", $position);
             $staffStmt->execute();
         }
         

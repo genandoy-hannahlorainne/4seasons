@@ -57,4 +57,44 @@ export class AdminService {
   deleteUser(userId: number): Observable<any> {
     return this.http.delete<any>(`${environment.apiUrl}/manage-user.php?action=delete&user_id=${userId}`);
   }
+
+  // System Settings
+  getSystemSettings(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/system-settings.php?action=get-all`);
+  }
+
+  updateSystemSettings(section: string, settings: any): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/system-settings.php?action=update`, {
+      section,
+      settings
+    });
+  }
+
+  // Reports
+  getReport(reportType: string, startDate?: string, endDate?: string): Observable<any> {
+    let url = `${environment.apiUrl}/admin-reports.php?type=${reportType}`;
+    if (startDate) url += `&start_date=${startDate}`;
+    if (endDate) url += `&end_date=${endDate}`;
+    return this.http.get<any>(url);
+  }
+
+  getSummaryReport(): Observable<any> {
+    return this.getReport('summary');
+  }
+
+  getUsersReport(): Observable<any> {
+    return this.getReport('users');
+  }
+
+  getMedicalReport(startDate?: string, endDate?: string): Observable<any> {
+    return this.getReport('medical', startDate, endDate);
+  }
+
+  getRegistrationReport(startDate?: string, endDate?: string): Observable<any> {
+    return this.getReport('registration', startDate, endDate);
+  }
+
+  getAllergiesReport(): Observable<any> {
+    return this.getReport('allergies');
+  }
 }

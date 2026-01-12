@@ -96,4 +96,12 @@ export class AdviserService {
   getAdvisoryStudents(userId: number): Observable<AdvisoryStudentsResponse> {
     return this.http.get<AdvisoryStudentsResponse>(`${environment.apiUrl}/get-advisory-students.php?user_id=${userId}`);
   }
+
+  autoAssignStudents(userId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/auto-assign-students.php?user_id=${userId}`);
+  }
+
+  getStudentCompleteProfile(studentId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/get-student-complete-profile.php?student_id=${studentId}`);
+  }
 }

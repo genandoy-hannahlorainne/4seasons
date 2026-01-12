@@ -331,26 +331,58 @@ export class AdviserDashboardComponent implements OnInit {
       return;
     }
 
-    this.adviserService.getAdvisoryStudents(currentUser.user_id).subscribe({
-      next: (response: any) => {
-        if (response.success) {
-          this.advisoryClass = response.adviser.advisory_class;
-          this.advisoryStudents = response.students;
-          this.totalStudents = response.stats.total_students;
-          this.clinicVisitsThisMonth = response.stats.clinic_visits_this_month;
-          this.studentsWithAllergies = response.stats.students_with_allergies;
-          
-          // Generate recent activity from student visits
-          this.generateRecentActivity();
-        } else {
-          this.error = 'Failed to load students';
-        }
-        this.loading = false;
+    // First, auto-assign students based on grade/section
+    this.adviserService.autoAssignStudents(currentUser.user_id).subscribe({
+      next: () => {
+        // Then fetch the advisory students
+        this.adviserService.getAdvisoryStudents(currentUser.user_id).subscribe({
+          next: (response: any) => {
+            if (response.success) {
+              this.advisoryClass = response.adviser.advisory_class;
+              this.advisoryStudents = response.students;
+              this.totalStudents = response.stats.total_students;
+              this.clinicVisitsThisMonth = response.stats.clinic_visits_this_month;
+              this.studentsWithAllergies = response.stats.students_with_allergies;
+              
+              // Generate recent activity from student visits
+              this.generateRecentActivity();
+            } else {
+              this.error = 'Failed to load students';
+            }
+            this.loading = false;
+          },
+          error: (err: any) => {
+            console.error('Error loading students:', err);
+            this.error = 'Failed to load students. Please try again.';
+            this.loading = false;
+          }
+        });
       },
       error: (err: any) => {
-        console.error('Error loading students:', err);
-        this.error = 'Failed to load students. Please try again.';
-        this.loading = false;
+        console.error('Error auto-assigning students:', err);
+        // Continue anyway - try to load students even if auto-assign fails
+        this.adviserService.getAdvisoryStudents(currentUser.user_id).subscribe({
+          next: (response: any) => {
+            if (response.success) {
+              this.advisoryClass = response.adviser.advisory_class;
+              this.advisoryStudents = response.students;
+              this.totalStudents = response.stats.total_students;
+              this.clinicVisitsThisMonth = response.stats.clinic_visits_this_month;
+              this.studentsWithAllergies = response.stats.students_with_allergies;
+              
+              // Generate recent activity from student visits
+              this.generateRecentActivity();
+            } else {
+              this.error = 'Failed to load students';
+            }
+            this.loading = false;
+          },
+          error: (err: any) => {
+            console.error('Error loading students:', err);
+            this.error = 'Failed to load students. Please try again.';
+            this.loading = false;
+          }
+        });
       }
     });
   }
@@ -408,10 +440,30 @@ export class AdviserDashboardComponent implements OnInit {
   }
 
   viewStudent(student: AdvisedStudent): void {
+    // Fetch complete student profile from backend
+    this.adviserService.getStudentCompleteProfile(student.student_id).subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          this.selectedStudent = response.data;
+        } else {
+          console.error('Failed to load student profile:', response.message);
+          // Fallback to basic data
+          this.selectedStudent = this.buildBasicStudentData(student);
+        }
+      },
+      error: (err: any) => {
+        console.error('Error loading student profile:', err);
+        // Fallback to basic data
+        this.selectedStudent = this.buildBasicStudentData(student);
+      }
+    });
+  }
+
+  private buildBasicStudentData(student: AdvisedStudent): any {
     const birthDate = student.birth_date ? new Date(student.birth_date) : null;
     const age = birthDate ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null;
     
-    this.selectedStudent = {
+    return {
       name: student.full_name,
       studentNumber: student.student_number,
       gradeSection: student.grade_section,
