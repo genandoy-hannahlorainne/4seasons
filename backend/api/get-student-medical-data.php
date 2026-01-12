@@ -166,6 +166,30 @@ try {
     $lastVisitStmt->execute();
     $lastVisit = $lastVisitStmt->fetch(PDO::FETCH_ASSOC);
     
+    // Get adviser information
+    $adviserQuery = "SELECT 
+                        a.adviser_id,
+                        a.first_name,
+                        a.last_name,
+                        a.contact_phone,
+                        u.email
+                     FROM advisers a
+                     INNER JOIN users u ON a.user_id = u.user_id
+                     WHERE a.is_active = 1
+                     AND (
+                        SELECT COUNT(*) FROM advisory_class ac 
+                        WHERE ac.adviser_id = a.adviser_id 
+                        AND ac.grade_level = :grade_level 
+                        AND ac.section = :section
+                     ) > 0
+                     LIMIT 1";
+    
+    $adviserStmt = $db->prepare($adviserQuery);
+    $adviserStmt->bindParam(":grade_level", $student['grade_level']);
+    $adviserStmt->bindParam(":section", $student['section']);
+    $adviserStmt->execute();
+    $adviser = $adviserStmt->fetch(PDO::FETCH_ASSOC);
+    
     // Get visit counts
     $recentVisitsQuery = "SELECT COUNT(*) as count
                          FROM medical_visits
@@ -224,7 +248,9 @@ try {
                 'address' => $student['address'],
                 'emergency_contact' => $student['emergency_contact'],
                 'grade_level' => $student['grade_level'],
-                'section' => $student['section']
+                'section' => $student['section'],
+                'adviser_name' => $adviser ? trim($adviser['first_name'] . ' ' . $adviser['last_name']) : 'Not assigned',
+                'adviser_contact' => $adviser ? ($adviser['contact_phone'] ?: $adviser['email']) : 'N/A'
             ],
             'recent_visits_count' => (int)$recentVisitsCount,
             'total_visits_count' => (int)$totalVisitsCount
