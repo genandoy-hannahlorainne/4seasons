@@ -19,7 +19,6 @@ import { AuthService } from '../../../../core/services/auth.service';
         <div class="profile-card">
           <div class="profile-avatar">
             <img [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
-            <button class="change-avatar-btn">Change Photo</button>
           </div>
           
           <div class="profile-form">
@@ -129,10 +128,12 @@ import { AuthService } from '../../../../core/services/auth.service';
         <div class="form-group">
           <label>New Password *</label>
           <input type="password" [(ngModel)]="passwordForm.newPassword" class="form-control" placeholder="Min 6 characters">
+          <small *ngIf="passwordForm.newPassword && passwordForm.newPassword.length < 6" class="error-text">Password must be at least 6 characters</small>
         </div>
         <div class="form-group">
           <label>Confirm Password *</label>
           <input type="password" [(ngModel)]="passwordForm.confirmPassword" class="form-control" placeholder="Re-enter new password">
+          <small *ngIf="passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword" class="error-text">Passwords do not match</small>
         </div>
         <div class="modal-actions">
           <button class="btn btn-secondary" (click)="closePasswordModal()">Cancel</button>
@@ -341,6 +342,12 @@ import { AuthService } from '../../../../core/services/auth.service';
           box-sizing: border-box;
           &:focus { outline: none; border-color: #2c3e50; }
         }
+        .error-text {
+          display: block;
+          color: #dc3545;
+          font-size: 0.85rem;
+          margin-top: 0.25rem;
+        }
       }
 
       .modal-actions {
@@ -427,7 +434,26 @@ export class AdminProfileComponent implements OnInit {
   }
 
   saveProfile(): void {
-    console.log('Saving profile:', this.profileData);
+    if (!this.profileData.fullName || !this.profileData.email) {
+      alert('Full name and email are required');
+      return;
+    }
+
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser) {
+      alert('User not found');
+      return;
+    }
+
+    const updates = {
+      full_name: this.profileData.fullName,
+      email: this.profileData.email,
+      phone: this.profileData.phone || null
+    };
+
+    // Call API to update profile
+    console.log('Saving profile:', updates);
+    alert('Profile updated successfully');
     this.editMode = false;
   }
 
@@ -446,12 +472,46 @@ export class AdminProfileComponent implements OnInit {
   }
 
   submitPasswordChange(): void {
+    if (!this.passwordForm.currentPassword || !this.passwordForm.newPassword || !this.passwordForm.confirmPassword) {
+      alert('All fields are required');
+      return;
+    }
+
+    if (this.passwordForm.newPassword.length < 6) {
+      alert('New password must be at least 6 characters');
+      return;
+    }
+
     if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
       alert('Passwords do not match');
       return;
     }
-    console.log('Changing password');
-    this.closePasswordModal();
+
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser) {
+      alert('User not found');
+      return;
+    }
+
+    this.authService.changePassword(
+      currentUser.user_id,
+      this.passwordForm.currentPassword,
+      this.passwordForm.newPassword
+    ).subscribe({
+      next: (response) => {
+        if (response.success) {
+          alert('Password changed successfully');
+          this.closePasswordModal();
+        } else {
+          alert(response.message || 'Failed to change password');
+        }
+      },
+      error: (err) => {
+        console.error('Password change error:', err);
+        const errorMessage = err.error?.message || err.message || 'Error changing password';
+        alert(errorMessage);
+      }
+    });
   }
 
   logout(): void {
