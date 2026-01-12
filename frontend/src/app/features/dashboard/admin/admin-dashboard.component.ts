@@ -147,37 +147,7 @@ import { ManageUsersComponent } from './manage-users/manage-users.component';
                 <span class="action-icon">📊</span>
                 <span class="action-label">View Reports</span>
               </button>
-              <button class="action-btn" (click)="showBackupModal = true">
-                <span class="action-icon">💾</span>
-                <span class="action-label">Database Backup</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/audit-logs')">
-                <span class="action-icon">📋</span>
-                <span class="action-label">Audit Logs</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/security')">
-                <span class="action-icon">🔒</span>
-                <span class="action-label">Security</span>
-              </button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Backup Modal -->
-      <div class="modal-overlay" *ngIf="showBackupModal" (click)="closeBackupModal()">
-        <div class="modal-content" (click)="$event.stopPropagation()">
-          <button class="close-btn" (click)="closeBackupModal()">×</button>
-          <div class="modal-header">
-            <h2>Database Backup</h2>
-          </div>
-          <div class="modal-body">
-            <p>Are you sure you want to create a database backup?</p>
-            <p class="backup-info">This process may take a few minutes depending on the database size.</p>
-          </div>
-          <div class="modal-actions">
-            <button class="btn btn-primary" (click)="performBackup()">Start Backup</button>
-            <button class="btn btn-outline" (click)="closeBackupModal()">Cancel</button>
           </div>
         </div>
       </div>
@@ -586,7 +556,6 @@ import { ManageUsersComponent } from './manage-users/manage-users.component';
 })
 export class AdminDashboardComponent implements OnInit {
   loading = false;
-  showBackupModal = false;
 
   systemStats = {
     totalUsers: 450,
@@ -597,17 +566,9 @@ export class AdminDashboardComponent implements OnInit {
 
   recentUsers: any[] = [];
 
-  systemAlerts = [
-    { type: 'warning', message: 'Database backup pending', date: '2024-12-03' },
-    { type: 'info', message: 'System update available', date: '2024-12-02' }
-  ];
+  systemAlerts: any[] = [];
 
-  activityLog = [
-    { type: 'user', action: 'New user registered', user: 'John Doe', timestamp: '10:30 AM' },
-    { type: 'record', action: 'Medical record updated', user: 'Clinic Staff', timestamp: '09:15 AM' },
-    { type: 'report', action: 'Monthly report generated', user: 'Admin', timestamp: 'Yesterday' },
-    { type: 'system', action: 'System backup completed', user: 'System', timestamp: 'Yesterday' }
-  ];
+  activityLog: any[] = [];
 
   constructor(
     private authService: AuthService,
@@ -675,16 +636,39 @@ export class AdminDashboardComponent implements OnInit {
         this.loading = false;
       }
     });
+
+    // Fetch activity logs
+    this.adminService.getActivityLogs(3).subscribe({
+      next: (response) => {
+        if (response.success && response.activities) {
+          this.activityLog = response.activities.slice(0, 3).map((activity: any) => ({
+            type: activity.type,
+            action: activity.action,
+            user: activity.user,
+            timestamp: this.formatTimestamp(activity.timestamp)
+          }));
+        }
+      },
+      error: (err) => {
+        console.error('Error loading activity logs:', err);
+      }
+    });
   }
 
-  performBackup(): void {
-    // Placeholder for backup functionality
-    alert('Database backup initiated. This may take a few minutes...');
-    this.showBackupModal = false;
-  }
+  formatTimestamp(timestamp: string): string {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-  closeBackupModal(): void {
-    this.showBackupModal = false;
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   getActivityIcon(type: string): string {
