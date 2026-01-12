@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AdviserService, AdvisedStudent } from '../../../../core/services/adviser.service';
 import { StudentProfileModalComponent } from '../student-profile-modal/student-profile-modal.component';
@@ -7,119 +8,91 @@ import { StudentProfileModalComponent } from '../student-profile-modal/student-p
 @Component({
   selector: 'app-adviser-health-status',
   standalone: true,
-  imports: [CommonModule, StudentProfileModalComponent],
+  imports: [CommonModule, FormsModule, StudentProfileModalComponent],
   template: `
     <div class="adviser-health-status">
-      <div class="health-header">
-        <h1>Health Status Overview</h1>
-        <p>Summary of health status for students under your advisory</p>
-      </div>
-
-      <!-- Loading State -->
       <div *ngIf="loading" class="loading-state">
         <p>Loading students...</p>
       </div>
 
-      <!-- Error State -->
       <div *ngIf="error" class="error-state">
         <p>{{ error }}</p>
         <button (click)="loadStudents()">Retry</button>
       </div>
 
-      <div *ngIf="!loading && !error">
-        <!-- Quick Stats -->
-        <div class="quick-stats">
-          <div class="stat-item total">
-            <div class="stat-icon">👥</div>
-            <div class="stat-value">{{ studentsHealth.length }}</div>
-            <div class="stat-label">Total Students</div>
-          </div>
-          <div class="stat-item visits">
-            <div class="stat-icon">🏥</div>
-            <div class="stat-value">{{ recentVisitsCount }}</div>
-            <div class="stat-label">With Clinic Visits</div>
-          </div>
-          <div class="stat-item allergies">
-            <div class="stat-icon">⚠️</div>
-            <div class="stat-value">{{ studentsWithAllergiesCount }}</div>
-            <div class="stat-label">With Allergies</div>
-          </div>
-        </div>
+      <div *ngIf="!loading && !error" class="dashboard-wrap">
+        <div class="overview-card">
+          <div class="overview-title">Dashboard Overview</div>
+          <div class="overview-sub">Welcome back, {{ adviserName }}!</div>
+          <div class="overview-meta">{{ advisoryClass || 'Advisory Class' }} • {{ totalStudents }} Students</div>
 
-        <!-- Student Health Cards -->
-        <div class="students-health-grid" *ngIf="studentsHealth.length > 0">
-          <div *ngFor="let student of studentsHealth" class="student-health-card">
-            <div class="card-header">
-              <div class="student-avatar">
-                <img [src]="getAvatarUrl(student)" [alt]="student.full_name">
-              </div>
-              <div class="student-basic-info">
-                <div class="student-name">{{ student.full_name }}</div>
-                <div class="student-number">{{ student.student_number }}</div>
-                <div class="student-section">{{ student.grade_section }}</div>
-              </div>
+          <div class="stats-row">
+            <div class="stat-tile tile-fit">
+              <div class="tile-value">{{ fitCount }}</div>
+              <div class="tile-label">Fit for Activities</div>
             </div>
-
-            <div class="vitals-summary">
-              <h4>Basic Info</h4>
-              <div class="vitals-grid">
-                <div class="vital-item">
-                  <span class="vital-icon">🩸</span>
-                  <span class="vital-label">Blood Type</span>
-                  <span class="vital-value">{{ student.blood_type || 'N/A' }}</span>
-                </div>
-                <div class="vital-item">
-                  <span class="vital-icon">👤</span>
-                  <span class="vital-label">Gender</span>
-                  <span class="vital-value">{{ student.gender === 'F' ? 'Female' : (student.gender === 'M' ? 'Male' : 'Other') }}</span>
-                </div>
-                <div class="vital-item">
-                  <span class="vital-icon">📅</span>
-                  <span class="vital-label">Birthday</span>
-                  <span class="vital-value">{{ formatBirthday(student.birth_date) }}</span>
-                </div>
-                <div class="vital-item">
-                  <span class="vital-icon">📞</span>
-                  <span class="vital-label">Contact</span>
-                  <span class="vital-value">{{ student.phone || 'N/A' }}</span>
-                </div>
-              </div>
+            <div class="stat-tile tile-pending">
+              <div class="tile-value">{{ pendingCount }}</div>
+              <div class="tile-label">Pending Assessment</div>
             </div>
-
-            <div class="last-visit-info">
-              <h4>Last Clinic Visit</h4>
-              <div class="visit-details" *ngIf="student.last_visit">
-                <div class="visit-date">
-                  <span class="visit-icon">📅</span>
-                  {{ formatDate(student.last_visit.visit_date) }}
-                </div>
-                <div class="visit-reason">
-                  <span class="visit-icon">📋</span>
-                  {{ student.last_visit.reason }}
-                </div>
-                <div class="visit-status" [ngClass]="student.last_visit.status.toLowerCase()">
-                  {{ student.last_visit.status }}
-                </div>
-              </div>
-              <div class="no-visit" *ngIf="!student.last_visit">
-                No clinic visits recorded
-              </div>
+            <div class="stat-tile tile-restricted">
+              <div class="tile-value">{{ restrictedCount }}</div>
+              <div class="tile-label">Restricted Activities</div>
             </div>
-
-            <div class="card-footer">
-              <div class="allergies-info" *ngIf="student.allergies && student.allergies.length > 0">
-                <span class="allergy-icon">⚠️</span>
-                <span class="allergy-text">Allergies: {{ student.allergies.join(', ') }}</span>
-              </div>
-              <button class="btn-view-full" (click)="viewFullRecord(student)">
-                View Full Record
-              </button>
+            <div class="stat-tile tile-special">
+              <div class="tile-value">{{ specialCount }}</div>
+              <div class="tile-label">Special Medical Needs</div>
             </div>
           </div>
         </div>
 
-        <div class="no-students" *ngIf="studentsHealth.length === 0">
-          <p>No students registered in your advisory class yet.</p>
+        <div class="table-card">
+          <div class="table-header">
+            <div class="table-title">Student Health Status</div>
+
+            <div class="search-wrap">
+              <input
+                type="text"
+                class="search-input"
+                [(ngModel)]="searchTerm"
+                placeholder="Search">
+              <span class="search-icon" aria-hidden="true">🔍</span>
+            </div>
+          </div>
+
+          <div class="table">
+            <div class="thead">
+              <div>Student Name</div>
+              <div>LRN</div>
+              <div>Status</div>
+              <div>Last Check-up</div>
+              <div>Notes</div>
+              <div class="right">Actions</div>
+            </div>
+
+            <div class="tbody" *ngIf="filteredStudents.length > 0">
+              <div class="trow" *ngFor="let student of filteredStudents">
+                <div class="student-cell">
+                  <span class="student-name">{{ student.full_name }}</span>
+                </div>
+                <div class="muted">{{ student.student_number }}</div>
+                <div>
+                  <span class="status-pill" [ngClass]="getStatusClass(student)">{{ getStatusText(student) }}</span>
+                </div>
+                <div class="muted">{{ getLastCheckup(student) }}</div>
+                <div class="muted">{{ getNotes(student) }}</div>
+                <div class="right">
+                  <button type="button" class="icon-action" (click)="viewFullRecord(student)" title="View">
+                    <img src="assets/view-icon.png" alt="View" class="action-icon">
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="empty" *ngIf="filteredStudents.length === 0">
+              No students found.
+            </div>
+          </div>
         </div>
       </div>
 
@@ -138,10 +111,10 @@ import { StudentProfileModalComponent } from '../student-profile-modal/student-p
       min-height: 100vh;
     }
 
-    .health-header {
-      margin-bottom: 1.5rem;
-      h1 { font-size: 1.8rem; color: #2c3e50; margin-bottom: 0.5rem; font-weight: 600; }
-      p { color: #7f8c8d; font-size: 1rem; }
+    .dashboard-wrap {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
     }
 
     .loading-state, .error-state {
@@ -160,165 +133,232 @@ import { StudentProfileModalComponent } from '../student-profile-modal/student-p
       }
     }
 
-    .quick-stats {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      
-      .stat-item {
-        flex: 1;
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        
-        .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-        .stat-value { font-size: 2.5rem; font-weight: 700; color: #2c3e50; }
-        .stat-label { color: #7f8c8d; font-size: 0.9rem; }
-        
-        &.total { border-top: 4px solid #3498db; }
-        &.visits { border-top: 4px solid #e74c3c; }
-        &.allergies { border-top: 4px solid #f39c12; }
-      }
+    .overview-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    .students-health-grid {
+    .overview-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #0b2a4a;
+      margin-bottom: 0.25rem;
+    }
+
+    .overview-sub {
+      color: #4f7ea9;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      font-size: 0.95rem;
+    }
+
+    .overview-meta {
+      color: #0b2a4a;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .stats-row {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
     }
 
-    .student-health-card {
-      background: white;
+    .stat-tile {
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      color: #fff;
+      min-height: 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .tile-value {
+      font-size: 1.6rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .tile-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      opacity: 0.95;
+    }
+
+    .tile-fit { background: linear-gradient(135deg, #6489f7 0%, #c0d0ff 100%); }
+    .tile-pending { background: linear-gradient(135deg, #f78e64 0%, #ffc0c0 100%); }
+    .tile-restricted { background: linear-gradient(135deg, #f7bf64 0%, #ffd8c0 100%); }
+    .tile-special { background: linear-gradient(135deg, #ab64f7 0%, #dcc0ff 100%); }
+
+    .table-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .table-title {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #4f7ea9;
+    }
+
+    .search-wrap {
+      position: relative;
+      width: 340px;
+      max-width: 100%;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 36px;
+      border-radius: 999px;
+      border: 1px solid rgba(229, 231, 235, 0.9);
+      padding: 0 38px 0 14px;
+      background: #f8fafc;
+      outline: none;
+      font-size: 0.9rem;
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.65;
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .table {
+      width: 100%;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      transition: all 0.2s ease;
-      border-left: 4px solid #3498db;
-      
-      &:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-      }
+      background: #fff;
+      border: 1px solid rgba(229, 231, 235, 0.9);
     }
 
-    .card-header {
-      display: flex;
-      align-items: center;
+    .thead {
+      display: grid;
+      grid-template-columns: 2fr 1.4fr 1fr 1.4fr 1.6fr 0.6fr;
       gap: 1rem;
-      padding: 1.25rem;
-      background: #f8f9fa;
-      border-bottom: 1px solid #e9ecef;
-      
-      .student-avatar {
-        width: 55px;
-        height: 55px;
-        img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-      }
-      
-      .student-basic-info {
-        flex: 1;
-        .student-name { font-weight: 600; color: #2c3e50; font-size: 1rem; }
-        .student-number { color: #7f8c8d; font-size: 0.85rem; }
-        .student-section { color: #95a5a6; font-size: 0.8rem; }
-      }
+      padding: 0.85rem 1rem;
+      font-weight: 800;
+      color: #111827;
+      background: #fff;
     }
 
-    .vitals-summary {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid #e9ecef;
-      
-      h4 { font-size: 0.85rem; color: #6c757d; margin-bottom: 0.75rem; font-weight: 600; }
-      
-      .vitals-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.5rem;
-        
-        .vital-item {
-          text-align: center;
-          padding: 0.5rem;
-          background: #f8f9fa;
-          border-radius: 8px;
-          
-          .vital-icon { display: block; font-size: 1rem; margin-bottom: 0.25rem; }
-          .vital-label { display: block; font-size: 0.7rem; color: #7f8c8d; margin-bottom: 0.25rem; }
-          .vital-value { display: block; font-size: 0.8rem; font-weight: 600; color: #2c3e50; }
-        }
-      }
-    }
-
-    .last-visit-info {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid #e9ecef;
-      
-      h4 { font-size: 0.85rem; color: #6c757d; margin-bottom: 0.75rem; font-weight: 600; }
-      
-      .visit-details {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        align-items: center;
-        
-        .visit-date, .visit-reason {
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-          font-size: 0.85rem;
-          color: #495057;
-          .visit-icon { font-size: 0.9rem; }
-        }
-        
-        .visit-status {
-          padding: 0.25rem 0.6rem;
-          border-radius: 10px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          
-          &.resolved, &.completed { background: #d4edda; color: #155724; }
-          &.ongoing, &.pending { background: #fff3cd; color: #856404; }
-          &.follow-up { background: #d1ecf1; color: #0c5460; }
-        }
-      }
-      
-      .no-visit { color: #95a5a6; font-size: 0.85rem; font-style: italic; }
-    }
-
-    .card-footer {
-      padding: 1rem 1.25rem;
-      display: flex;
-      justify-content: space-between;
+    .tbody .trow {
+      display: grid;
+      grid-template-columns: 2fr 1.4fr 1fr 1.4fr 1.6fr 0.6fr;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
       align-items: center;
-      
-      .allergies-info {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        .allergy-icon { font-size: 0.9rem; }
-        .allergy-text { font-size: 0.8rem; color: #dc3545; font-weight: 500; }
-      }
-      
-      .btn-view-full {
-        padding: 0.5rem 1rem;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        font-weight: 500;
-        transition: background 0.2s;
-        &:hover { background: #0056b3; }
-      }
+      border-top: 1px solid rgba(229, 231, 235, 0.9);
     }
 
-    .no-students {
+    .student-name {
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .right {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .status-pill.fit {
+      background: rgba(34, 197, 94, 0.18);
+      color: #166534;
+    }
+
+    .status-pill.restricted {
+      background: rgba(239, 68, 68, 0.18);
+      color: #991b1b;
+    }
+
+    .status-pill.pending {
+      background: rgba(245, 158, 11, 0.22);
+      color: #92400e;
+    }
+
+    .status-pill.special {
+      background: rgba(168, 85, 247, 0.18);
+      color: #6b21a8;
+    }
+
+    .icon-action {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 0;
+      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .icon-action:hover {
+      background: rgba(15, 23, 42, 0.06);
+    }
+
+    .action-icon {
+      width: 18px;
+      height: 18px;
+      display: block;
+      object-fit: contain;
+      opacity: 0.9;
+    }
+
+    .empty {
+      padding: 1.25rem;
       text-align: center;
-      padding: 3rem;
-      background: white;
-      border-radius: 12px;
-      color: #7f8c8d;
+      color: #6b7280;
+      border-top: 1px solid rgba(229, 231, 235, 0.9);
+    }
+
+    @media (max-width: 1024px) {
+      .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .thead, .tbody .trow { grid-template-columns: 2fr 1.3fr 1fr 1.3fr 1.4fr 0.6fr; }
+    }
+
+    @media (max-width: 768px) {
+      .table-header { flex-direction: column; align-items: flex-start; }
+      .search-wrap { width: 100%; }
+      .thead, .tbody .trow { grid-template-columns: 1.6fr 1fr 1fr 1fr 0.6fr; }
+      .thead div:nth-child(5), .tbody .trow div:nth-child(5) { display: none; }
     }
   `]
 })
@@ -326,6 +366,10 @@ export class AdviserHealthStatusComponent implements OnInit {
   selectedStudent: any = null;
   loading = true;
   error = '';
+
+  adviserName = 'Adviser';
+  advisoryClass = '';
+  searchTerm = '';
   
   studentsHealth: AdvisedStudent[] = [];
 
@@ -343,6 +387,10 @@ export class AdviserHealthStatusComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const currentUser = this.authService.currentUserValue;
+    if (currentUser) {
+      this.adviserName = currentUser.full_name || 'Adviser';
+    }
     this.loadStudents();
   }
 
@@ -361,6 +409,7 @@ export class AdviserHealthStatusComponent implements OnInit {
       next: (response: any) => {
         if (response.success) {
           this.studentsHealth = response.students;
+          this.advisoryClass = response.adviser?.advisory_class || '';
         } else {
           this.error = 'Failed to load students';
         }
@@ -388,6 +437,63 @@ export class AdviserHealthStatusComponent implements OnInit {
     if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  get filteredStudents(): AdvisedStudent[] {
+    const q = (this.searchTerm || '').trim().toLowerCase();
+    if (!q) return this.studentsHealth;
+    return this.studentsHealth.filter(s => {
+      const name = (s.full_name || '').toLowerCase();
+      const lrn = (s.student_number || '').toLowerCase();
+      return name.includes(q) || lrn.includes(q);
+    });
+  }
+
+  get totalStudents(): number {
+    return this.studentsHealth.length;
+  }
+
+  get fitCount(): number {
+    return this.studentsHealth.filter(s => this.getStatusClass(s) === 'fit').length;
+  }
+
+  get pendingCount(): number {
+    return this.studentsHealth.filter(s => this.getStatusClass(s) === 'pending').length;
+  }
+
+  get restrictedCount(): number {
+    return this.studentsHealth.filter(s => this.getStatusClass(s) === 'restricted').length;
+  }
+
+  get specialCount(): number {
+    return this.studentsHealth.filter(s => this.getStatusClass(s) === 'special').length;
+  }
+
+  getStatusClass(student: AdvisedStudent): 'fit' | 'pending' | 'restricted' | 'special' {
+    const status = (student.last_visit?.status || '').toLowerCase();
+    if (status === 'pending' || status === 'ongoing') return 'pending';
+    if (student.allergies && student.allergies.length > 0) return 'restricted';
+    if (status === 'follow-up' || status === 'referred') return 'special';
+    return 'fit';
+  }
+
+  getStatusText(student: AdvisedStudent): string {
+    const cls = this.getStatusClass(student);
+    if (cls === 'pending') return 'Pending';
+    if (cls === 'restricted') return 'Restricted';
+    if (cls === 'special') return 'Special';
+    return 'Fit';
+  }
+
+  getLastCheckup(student: AdvisedStudent): string {
+    if (!student.last_visit?.visit_date) return '--';
+    return this.formatDate(student.last_visit.visit_date);
+  }
+
+  getNotes(student: AdvisedStudent): string {
+    if (student.allergies && student.allergies.length > 0) return 'Restricted';
+    if (student.last_visit?.reason) return student.last_visit.reason;
+    return 'No restrictions';
   }
 
   viewFullRecord(student: AdvisedStudent): void {
