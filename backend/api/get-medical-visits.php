@@ -1,7 +1,8 @@
-﻿<?php
+<?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, X-Requested-With");
+header("Access-Control-Max-Age: 3600");
 header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -16,6 +17,9 @@ $db = $database->getConnection();
 
 $studentId = isset($_GET['student_id']) ? $_GET['student_id'] : null;
 $userId = isset($_GET['user_id']) ? $_GET['user_id'] : null;
+$status = isset($_GET['status']) ? $_GET['status'] : null;
+$date = isset($_GET['date']) ? $_GET['date'] : null;
+$limit = isset($_GET['limit']) ? intval($_GET['limit']) : 50;
 
 if (!$studentId && $userId) {
     $userStudentQuery = "SELECT student_id FROM students WHERE user_id = :user_id AND is_active = 1 LIMIT 1";
@@ -30,7 +34,23 @@ if (!$studentId && $userId) {
 }
 
 try {
-    $query = "SELECT mv.visit_id, mv.student_id, mv.visit_datetime, mv.visit_type, mv.chief_complaint, mv.notes, mv.status, s.student_number, s.first_name, s.last_name, s.gender, s.grade_level, s.section FROM medical_visits mv JOIN students s ON mv.student_id = s.student_id WHERE 1=1";
+    // Optimized query using LEFT JOINs to fetch all data in one query
+    $query = "SELECT DISTINCT
+                     mv.visit_id, mv.student_id, mv.visit_datetime, mv.visit_type,
+                     mv.chief_complaint, mv.notes, mv.status,
+                     s.student_number, s.first_name, s.last_name, s.gender,
+                     s.grade_level, s.section,
+                     v.temperature_c, v.bp_systolic, v.bp_diastolic, v.pulse_rate, v.respiration_rate,
+                     d.diagnosis_text,
+                     t.treatment_text,
+                     m.medication_name, m.notes as medication_notes
+              FROM medical_visits mv
+              INNER JOIN students s ON mv.student_id = s.student_id
+              LEFT JOIN vitals v ON mv.visit_id = v.visit_id
+              LEFT JOIN diagnoses d ON mv.visit_id = d.visit_id
+              LEFT JOIN treatments t ON mv.visit_id = t.visit_id
+              LEFT JOIN medications m ON mv.visit_id = m.visit_id
+              WHERE s.is_active = 1";
     
     $params = [];
     
@@ -39,22 +59,89 @@ try {
         $params[':student_id'] = $studentId;
     }
     
-    $query .= " ORDER BY mv.visit_datetime DESC LIMIT 50";
+    if ($status) {
+        $statusMap = ['pending' => 'Open', 'completed' => 'Closed', 'referred' => 'Referred'];
+        $dbStatus = isset($statusMap[$status]) ? $statusMap[$status] : $status;
+        $query .= " AND mv.status = :status";
+        $params[':status'] = $dbStatus;
+    }
+    
+    if ($date) {
+        $query .= " AND DATE(mv.visit_datetime) = :date";
+        $params[':date'] = $date;
+    }
+    
+    $query .= " ORDER BY mv.visit_datetime DESC LIMIT :limit";
+    
+    error_log("Query: " . $query);
+    error_log("Params: " . json_encode($params));
     
     $stmt = $db->prepare($query);
     
     foreach ($params as $key => $value) {
         $stmt->bindValue($key, $value);
     }
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->execute();
     
+    error_log("Rows returned: " . $stmt->rowCount());
+    
     $visits = [];
+    $processedVisits = [];
+    
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) { 
-        $visits[] = $row;
+        $visitId = $row['visit_id'];
+        
+        // Skip if we've already processed this visit (due to multiple rows from JOINs)
+        if (isset($processedVisits[$visitId])) {
+            continue;
+        }
+        $processedVisits[$visitId] = true;
+        
+        $fullName = trim($row['first_name'] . ' ' . $row['last_name']);
+        $gradeSection = 'Grade ' . $row['grade_level'] . ' - ' . $row['section'];
+        
+        $bloodPressure = null;
+        if ($row['bp_systolic'] && $row['bp_diastolic']) {
+            $bloodPressure = $row['bp_systolic'] . '/' . $row['bp_diastolic'];
+        }
+        
+        $statusMap = ['Open' => 'pending', 'Closed' => 'completed', 'Referred' => 'referred'];
+        $frontendStatus = isset($statusMap[$row['status']]) ? $statusMap[$row['status']] : strtolower($row['status']);
+        
+        $visitTypeMap = ['Routine' => 'walk-in', 'Emergency' => 'emergency', 'Follow-up' => 'follow-up', 'Referral' => 'referred'];
+        $frontendVisitType = isset($visitTypeMap[$row['visit_type']]) ? $visitTypeMap[$row['visit_type']] : strtolower($row['visit_type']);
+        
+        $visits[] = [
+            'id' => $visitId,
+            'student_id' => $row['student_id'],
+            'studentName' => $fullName,
+            'studentNumber' => $row['student_number'],
+            'gradeSection' => $gradeSection,
+            'avatar' => $row['gender'] === 'F' ? 'assets/user-female.png' : 'assets/user-male.png',
+            'dateTime' => date('M d, Y h:i A', strtotime($row['visit_datetime'])),
+            'rawDateTime' => $row['visit_datetime'],
+            'visitType' => $frontendVisitType,
+            'chiefComplaint' => $row['chief_complaint'],
+            'notes' => $row['notes'],
+            'diagnosis' => $row['diagnosis_text'] ?: null,
+            'treatment' => $row['treatment_text'] ?: null,
+            'status' => $frontendStatus,
+            'vitals' => [
+                'temperature' => $row['temperature_c'] ?: null,
+                'bloodPressure' => $bloodPressure,
+                'pulseRate' => $row['pulse_rate'] ?: null,
+                'respiratoryRate' => $row['respiration_rate'] ?: null
+            ],
+            'medications' => $row['medication_name'] ?: null,
+            'recommendations' => $row['medication_notes'] ?: null
+        ];
     }
     
+    error_log("Visits processed: " . count($visits));
+    
     http_response_code(200);
-    echo json_encode(['success' => true, 'data' => $visits, 'total' => count($visits)]);
+    echo json_encode(['success' => true, 'data' => $visits, 'visits' => $visits, 'total' => count($visits)]);
     
 } catch (PDOException $e) {
     http_response_code(500);
