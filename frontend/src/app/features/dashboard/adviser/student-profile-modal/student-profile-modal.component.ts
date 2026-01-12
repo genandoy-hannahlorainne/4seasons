@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="modal-overlay" (click)="onOverlayClick($event)">
       <div class="modal-content">
-        <button class="close-btn" (click)="close.emit()">×</button>
+        <button class="close-btn" (click)="close.emit()"><i class="fa-solid fa-xmark"></i></button>
         
         <!-- Header -->
         <div class="modal-header">
@@ -24,7 +24,7 @@ import { CommonModule } from '@angular/common';
 
         <!-- Basic Info -->
         <div class="info-section">
-          <h3>📋 Basic Information</h3>
+          <h3><i class="fa-solid fa-clipboard-list"></i> Basic Information</h3>
           <div class="info-grid">
             <div class="info-item">
               <span class="label">Gender</span>
@@ -47,7 +47,7 @@ import { CommonModule } from '@angular/common';
 
         <!-- Health Summary -->
         <div class="info-section">
-          <h3>🏥 Health Summary</h3>
+          <h3><i class="fa-solid fa-notes-medical"></i> Health Summary</h3>
           <div class="info-grid">
             <div class="info-item">
               <span class="label">Blood Type</span>
@@ -70,19 +70,19 @@ import { CommonModule } from '@angular/common';
 
         <!-- Allergies -->
         <div class="info-section" *ngIf="student?.allergies?.length > 0">
-          <h3>⚠️ Allergies</h3>
+          <h3><i class="fa-solid fa-triangle-exclamation"></i> Allergies</h3>
           <div class="allergy-tags">
             <span class="allergy-tag" *ngFor="let allergy of student?.allergies">{{ allergy }}</span>
           </div>
         </div>
         <div class="info-section" *ngIf="!student?.allergies?.length">
-          <h3>⚠️ Allergies</h3>
+          <h3><i class="fa-solid fa-triangle-exclamation"></i> Allergies</h3>
           <p class="no-data">No known allergies</p>
         </div>
 
         <!-- Emergency Contact -->
         <div class="info-section">
-          <h3>📞 Emergency Contact</h3>
+          <h3><i class="fa-solid fa-phone"></i> Emergency Contact</h3>
           <div class="emergency-contact">
             <div class="contact-name">{{ student?.emergencyContact?.name || 'Maria Genandoy' }}</div>
             <div class="contact-relation">{{ student?.emergencyContact?.relation || 'Mother' }}</div>
@@ -92,7 +92,7 @@ import { CommonModule } from '@angular/common';
 
         <!-- Recent Clinic Visits -->
         <div class="info-section">
-          <h3>🏥 Recent Clinic Visits</h3>
+          <h3><i class="fa-solid fa-hospital"></i> Recent Clinic Visits</h3>
           <div class="visits-list" *ngIf="student?.recentVisits?.length > 0">
             <div class="visit-item" *ngFor="let visit of student?.recentVisits">
               <div class="visit-date">{{ visit.date }}</div>
@@ -140,19 +140,20 @@ import { CommonModule } from '@angular/common';
 
     .close-btn {
       position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: #f1f3f4;
+      top: 15px;
+      right: 15px;
+      background: white;
       border: none;
-      width: 32px;
-      height: 32px;
+      width: 35px;
+      height: 35px;
       border-radius: 50%;
-      font-size: 1.5rem;
-      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #5f6368;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      color: #666;
       transition: all 0.2s;
       
       &:hover {
@@ -206,7 +207,7 @@ import { CommonModule } from '@angular/common';
     }
 
     .info-section {
-      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
       border-bottom: 1px solid #e9ecef;
       
       &:last-child {
@@ -214,10 +215,15 @@ import { CommonModule } from '@angular/common';
       }
       
       h3 {
-        font-size: 0.95rem;
-        color: #495057;
-        margin: 0 0 0.75rem 0;
+        font-size: 1.1rem;
+        color: #2c3e50;
+        margin-bottom: 1rem;
         font-weight: 600;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
     }
 
