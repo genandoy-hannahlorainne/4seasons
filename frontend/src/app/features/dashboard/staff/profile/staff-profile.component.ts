@@ -19,7 +19,6 @@ import { AuthService } from '../../../../core/services/auth.service';
         <div class="profile-card">
           <div class="profile-avatar">
             <img [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
-            <button class="change-avatar-btn">Change Photo</button>
           </div>
           
           <div class="profile-form">

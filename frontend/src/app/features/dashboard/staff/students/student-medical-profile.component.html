@@ -30,11 +30,6 @@
         <span *ngIf="student.phone"><strong>Phone:</strong> {{ student.phone }}</span>
       </div>
     </div>
-    <div class="student-actions">
-      <button class="btn btn-primary" routerLink="/dashboard/staff/visits/new" [queryParams]="{studentId: studentId}">
-        + New Visit
-      </button>
-    </div>
   </div>
 
   <!-- No Medical Record Indicator -->
@@ -43,11 +38,7 @@
     <div class="alert-content">
       <h3>No Medical Record Yet</h3>
       <p>This student doesn't have any medical records in the system yet.</p>
-      <p class="alert-hint">Create a new clinic visit to start building their medical profile.</p>
     </div>
-    <button class="btn btn-primary" routerLink="/dashboard/staff/visits/new" [queryParams]="{studentId: studentId}">
-      + Create First Visit
-    </button>
   </div>
 
   <!-- Allergies Alert -->
