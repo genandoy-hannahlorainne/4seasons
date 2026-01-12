@@ -50,7 +50,6 @@ export class StudentProfileComponent implements OnInit {
       section: ['', Validators.required],
       address: ['', Validators.required],
       bloodType: [''],
-      emergencyContact: ['', Validators.required],
       contactNumber: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]]
     });
@@ -128,7 +127,6 @@ export class StudentProfileComponent implements OnInit {
             section: profile.section || '',
             address: profile.address || '',
             bloodType: profile.blood_type || '',
-            emergencyContact: profile.emergency_contact || '',
             contactNumber: profile.contact_number || '',
             email: profile.email || ''
           });
@@ -194,10 +192,10 @@ export class StudentProfileComponent implements OnInit {
         if (response.success) {
           this.successMessage = 'Profile updated successfully!';
           this.isEditing = false;
-          this.profileForm.disable();
           
-          // Reload profile data to show updated values
-          this.loadUserProfile();
+          // Update form with current values and disable it
+          this.profileForm.patchValue(profileData);
+          this.profileForm.disable();
           
           // Clear success message after 3 seconds
           setTimeout(() => {

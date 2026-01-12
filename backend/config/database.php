@@ -7,11 +7,11 @@ class Database {
     public $conn;
     
     public function __construct() {
-        // Use environment variables for Docker, fallback to localhost for XAMPP
-        $this->host = getenv('DB_HOST') ?: 'localhost';
-        $this->db_name = getenv('DB_DATABASE') ?: '4seasons';
-        $this->username = getenv('DB_USERNAME') ?: 'root';
-        $this->password = getenv('DB_PASSWORD') ?: '';
+        // Use XAMPP MySQL (port 3306)
+        $this->host = 'localhost';
+        $this->db_name = '4seasons';
+        $this->username = 'root';
+        $this->password = '';
     }
 
     public function getConnection() {

@@ -64,13 +64,13 @@ export class RegisterComponent {
         password: ['', [Validators.required, Validators.minLength(6)]]
       });
     } else if (this.selectedRole === 'adviser') {
-      // Adviser - with grade and section (advisory class)
+      // Adviser - optional grade and section
       this.registerForm = this.fb.group({
         firstName: ['', Validators.required],
         middleName: [''],
         lastName: ['', Validators.required],
-        gradeLevel: ['', Validators.required],
-        section: ['', Validators.required],
+        gradeLevel: [''],
+        section: [''],
         email: ['', Validators.email],
         contactNumber: [''],
         password: ['', [Validators.required, Validators.minLength(6)]]

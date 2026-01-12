@@ -1,0 +1,207 @@
+<div class="medical-profile-page">
+  <div class="page-header">
+    <button class="back-btn" routerLink="/dashboard/staff/students">← Back to Students</button>
+    <h1>Student Medical Profile</h1>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <p>Loading student profile...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !loading">
+    <p>{{ error }}</p>
+    <button class="btn btn-secondary" routerLink="/dashboard/staff/students">Back to Students</button>
+  </div>
+
+  <!-- Student Info Card -->
+  <div class="student-info-card" *ngIf="!loading && !error">
+    <div class="student-avatar">
+      <img [src]="student.avatar" [alt]="student.name">
+    </div>
+    <div class="student-details">
+      <h2>{{ student.name }}</h2>
+      <p class="student-number">{{ student.student_number }}</p>
+      <p class="student-grade">{{ student.grade_section }}</p>
+      <div class="student-meta">
+        <span *ngIf="student.blood_type"><strong>Blood Type:</strong> {{ student.blood_type }}</span>
+        <span *ngIf="student.email"><strong>Email:</strong> {{ student.email }}</span>
+        <span *ngIf="student.phone"><strong>Phone:</strong> {{ student.phone }}</span>
+      </div>
+    </div>
+    <div class="student-actions">
+      <button class="btn btn-primary" routerLink="/dashboard/staff/visits/new" [queryParams]="{studentId: studentId}">
+        + New Visit
+      </button>
+    </div>
+  </div>
+
+  <!-- No Medical Record Indicator -->
+  <div class="no-medical-record-alert" *ngIf="!loading && !error && !hasMedicalRecord">
+    <div class="alert-icon">📋</div>
+    <div class="alert-content">
+      <h3>No Medical Record Yet</h3>
+      <p>This student doesn't have any medical records in the system yet.</p>
+      <p class="alert-hint">Create a new clinic visit to start building their medical profile.</p>
+    </div>
+    <button class="btn btn-primary" routerLink="/dashboard/staff/visits/new" [queryParams]="{studentId: studentId}">
+      + Create First Visit
+    </button>
+  </div>
+
+  <!-- Allergies Alert -->
+  <div class="allergies-alert" *ngIf="!loading && !error && allergies.length > 0">
+    <h3>⚠️ Known Allergies</h3>
+    <div class="allergy-list">
+      <div *ngFor="let allergy of allergies" class="allergy-item" [class]="'severity-' + allergy.severity">
+        <strong>{{ allergy.name }}</strong> ({{ allergy.severity }})
+        <p *ngIf="allergy.reaction">Reaction: {{ allergy.reaction }}</p>
+        <p *ngIf="allergy.notes">Notes: {{ allergy.notes }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="profile-tabs" *ngIf="!loading && !error">
+    <button class="tab" [class.active]="activeTab === 'vitals'" (click)="activeTab = 'vitals'">Vitals History</button>
+    <button class="tab" [class.active]="activeTab === 'diagnoses'" (click)="activeTab = 'diagnoses'">Diagnoses</button>
+    <button class="tab" [class.active]="activeTab === 'treatments'" (click)="activeTab = 'treatments'">Treatments</button>
+    <button class="tab" [class.active]="activeTab === 'medications'" (click)="activeTab = 'medications'">Medications</button>
+    <button class="tab" [class.active]="activeTab === 'immunizations'" (click)="activeTab = 'immunizations'">Immunizations</button>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content" *ngIf="!loading && !error">
+    <!-- Vitals History -->
+    <div *ngIf="activeTab === 'vitals'" class="content-section">
+      <div class="section-header">
+        <h3>Vitals History</h3>
+      </div>
+      <div class="empty-state" *ngIf="vitalsHistory.length === 0">
+        <p>No vitals recorded yet</p>
+      </div>
+      <table class="data-table" *ngIf="vitalsHistory.length > 0">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Temperature</th>
+            <th>Blood Pressure</th>
+            <th>Pulse Rate</th>
+            <th>Weight</th>
+            <th>Height</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let vital of vitalsHistory">
+            <td>{{ vital.date }}</td>
+            <td>{{ vital.temperature }}°C</td>
+            <td>{{ vital.blood_pressure }}</td>
+            <td>{{ vital.pulse_rate }} bpm</td>
+            <td>{{ vital.weight }} kg</td>
+            <td>{{ vital.height }} cm</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Diagnoses -->
+    <div *ngIf="activeTab === 'diagnoses'" class="content-section">
+      <div class="section-header">
+        <h3>Diagnoses</h3>
+      </div>
+      <div class="empty-state" *ngIf="diagnoses.length === 0">
+        <p>No diagnoses recorded yet</p>
+      </div>
+      <div class="card-list" *ngIf="diagnoses.length > 0">
+        <div *ngFor="let diagnosis of diagnoses" class="info-card">
+          <div class="card-header">
+            <span class="card-title">{{ diagnosis.condition }}</span>
+            <span class="card-date">{{ diagnosis.date }}</span>
+          </div>
+          <p class="card-description">{{ diagnosis.notes }}</p>
+          <span class="status-badge" [class]="diagnosis.status">{{ diagnosis.status }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Treatments -->
+    <div *ngIf="activeTab === 'treatments'" class="content-section">
+      <div class="section-header">
+        <h3>Treatments</h3>
+      </div>
+      <div class="empty-state" *ngIf="treatments.length === 0">
+        <p>No treatments recorded yet</p>
+      </div>
+      <div class="card-list" *ngIf="treatments.length > 0">
+        <div *ngFor="let treatment of treatments" class="info-card">
+          <div class="card-header">
+            <span class="card-title">{{ treatment.name }}</span>
+            <span class="card-date">{{ treatment.date }}</span>
+          </div>
+          <p class="card-description">{{ treatment.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medications -->
+    <div *ngIf="activeTab === 'medications'" class="content-section">
+      <div class="section-header">
+        <h3>Medications</h3>
+      </div>
+      <div class="empty-state" *ngIf="medications.length === 0">
+        <p>No medications recorded yet</p>
+      </div>
+      <table class="data-table" *ngIf="medications.length > 0">
+        <thead>
+          <tr>
+            <th>Medication</th>
+            <th>Dosage</th>
+            <th>Frequency</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let med of medications">
+            <td>{{ med.name }}</td>
+            <td>{{ med.dosage }}</td>
+            <td>{{ med.frequency }}</td>
+            <td>{{ med.startDate }}</td>
+            <td>{{ med.endDate || 'Ongoing' }}</td>
+            <td><span class="status-badge" [class]="med.status">{{ med.status }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Immunizations -->
+    <div *ngIf="activeTab === 'immunizations'" class="content-section">
+      <div class="section-header">
+        <h3>Immunizations</h3>
+      </div>
+      <div class="empty-state" *ngIf="immunizations.length === 0">
+        <p>No immunization records yet</p>
+      </div>
+      <table class="data-table" *ngIf="immunizations.length > 0">
+        <thead>
+          <tr>
+            <th>Vaccine</th>
+            <th>Date Administered</th>
+            <th>Dose</th>
+            <th>Administered By</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let imm of immunizations">
+            <td>{{ imm.vaccine }}</td>
+            <td>{{ imm.date }}</td>
+            <td>{{ imm.dose }}</td>
+            <td>{{ imm.administeredBy }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

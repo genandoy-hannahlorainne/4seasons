@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { StaffService } from '../../../../core/services/staff.service';
 
 @Component({
   selector: 'app-reports',
@@ -13,30 +14,43 @@ import { FormsModule } from '@angular/forms';
         <p>Generate and export clinic reports</p>
       </div>
 
+      <!-- Error Alert -->
+      <div class="error-alert" *ngIf="error">
+        <span>⚠️ {{ error }}</span>
+      </div>
+
       <!-- Report Filters -->
       <div class="card filters-card">
         <div class="filter-row">
           <div class="filter-group">
             <label>Date Range</label>
             <div class="date-range">
-              <input type="date" [(ngModel)]="startDate" class="filter-input">
+              <input type="date" [(ngModel)]="startDate" class="filter-input" [disabled]="loading">
               <span>to</span>
-              <input type="date" [(ngModel)]="endDate" class="filter-input">
+              <input type="date" [(ngModel)]="endDate" class="filter-input" [disabled]="loading">
             </div>
           </div>
           <div class="filter-group">
             <label>Grade Level</label>
-            <select [(ngModel)]="gradeFilter" class="filter-select">
+            <select [(ngModel)]="gradeFilter" class="filter-select" [disabled]="loading">
               <option value="">All Grades</option>
               <option *ngFor="let grade of grades" [value]="grade">Grade {{ grade }}</option>
             </select>
           </div>
-          <button class="btn btn-primary" (click)="generateReport()">Generate Report</button>
+          <button class="btn btn-primary" (click)="generateReport()" [disabled]="loading">
+            {{ loading ? 'Loading...' : 'Generate Report' }}
+          </button>
         </div>
       </div>
 
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading report data...</p>
+      </div>
+
       <!-- Summary Cards -->
-      <div class="summary-cards">
+      <div class="summary-cards" *ngIf="!loading">
         <div class="summary-card">
           <div class="card-value">{{ totalVisits }}</div>
           <div class="card-label">Total Visits</div>
@@ -56,7 +70,7 @@ import { FormsModule } from '@angular/forms';
       </div>
 
       <!-- Charts Section -->
-      <div class="charts-section">
+      <div class="charts-section" *ngIf="!loading">
         <div class="card">
           <h2>Cases by Illness</h2>
           <div class="empty-state" *ngIf="casesByIllness.length === 0">
@@ -91,7 +105,7 @@ import { FormsModule } from '@angular/forms';
       </div>
 
       <!-- Export Section -->
-      <div class="card">
+      <div class="card" *ngIf="!loading">
         <h2>Export Report</h2>
         <div class="export-buttons">
           <button class="btn btn-outline" (click)="exportPDF()">Export as PDF</button>
@@ -111,6 +125,45 @@ import { FormsModule } from '@angular/forms';
       margin-bottom: 1.5rem;
       h1 { font-size: 1.8rem; color: #2c3e50; margin-bottom: 0.5rem; font-weight: 600; }
       p { color: #7f8c8d; font-size: 1rem; margin: 0; }
+    }
+
+    .error-alert {
+      background: #fee;
+      border: 1px solid #fcc;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      color: #c33;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+      p { color: #7f8c8d; margin-top: 1rem; }
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e9ecef;
+      border-top-color: #007bff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     .card {
@@ -149,6 +202,7 @@ import { FormsModule } from '@angular/forms';
       border-radius: 8px;
       font-size: 0.9rem;
       &:focus { outline: none; border-color: #007bff; }
+      &:disabled { background: #f5f7fa; cursor: not-allowed; }
     }
 
     .btn {
@@ -159,8 +213,9 @@ import { FormsModule } from '@angular/forms';
       font-weight: 500;
       transition: all 0.2s ease;
 
-      &.btn-primary { background: #007bff; color: white; &:hover { background: #0056b3; } }
-      &.btn-outline { background: white; color: #007bff; border: 1px solid #007bff; &:hover { background: #e3f2fd; } }
+      &.btn-primary { background: #007bff; color: white; &:hover:not(:disabled) { background: #0056b3; } }
+      &.btn-outline { background: white; color: #007bff; border: 1px solid #007bff; &:hover:not(:disabled) { background: #e3f2fd; } }
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
 
     .summary-cards {
@@ -244,6 +299,9 @@ export class ReportsComponent implements OnInit {
   casesByIllness: { illness: string; count: number }[] = [];
   casesByGrade: { grade: number; count: number }[] = [];
 
+  loading = false;
+  error: string | null = null;
+
   get maxIllnessCount(): number {
     return Math.max(...this.casesByIllness.map(i => i.count), 1);
   }
@@ -252,6 +310,8 @@ export class ReportsComponent implements OnInit {
     return Math.max(...this.casesByGrade.map(g => g.count), 1);
   }
 
+  constructor(private staffService: StaffService) {}
+
   ngOnInit(): void {
     const end = new Date();
     const start = new Date();
@@ -259,10 +319,48 @@ export class ReportsComponent implements OnInit {
     
     this.endDate = end.toISOString().split('T')[0];
     this.startDate = start.toISOString().split('T')[0];
+
+    // Load initial report
+    this.generateReport();
   }
 
   generateReport(): void {
-    console.log('Generating report:', { startDate: this.startDate, endDate: this.endDate, grade: this.gradeFilter });
+    this.loading = true;
+    this.error = null;
+
+    this.staffService.getReportsData(this.startDate, this.endDate, this.gradeFilter).subscribe({
+      next: (response) => {
+        if (response.success) {
+          const data = response.data;
+          this.totalVisits = data.totalVisits;
+          this.uniqueStudents = data.uniqueStudents;
+          this.emergencyCases = data.emergencyCases;
+          this.referrals = data.referrals;
+          
+          // Map illness data
+          this.casesByIllness = data.casesByIllness.map((item: any) => ({
+            illness: item.illness || 'Unknown',
+            count: parseInt(item.count)
+          }));
+
+          // Map grade data
+          this.casesByGrade = data.casesByGrade.map((item: any) => ({
+            grade: parseInt(item.grade),
+            count: parseInt(item.count)
+          }));
+
+          this.loading = false;
+        } else {
+          this.error = response.message || 'Failed to load report data';
+          this.loading = false;
+        }
+      },
+      error: (err) => {
+        console.error('Error loading report data:', err);
+        this.error = 'Failed to load report data. Please try again.';
+        this.loading = false;
+      }
+    });
   }
 
   exportPDF(): void {

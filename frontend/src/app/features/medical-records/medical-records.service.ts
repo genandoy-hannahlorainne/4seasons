@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from '../../core/services/auth.service';
 
 export interface PersonalMedicalInfo {
   student_id: number;
@@ -57,14 +58,23 @@ export interface ApiResponse<T> {
 export class MedicalRecordsService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   getMedicalRecord(): Observable<ApiResponse<MedicalRecord>> {
-    return this.http.get<ApiResponse<MedicalRecord>>(`${this.apiUrl}/get-student-medical-data.php`);
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser || !currentUser.user_id) {
+      throw new Error('User not authenticated');
+    }
+    return this.http.get<ApiResponse<MedicalRecord>>(`${this.apiUrl}/get-student-medical-data.php?user_id=${currentUser.user_id}`);
   }
 
   getMedicalVisits(): Observable<ApiResponse<MedicalVisit[]>> {
-    return this.http.get<ApiResponse<MedicalVisit[]>>(`${this.apiUrl}/medical-visits`);
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser || !currentUser.user_id) {
+      throw new Error('User not authenticated');
+    }
+    // Get student_id from the profile first, then fetch visits
+    return this.http.get<ApiResponse<MedicalVisit[]>>(`${this.apiUrl}/get-medical-visits.php?user_id=${currentUser.user_id}`);
   }
 
   getVisitDetails(visitId: number): Observable<ApiResponse<MedicalVisit>> {
@@ -73,5 +83,9 @@ export class MedicalRecordsService {
 
   updateMedicalInfo(data: { emergency_contact?: string; address?: string }): Observable<ApiResponse<any>> {
     return this.http.put<ApiResponse<any>>(`${this.apiUrl}/update-medical-info.php`, data);
+  }
+
+  getAdviserByGradeSection(gradeLevel: string, section: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/get-adviser-by-grade-section.php?grade_level=${gradeLevel}&section=${section}`);
   }
 }
