@@ -10,9 +10,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once '../config/database.php';
+require_once '../middleware/auth.php';
 
 $database = new Database();
 $db = $database->getConnection();
+
+// Authenticate user
+$auth = new Auth($database);
+
+// Only Admin can manage users
+$auth->requireRole('Admin');
 
 try {
     $method = $_SERVER['REQUEST_METHOD'];
@@ -32,6 +39,7 @@ try {
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($user) {
+            $auth->logActivity('View User', 'Viewed user: ' . $user['username']);
             echo json_encode(['success' => true, 'user' => $user]);
         } else {
             http_response_code(404);
@@ -72,6 +80,7 @@ try {
         
         $stmt = $db->prepare($query);
         if ($stmt->execute($params)) {
+            $auth->logActivity('Update User', 'Updated user ID: ' . $user_id);
             echo json_encode(['success' => true, 'message' => 'User updated successfully']);
         } else {
             http_response_code(500);
@@ -94,6 +103,7 @@ try {
         
         $stmt = $db->prepare($query);
         if ($stmt->execute([$password_hash, $user_id])) {
+            $auth->logActivity('Reset Password', 'Reset password for user ID: ' . $user_id);
             echo json_encode(['success' => true, 'message' => 'Password reset successfully']);
         } else {
             http_response_code(500);
@@ -106,6 +116,7 @@ try {
         
         $stmt = $db->prepare($query);
         if ($stmt->execute([$user_id])) {
+            $auth->logActivity('Deactivate User', 'Deactivated user ID: ' . $user_id);
             echo json_encode(['success' => true, 'message' => 'User deactivated successfully']);
         } else {
             http_response_code(500);
@@ -118,6 +129,7 @@ try {
         
         $stmt = $db->prepare($query);
         if ($stmt->execute([$user_id])) {
+            $auth->logActivity('Activate User', 'Activated user ID: ' . $user_id);
             echo json_encode(['success' => true, 'message' => 'User activated successfully']);
         } else {
             http_response_code(500);
@@ -130,6 +142,7 @@ try {
         
         $stmt = $db->prepare($query);
         if ($stmt->execute([$user_id])) {
+            $auth->logActivity('Delete User', 'Deleted user ID: ' . $user_id);
             echo json_encode(['success' => true, 'message' => 'User deleted successfully']);
         } else {
             http_response_code(500);

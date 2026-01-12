@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../../core/services/admin.service';
+import { Subject, interval } from 'rxjs';
+import { takeUntil, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-manage-users',
@@ -10,7 +12,7 @@ import { AdminService } from '../../../../core/services/admin.service';
   templateUrl: './manage-users.component.html',
   styleUrls: ['./manage-users.component.scss']
 })
-export class ManageUsersComponent implements OnInit {
+export class ManageUsersComponent implements OnInit, OnDestroy {
   users: any[] = [];
   filteredUsers: any[] = [];
   loading = false;
@@ -23,50 +25,93 @@ export class ManageUsersComponent implements OnInit {
   editingUser: any = null;
   successMessage = '';
   errorMessage = '';
+  private destroy$ = new Subject<void>();
+  private refreshInterval = 30000; // 30 seconds
 
   constructor(private adminService: AdminService) {}
 
   ngOnInit(): void {
     this.loadUsers();
+    
+    // Auto-refresh users every 30 seconds
+    interval(this.refreshInterval)
+      .pipe(
+        switchMap(() => this.adminService.getAllUsers()),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.users) {
+            this.updateUsersList(response);
+          }
+        },
+        error: (err) => {
+          console.error('Auto-refresh error:', err);
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadUsers(): void {
     this.loading = true;
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
-        if (response.success && response.users) {
-          // Map users from grouped response
-          this.users = [
-            ...(response.users.student || []).map((u: any) => ({ 
-              ...u, 
-              roleDisplay: 'Student',
-              role: 'student'
-            })),
-            ...(response.users.adviser || []).map((u: any) => ({ 
-              ...u, 
-              roleDisplay: 'Adviser',
-              role: 'adviser'
-            })),
-            ...(response.users.clinic_staff || []).map((u: any) => ({ 
-              ...u, 
-              roleDisplay: 'Clinic Staff',
-              role: 'clinic_staff'
-            }))
-          ];
-          this.filterUsers();
-          console.log('Users loaded:', this.users.length);
-        } else {
-          console.error('Invalid response structure:', response);
-          this.errorMessage = 'Invalid response from server';
-        }
+        this.updateUsersList(response);
         this.loading = false;
       },
       error: (err) => {
         console.error('Error loading users:', err);
-        this.errorMessage = 'Failed to load users';
+        this.errorMessage = 'Failed to load users. Make sure you are logged in as admin.';
         this.loading = false;
       }
     });
+  }
+
+  private updateUsersList(response: any): void {
+    if (response.success && response.users) {
+      // Handle grouped response (when no role filter)
+      if (response.users.student || response.users.adviser || response.users.clinic_staff) {
+        this.users = [
+          ...(response.users.student || []).map((u: any) => ({ 
+            ...u, 
+            roleDisplay: 'Student',
+            role: 'student'
+          })),
+          ...(response.users.adviser || []).map((u: any) => ({ 
+            ...u, 
+            roleDisplay: 'Adviser',
+            role: 'adviser'
+          })),
+          ...(response.users.clinic_staff || []).map((u: any) => ({ 
+            ...u, 
+            roleDisplay: 'Clinic Staff',
+            role: 'clinic_staff'
+          })),
+          ...(response.users.admin || []).map((u: any) => ({ 
+            ...u, 
+            roleDisplay: 'Admin',
+            role: 'admin'
+          }))
+        ];
+      } else {
+        // Handle flat response (when role filter is applied)
+        this.users = (response.users || []).map((u: any) => ({
+          ...u,
+          roleDisplay: u.role_name || 'Unknown',
+          role: u.role_name?.toLowerCase() || 'unknown'
+        }));
+      }
+      
+      this.filterUsers();
+      console.log('Users loaded:', this.users.length);
+    } else {
+      console.error('Invalid response structure:', response);
+      this.errorMessage = 'Invalid response from server';
+    }
   }
 
   filterUsers(): void {

@@ -36,6 +36,58 @@ if (!empty($data->username) && !empty($data->password)) {
         // Verify password
         if (password_verify($data->password, $row['password_hash'])) {
             
+            // Validate role-specific profile exists (prevent cross-role login)
+            $roleValidationPassed = false;
+            $validationError = '';
+            
+            if ($row['role_name'] === 'Student') {
+                // Student must have an active student profile
+                $checkQuery = "SELECT student_id FROM students WHERE user_id = :user_id AND is_active = 1";
+                $checkStmt = $db->prepare($checkQuery);
+                $checkStmt->bindParam(":user_id", $row['user_id']);
+                $checkStmt->execute();
+                if ($checkStmt->rowCount() > 0) {
+                    $roleValidationPassed = true;
+                } else {
+                    $validationError = 'Student profile not found or inactive';
+                }
+            } elseif ($row['role_name'] === 'Adviser') {
+                // Adviser must have an active adviser profile
+                $checkQuery = "SELECT adviser_id FROM advisers WHERE user_id = :user_id AND is_active = 1";
+                $checkStmt = $db->prepare($checkQuery);
+                $checkStmt->bindParam(":user_id", $row['user_id']);
+                $checkStmt->execute();
+                if ($checkStmt->rowCount() > 0) {
+                    $roleValidationPassed = true;
+                } else {
+                    $validationError = 'Adviser profile not found or inactive';
+                }
+            } elseif ($row['role_name'] === 'Clinic Staff') {
+                // Clinic Staff must have an active clinic_staff profile
+                $checkQuery = "SELECT clinic_staff_id FROM clinic_staff WHERE user_id = :user_id AND is_active = 1 AND deleted_at IS NULL";
+                $checkStmt = $db->prepare($checkQuery);
+                $checkStmt->bindParam(":user_id", $row['user_id']);
+                $checkStmt->execute();
+                if ($checkStmt->rowCount() > 0) {
+                    $roleValidationPassed = true;
+                } else {
+                    $validationError = 'Clinic staff profile not found or inactive';
+                }
+            } elseif ($row['role_name'] === 'Admin' || $row['role_name'] === 'admin') {
+                // Admin role is valid if user exists with admin role
+                $roleValidationPassed = true;
+            }
+            
+            // If role validation failed, deny login
+            if (!$roleValidationPassed) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Access denied: ' . $validationError . '. You cannot login with this account.'
+                ]);
+                exit();
+            }
+            
             // Get additional info based on role (don't include password_hash in response)
             $userInfo = [
                 'user_id' => $row['user_id'],

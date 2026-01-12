@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MedicalRecordsService, MedicalRecord } from './medical-records.service';
+import { AuthService } from '../../core/services/auth.service';
+import { Subject, interval } from 'rxjs';
+import { takeUntil, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-medical-records',
@@ -49,6 +52,14 @@ import { MedicalRecordsService, MedicalRecord } from './medical-records.service'
               <div class="card-value">{{ medicalRecord.allergies.length }}</div>
             </div>
           </div>
+
+          <div class="overview-card">
+            <div class="card-icon">👨‍🏫</div>
+            <div class="card-content">
+              <h3>Adviser</h3>
+              <div class="card-value" style="font-size: 0.9rem;">{{ medicalRecord.personal_info.adviser_name }}</div>
+            </div>
+          </div>
         </div>
 
         <div class="action-cards">
@@ -75,15 +86,42 @@ import { MedicalRecordsService, MedicalRecord } from './medical-records.service'
   `,
   styleUrls: ['./medical-records.component.scss']
 })
-export class MedicalRecordsComponent implements OnInit {
+export class MedicalRecordsComponent implements OnInit, OnDestroy {
   medicalRecord: MedicalRecord | null = null;
   loading = true;
   error: string | null = null;
+  private destroy$ = new Subject<void>();
+  private refreshInterval = 30000; // 30 seconds
 
-  constructor(private medicalRecordsService: MedicalRecordsService) {}
+  constructor(
+    private medicalRecordsService: MedicalRecordsService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
     this.loadMedicalRecord();
+    
+    // Auto-refresh medical data every 30 seconds
+    interval(this.refreshInterval)
+      .pipe(
+        switchMap(() => this.medicalRecordsService.getMedicalRecord()),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            this.medicalRecord = response.data;
+          }
+        },
+        error: (err) => {
+          console.error('Auto-refresh error:', err);
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadMedicalRecord() {

@@ -133,6 +133,57 @@
             <input type="text" [value]="selectedUser.created_at | date:'medium'" class="form-control" disabled>
           </div>
         </div>
+
+        <!-- Student-Specific Info -->
+        <div *ngIf="selectedUser.role === 'student'" class="info-section">
+          <h3>Student Information</h3>
+          <div class="form-group">
+            <label>Student Number</label>
+            <input type="text" [value]="selectedUser.student_number" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Grade Level</label>
+            <input type="text" [value]="selectedUser.grade_level" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Section</label>
+            <input type="text" [value]="selectedUser.section" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Gender</label>
+            <input type="text" [value]="selectedUser.gender" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Birth Date</label>
+            <input type="text" [value]="selectedUser.birth_date | date:'medium'" class="form-control" disabled>
+          </div>
+        </div>
+
+        <!-- Adviser-Specific Info -->
+        <div *ngIf="selectedUser.role === 'adviser'" class="info-section">
+          <h3>Adviser Information</h3>
+          <div class="form-group">
+            <label>Employee Number</label>
+            <input type="text" [value]="selectedUser.employee_number" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Contact Phone</label>
+            <input type="text" [value]="selectedUser.contact_phone" class="form-control" disabled>
+          </div>
+        </div>
+
+        <!-- Clinic Staff-Specific Info -->
+        <div *ngIf="selectedUser.role === 'clinic_staff'" class="info-section">
+          <h3>Clinic Staff Information</h3>
+          <div class="form-group">
+            <label>Staff Code</label>
+            <input type="text" [value]="selectedUser.staff_code" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Position</label>
+            <input type="text" [value]="selectedUser.position" class="form-control" disabled>
+          </div>
+        </div>
       </div>
 
       <!-- Modal Actions -->
