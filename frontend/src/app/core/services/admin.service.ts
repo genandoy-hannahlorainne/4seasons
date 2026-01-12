@@ -101,4 +101,48 @@ export class AdminService {
   getActivityLogs(limit: number = 20, offset: number = 0): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/get-activity-logs.php?limit=${limit}&offset=${offset}`);
   }
+
+  // Backup & Recovery
+  createBackup(): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/backup-database.php`, {});
+  }
+
+  getBackupHistory(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/get-backup-history.php`);
+  }
+
+  downloadBackup(filename: string): void {
+    const url = `${environment.apiUrl}/download-backup.php?filename=${filename}`;
+    
+    // Use HttpClient to download with authentication headers
+    this.http.get(url, {
+      responseType: 'blob',
+      observe: 'response'
+    }).subscribe({
+      next: (response) => {
+        // Create a blob URL and trigger download
+        const blob = response.body;
+        if (blob) {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.click();
+          window.URL.revokeObjectURL(url);
+        }
+      },
+      error: (error) => {
+        console.error('Download failed:', error);
+        alert('Failed to download backup file');
+      }
+    });
+  }
+
+  deleteBackup(filename: string): Observable<any> {
+    return this.http.delete<any>(`${environment.apiUrl}/delete-backup.php?filename=${filename}`);
+  }
+
+  restoreBackup(filename: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/restore-backup.php`, { filename });
+  }
 }

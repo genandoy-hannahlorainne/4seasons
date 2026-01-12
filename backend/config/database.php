@@ -31,5 +31,14 @@ class Database {
 
         return $this->conn;
     }
+    
+    public function getConfig() {
+        return [
+            'host' => $this->host,
+            'dbname' => $this->db_name,
+            'username' => $this->username,
+            'password' => $this->password
+        ];
+    }
 }
 ?>
