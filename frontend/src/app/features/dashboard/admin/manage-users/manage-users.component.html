@@ -72,7 +72,7 @@
             </td>
             <td class="user-actions">
               <button class="action-btn view-btn" (click)="viewUser(user)" title="View/Edit">
-                ✎
+                <i class="fa-solid fa-pen-to-square"></i>
               </button>
             </td>
           </tr>
@@ -88,15 +88,15 @@
   <!-- User Details Modal -->
   <div class="modal-overlay" *ngIf="showUserModal" (click)="closeUserModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
-      <button class="close-btn" (click)="closeUserModal()">×</button>
+      <button class="close-btn" (click)="closeUserModal()"><i class="fa-solid fa-xmark"></i></button>
 
       <div class="modal-header">
         <h2>User Details</h2>
       </div>
 
       <!-- Messages -->
-      <div *ngIf="successMessage" class="alert alert-success">✓ {{ successMessage }}</div>
-      <div *ngIf="errorMessage" class="alert alert-danger">✕ {{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}</div>
 
       <!-- User Info -->
       <div class="modal-body">
@@ -133,6 +133,57 @@
             <input type="text" [value]="selectedUser.created_at | date:'medium'" class="form-control" disabled>
           </div>
         </div>
+
+        <!-- Student-Specific Info -->
+        <div *ngIf="selectedUser.role === 'student'" class="info-section">
+          <h3>Student Information</h3>
+          <div class="form-group">
+            <label>Student Number</label>
+            <input type="text" [value]="selectedUser.student_number" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Grade Level</label>
+            <input type="text" [value]="selectedUser.grade_level" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Section</label>
+            <input type="text" [value]="selectedUser.section" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Gender</label>
+            <input type="text" [value]="selectedUser.gender" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Birth Date</label>
+            <input type="text" [value]="selectedUser.birth_date | date:'medium'" class="form-control" disabled>
+          </div>
+        </div>
+
+        <!-- Adviser-Specific Info -->
+        <div *ngIf="selectedUser.role === 'adviser'" class="info-section">
+          <h3>Adviser Information</h3>
+          <div class="form-group">
+            <label>Employee Number</label>
+            <input type="text" [value]="selectedUser.employee_number" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Contact Phone</label>
+            <input type="text" [value]="selectedUser.contact_phone" class="form-control" disabled>
+          </div>
+        </div>
+
+        <!-- Clinic Staff-Specific Info -->
+        <div *ngIf="selectedUser.role === 'clinic_staff'" class="info-section">
+          <h3>Clinic Staff Information</h3>
+          <div class="form-group">
+            <label>Staff Code</label>
+            <input type="text" [value]="selectedUser.staff_code" class="form-control" disabled>
+          </div>
+          <div class="form-group">
+            <label>Position</label>
+            <input type="text" [value]="selectedUser.position" class="form-control" disabled>
+          </div>
+        </div>
       </div>
 
       <!-- Modal Actions -->
@@ -151,14 +202,14 @@
   <!-- Password Reset Modal -->
   <div class="modal-overlay" *ngIf="showPasswordModal" (click)="closePasswordModal()">
     <div class="modal-content password-modal" (click)="$event.stopPropagation()">
-      <button class="close-btn" (click)="closePasswordModal()">×</button>
+      <button class="close-btn" (click)="closePasswordModal()"><i class="fa-solid fa-xmark"></i></button>
 
       <div class="modal-header">
         <h2>Reset Password</h2>
       </div>
 
-      <div *ngIf="successMessage" class="alert alert-success">✓ {{ successMessage }}</div>
-      <div *ngIf="errorMessage" class="alert alert-danger">✕ {{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}</div>
 
       <div class="modal-body">
         <p class="password-info">Enter a new password for <strong>{{ selectedUser?.full_name }}</strong></p>

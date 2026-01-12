@@ -15,6 +15,8 @@ export interface PersonalMedicalInfo {
   emergency_contact: string;
   grade_level: string;
   section: string;
+  adviser_name?: string;
+  adviser_contact?: string;
 }
 
 export interface Allergy {

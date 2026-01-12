@@ -24,6 +24,7 @@ import { SystemSettingsComponent } from './admin/system-settings/system-settings
 import { ViewReportsComponent } from './admin/view-reports/view-reports.component';
 import { BackupRecoveryComponent } from './admin/backup-recovery/backup-recovery.component';
 import { AdminGuard } from '../../core/guards/admin.guard';
+import { roleGuard } from '../../core/guards/role.guard';
 
 export const dashboardRoutes: Routes = [
   {
@@ -34,6 +35,8 @@ export const dashboardRoutes: Routes = [
   {
     path: 'student',
     component: StudentLayoutComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['Student'] },
     children: [
       { path: '', component: StudentDashboardComponent },
       { path: 'profile', component: StudentProfileComponent },
@@ -43,16 +46,20 @@ export const dashboardRoutes: Routes = [
   {
     path: 'adviser',
     component: AdviserLayoutComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['Adviser'] },
     children: [
       { path: '', component: AdviserDashboardComponent },
       { path: 'alerts', component: AdviserAlertsComponent },
-      { path: 'health-status', component: AdviserHealthStatusComponent },
+      { path: 'health-status', redirectTo: '', pathMatch: 'full' },
       { path: 'profile', component: AdviserProfileComponent }
     ]
   },
   {
     path: 'staff',
     component: StaffLayoutComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['Clinic Staff'] },
     children: [
       { path: '', component: ClinicDashboardComponent },
       { path: 'students', component: StudentListComponent },
@@ -68,7 +75,8 @@ export const dashboardRoutes: Routes = [
   {
     path: 'admin',
     component: AdminLayoutComponent,
-    canActivate: [AdminGuard],
+    canActivate: [AdminGuard, roleGuard],
+    data: { roles: ['Admin'] },
     children: [
       { path: '', component: AdminDashboardComponent },
       { path: 'profile', component: AdminProfileComponent },
