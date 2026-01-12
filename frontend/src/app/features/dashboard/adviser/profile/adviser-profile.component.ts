@@ -20,7 +20,6 @@ import { AdviserService } from '../../../../core/services/adviser.service';
         <div class="profile-card">
           <div class="profile-avatar">
             <img [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
-            <button class="change-avatar-btn">Change Photo</button>
           </div>
           
           <div class="profile-form">
@@ -87,7 +86,7 @@ import { AdviserService } from '../../../../core/services/adviser.service';
                 <div class="setting-title">Change Password</div>
                 <div class="setting-description">Update your account password</div>
               </div>
-              <button class="btn btn-outline">Change</button>
+              <button class="btn btn-outline" (click)="changePassword()">Change</button>
             </div>
           </div>
 
@@ -101,6 +100,37 @@ import { AdviserService } from '../../../../core/services/adviser.service';
               <button class="btn btn-danger" (click)="logout()">Logout</button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal-overlay" *ngIf="showPasswordModal" (click)="closePasswordModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="closePasswordModal()">×</button>
+        <h3>Change Password</h3>
+        
+        <div class="form-group">
+          <label>Current Password *</label>
+          <input type="password" [(ngModel)]="passwordForm.currentPassword" class="form-control" placeholder="Enter current password">
+        </div>
+        <div class="form-group">
+          <label>New Password *</label>
+          <input type="password" [(ngModel)]="passwordForm.newPassword" class="form-control" placeholder="Min 6 characters">
+        </div>
+        <div class="form-group">
+          <label>Confirm Password *</label>
+          <input type="password" [(ngModel)]="passwordForm.confirmPassword" class="form-control" placeholder="Re-enter new password">
+        </div>
+        
+        <div class="error-message" *ngIf="passwordError">{{ passwordError }}</div>
+        <div class="success-message" *ngIf="passwordSuccess">{{ passwordSuccess }}</div>
+        
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="closePasswordModal()">Cancel</button>
+          <button class="btn btn-primary" (click)="submitPasswordChange()" [disabled]="passwordLoading">
+            {{ passwordLoading ? 'Changing...' : 'Change Password' }}
+          </button>
         </div>
       </div>
     </div>
@@ -263,6 +293,68 @@ import { AdviserService } from '../../../../core/services/adviser.service';
       background: white;
       border-radius: 16px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      position: relative;
+
+      h3 { color: #2c3e50; margin-bottom: 1.5rem; font-weight: 700; }
+
+      .close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        font-size: 2rem;
+        color: #7f8c8d;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        &:hover { color: #2c3e50; }
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #2c3e50; }
+
+        .form-control {
+          width: 100%;
+          padding: 0.75rem;
+          border: 1px solid #ced4da;
+          border-radius: 6px;
+          font-size: 1rem;
+          &:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); }
+        }
+      }
+
+      .error-message {
+        background: #fee;
+        border: 1px solid #fcc;
+        color: #c33;
+        padding: 0.75rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+      }
+
+      .success-message {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+        padding: 0.75rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+      }
 
       &.logout-modal {
         max-width: 300px;
@@ -296,7 +388,11 @@ import { AdviserService } from '../../../../core/services/adviser.service';
 })
 export class AdviserProfileComponent implements OnInit {
   editMode = false;
+  showPasswordModal = false;
   showLogoutModal = false;
+  passwordLoading = false;
+  passwordError = '';
+  passwordSuccess = '';
   originalProfileData: any = {};
 
   profileData = {
@@ -305,6 +401,12 @@ export class AdviserProfileComponent implements OnInit {
     phone: '',
     advisoryClass: '',
     avatar: 'assets/user-female.png'
+  };
+
+  passwordForm = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   };
 
   constructor(
@@ -353,6 +455,72 @@ export class AdviserProfileComponent implements OnInit {
   cancelEdit(): void {
     this.profileData = { ...this.originalProfileData };
     this.editMode = false;
+  }
+
+  changePassword(): void {
+    this.showPasswordModal = true;
+    this.passwordError = '';
+    this.passwordSuccess = '';
+  }
+
+  closePasswordModal(): void {
+    this.showPasswordModal = false;
+    this.passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+    this.passwordError = '';
+    this.passwordSuccess = '';
+  }
+
+  submitPasswordChange(): void {
+    this.passwordError = '';
+    this.passwordSuccess = '';
+
+    // Validation
+    if (!this.passwordForm.currentPassword || !this.passwordForm.newPassword || !this.passwordForm.confirmPassword) {
+      this.passwordError = 'All fields are required';
+      return;
+    }
+
+    if (this.passwordForm.newPassword.length < 6) {
+      this.passwordError = 'New password must be at least 6 characters';
+      return;
+    }
+
+    if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
+      this.passwordError = 'Passwords do not match';
+      return;
+    }
+
+    this.passwordLoading = true;
+    const currentUser = this.authService.currentUserValue;
+
+    if (!currentUser || !currentUser.user_id) {
+      this.passwordError = 'User not authenticated';
+      this.passwordLoading = false;
+      return;
+    }
+
+    this.authService.changePassword(
+      currentUser.user_id,
+      this.passwordForm.currentPassword,
+      this.passwordForm.newPassword
+    ).subscribe({
+      next: (response) => {
+        this.passwordLoading = false;
+        if (response.success) {
+          this.passwordSuccess = 'Password changed successfully!';
+          setTimeout(() => {
+            this.closePasswordModal();
+          }, 2000);
+        } else {
+          this.passwordError = response.message || 'Failed to change password';
+        }
+      },
+      error: (error) => {
+        this.passwordLoading = false;
+        this.passwordError = 'Failed to change password. Please try again.';
+        console.error('Password change error:', error);
+      }
+    });
   }
 
   logout(): void {
