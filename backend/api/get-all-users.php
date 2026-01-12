@@ -100,8 +100,8 @@ try {
                          cs.clinic_staff_id, cs.staff_code, cs.position
                   FROM users u
                   INNER JOIN clinic_staff cs ON u.user_id = cs.user_id
-                  WHERE u.role_id = (SELECT role_id FROM roles WHERE LOWER(role_name) = 'clinic_staff')
-                  AND cs.clinic_staff_id IS NOT NULL
+                  WHERE cs.clinic_staff_id IS NOT NULL
+                  AND cs.is_active = 1
                   ORDER BY u.full_name ASC";
         
         $stmt = $db->prepare($query);
@@ -191,8 +191,8 @@ try {
                          cs.clinic_staff_id
                   FROM users u
                   INNER JOIN clinic_staff cs ON u.user_id = cs.user_id
-                  WHERE u.role_id = (SELECT role_id FROM roles WHERE LOWER(role_name) = 'clinic_staff')
-                  AND cs.clinic_staff_id IS NOT NULL
+                  WHERE cs.clinic_staff_id IS NOT NULL
+                  AND cs.is_active = 1
                   ORDER BY u.full_name ASC";
         
         $stmt = $db->prepare($query);
