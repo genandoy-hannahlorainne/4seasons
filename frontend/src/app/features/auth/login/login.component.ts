@@ -33,6 +33,11 @@ export class LoginComponent implements OnInit {
     // Get role from query params
     this.route.queryParams.subscribe(params => {
       this.selectedRole = params['role'] || '';
+      
+      // If no role selected, redirect back to role selection
+      if (!this.selectedRole) {
+        this.router.navigate(['/role-selection']);
+      }
     });
   }
 
@@ -54,6 +59,13 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    // STRICT VALIDATION: Must have selected role
+    if (!this.selectedRole) {
+      this.error = 'Invalid session. Please start from role selection.';
+      this.router.navigate(['/role-selection']);
+      return;
+    }
+
     this.loading = true;
     this.error = '';
 
@@ -61,15 +73,34 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(username, password).subscribe({
       next: (user) => {
+        this.loading = false;
+
+        // Map selected role to expected role name
+        const roleMap: { [key: string]: string } = {
+          'student': 'Student',
+          'adviser': 'Adviser',
+          'clinic-staff': 'Clinic Staff'
+        };
+
+        const expectedRole = roleMap[this.selectedRole];
+        const userRole = user.role_name;
+
+        // STRICT VALIDATION: User role MUST match selected role exactly
+        if (userRole !== expectedRole) {
+          this.authService.logout();
+          this.error = `❌ SECURITY ERROR: You selected to login as "${expectedRole}" but this account belongs to "${userRole}". Access DENIED. Please use the correct account for ${expectedRole}.`;
+          console.error(`🔒 SECURITY VIOLATION: Login attempt with mismatched role. Selected: ${expectedRole}, Actual: ${userRole}, User: ${username}`);
+          return;
+        }
+
         // Check if admin - redirect to admin login instead
         if (user.role_name === 'admin' || user.role_name === 'Admin') {
           this.authService.logout();
           this.error = 'Please use the admin portal to login.';
-          this.loading = false;
           return;
         }
 
-        // Redirect based on user role (no admin here)
+        // All validations passed - redirect to appropriate dashboard
         const roleRoutes: { [key: string]: string } = {
           'Student': '/dashboard/student',
           'Adviser': '/dashboard/adviser',
@@ -80,8 +111,14 @@ export class LoginComponent implements OnInit {
         this.router.navigate([route]);
       },
       error: (err) => {
-        this.error = 'Invalid username or password';
         this.loading = false;
+        // Check if error is from backend role validation
+        if (err.status === 403) {
+          this.error = `❌ SECURITY ERROR: ${err.error?.message || 'Access denied. Your account profile is incomplete or inactive.'}`;
+          console.error('🔒 SECURITY VIOLATION: Backend role validation failed', err.error);
+        } else {
+          this.error = err.error?.message || 'Invalid username or password';
+        }
       }
     });
   }
