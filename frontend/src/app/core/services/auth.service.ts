@@ -53,7 +53,8 @@ export class AuthService {
     return this.http.post<any>(`${environment.apiUrl}/change-password.php`, {
       user_id: userId,
       current_password: currentPassword,
-      new_password: newPassword
+      new_password: newPassword,
+      confirm_password: newPassword
     });
   }
 }
