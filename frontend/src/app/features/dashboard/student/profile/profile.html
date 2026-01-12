@@ -8,8 +8,8 @@
     <p>Loading profile...</p>
   </div>
 
-  <div *ngIf="successMessage" class="alert alert-success">✓ {{ successMessage }}</div>
-  <div *ngIf="errorMessage" class="alert alert-danger">✕ {{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}</div>
 
   <div class="profile-content" *ngIf="!loading || isEditing">
     <div class="profile-settings card" role="region" aria-label="Profile Settings">
@@ -104,11 +104,11 @@
 <!-- Change Password Modal -->
 <div class="modal-overlay" *ngIf="showPasswordModal" (click)="closePasswordModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
-    <button class="close-btn" (click)="closePasswordModal()">×</button>
+    <button class="close-btn" (click)="closePasswordModal()"><i class="fa-solid fa-xmark"></i></button>
     <h3>Change Password</h3>
     
-    <div *ngIf="passwordSuccess" class="alert alert-success">✓ {{ passwordSuccess }}</div>
-    <div *ngIf="passwordError" class="alert alert-danger">✕ {{ passwordError }}</div>
+    <div *ngIf="passwordSuccess" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ passwordSuccess }}</div>
+    <div *ngIf="passwordError" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ passwordError }}</div>
 
     <form [formGroup]="changePasswordForm" (ngSubmit)="onChangePasswordSubmit()">
       <div class="form-group">
@@ -136,7 +136,7 @@
 <!-- QR Code Modal -->
 <div class="modal-overlay" *ngIf="showQRModal" (click)="closeQRModal()">
   <div class="modal-content qr-modal" (click)="$event.stopPropagation()">
-    <button class="close-btn" (click)="closeQRModal()">×</button>
+    <button class="close-btn" (click)="closeQRModal()"><i class="fa-solid fa-xmark"></i></button>
     <h3>Your Student QR Code</h3>
     
     <div class="qr-code-container" *ngIf="qrCodeData">
@@ -155,7 +155,7 @@
     </div>
     
     <div class="modal-actions">
-      <button class="btn btn-success" (click)="downloadQRCode()">💾 Download</button>
+      <button class="btn btn-success" (click)="downloadQRCode()"><i class="fa-solid fa-download"></i> Download</button>
     </div>
   </div>
 </div>

@@ -51,7 +51,7 @@ export const dashboardRoutes: Routes = [
     children: [
       { path: '', component: AdviserDashboardComponent },
       { path: 'alerts', component: AdviserAlertsComponent },
-      { path: 'health-status', component: AdviserHealthStatusComponent },
+      { path: 'health-status', redirectTo: '', pathMatch: 'full' },
       { path: 'profile', component: AdviserProfileComponent }
     ]
   },

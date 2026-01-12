@@ -11,101 +11,95 @@ import { environment } from '../../../../environments/environment';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="clinic-dashboard">
-      <div class="dashboard-header">
-        <h1>Welcome back, {{ staffName }}!</h1>
-        <p class="subtitle">Clinic Staff Dashboard</p>
-      </div>
+      <div class="dashboard-wrap">
+        <div class="overview-card">
+          <div class="overview-title">Dashboard Overview</div>
+          <div class="overview-sub">Welcome back, {{ staffName }}!</div>
+          <div class="overview-meta">Clinic Staff Dashboard</div>
 
-      <!-- Summary Cards -->
-      <div class="summary-cards">
-        <div class="summary-card">
-          <div class="card-info">
-            <div class="card-value">{{ totalStudents }}</div>
-            <div class="card-label">Total Students</div>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="card-info">
-            <div class="card-value">{{ todayVisits }}</div>
-            <div class="card-label">Today's Visits</div>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="card-info">
-            <div class="card-value">{{ totalVisits }}</div>
-            <div class="card-label">Total Visits</div>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="card-info">
-            <div class="card-value">{{ pendingVisits }}</div>
-            <div class="card-label">Pending Visits</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="card">
-        <h2>Quick Actions</h2>
-        <div class="actions-grid">
-          <button class="action-btn" routerLink="/dashboard/staff/visits/new">
-            <span class="action-text">+ New Visit</span>
-          </button>
-          <button class="action-btn" routerLink="/dashboard/staff/students">
-            <span class="action-text">Find Student</span>
-          </button>
-          <button class="action-btn" routerLink="/dashboard/staff/reports">
-            <span class="action-text">Generate Report</span>
-          </button>
-          <button class="action-btn" routerLink="/dashboard/staff/profile">
-            <span class="action-text">My Profile</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Recent Activity -->
-      <div class="recent-section">
-        <div class="card">
-          <h2>Recent Visits</h2>
-          <div class="loading-state" *ngIf="loadingVisits">
-            <p>Loading...</p>
-          </div>
-          <div class="empty-state" *ngIf="!loadingVisits && recentVisits.length === 0">
-            <p>No recent visits recorded</p>
-          </div>
-          <div class="visits-list" *ngIf="!loadingVisits && recentVisits.length > 0">
-            <div *ngFor="let visit of recentVisits" class="visit-item">
-              <div class="visit-avatar">
-                <img [src]="visit.avatar" alt="Student">
-              </div>
-              <div class="visit-info">
-                <div class="visit-name">{{ visit.studentName }}</div>
-                <div class="visit-reason">{{ visit.chiefComplaint }}</div>
-              </div>
-              <div class="visit-meta">
-                <div class="visit-time">{{ visit.dateTime }}</div>
-                <span class="visit-status" [class]="visit.status">{{ visit.status }}</span>
-              </div>
+          <div class="stats-row">
+            <div class="stat-tile tile-students">
+              <div class="tile-value">{{ totalStudents }}</div>
+              <div class="tile-label">Total Students</div>
+            </div>
+            <div class="stat-tile tile-today">
+              <div class="tile-value">{{ todayVisits }}</div>
+              <div class="tile-label">Today's Visits</div>
+            </div>
+            <div class="stat-tile tile-total-visits">
+              <div class="tile-value">{{ totalVisits }}</div>
+              <div class="tile-label">Total Visits</div>
+            </div>
+            <div class="stat-tile tile-pending">
+              <div class="tile-value">{{ pendingVisits }}</div>
+              <div class="tile-label">Pending Visits</div>
             </div>
           </div>
-          <div class="view-all" *ngIf="recentVisits.length > 0">
-            <a routerLink="/dashboard/staff/visits">View All Visits</a>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <h2>Quick Actions</h2>
+          <div class="actions-grid">
+            <button class="action-btn" routerLink="/dashboard/staff/visits/new">
+              <span class="action-text">+ New Visit</span>
+            </button>
+            <button class="action-btn" routerLink="/dashboard/staff/students">
+              <span class="action-text">Find Student</span>
+            </button>
+            <button class="action-btn" routerLink="/dashboard/staff/reports">
+              <span class="action-text">Generate Report</span>
+            </button>
+            <button class="action-btn" routerLink="/dashboard/staff/profile">
+              <span class="action-text">My Profile</span>
+            </button>
           </div>
         </div>
 
-        <div class="card">
-          <h2>Students with Allergies</h2>
-          <div class="loading-state" *ngIf="loadingAllergies">
-            <p>Loading...</p>
+        <!-- Recent Activity -->
+        <div class="recent-section">
+          <div class="card">
+            <h2>Recent Visits</h2>
+            <div class="loading-state" *ngIf="loadingVisits">
+              <p>Loading...</p>
+            </div>
+            <div class="empty-state" *ngIf="!loadingVisits && recentVisits.length === 0">
+              <p>No recent visits recorded</p>
+            </div>
+            <div class="visits-list" *ngIf="!loadingVisits && recentVisits.length > 0">
+              <div *ngFor="let visit of recentVisits" class="visit-item">
+                <div class="visit-avatar">
+                  <img [src]="visit.avatar" alt="Student">
+                </div>
+                <div class="visit-info">
+                  <div class="visit-name">{{ visit.studentName }}</div>
+                  <div class="visit-reason">{{ visit.chiefComplaint }}</div>
+                </div>
+                <div class="visit-meta">
+                  <div class="visit-time">{{ visit.dateTime }}</div>
+                  <span class="visit-status" [class]="visit.status">{{ visit.status }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="view-all" *ngIf="recentVisits.length > 0">
+              <a routerLink="/dashboard/staff/visits">View All Visits</a>
+            </div>
           </div>
-          <div class="empty-state" *ngIf="!loadingAllergies && studentsWithAllergies.length === 0">
-            <p>No allergy records found</p>
-          </div>
-          <div class="allergy-list" *ngIf="!loadingAllergies && studentsWithAllergies.length > 0">
-            <div *ngFor="let student of studentsWithAllergies" class="allergy-item">
-              <div class="student-name">{{ student.name }}</div>
-              <div class="allergy-tags">
-                <span *ngFor="let allergy of student.allergies" class="allergy-tag">{{ allergy }}</span>
+
+          <div class="card">
+            <h2>Students with Allergies</h2>
+            <div class="loading-state" *ngIf="loadingAllergies">
+              <p>Loading...</p>
+            </div>
+            <div class="empty-state" *ngIf="!loadingAllergies && studentsWithAllergies.length === 0">
+              <p>No allergy records found</p>
+            </div>
+            <div class="allergy-list" *ngIf="!loadingAllergies && studentsWithAllergies.length > 0">
+              <div *ngFor="let student of studentsWithAllergies" class="allergy-item">
+                <div class="student-name">{{ student.name }}</div>
+                <div class="allergy-tags">
+                  <span *ngFor="let allergy of student.allergies" class="allergy-tag">{{ allergy }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -120,28 +114,73 @@ import { environment } from '../../../../environments/environment';
       min-height: 100vh;
     }
 
-    .dashboard-header {
-      margin-bottom: 2rem;
-      h1 { font-size: 1.8rem; color: #2c3e50; margin-bottom: 0.5rem; font-weight: 600; }
-      .subtitle { color: #7f8c8d; font-size: 1rem; }
-    }
-
-    .summary-cards {
+    .dashboard-wrap {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1.5rem;
-      margin-bottom: 2rem;
+      grid-template-columns: 1fr;
+      gap: 1rem;
     }
 
-    .summary-card {
-      background: white;
+    .overview-card {
+      background: #fff;
       border-radius: 12px;
       padding: 1.5rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      
-      .card-value { font-size: 2rem; font-weight: 700; color: #2c3e50; }
-      .card-label { color: #7f8c8d; font-size: 0.9rem; margin-top: 0.25rem; }
     }
+
+    .overview-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #0b2a4a;
+      margin-bottom: 0.25rem;
+    }
+
+    .overview-sub {
+      color: #4f7ea9;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      font-size: 0.95rem;
+    }
+
+    .overview-meta {
+      color: #0b2a4a;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-tile {
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      color: #fff;
+      min-height: 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .tile-value {
+      font-size: 1.4rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .tile-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      opacity: 0.95;
+    }
+
+    .tile-students { background: linear-gradient(135deg, #5b8cff, #a1b7ff); }
+    .tile-today { background: linear-gradient(135deg, #6a11cb, #b37aff); }
+    .tile-total-visits { background: linear-gradient(135deg, #ff7e5f, #feb47b); }
+    .tile-pending { background: linear-gradient(135deg, #f9a826, #ffd194); }
 
     .card {
       background: white;
@@ -183,6 +222,12 @@ import { environment } from '../../../../environments/environment';
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .actions-grid { grid-template-columns: repeat(2, 1fr); }
+      .recent-section { grid-template-columns: 1fr; }
     }
 
     .loading-state, .empty-state {

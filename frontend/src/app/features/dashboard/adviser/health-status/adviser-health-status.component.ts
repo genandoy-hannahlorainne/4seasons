@@ -56,7 +56,7 @@ import { StudentProfileModalComponent } from '../student-profile-modal/student-p
                 class="search-input"
                 [(ngModel)]="searchTerm"
                 placeholder="Search">
-              <span class="search-icon" aria-hidden="true">🔍</span>
+              <span class="search-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
             </div>
           </div>
 

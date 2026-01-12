@@ -14,12 +14,8 @@ import { AuthService } from '../../../core/services/auth.service';
         <div class="nav-links">
           <a routerLink="/dashboard/adviser" class="nav-link" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
           <a routerLink="/dashboard/adviser/alerts" class="nav-link" routerLinkActive="active">Alerts</a>
-          <a routerLink="/dashboard/adviser/health-status" class="nav-link" routerLinkActive="active">Health Status</a>
         </div>
         <div class="nav-icons">
-          <button class="icon-btn notification" title="Notifications">
-            <img src="assets/notification-icon.png" alt="Notifications" class="icon-img">
-          </button>
           <button class="icon-btn profile" routerLink="/dashboard/adviser/profile" title="Profile">
             <img src="assets/user-male.png" alt="Profile" class="icon-img">
           </button>

@@ -10,11 +10,6 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
   imports: [CommonModule, StudentProfileModalComponent],
   template: `
     <div class="adviser-dashboard">
-      <div class="dashboard-header">
-        <h1>Welcome back, {{ adviserName }}!</h1>
-        <p class="advisory-info">Advisory Class: {{ advisoryClass }}</p>
-      </div>
-
       <!-- Loading State -->
       <div *ngIf="loading" class="loading-state">
         <p>Loading students...</p>
@@ -26,28 +21,24 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
         <button (click)="loadStudents()">Retry</button>
       </div>
 
-      <div *ngIf="!loading && !error">
-        <!-- Summary Cards -->
-        <div class="summary-cards">
-          <div class="summary-card total">
-            <div class="card-icon">👥</div>
-            <div class="card-info">
-              <div class="card-value">{{ totalStudents }}</div>
-              <div class="card-label">Total Students</div>
+      <div *ngIf="!loading && !error" class="dashboard-wrap">
+        <div class="overview-card">
+          <div class="overview-title">Dashboard Overview</div>
+          <div class="overview-sub">Welcome back, {{ adviserName }}!</div>
+          <div class="overview-meta">{{ advisoryClass || 'Advisory Class' }} • {{ totalStudents }} Students</div>
+
+          <div class="stats-row">
+            <div class="stat-tile tile-total">
+              <div class="tile-value">{{ totalStudents }}</div>
+              <div class="tile-label">Total Students</div>
             </div>
-          </div>
-          <div class="summary-card visits">
-            <div class="card-icon">🏥</div>
-            <div class="card-info">
-              <div class="card-value">{{ clinicVisitsThisMonth }}</div>
-              <div class="card-label">Clinic Visits (This Month)</div>
+            <div class="stat-tile tile-visits">
+              <div class="tile-value">{{ clinicVisitsThisMonth }}</div>
+              <div class="tile-label">Clinic Visits (This Month)</div>
             </div>
-          </div>
-          <div class="summary-card allergies">
-            <div class="card-icon">⚠️</div>
-            <div class="card-info">
-              <div class="card-value">{{ studentsWithAllergies }}</div>
-              <div class="card-label">With Allergies</div>
+            <div class="stat-tile tile-allergies">
+              <div class="tile-value">{{ studentsWithAllergies }}</div>
+              <div class="tile-label">With Allergies</div>
             </div>
           </div>
         </div>
@@ -86,9 +77,9 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
           <div class="activity-list">
             <div *ngFor="let activity of recentActivity" class="activity-item">
               <div class="activity-icon" [ngClass]="activity.type">
-                <span *ngIf="activity.type === 'visit'">🏥</span>
-                <span *ngIf="activity.type === 'alert'">⚠️</span>
-                <span *ngIf="activity.type === 'checkup'">✅</span>
+                <i *ngIf="activity.type === 'visit'" class="fa-solid fa-notes-medical"></i>
+                <i *ngIf="activity.type === 'alert'" class="fa-solid fa-triangle-exclamation"></i>
+                <i *ngIf="activity.type === 'checkup'" class="fa-solid fa-circle-check"></i>
               </div>
               <div class="activity-content">
                 <div class="activity-text">{{ activity.message }}</div>
@@ -114,21 +105,72 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
       min-height: 100vh;
     }
 
-    .dashboard-header {
-      margin-bottom: 2rem;
-      
-      h1 {
-        font-size: 1.8rem;
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-      }
-      
-      .advisory-info {
-        color: #7f8c8d;
-        font-size: 1rem;
-      }
+    .dashboard-wrap {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
     }
+
+    .overview-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .overview-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #0b2a4a;
+      margin-bottom: 0.25rem;
+    }
+
+    .overview-sub {
+      color: #4f7ea9;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      font-size: 0.95rem;
+    }
+
+    .overview-meta {
+      color: #0b2a4a;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-tile {
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      color: #fff;
+      min-height: 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .tile-value {
+      font-size: 1.4rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .tile-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      opacity: 0.95;
+    }
+
+    .tile-total { background: linear-gradient(135deg, #5b8cff, #a1b7ff); }
+    .tile-visits { background: linear-gradient(135deg, #ff7e5f, #feb47b); }
+    .tile-allergies { background: linear-gradient(135deg, #f9a826, #ffd194); }
 
     .loading-state, .error-state {
       text-align: center;
@@ -145,31 +187,6 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
         border-radius: 6px;
         cursor: pointer;
       }
-    }
-
-    .summary-cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .summary-card {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      
-      .card-icon { font-size: 2.5rem; }
-      .card-value { font-size: 2rem; font-weight: 700; color: #2c3e50; }
-      .card-label { color: #7f8c8d; font-size: 0.9rem; }
-      
-      &.total { border-left: 4px solid #3498db; }
-      &.visits { border-left: 4px solid #e74c3c; }
-      &.allergies { border-left: 4px solid #f39c12; }
     }
 
     .card {

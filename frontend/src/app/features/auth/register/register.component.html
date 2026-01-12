@@ -7,19 +7,19 @@
       
       <div class="role-cards">
         <div class="role-card" (click)="selectRole('student')">
-          <div class="role-icon">👨‍🎓</div>
+          <div class="role-icon"><i class="fa-solid fa-graduation-cap"></i></div>
           <h3>Student</h3>
           <p>Register as a student</p>
         </div>
 
         <div class="role-card" (click)="selectRole('adviser')">
-          <div class="role-icon">👨‍🏫</div>
+          <div class="role-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
           <h3>Adviser</h3>
           <p>Register as an adviser</p>
         </div>
 
         <div class="role-card" (click)="selectRole('clinic-staff')">
-          <div class="role-icon">👨‍⚕️</div>
+          <div class="role-icon"><i class="fa-solid fa-user-nurse"></i></div>
           <h3>Clinic Staff</h3>
           <p>Register as clinic staff</p>
         </div>
@@ -297,9 +297,9 @@
     <div class="modal-content" (click)="$event.stopPropagation()" [class.success]="modalSuccess" [class.error]="!modalSuccess">
       <div class="modal-icon">
         @if (modalSuccess) {
-          <span class="icon-success">✓</span>
+          <span class="icon-success"><i class="fa-solid fa-circle-check"></i></span>
         } @else {
-          <span class="icon-error">✕</span>
+          <span class="icon-error"><i class="fa-solid fa-circle-xmark"></i></span>
         }
       </div>
       <h3>{{ modalSuccess ? 'Registration Successful!' : 'Registration Failed' }}</h3>
@@ -311,7 +311,7 @@
           <div class="username-box">
             <span class="username-text">{{ registeredUsername }}</span>
             <button class="btn-copy" (click)="copyUsername()" title="Copy username">
-              📋 Copy
+              <i class="fa-solid fa-copy"></i> Copy
             </button>
           </div>
         </div>

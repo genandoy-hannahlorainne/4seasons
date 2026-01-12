@@ -2,86 +2,89 @@
   <div class="dashboard-content">
     <div *ngIf="loading" class="loading-message">Loading student data...</div>
     <div *ngIf="error" class="error-message">{{ error }}</div>
-    
-    <div class="welcome-section">
-      <h1>Welcome back, {{ studentName }}!</h1>
-      <p class="student-info">{{ studentId }} • {{ gradeLevel }}</p>
-    </div>
 
-    <div class="info-cards">
-      <div class="info-card bmi">
-        <div class="card-value">{{ bmi }}</div>
-        <div class="card-label">BMI</div>
-      </div>
-      <div class="info-card blood-type">
-        <div class="card-value">{{ bloodType }}</div>
-        <div class="card-label">Blood Type</div>
-      </div>
-      <div class="info-card allergies">
-        <div class="card-value">{{ allergiesCount }}</div>
-        <div class="card-label">Allergies</div>
-      </div>
-      <div class="info-card last-visit">
-        <div class="card-value">{{ lastVisit }}</div>
-        <div class="card-label">Last Visit</div>
-      </div>
-    </div>
+    <div class="dashboard-wrap">
+      <div class="overview-card">
+        <div class="overview-title">Dashboard Overview</div>
+        <div class="overview-sub">Welcome back, {{ studentName }}!</div>
+        <div class="overview-meta">{{ studentId }} • {{ gradeLevel }}</div>
 
-    <div class="main-content">
-      <div class="left-column">
-        <div class="card medical-info">
-          <h2>Medical Information</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="info-label">Height</div>
-              <div class="info-value">{{ height }}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Weight</div>
-              <div class="info-value">{{ weight }}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Age</div>
-              <div class="info-value">{{ age }}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">BMI</div>
-              <div class="info-value">{{ bmiPercentage }}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Blood Type</div>
-              <div class="info-value">{{ bloodType }}</div>
-            </div>
+        <div class="stats-row">
+          <div class="stat-tile tile-bmi">
+            <div class="tile-value">{{ bmi }}</div>
+            <div class="tile-label">BMI</div>
+          </div>
+          <div class="stat-tile tile-blood-type">
+            <div class="tile-value">{{ bloodType }}</div>
+            <div class="tile-label">Blood Type</div>
+          </div>
+          <div class="stat-tile tile-allergies">
+            <div class="tile-value">{{ allergiesCount }}</div>
+            <div class="tile-label">Allergies</div>
+          </div>
+          <div class="stat-tile tile-last-visit">
+            <div class="tile-value">{{ lastVisit }}</div>
+            <div class="tile-label">Last Visit</div>
           </div>
         </div>
+      </div>
 
-        <div class="card immunization-records">
-          <h2>Immunization Records</h2>
-          <div class="immunization-list">
-            <div *ngFor="let record of immunizationRecords" class="immunization-item">
-              <div class="immunization-info">
-                <div class="immunization-name">{{ record.name }}</div>
-                <div class="immunization-date">Last: {{ record.lastDate }}</div>
+      <div class="main-content">
+        <div class="left-column">
+          <div class="card medical-info">
+            <h2>Medical Information</h2>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Height</div>
+                <div class="info-value">{{ height }}</div>
               </div>
-              <span class="status-badge" [class]="record.status.toLowerCase()">
-                {{ record.status }}
-              </span>
+              <div class="info-item">
+                <div class="info-label">Weight</div>
+                <div class="info-value">{{ weight }}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Age</div>
+                <div class="info-value">{{ age }}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">BMI</div>
+                <div class="info-value">{{ bmiPercentage }}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Blood Type</div>
+                <div class="info-value">{{ bloodType }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card immunization-records">
+            <h2>Immunization Records</h2>
+            <div class="immunization-list">
+              <div *ngFor="let record of immunizationRecords" class="immunization-item">
+                <div class="immunization-info">
+                  <div class="immunization-name">{{ record.name }}</div>
+                  <div class="immunization-date">Last: {{ record.lastDate }}</div>
+                </div>
+                <span class="status-badge" [class]="record.status.toLowerCase()">
+                  {{ record.status }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="right-column">
-        <div class="card known-allergies">
-          <div class="card-header">
-            <h2>Known Allergies</h2>
-            <button class="edit-btn">
-              <img src="assets/edit-icon.png" alt="Edit" class="edit-icon-img"> Edit
-            </button>
-          </div>
-          <div class="allergies-list">
-            <div *ngFor="let allergy of knownAllergies" class="allergy-item">
-              {{ allergy }}
+        <div class="right-column">
+          <div class="card known-allergies">
+            <div class="card-header">
+              <h2>Known Allergies</h2>
+              <button class="edit-btn">
+                <img src="assets/edit-icon.png" alt="Edit" class="edit-icon-img"> Edit
+              </button>
+            </div>
+            <div class="allergies-list">
+              <div *ngFor="let allergy of knownAllergies" class="allergy-item">
+                {{ allergy }}
+              </div>
             </div>
           </div>
         </div>
