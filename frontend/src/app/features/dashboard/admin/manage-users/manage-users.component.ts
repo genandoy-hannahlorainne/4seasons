@@ -34,13 +34,30 @@ export class ManageUsersComponent implements OnInit {
     this.loading = true;
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
-        if (response.success) {
+        if (response.success && response.users) {
+          // Map users from grouped response
           this.users = [
-            ...response.users.student.map((u: any) => ({ ...u, roleDisplay: 'Student' })),
-            ...response.users.adviser.map((u: any) => ({ ...u, roleDisplay: 'Adviser' })),
-            ...response.users.clinic_staff.map((u: any) => ({ ...u, roleDisplay: 'Clinic Staff' }))
+            ...(response.users.student || []).map((u: any) => ({ 
+              ...u, 
+              roleDisplay: 'Student',
+              role: 'student'
+            })),
+            ...(response.users.adviser || []).map((u: any) => ({ 
+              ...u, 
+              roleDisplay: 'Adviser',
+              role: 'adviser'
+            })),
+            ...(response.users.clinic_staff || []).map((u: any) => ({ 
+              ...u, 
+              roleDisplay: 'Clinic Staff',
+              role: 'clinic_staff'
+            }))
           ];
           this.filterUsers();
+          console.log('Users loaded:', this.users.length);
+        } else {
+          console.error('Invalid response structure:', response);
+          this.errorMessage = 'Invalid response from server';
         }
         this.loading = false;
       },
@@ -54,11 +71,12 @@ export class ManageUsersComponent implements OnInit {
 
   filterUsers(): void {
     this.filteredUsers = this.users.filter(user => {
-      const matchesRole = this.selectedRole === 'all' || user.role === this.selectedRole;
+      const userRole = user.role || user.roleDisplay?.toLowerCase();
+      const matchesRole = this.selectedRole === 'all' || userRole === this.selectedRole;
       const matchesSearch = !this.searchQuery || 
         user.full_name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
         user.username.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(this.searchQuery.toLowerCase());
+        (user.email && user.email.toLowerCase().includes(this.searchQuery.toLowerCase()));
       
       return matchesRole && matchesSearch;
     });

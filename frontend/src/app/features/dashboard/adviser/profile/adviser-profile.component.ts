@@ -130,6 +130,9 @@ export class AdviserProfileComponent implements OnInit {
   editMode = false;
   showPasswordModal = false;
   showLogoutModal = false;
+  passwordLoading = false;
+  passwordError = '';
+  passwordSuccess = '';
   originalProfileData: any = {};
 
   profileData = {

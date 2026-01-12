@@ -92,9 +92,6 @@ interface Student {
                   <button class="btn btn-primary btn-sm" [routerLink]="['/dashboard/staff/students', student.id]">
                     View Profile
                   </button>
-                  <button class="btn btn-success btn-sm" [routerLink]="['/dashboard/staff/visits/new']" [queryParams]="{studentId: student.id}">
-                    New Visit
-                  </button>
                 </div>
               </td>
             </tr>

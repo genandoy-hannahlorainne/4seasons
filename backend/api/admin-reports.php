@@ -99,7 +99,6 @@ try {
                   FROM users u
                   JOIN roles r ON u.role_id = r.role_id
                   WHERE DATE(u.created_at) BETWEEN ? AND ?
-                  AND r.role_name IN ('student', 'adviser', 'clinic_staff')
                   GROUP BY DATE(u.created_at), r.role_name
                   ORDER BY registration_date DESC";
         

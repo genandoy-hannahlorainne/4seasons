@@ -97,4 +97,8 @@ export class AdminService {
   getAllergiesReport(): Observable<any> {
     return this.getReport('allergies');
   }
+
+  getActivityLogs(limit: number = 20, offset: number = 0): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/get-activity-logs.php?limit=${limit}&offset=${offset}`);
+  }
 }
