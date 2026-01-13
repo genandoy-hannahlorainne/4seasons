@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AdviserService } from '../../../../core/services/adviser.service';
+import { Subject, interval } from 'rxjs';
+import { takeUntil, switchMap, startWith } from 'rxjs/operators';
 
 interface Alert {
   id: number;
@@ -33,6 +35,7 @@ interface Alert {
 
       <!-- Loading State -->
       <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
         <p>Loading alerts...</p>
       </div>
 
@@ -70,7 +73,9 @@ interface Alert {
             
             <div class="alert-preview">
               <div class="alert-avatar">
-                <img src="assets/user-male.png" alt="Clinic Staff">
+                <div class="avatar-placeholder">
+                  <i class="fa-solid fa-user-nurse"></i>
+                </div>
                 <span class="alert-badge" [ngClass]="alert.priority">
                   <span *ngIf="alert.priority === 'urgent'">!</span>
                   <span *ngIf="alert.priority === 'normal'">i</span>
@@ -83,7 +88,7 @@ interface Alert {
                   <span class="alert-time">{{ alert.timeAgo }}</span>
                 </div>
                 <div class="alert-subject">
-                  <strong>Re: {{ alert.studentName }}</strong> - {{ alert.subject }}
+                  <strong>{{ alert.studentName }}</strong> - {{ alert.subject }}
                 </div>
                 <div class="alert-preview-text">{{ alert.previewText }}</div>
               </div>
@@ -174,13 +179,29 @@ interface Alert {
       background: white;
       border-radius: 12px;
       
+      .spinner {
+        width: 50px;
+        height: 50px;
+        margin: 0 auto 1rem;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
       p { color: #7f8c8d; }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .alert-filters {
       display: flex;
       gap: 0.5rem;
       margin-bottom: 1.5rem;
+      flex-wrap: wrap;
       
       .filter-btn {
         padding: 0.6rem 1.2rem;
@@ -195,14 +216,14 @@ interface Alert {
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         
         &:hover { background: #f8f9fa; }
-        &.active { background: #007bff; color: white; }
+        &.active { background: #007bff; color: white; box-shadow: 0 2px 8px rgba(0,123,255,0.3); }
       }
     }
 
     .alerts-list {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.75rem;
     }
 
     .alert-item {
@@ -214,7 +235,14 @@ interface Alert {
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
       
       &:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
-      &.unread { background: #f0f7ff; border-left: 4px solid #007bff; }
+      &.unread { 
+        background: #f0f7ff; 
+        border-left: 4px solid #007bff;
+        
+        .alert-preview {
+          background: #f8fbff;
+        }
+      }
       &.expanded { box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
     }
 
@@ -223,6 +251,7 @@ interface Alert {
       align-items: flex-start;
       padding: 1rem;
       gap: 1rem;
+      transition: background 0.2s ease;
     }
 
     .alert-avatar {
@@ -231,7 +260,17 @@ interface Alert {
       height: 50px;
       flex-shrink: 0;
       
-      img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+      .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+      }
       
       .alert-badge {
         position: absolute;
@@ -361,12 +400,22 @@ interface Alert {
       .empty-title { font-size: 1.3rem; font-weight: 600; color: #2c3e50; margin-bottom: 0.5rem; }
       .empty-text { color: #7f8c8d; font-size: 1rem; max-width: 400px; margin: 0 auto; line-height: 1.5; }
     }
+
+    @media (max-width: 768px) {
+      .adviser-alerts { padding: 1rem; }
+      .alert-filters { gap: 0.25rem; }
+      .alert-preview { padding: 0.75rem; gap: 0.75rem; }
+      .message-student-info { flex-direction: column; gap: 0.5rem; }
+      .message-actions { flex-direction: column; }
+    }
   `]
 })
-export class AdviserAlertsComponent implements OnInit {
+export class AdviserAlertsComponent implements OnInit, OnDestroy {
   activeFilter = 'all';
   loading = false;
   alerts: Alert[] = [];
+  private destroy$ = new Subject<void>();
+  private refreshInterval = 30000; // 30 seconds
 
   constructor(
     private authService: AuthService,
@@ -394,13 +443,49 @@ export class AdviserAlertsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAlerts();
+    
+    // Auto-refresh notifications every 30 seconds
+    interval(this.refreshInterval)
+      .pipe(
+        startWith(0),
+        switchMap(() => this.adviserService.getAdviserNotifications()),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (response) => {
+          if (response?.success && Array.isArray(response.notifications)) {
+            this.alerts = response.notifications;
+          }
+        },
+        error: (err) => {
+          console.error('Auto-refresh error:', err);
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadAlerts(): void {
-    // For now, alerts will be empty since no clinic activity yet
-    // In the future, this will fetch from an API endpoint
-    this.loading = false;
-    this.alerts = [];
+    this.loading = true;
+    this.adviserService.getAdviserNotifications().subscribe({
+      next: (response) => {
+        console.log('✅ Notifications response:', response);
+        if (response?.success && Array.isArray(response.notifications)) {
+          this.alerts = response.notifications;
+          console.log('✅ Loaded', this.alerts.length, 'notifications');
+        } else {
+          console.error('❌ Invalid response structure:', response);
+        }
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('❌ Error loading notifications:', err);
+        this.loading = false;
+      }
+    });
   }
 
   setFilter(filter: string): void {

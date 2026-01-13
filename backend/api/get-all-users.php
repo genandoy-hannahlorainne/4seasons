@@ -1,7 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, X-Requested-With");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, User-Id, X-Requested-With, X-User-Id");
 header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -23,6 +23,8 @@ $auth->requireRole('Admin');
 
 try {
     error_log("=== GET ALL USERS API ===");
+    error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+    error_log("Request headers: " . json_encode(getallheaders()));
     
     $role = isset($_GET['role']) ? strtolower($_GET['role']) : null;
     
@@ -166,7 +168,7 @@ try {
     }
     
     // If no role specified, fetch ALL users grouped by role
-    error_log("Fetching all users...");
+    error_log("Fetching all users (no role filter)...");
     
     $students = [];
     $advisers = [];
@@ -184,6 +186,7 @@ try {
               AND u.deleted_at IS NULL
               ORDER BY u.full_name ASC";
     
+    error_log("Executing student query: " . $query);
     $stmt = $db->prepare($query);
     $stmt->execute();
     
@@ -205,6 +208,7 @@ try {
             'role_name' => $row['role_name']
         ];
     }
+    error_log("Found " . count($students) . " students");
     
     // Get ALL advisers (role_id = 3)
     $query = "SELECT u.user_id, u.username, u.email, u.full_name, u.phone, u.is_active, u.created_at,
@@ -217,6 +221,7 @@ try {
               AND u.deleted_at IS NULL
               ORDER BY u.full_name ASC";
     
+    error_log("Executing adviser query: " . $query);
     $stmt = $db->prepare($query);
     $stmt->execute();
     
@@ -237,6 +242,7 @@ try {
             'role_name' => $row['role_name']
         ];
     }
+    error_log("Found " . count($advisers) . " advisers");
     
     // Get ALL clinic staff (role_id = 4)
     $query = "SELECT u.user_id, u.username, u.email, u.full_name, u.phone, u.is_active, u.created_at,
@@ -249,6 +255,7 @@ try {
               AND u.deleted_at IS NULL
               ORDER BY u.full_name ASC";
     
+    error_log("Executing clinic_staff query: " . $query);
     $stmt = $db->prepare($query);
     $stmt->execute();
     
@@ -267,6 +274,7 @@ try {
             'role_name' => $row['role_name']
         ];
     }
+    error_log("Found " . count($clinic_staff) . " clinic staff");
     
     // Get ALL admins (role_id = 1)
     $query = "SELECT u.user_id, u.username, u.email, u.full_name, u.phone, u.is_active, u.created_at,
@@ -277,6 +285,7 @@ try {
               AND u.deleted_at IS NULL
               ORDER BY u.full_name ASC";
     
+    error_log("Executing admin query: " . $query);
     $stmt = $db->prepare($query);
     $stmt->execute();
     
@@ -292,6 +301,7 @@ try {
             'role_name' => $row['role_name']
         ];
     }
+    error_log("Found " . count($admins) . " admins");
     
     $total = count($students) + count($advisers) + count($clinic_staff) + count($admins);
     error_log("Total users: $total (Students: " . count($students) . ", Advisers: " . count($advisers) . ", Staff: " . count($clinic_staff) . ", Admins: " . count($admins) . ")");

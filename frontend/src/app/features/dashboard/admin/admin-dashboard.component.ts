@@ -1,11 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
 import { AdminService } from '../../../core/services/admin.service';
-import { ManageUsersComponent } from './manage-users/manage-users.component';
-import { Subject, interval } from 'rxjs';
-import { takeUntil, switchMap, startWith } from 'rxjs/operators';
+import { Subject, interval, BehaviorSubject } from 'rxjs';
+import { takeUntil, switchMap, startWith, tap } from 'rxjs/operators';
 
 interface User {
   user_id: number;
@@ -54,6 +52,20 @@ interface UsersResponse {
       </div>
 
       <div class="dashboard-content" *ngIf="!loading">
+        <!-- Debug Info (Remove in production) -->
+        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+          <strong>📊 Current Stats:</strong>
+          <div style="margin-top: 10px; font-family: monospace;">
+            Total Users: {{ systemStats.totalUsers }} | 
+            Students: {{ systemStats.totalStudents }} | 
+            Faculty: {{ systemStats.totalAdvisers }} | 
+            Clinic Staff: {{ systemStats.totalStaff }}
+          </div>
+          <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+            Recent Users Count: {{ recentUsers.length }}
+          </div>
+        </div>
+
         <!-- Statistics Cards -->
         <div class="stats-grid">
           <div class="stat-card users">
@@ -74,7 +86,7 @@ interface UsersResponse {
             <div class="stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalAdvisers }}</div>
-              <div class="stat-label">Faculty</div>
+              <div class="stat-label">Faculty/Advisers</div>
             </div>
           </div>
           <div class="stat-card staff">
@@ -528,6 +540,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   loading = false;
   private destroy$ = new Subject<void>();
   private refreshInterval = 30000; // 30 seconds
+  private usersData$ = new BehaviorSubject<UsersResponse | null>(null);
 
   systemStats = {
     totalUsers: 0,
@@ -541,7 +554,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   activityLog: any[] = [];
 
   constructor(
-    private authService: AuthService,
     private router: Router,
     private adminService: AdminService
   ) {}
@@ -554,6 +566,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       .pipe(
         startWith(0),
         switchMap(() => this.adminService.getAllUsers()),
+        tap(response => this.usersData$.next(response)),
         takeUntil(this.destroy$)
       )
       .subscribe({
@@ -584,16 +597,23 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     // Load users data
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
-        console.log('✅ getAllUsers response:', response);
+        console.log('✅ getAllUsers full response:', response);
+        console.log('✅ Response success:', response?.success);
+        console.log('✅ Response users:', response?.users);
+        console.log('✅ Response totals:', response?.totals);
+        
         if (response?.success && response.users) {
+          this.usersData$.next(response);
           this.updateDashboardData(response);
         } else {
           console.error('❌ Invalid response structure:', response);
+          this.loading = false;
         }
         this.loading = false;
       },
       error: (err) => {
         console.error('❌ Error loading users:', err);
+        console.error('❌ Error details:', err.error);
         this.loading = false;
       }
     });
@@ -623,6 +643,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     // Validate response structure
     if (!response || !response.success || !response.users) {
       console.error('❌ Invalid response structure');
+      console.error('❌ Response:', response);
+      console.error('❌ Response.success:', response?.success);
+      console.error('❌ Response.users:', response?.users);
       return;
     }
 
@@ -632,6 +655,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const clinicStaff = Array.isArray(response.users.clinic_staff) ? response.users.clinic_staff : [];
     const admins = Array.isArray(response.users.admin) ? response.users.admin : [];
     
+    console.log('📈 Raw user arrays:');
+    console.log('   Students:', students);
+    console.log('   Advisers:', advisers);
+    console.log('   Clinic Staff:', clinicStaff);
+    console.log('   Admins:', admins);
+    
     // Combine all users
     const allUsers: User[] = [...students, ...advisers, ...clinicStaff, ...admins];
     
@@ -640,6 +669,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     
     // Update statistics - prefer totals from API, fallback to manual count
     if (response.totals) {
+      console.log('📊 Using totals from API:', response.totals);
       this.systemStats = {
         totalUsers: response.totals.total || 0,
         totalStudents: response.totals.students || 0,
@@ -647,6 +677,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         totalStaff: response.totals.clinic_staff || 0
       };
     } else {
+      console.log('📊 Calculating totals manually');
       this.systemStats = {
         totalUsers: allUsers.length,
         totalStudents: students.length,
@@ -655,7 +686,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       };
     }
     
-    console.log('✅ Updated stats:', this.systemStats);
+    console.log('✅ Final stats:', this.systemStats);
     
     // Sort users by registration date (most recent first)
     const sortedUsers = allUsers
@@ -676,13 +707,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }));
     
     console.log('✅ Recent users updated:', this.recentUsers.length, 'users');
+    console.log('✅ Recent users:', this.recentUsers);
   }
 
   private formatRoleName(roleName: string): string {
     // Convert role names to proper format
     const roleMap: { [key: string]: string } = {
       'student': 'Student',
-      'adviser': 'Adviser',
+      'adviser': 'Faculty/Adviser',
       'clinic staff': 'Clinic Staff',
       'admin': 'Admin'
     };

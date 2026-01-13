@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../../core/services/admin.service';
 import { Subject, interval } from 'rxjs';
-import { takeUntil, switchMap } from 'rxjs/operators';
+import { takeUntil, switchMap, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-manage-users',
@@ -28,6 +28,14 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private refreshInterval = 30000; // 30 seconds
 
+  // Debug properties
+  userCounts = {
+    students: 0,
+    advisers: 0,
+    clinicStaff: 0,
+    admins: 0
+  };
+
   constructor(private adminService: AdminService) {}
 
   ngOnInit(): void {
@@ -36,6 +44,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     // Auto-refresh users every 30 seconds
     interval(this.refreshInterval)
       .pipe(
+        startWith(0),
         switchMap(() => this.adminService.getAllUsers()),
         takeUntil(this.destroy$)
       )
@@ -58,13 +67,18 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   loadUsers(): void {
     this.loading = true;
+    console.log('👥 Loading users for manage-users component...');
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
+        console.log('✅ getAllUsers response received:', response);
+        console.log('✅ Response.success:', response?.success);
+        console.log('✅ Response.users keys:', response?.users ? Object.keys(response.users) : 'no users object');
         this.updateUsersList(response);
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading users:', err);
+        console.error('❌ Error loading users:', err);
+        console.error('❌ Error details:', err.error);
         this.errorMessage = 'Failed to load users. Make sure you are logged in as admin.';
         this.loading = false;
       }
@@ -72,9 +86,19 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   private updateUsersList(response: any): void {
+    console.log('👥 updateUsersList called with response:', response);
+    
     if (response.success && response.users) {
+      console.log('✅ Response is successful and has users');
+      
       // Handle grouped response (when no role filter)
-      if (response.users.student || response.users.adviser || response.users.clinic_staff) {
+      if (response.users.student || response.users.adviser || response.users.clinic_staff || response.users.admin) {
+        console.log('📊 Detected grouped response format');
+        console.log('   student count:', response.users.student?.length || 0);
+        console.log('   adviser count:', response.users.adviser?.length || 0);
+        console.log('   clinic_staff count:', response.users.clinic_staff?.length || 0);
+        console.log('   admin count:', response.users.admin?.length || 0);
+        
         this.users = [
           ...(response.users.student || []).map((u: any) => ({ 
             ...u, 
@@ -83,7 +107,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
           })),
           ...(response.users.adviser || []).map((u: any) => ({ 
             ...u, 
-            roleDisplay: 'Adviser',
+            roleDisplay: 'Faculty/Adviser',
             role: 'adviser'
           })),
           ...(response.users.clinic_staff || []).map((u: any) => ({ 
@@ -97,21 +121,50 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
             role: 'admin'
           }))
         ];
+        
+        console.log('✅ Mapped users array, total count:', this.users.length);
+        console.log('✅ Users breakdown:', {
+          students: this.users.filter(u => u.role === 'student').length,
+          advisers: this.users.filter(u => u.role === 'adviser').length,
+          clinicStaff: this.users.filter(u => u.role === 'clinic_staff').length,
+          admins: this.users.filter(u => u.role === 'admin').length
+        });
       } else {
+        console.log('📊 Detected flat response format');
         // Handle flat response (when role filter is applied)
         this.users = (response.users || []).map((u: any) => ({
           ...u,
-          roleDisplay: u.role_name || 'Unknown',
+          roleDisplay: this.formatRoleName(u.role_name || 'Unknown'),
           role: u.role_name?.toLowerCase() || 'unknown'
         }));
+        console.log('✅ Mapped flat users array, total count:', this.users.length);
       }
       
       this.filterUsers();
-      console.log('Users loaded:', this.users.length);
+      console.log('✅ Users loaded and filtered:', this.filteredUsers.length);
+      
+      // Update counts
+      this.userCounts = {
+        students: this.users.filter(u => u.role === 'student').length,
+        advisers: this.users.filter(u => u.role === 'adviser').length,
+        clinicStaff: this.users.filter(u => u.role === 'clinic_staff').length,
+        admins: this.users.filter(u => u.role === 'admin').length
+      };
+      console.log('✅ User counts:', this.userCounts);
     } else {
-      console.error('Invalid response structure:', response);
+      console.error('❌ Invalid response structure:', response);
       this.errorMessage = 'Invalid response from server';
     }
+  }
+
+  private formatRoleName(roleName: string): string {
+    const roleMap: { [key: string]: string } = {
+      'student': 'Student',
+      'adviser': 'Faculty/Adviser',
+      'clinic staff': 'Clinic Staff',
+      'admin': 'Admin'
+    };
+    return roleMap[roleName.toLowerCase()] || roleName;
   }
 
   filterUsers(): void {
@@ -210,10 +263,9 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   toggleUserStatus(): void {
     if (!this.selectedUser) return;
 
-    const action = this.selectedUser.is_active ? 'deactivate' : 'activate';
-    const observable = this.selectedUser.is_active 
-      ? this.adminService.deactivateUser(this.selectedUser.user_id)
-      : this.adminService.activateUser(this.selectedUser.user_id);
+    const observable = this.selectedUser.is_active ? 
+      this.adminService.deactivateUser(this.selectedUser.user_id) :
+      this.adminService.activateUser(this.selectedUser.user_id);
 
     observable.subscribe({
       next: (response) => {

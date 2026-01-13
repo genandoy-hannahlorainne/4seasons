@@ -30,14 +30,29 @@ class Auth {
      */
     private function validateAuthentication() {
         // Get user_id from header
+        // PHP converts HTTP headers to $_SERVER with HTTP_ prefix and uppercase
         $this->user_id = isset($_SERVER['HTTP_USER_ID']) ? intval($_SERVER['HTTP_USER_ID']) : null;
 
         error_log("=== AUTH VALIDATION ===");
-        error_log("User ID from header: " . ($this->user_id ? $this->user_id : 'MISSING'));
-        error_log("All headers: " . json_encode(getallheaders()));
+        error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+        error_log("User ID from HTTP_USER_ID header: " . ($this->user_id ? $this->user_id : 'MISSING'));
+        
+        // Debug: Log all headers
+        $headers = getallheaders();
+        error_log("All headers received: " . json_encode($headers));
+        
+        // Check for user_id in different formats
+        if (!$this->user_id && isset($headers['user_id'])) {
+            $this->user_id = intval($headers['user_id']);
+            error_log("Found user_id in headers array: " . $this->user_id);
+        }
+        if (!$this->user_id && isset($headers['User-Id'])) {
+            $this->user_id = intval($headers['User-Id']);
+            error_log("Found User-Id in headers array: " . $this->user_id);
+        }
 
         if (!$this->user_id) {
-            error_log("❌ Missing user_id header");
+            error_log("❌ Missing user_id header - checked HTTP_USER_ID, user_id, and User-Id");
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'Unauthorized: Missing user_id']);
             exit();

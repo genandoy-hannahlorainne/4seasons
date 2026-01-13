@@ -578,12 +578,13 @@ export class VisitFormComponent implements OnInit {
       student_id: this.selectedStudent.student_id,
       date_time: this.visit.dateTime,
       visit_type: this.visit.visitType,
+      chief_complaint: this.visit.diagnosis,
+      diagnosis: this.visit.diagnosis,
       vitals: {
         temperature: this.visit.vitals.temperature,
         blood_pressure: this.visit.vitals.bloodPressure,
         pulse_rate: this.visit.vitals.pulseRate
       },
-      diagnosis: this.visit.diagnosis,
       status: this.visit.status,
       notify_parent: this.visit.notifyParent,
       parent_phone: this.selectedStudent?.parentPhone || null
