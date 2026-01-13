@@ -11,8 +11,9 @@
       <select id="roleFilter" [(ngModel)]="selectedRole" (change)="onRoleChange()" class="filter-select">
         <option value="all">All Users</option>
         <option value="student">Students</option>
-        <option value="adviser">Advisers</option>
+        <option value="adviser">Faculty/Advisers</option>
         <option value="clinic_staff">Clinic Staff</option>
+        <option value="admin">Admins</option>
       </select>
     </div>
 
@@ -27,6 +28,17 @@
         class="search-input"
       >
     </div>
+  </div>
+
+  <!-- Debug Info -->
+  <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #4caf50; font-size: 0.9em;">
+    <strong>📊 Debug Info:</strong>
+    Total: {{ users.length }} | 
+    Filtered: {{ filteredUsers.length }} | 
+    Students: {{ userCounts.students }} | 
+    Faculty: {{ userCounts.advisers }} | 
+    Clinic Staff: {{ userCounts.clinicStaff }} | 
+    Admins: {{ userCounts.admins }}
   </div>
 
   <!-- Loading State -->
@@ -183,6 +195,12 @@
             <label>Position</label>
             <input type="text" [value]="selectedUser.position" class="form-control" disabled>
           </div>
+        </div>
+
+        <!-- Admin-Specific Info -->
+        <div *ngIf="selectedUser.role === 'admin'" class="info-section">
+          <h3>Admin Information</h3>
+          <p class="admin-note">This is an administrator account with full system access.</p>
         </div>
       </div>
 
