@@ -51,6 +51,8 @@ if (isset($_GET['student_id'])) {
     // Get user_id from header or query parameter
     $user_id = isset($_SERVER['HTTP_USER_ID']) ? $_SERVER['HTTP_USER_ID'] : $_GET['user_id'];
     
+    error_log("Getting student for user_id: " . $user_id);
+    
     // Get student info from user_id
     $studentQuery = "SELECT 
                         s.student_id,
@@ -73,12 +75,16 @@ if (isset($_GET['student_id'])) {
     $studentStmt->execute();
     $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
     
+    error_log("Student found: " . ($student ? "Yes" : "No"));
+    
     if ($student) {
         $student_id = $student['student_id'];
     }
 } else {
     // Default for testing
     $user_id = 19;
+    error_log("No user_id provided, using default: $user_id");
+    
     $studentQuery = "SELECT 
                         s.student_id,
                         s.student_number,
@@ -107,10 +113,11 @@ if (isset($_GET['student_id'])) {
 
 try {
     if (!$student || !$student_id) {
+        error_log("Student not found - student: " . ($student ? "exists" : "null") . ", student_id: " . ($student_id ? $student_id : "null"));
         http_response_code(404);
         echo json_encode([
             'success' => false,
-            'message' => 'Student not found'
+            'message' => 'Student not found. Please ensure you are logged in as a student.'
         ]);
         exit();
     }
@@ -131,8 +138,14 @@ try {
     
     $allergiesStmt = $db->prepare($allergiesQuery);
     $allergiesStmt->bindParam(":student_id", $student_id);
-    $allergiesStmt->execute();
-    $allergies = $allergiesStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    try {
+        $allergiesStmt->execute();
+        $allergies = $allergiesStmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Allergies table error: " . $e->getMessage());
+        $allergies = [];
+    }
     
     // Get immunizations from the immunizations table
     $immunizationsQuery = "SELECT 
@@ -147,8 +160,15 @@ try {
     
     $immunizationsStmt = $db->prepare($immunizationsQuery);
     $immunizationsStmt->bindParam(":student_id", $student_id);
-    $immunizationsStmt->execute();
-    $immunizations = $immunizationsStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    try {
+        $immunizationsStmt->execute();
+        $immunizations = $immunizationsStmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        // Table might not exist, use empty array
+        error_log("Immunizations table error: " . $e->getMessage());
+        $immunizations = [];
+    }
     
     // Get last visit
     $lastVisitQuery = "SELECT 
@@ -175,18 +195,13 @@ try {
                         u.email
                      FROM advisers a
                      INNER JOIN users u ON a.user_id = u.user_id
+                     INNER JOIN student_adviser sa ON a.adviser_id = sa.adviser_id
                      WHERE a.is_active = 1
-                     AND (
-                        SELECT COUNT(*) FROM advisory_class ac 
-                        WHERE ac.adviser_id = a.adviser_id 
-                        AND ac.grade_level = :grade_level 
-                        AND ac.section = :section
-                     ) > 0
+                     AND sa.student_id = :student_id
                      LIMIT 1";
     
     $adviserStmt = $db->prepare($adviserQuery);
-    $adviserStmt->bindParam(":grade_level", $student['grade_level']);
-    $adviserStmt->bindParam(":section", $student['section']);
+    $adviserStmt->bindParam(":student_id", $student_id);
     $adviserStmt->execute();
     $adviser = $adviserStmt->fetch(PDO::FETCH_ASSOC);
     
