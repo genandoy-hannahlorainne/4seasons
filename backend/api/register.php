@@ -140,6 +140,20 @@ if (!empty($data->role) && !empty($data->password)) {
             $studentStmt->bindParam(":section", $section);
             $studentStmt->execute();
             
+            $student_id = $db->lastInsertId();
+            
+            // Generate QR code for the student
+            $qr_token = bin2hex(random_bytes(16));
+            $qr_expires_at = date('Y-m-d H:i:s', strtotime('+1 year'));
+            
+            $qrQuery = "INSERT INTO qr_codes (student_id, qr_token, qr_generated_at, qr_expires_at) 
+                       VALUES (:student_id, :qr_token, NOW(), :qr_expires_at)";
+            $qrStmt = $db->prepare($qrQuery);
+            $qrStmt->bindParam(":student_id", $student_id);
+            $qrStmt->bindParam(":qr_token", $qr_token);
+            $qrStmt->bindParam(":qr_expires_at", $qr_expires_at);
+            $qrStmt->execute();
+            
         } elseif ($data->role === 'adviser') {
             $adviserQuery = "INSERT INTO advisers 
                            (user_id, first_name, last_name, contact_phone, grade_level, section, is_active) 

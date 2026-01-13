@@ -104,4 +104,8 @@ export class AdviserService {
   getStudentCompleteProfile(studentId: number): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/get-student-complete-profile.php?student_id=${studentId}`);
   }
+
+  getAdviserNotifications(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/get-adviser-notifications.php`);
+  }
 }

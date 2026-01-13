@@ -5,18 +5,39 @@ require_once '../cors.php';
 header("Content-Type: application/json; charset=UTF-8");
 
 require_once '../config/database.php';
+require_once '../middleware/auth.php';
 
 $database = new Database();
 $db = $database->getConnection();
 
+// Authenticate user
+$auth = new Auth($database);
+$auth->requireRole('Clinic Staff');
+
 $data = json_decode(file_get_contents("php://input"));
 
 // Validate required fields
-if (empty($data->student_id) || empty($data->chief_complaint) || empty($data->visit_type)) {
+if (empty($data->student_id) || empty($data->diagnosis) || empty($data->visit_type)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'student_id, chief_complaint, and visit_type are required']);
+    echo json_encode(['success' => false, 'message' => 'student_id, diagnosis, and visit_type are required']);
     exit();
 }
+
+// Get clinic_staff_id for the authenticated user
+$userId = $auth->userId();
+$clinicStaffQuery = "SELECT clinic_staff_id FROM clinic_staff WHERE user_id = :user_id AND is_active = 1 LIMIT 1";
+$clinicStaffStmt = $db->prepare($clinicStaffQuery);
+$clinicStaffStmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+$clinicStaffStmt->execute();
+
+if ($clinicStaffStmt->rowCount() === 0) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Clinic staff profile not found']);
+    exit();
+}
+
+$clinicStaffData = $clinicStaffStmt->fetch(PDO::FETCH_ASSOC);
+$clinicStaffId = $clinicStaffData['clinic_staff_id'];
 
 try {
     $db->beginTransaction();
@@ -85,7 +106,6 @@ try {
     
     // Set values
     $visitDateTime = !empty($data->date_time) ? $data->date_time : date('Y-m-d H:i:s');
-    $clinicStaffId = !empty($data->clinic_staff_id) ? $data->clinic_staff_id : null;
     
     $stmt->bindParam(':student_id', $data->student_id);
     $stmt->bindParam(':clinic_staff_id', $clinicStaffId);
