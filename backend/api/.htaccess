@@ -1,2 +1,5 @@
 # CORS is handled by PHP files (cors.php)
-# No need for .htaccess CORS headers
+# Allow all HTTP methods
+<Limit GET POST PUT DELETE OPTIONS>
+    Require all granted
+</Limit>

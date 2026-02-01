@@ -66,6 +66,29 @@ interface UsersResponse {
           </div>
         </div>
 
+        <!-- Emergency Notifications (if any) -->
+        <div class="emergency-banner" *ngIf="emergencyNotifications.length > 0">
+          <div class="emergency-header">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>{{ emergencyNotifications.length }} Emergency Alert{{ emergencyNotifications.length > 1 ? 's' : '' }}</span>
+            <button class="mark-all-read" (click)="markAllNotificationsAsRead()" *ngIf="emergencyNotifications.length > 0">
+              Mark All Read
+            </button>
+          </div>
+          <div class="emergency-list">
+            <div *ngFor="let notification of emergencyNotifications" class="emergency-item">
+              <div class="emergency-content">
+                <div class="emergency-message">{{ notification.message }}</div>
+                <div class="emergency-meta">
+                  <span>{{ notification.student.full_name }} ({{ notification.student.student_number }})</span>
+                  <span>{{ notification.timeAgo }}</span>
+                </div>
+              </div>
+              <button class="emergency-view" (click)="viewEmergencyDetails(notification)">View</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Statistics Cards -->
         <div class="stats-grid">
           <div class="stat-card users">
@@ -254,6 +277,95 @@ interface UsersResponse {
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+
+    .emergency-banner {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+      color: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+      animation: pulse 2s infinite;
+
+      .emergency-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+
+        i { font-size: 1.25rem; }
+        
+        .mark-all-read {
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: white;
+          padding: 0.4rem 0.8rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          font-weight: 500;
+          transition: all 0.2s ease;
+          &:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+          }
+        }
+      }
+
+      .emergency-list {
+        .emergency-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 0.75rem;
+          &:last-child { margin-bottom: 0; }
+
+          .emergency-content {
+            flex: 1;
+            .emergency-message {
+              font-weight: 500;
+              margin-bottom: 0.5rem;
+              line-height: 1.4;
+            }
+            .emergency-meta {
+              font-size: 0.9rem;
+              opacity: 0.9;
+              span {
+                margin-right: 1rem;
+                &:last-child { margin-right: 0; }
+              }
+            }
+          }
+
+          .emergency-view {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            &:hover {
+              background: rgba(255, 255, 255, 0.3);
+              border-color: rgba(255, 255, 255, 0.5);
+            }
+          }
+        }
+      }
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3); }
+      50% { box-shadow: 0 4px 20px rgba(255, 107, 107, 0.5); }
+      100% { box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3); }
     }
 
     .stats-grid {
@@ -552,6 +664,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   recentUsers: any[] = [];
   systemAlerts: any[] = [];
   activityLog: any[] = [];
+  emergencyNotifications: any[] = [];
 
   constructor(
     private router: Router,
@@ -633,6 +746,24 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('❌ Error loading activity logs:', err);
+      }
+    });
+
+    // Load emergency notifications
+    this.adminService.getNotifications().subscribe({
+      next: (response) => {
+        console.log('✅ Admin notifications response:', response);
+        if (response?.success && Array.isArray(response.notifications)) {
+          this.emergencyNotifications = response.notifications
+            .filter((notif: any) => notif.priority === 'urgent')
+            .map((notif: any) => ({
+              ...notif,
+              timeAgo: this.formatTimestamp(notif.created_at)
+            }));
+        }
+      },
+      error: (err) => {
+        console.error('❌ Error loading admin notifications:', err);
       }
     });
   }
@@ -787,6 +918,63 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const index = this.systemAlerts.indexOf(alert);
     if (index > -1) {
       this.systemAlerts.splice(index, 1);
+    }
+  }
+
+  viewEmergencyDetails(notification: any): void {
+    // Navigate to detailed view or show modal
+    console.log('Viewing emergency details:', notification);
+    
+    // Create a detailed modal or alert
+    const details = `
+Emergency Details:
+
+Student: ${notification.student.full_name}
+Student Number: ${notification.student.student_number}
+Grade & Section: ${notification.student.grade_section}
+Complaint: ${notification.visit.chief_complaint}
+Visit Status: ${notification.visit.status}
+Time: ${notification.timeAgo}
+
+Staff: ${notification.staff.name || 'N/A'}
+Position: ${notification.staff.position || 'N/A'}
+    `.trim();
+    
+    if (confirm(details + '\n\nMark this notification as read?')) {
+      this.markNotificationAsRead(notification.notification_id);
+    }
+  }
+
+  markNotificationAsRead(notificationId: number): void {
+    this.adminService.markNotificationAsRead(notificationId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          // Remove from emergency notifications
+          this.emergencyNotifications = this.emergencyNotifications.filter(
+            n => n.notification_id !== notificationId
+          );
+        }
+      },
+      error: (err) => {
+        console.error('Failed to mark notification as read:', err);
+      }
+    });
+  }
+
+  markAllNotificationsAsRead(): void {
+    if (this.emergencyNotifications.length === 0) return;
+    
+    if (confirm(`Mark all ${this.emergencyNotifications.length} emergency notifications as read?`)) {
+      this.adminService.markAllNotificationsAsRead().subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.emergencyNotifications = [];
+          }
+        },
+        error: (err) => {
+          console.error('Failed to mark all notifications as read:', err);
+        }
+      });
     }
   }
 }

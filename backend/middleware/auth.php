@@ -236,4 +236,53 @@ class Auth {
         }
     }
 }
+
+// Helper functions for backward compatibility
+function verifyAdminRole() {
+    global $auth;
+    if (!isset($auth)) {
+        require_once __DIR__ . '/../config/database.php';
+        $auth = new Auth($database);
+    }
+    $auth->requireRole('Admin');
+    
+    // Set session for backward compatibility
+    if (!isset($_SESSION)) {
+        session_start();
+    }
+    $_SESSION['user_id'] = $auth->userId();
+    $_SESSION['role'] = $auth->role();
+}
+
+function verifyAdviserRole() {
+    global $auth;
+    if (!isset($auth)) {
+        require_once __DIR__ . '/../config/database.php';
+        $auth = new Auth($database);
+    }
+    $auth->requireRole('Adviser');
+    
+    // Set session for backward compatibility
+    if (!isset($_SESSION)) {
+        session_start();
+    }
+    $_SESSION['user_id'] = $auth->userId();
+    $_SESSION['role'] = $auth->role();
+}
+
+function verifyClinicStaffRole() {
+    global $auth;
+    if (!isset($auth)) {
+        require_once __DIR__ . '/../config/database.php';
+        $auth = new Auth($database);
+    }
+    $auth->requireRole('Clinic Staff');
+    
+    // Set session for backward compatibility
+    if (!isset($_SESSION)) {
+        session_start();
+    }
+    $_SESSION['user_id'] = $auth->userId();
+    $_SESSION['role'] = $auth->role();
+}
 ?>

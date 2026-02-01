@@ -38,7 +38,11 @@ if (isset($_GET['student_id'])) {
                         s.address,
                         s.emergency_contact,
                         s.grade_level,
-                        s.section
+                        s.section,
+                        s.height_cm,
+                        s.weight_kg,
+                        s.bmi,
+                        s.bmi_category
                      FROM students s
                      WHERE s.student_id = :student_id AND s.is_active = 1";
     
@@ -66,7 +70,11 @@ if (isset($_GET['student_id'])) {
                         s.address,
                         s.emergency_contact,
                         s.grade_level,
-                        s.section
+                        s.section,
+                        s.height_cm,
+                        s.weight_kg,
+                        s.bmi,
+                        s.bmi_category
                      FROM students s
                      WHERE s.user_id = :user_id AND s.is_active = 1";
     
@@ -97,7 +105,11 @@ if (isset($_GET['student_id'])) {
                         s.address,
                         s.emergency_contact,
                         s.grade_level,
-                        s.section
+                        s.section,
+                        s.height_cm,
+                        s.weight_kg,
+                        s.bmi,
+                        s.bmi_category
                      FROM students s
                      WHERE s.user_id = :user_id AND s.is_active = 1";
     
@@ -147,7 +159,23 @@ try {
         $allergies = [];
     }
     
-    // Get immunizations from the immunizations table
+    // Get recent visits (activities) instead of immunizations
+    $recentVisitsQuery = "SELECT 
+                             visit_datetime,
+                             visit_type,
+                             chief_complaint,
+                             status
+                          FROM medical_visits
+                          WHERE student_id = :student_id
+                          ORDER BY visit_datetime DESC
+                          LIMIT 10";
+    
+    $recentVisitsStmt = $db->prepare($recentVisitsQuery);
+    $recentVisitsStmt->bindParam(":student_id", $student_id);
+    $recentVisitsStmt->execute();
+    $recentVisits = $recentVisitsStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get immunizations from the immunizations table (keeping for compatibility)
     $immunizationsQuery = "SELECT 
                               immunization_id,
                               vaccine_name,
@@ -238,6 +266,14 @@ try {
                     'recorded_at' => $allergy['recorded_at']
                 ];
             }, $allergies),
+            'recent_visits' => array_map(function($visit) {
+                return [
+                    'visit_datetime' => $visit['visit_datetime'],
+                    'visit_type' => $visit['visit_type'],
+                    'chief_complaint' => $visit['chief_complaint'],
+                    'status' => $visit['status']
+                ];
+            }, $recentVisits),
             'immunizations' => array_map(function($imm) {
                 return [
                     'immunization_id' => (int)$imm['immunization_id'],
@@ -264,6 +300,10 @@ try {
                 'emergency_contact' => $student['emergency_contact'],
                 'grade_level' => $student['grade_level'],
                 'section' => $student['section'],
+                'height_cm' => $student['height_cm'] ? (float)$student['height_cm'] : null,
+                'weight_kg' => $student['weight_kg'] ? (float)$student['weight_kg'] : null,
+                'bmi' => $student['bmi'] ? (float)$student['bmi'] : null,
+                'bmi_category' => $student['bmi_category'],
                 'adviser_name' => $adviser ? trim($adviser['first_name'] . ' ' . $adviser['last_name']) : 'Not assigned',
                 'adviser_contact' => $adviser ? ($adviser['contact_phone'] ?: $adviser['email']) : 'N/A'
             ],

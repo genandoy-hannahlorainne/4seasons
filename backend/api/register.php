@@ -100,6 +100,18 @@ if (!empty($data->role) && !empty($data->password)) {
         
         // Insert role-specific data
         if ($data->role === 'student') {
+            // Log incoming student data for debugging
+            error_log("Student registration data: " . json_encode([
+                'studentNumber' => $data->studentNumber ?? 'MISSING',
+                'firstName' => $data->firstName ?? 'MISSING',
+                'middleName' => $data->middleName ?? 'MISSING',
+                'lastName' => $data->lastName ?? 'MISSING',
+                'gender' => $data->gender ?? 'MISSING',
+                'birthday' => $data->birthday ?? 'MISSING',
+                'gradeLevel' => $data->gradeLevel ?? 'MISSING',
+                'section' => $data->section ?? 'MISSING'
+            ]));
+            
             // Validate required student fields
             if (empty($data->studentNumber) || empty($data->firstName) || empty($data->lastName)) {
                 throw new Exception("Student number, first name, and last name are required");
@@ -141,6 +153,40 @@ if (!empty($data->role) && !empty($data->password)) {
             $studentStmt->execute();
             
             $student_id = $db->lastInsertId();
+            
+            // Auto-assign adviser based on grade level and section
+            if (!empty($gradeLevel) && !empty($section)) {
+                $adviserQuery = "SELECT adviser_id, user_id FROM advisers 
+                               WHERE grade_level = :grade_level 
+                               AND section = :section 
+                               AND is_active = 1 
+                               LIMIT 1";
+                $adviserStmt = $db->prepare($adviserQuery);
+                $adviserStmt->bindParam(":grade_level", $gradeLevel);
+                $adviserStmt->bindParam(":section", $section);
+                $adviserStmt->execute();
+                
+                if ($adviserStmt->rowCount() > 0) {
+                    $adviserRow = $adviserStmt->fetch(PDO::FETCH_ASSOC);
+                    $adviser_id = $adviserRow['adviser_id'];
+                    $adviser_user_id = $adviserRow['user_id'];
+                    
+                    // Update student with adviser (using user_id for foreign key)
+                    $updateAdviserQuery = "UPDATE students SET current_adviser_id = :adviser_user_id WHERE student_id = :student_id";
+                    $updateAdviserStmt = $db->prepare($updateAdviserQuery);
+                    $updateAdviserStmt->bindParam(":adviser_user_id", $adviser_user_id);
+                    $updateAdviserStmt->bindParam(":student_id", $student_id);
+                    $updateAdviserStmt->execute();
+                    
+                    // Also add to student_adviser junction table
+                    $junctionQuery = "INSERT INTO student_adviser (student_id, adviser_id, assigned_date) 
+                                    VALUES (:student_id, :adviser_id, CURDATE())";
+                    $junctionStmt = $db->prepare($junctionQuery);
+                    $junctionStmt->bindParam(":student_id", $student_id);
+                    $junctionStmt->bindParam(":adviser_id", $adviser_id);
+                    $junctionStmt->execute();
+                }
+            }
             
             // Generate QR code for the student
             $qr_token = bin2hex(random_bytes(16));

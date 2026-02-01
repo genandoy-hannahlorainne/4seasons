@@ -156,7 +156,7 @@ export class RegisterComponent {
         let errorMessage = 'Registration failed. Please try again.';
         
         if (err.status === 0) {
-          errorMessage = 'Cannot connect to server. Please make sure Docker is running (docker-compose up)';
+          errorMessage = 'Cannot connect to server. Please make sure your backend server is running (XAMPP or Docker).';
         } else if (err.error?.message) {
           errorMessage = err.error.message;
         } else if (err.message) {

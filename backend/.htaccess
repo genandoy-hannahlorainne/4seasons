@@ -1,2 +1,2 @@
 # CORS is handled by PHP files (cors.php)
-# No need for .htaccess CORS headers
+

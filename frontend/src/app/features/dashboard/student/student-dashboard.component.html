@@ -54,19 +54,23 @@
                 <div class="info-label">Blood Type</div>
                 <div class="info-value">{{ bloodType }}</div>
               </div>
+              <div class="info-item">
+                <div class="info-label">Adviser</div>
+                <div class="info-value">{{ adviserName }}</div>
+              </div>
             </div>
           </div>
 
-          <div class="card immunization-records">
-            <h2>Immunization Records</h2>
-            <div class="immunization-list">
-              <div *ngFor="let record of immunizationRecords" class="immunization-item">
-                <div class="immunization-info">
-                  <div class="immunization-name">{{ record.name }}</div>
-                  <div class="immunization-date">Last: {{ record.lastDate }}</div>
+          <div class="card recent-activities">
+            <h2>Recent Activities</h2>
+            <div class="activities-list">
+              <div *ngFor="let activity of recentActivities" class="activity-item">
+                <div class="activity-info">
+                  <div class="activity-name">{{ activity.activity }}</div>
+                  <div class="activity-date">{{ activity.date }}</div>
                 </div>
-                <span class="status-badge" [class]="record.status.toLowerCase()">
-                  {{ record.status }}
+                <span class="activity-badge" [class]="getActivityTypeClass(activity.type)">
+                  {{ activity.type }}
                 </span>
               </div>
             </div>

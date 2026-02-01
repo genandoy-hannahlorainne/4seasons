@@ -41,15 +41,11 @@ try {
                      s.student_number, s.first_name, s.last_name, s.gender,
                      s.grade_level, s.section,
                      v.temperature_c, v.bp_systolic, v.bp_diastolic, v.pulse_rate, v.respiration_rate,
-                     d.diagnosis_text,
-                     t.treatment_text,
-                     m.medication_name, m.notes as medication_notes
+                     d.diagnosis_text
               FROM medical_visits mv
               INNER JOIN students s ON mv.student_id = s.student_id
               LEFT JOIN vitals v ON mv.visit_id = v.visit_id
               LEFT JOIN diagnoses d ON mv.visit_id = d.visit_id
-              LEFT JOIN treatments t ON mv.visit_id = t.visit_id
-              LEFT JOIN medications m ON mv.visit_id = m.visit_id
               WHERE s.is_active = 1";
     
     $params = [];
@@ -125,16 +121,13 @@ try {
             'chiefComplaint' => $row['chief_complaint'],
             'notes' => $row['notes'],
             'diagnosis' => $row['diagnosis_text'] ?: null,
-            'treatment' => $row['treatment_text'] ?: null,
             'status' => $frontendStatus,
             'vitals' => [
                 'temperature' => $row['temperature_c'] ?: null,
                 'bloodPressure' => $bloodPressure,
                 'pulseRate' => $row['pulse_rate'] ?: null,
                 'respiratoryRate' => $row['respiration_rate'] ?: null
-            ],
-            'medications' => $row['medication_name'] ?: null,
-            'recommendations' => $row['medication_notes'] ?: null
+            ]
         ];
     }
     

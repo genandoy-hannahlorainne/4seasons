@@ -57,8 +57,6 @@
   <div class="profile-tabs" *ngIf="!loading && !error">
     <button class="tab" [class.active]="activeTab === 'vitals'" (click)="activeTab = 'vitals'">Vitals History</button>
     <button class="tab" [class.active]="activeTab === 'diagnoses'" (click)="activeTab = 'diagnoses'">Diagnoses</button>
-    <button class="tab" [class.active]="activeTab === 'treatments'" (click)="activeTab = 'treatments'">Treatments</button>
-    <button class="tab" [class.active]="activeTab === 'medications'" (click)="activeTab = 'medications'">Medications</button>
     <button class="tab" [class.active]="activeTab === 'immunizations'" (click)="activeTab = 'immunizations'">Immunizations</button>
   </div>
 
@@ -114,57 +112,6 @@
           <span class="status-badge" [class]="diagnosis.status">{{ diagnosis.status }}</span>
         </div>
       </div>
-    </div>
-
-    <!-- Treatments -->
-    <div *ngIf="activeTab === 'treatments'" class="content-section">
-      <div class="section-header">
-        <h3>Treatments</h3>
-      </div>
-      <div class="empty-state" *ngIf="treatments.length === 0">
-        <p>No treatments recorded yet</p>
-      </div>
-      <div class="card-list" *ngIf="treatments.length > 0">
-        <div *ngFor="let treatment of treatments" class="info-card">
-          <div class="card-header">
-            <span class="card-title">{{ treatment.name }}</span>
-            <span class="card-date">{{ treatment.date }}</span>
-          </div>
-          <p class="card-description">{{ treatment.description }}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Medications -->
-    <div *ngIf="activeTab === 'medications'" class="content-section">
-      <div class="section-header">
-        <h3>Medications</h3>
-      </div>
-      <div class="empty-state" *ngIf="medications.length === 0">
-        <p>No medications recorded yet</p>
-      </div>
-      <table class="data-table" *ngIf="medications.length > 0">
-        <thead>
-          <tr>
-            <th>Medication</th>
-            <th>Dosage</th>
-            <th>Frequency</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let med of medications">
-            <td>{{ med.name }}</td>
-            <td>{{ med.dosage }}</td>
-            <td>{{ med.frequency }}</td>
-            <td>{{ med.startDate }}</td>
-            <td>{{ med.endDate || 'Ongoing' }}</td>
-            <td><span class="status-badge" [class]="med.status">{{ med.status }}</span></td>
-          </tr>
-        </tbody>
-      </table>
     </div>
 
     <!-- Immunizations -->

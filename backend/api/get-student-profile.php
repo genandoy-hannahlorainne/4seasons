@@ -42,7 +42,7 @@ try {
     
     // Get student basic info
     $studentQuery = "SELECT s.student_id, s.student_number, s.first_name, s.middle_name, s.last_name,
-                            s.gender, s.grade_level, s.section, s.birth_date, s.blood_type,
+                            s.gender, s.grade_level, s.section, s.birth_date, s.blood_type, s.address,
                             u.email, u.phone
                      FROM students s
                      LEFT JOIN users u ON s.user_id = u.user_id
@@ -75,8 +75,10 @@ try {
         'grade_section' => 'Grade ' . $studentRow['grade_level'] . ' - ' . $studentRow['section'],
         'birth_date' => $studentRow['birth_date'],
         'blood_type' => $studentRow['blood_type'],
+        'address' => $studentRow['address'],
         'email' => $studentRow['email'],
         'phone' => $studentRow['phone'],
+        'contact_number' => $studentRow['phone'],
         'avatar' => $studentRow['gender'] === 'F' ? 'assets/user-female.png' : 'assets/user-male.png'
     ];
     
@@ -142,55 +144,11 @@ try {
     
     error_log("Diagnoses found: " . count($diagnoses));
     
-    // Get treatments (through medical_visits)
-    $treatmentQuery = "SELECT t.treatment_id, t.treatment_text, mv.visit_datetime
-                       FROM treatments t
-                       INNER JOIN medical_visits mv ON t.visit_id = mv.visit_id
-                       WHERE mv.student_id = :student_id
-                       ORDER BY mv.visit_datetime DESC
-                       LIMIT 20";
-    
-    $treatmentStmt = $db->prepare($treatmentQuery);
-    $treatmentStmt->bindParam(':student_id', $student_id, PDO::PARAM_INT);
-    $treatmentStmt->execute();
-    
+    // Treatments and medications tables have been removed
     $treatments = [];
-    while ($row = $treatmentStmt->fetch(PDO::FETCH_ASSOC)) {
-        $treatments[] = [
-            'treatment_id' => intval($row['treatment_id']),
-            'name' => $row['treatment_text'],
-            'date' => date('M d, Y', strtotime($row['visit_datetime'])),
-            'description' => ''
-        ];
-    }
+    $medications = [];
     
     error_log("Treatments found: " . count($treatments));
-    
-    // Get medications (through medical_visits)
-    $medicationQuery = "SELECT m.med_id, m.medication_name, mv.visit_datetime
-                        FROM medications m
-                        INNER JOIN medical_visits mv ON m.visit_id = mv.visit_id
-                        WHERE mv.student_id = :student_id
-                        ORDER BY mv.visit_datetime DESC
-                        LIMIT 20";
-    
-    $medicationStmt = $db->prepare($medicationQuery);
-    $medicationStmt->bindParam(':student_id', $student_id, PDO::PARAM_INT);
-    $medicationStmt->execute();
-    
-    $medications = [];
-    while ($row = $medicationStmt->fetch(PDO::FETCH_ASSOC)) {
-        $medications[] = [
-            'medication_id' => intval($row['med_id']),
-            'name' => $row['medication_name'],
-            'dosage' => '',
-            'frequency' => '',
-            'startDate' => date('M d, Y', strtotime($row['visit_datetime'])),
-            'endDate' => null,
-            'status' => 'active'
-        ];
-    }
-    
     error_log("Medications found: " . count($medications));
     
     // Get immunizations (if table exists)

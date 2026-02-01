@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, NavigationEnd, Router } from '@angular/router';
 import { StudentService } from '../../../core/services/student.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-student-dashboard',
@@ -11,12 +13,15 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './student-dashboard.component.html',
   styleUrls: ['./student-dashboard.component.scss']
 })
-export class StudentDashboardComponent implements OnInit {
+export class StudentDashboardComponent implements OnInit, OnDestroy {
+  private routerSubscription?: Subscription;
   // Student information
   studentName = 'User';
   studentId = '';
   gradeLevel = '';
   studentGender = '';
+  adviserName = 'Not assigned';
+  adviserContact = 'N/A';
   
   // Info cards data
   bmi = '--';
@@ -33,19 +38,39 @@ export class StudentDashboardComponent implements OnInit {
   // Known allergies
   knownAllergies: string[] = [];
   
-  // Immunization records
-  immunizationRecords: any[] = [];
+  // Recent activities instead of immunization records
+  recentActivities: any[] = [];
   
   loading = true;
   error = '';
 
   constructor(
     private studentService: StudentService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
+    // Load data initially
     this.loadStudentData();
+    
+    // Reload data whenever we navigate back to this route
+    this.routerSubscription = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        // Check if we're on the dashboard route
+        if (event.url.includes('/dashboard/student') && !event.url.includes('/dashboard/student/')) {
+          console.log('Dashboard route detected, reloading data...');
+          this.loadStudentData();
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    // Clean up subscription
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
   }
 
   loadStudentData(): void {
@@ -82,8 +107,8 @@ export class StudentDashboardComponent implements OnInit {
             this.age = this.calculateAge(profile.birth_date) + ' y/o';
           }
           
-          // Fetch medical data (vitals, allergies, immunizations)
-          this.loadMedicalData(profile.student_id);
+          // Fetch medical data using user_id (not student_id)
+          this.loadMedicalData(currentUser.user_id);
         } else {
           this.error = 'Failed to load student profile: ' + (response.message || 'Unknown error');
           this.loading = false;
@@ -100,8 +125,8 @@ export class StudentDashboardComponent implements OnInit {
     });
   }
 
-  loadMedicalData(studentId: number): void {
-    this.studentService.getStudentMedicalData(studentId).subscribe({
+  loadMedicalData(userId: number): void {
+    this.studentService.getStudentMedicalData(userId).subscribe({
       next: (response) => {
         console.log('Medical data response:', response);
         if (response.success && response.data) {
@@ -131,15 +156,24 @@ export class StudentDashboardComponent implements OnInit {
             this.allergiesCount = '0';
           }
           
-          // Set immunizations
-          if (data.immunizations && data.immunizations.length > 0) {
-            this.immunizationRecords = data.immunizations.map((imm: any) => ({
-              name: imm.vaccine_name,
-              lastDate: this.formatDate(imm.date_administered),
-              status: this.getImmunizationStatus(imm.date_administered)
+          // Set adviser information
+          if (data.personal_info) {
+            this.adviserName = data.personal_info.adviser_name || 'Not assigned';
+            this.adviserContact = data.personal_info.adviser_contact || 'N/A';
+          }
+          
+          // Set recent activities (medical visits)
+          if (data.recent_visits && data.recent_visits.length > 0) {
+            this.recentActivities = data.recent_visits.map((visit: any) => ({
+              activity: `Clinic Visit - ${visit.chief_complaint || 'General checkup'}`,
+              date: this.formatDate(visit.visit_datetime),
+              type: visit.visit_type || 'Routine',
+              status: visit.status || 'Completed'
             }));
           } else {
-            this.immunizationRecords = [];
+            this.recentActivities = [
+              { activity: 'No recent activities', date: '--', type: 'Info', status: 'N/A' }
+            ];
           }
           
           // Set last visit
@@ -178,6 +212,15 @@ export class StudentDashboardComponent implements OnInit {
     const yearsDiff = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24 * 365);
     
     return yearsDiff > 2 ? 'Outdated' : 'Updated';
+  }
+
+  getActivityTypeClass(type: string): string {
+    switch (type.toLowerCase()) {
+      case 'emergency': return 'activity-emergency';
+      case 'routine': return 'activity-routine';
+      case 'follow-up': return 'activity-followup';
+      default: return 'activity-info';
+    }
   }
 
   calculateAge(birthDate: string): number {
