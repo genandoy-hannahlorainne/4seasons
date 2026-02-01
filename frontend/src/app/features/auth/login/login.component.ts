@@ -75,6 +75,12 @@ export class LoginComponent implements OnInit {
       next: (user) => {
         this.loading = false;
 
+        // Check if password must be changed
+        if (user.password_must_change) {
+          this.router.navigate(['/force-change-password']);
+          return;
+        }
+
         // Map selected role to expected role name
         const roleMap: { [key: string]: string } = {
           'student': 'Student',

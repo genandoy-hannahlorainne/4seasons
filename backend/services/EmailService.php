@@ -112,6 +112,8 @@ class EmailService {
                 return $this->generateRoutineTemplate($variables);
             case 'parent-notification':
                 return $this->generateParentTemplate($variables);
+            case 'account-creation':
+                return $this->generateAccountCreationTemplate($variables);
             default:
                 return $this->generateGenericTemplate($variables);
         }
@@ -265,6 +267,64 @@ class EmailService {
         </html>";
     }
     
+    private function generateAccountCreationTemplate($vars) {
+        return "
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .header { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+                .content { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+                .credentials { background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107; }
+                .warning { background: #f8d7da; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #dc3545; }
+                .button { display: inline-block; padding: 12px 24px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; }
+                .footer { margin-top: 20px; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class='header'>
+                <h2>🎓 Welcome to PDMHS Medical System</h2>
+            </div>
+            
+            <div class='content'>
+                <p>Dear {$vars['recipient_name']},</p>
+                
+                <p>Your account has been created for the PDMHS Student Medical System as a <strong>{$vars['role']}</strong>.</p>
+                
+                <div class='credentials'>
+                    <h3>📋 Your Login Credentials:</h3>
+                    <p><strong>Username:</strong> {$vars['username']}</p>
+                    <p><strong>Temporary Password:</strong> {$vars['temp_password']}</p>
+                    <p><strong>Login URL:</strong> <a href='{$vars['login_url']}'>{$vars['login_url']}</a></p>
+                </div>
+                
+                <div class='warning'>
+                    <h3>⚠️ IMPORTANT SECURITY NOTICE:</h3>
+                    <ul>
+                        <li>You <strong>MUST</strong> change your password on first login</li>
+                        <li>Do not share your credentials with anyone</li>
+                        <li>Choose a strong password (min 8 characters, mix of letters, numbers, and symbols)</li>
+                        <li>This temporary password will expire if not used within 7 days</li>
+                    </ul>
+                </div>
+                
+                <p style='text-align: center;'>
+                    <a href='{$vars['login_url']}' class='button'>Login Now</a>
+                </p>
+                
+                <p>If you did not expect this email or have any questions, please contact the school administrator immediately.</p>
+                
+                <p>Best regards,<br>PDMHS Administration</p>
+            </div>
+            
+            <div class='footer'>
+                <p>This account was created at {$vars['timestamp']}</p>
+                <p>This is an automated email. Please do not reply to this message.</p>
+            </div>
+        </body>
+        </html>";
+    }
+    
     private function generateGenericTemplate($vars) {
         return "<html><body><h2>Notification</h2><p>This is a system notification.</p></body></html>";
     }
@@ -340,6 +400,24 @@ class EmailService {
         } catch (Exception $e) {
             error_log("Failed to log email result: " . $e->getMessage());
         }
+    }
+    
+    /**
+     * Send account creation email with credentials
+     */
+    public function sendAccountCreationEmail($recipientEmail, $recipientName, $username, $tempPassword, $role) {
+        $subject = "Your PDMHS Medical System Account";
+        
+        $template = $this->loadTemplate('account-creation', [
+            'recipient_name' => $recipientName,
+            'username' => $username,
+            'temp_password' => $tempPassword,
+            'role' => ucfirst($role),
+            'login_url' => 'http://localhost:4200/login', // Update with actual URL
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+        
+        return $this->sendEmail($recipientEmail, $recipientName, $subject, $template, EmailConfig::PRIORITY_NORMAL);
     }
     
     /**

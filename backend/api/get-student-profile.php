@@ -43,7 +43,7 @@ try {
     // Get student basic info
     $studentQuery = "SELECT s.student_id, s.student_number, s.first_name, s.middle_name, s.last_name,
                             s.gender, s.grade_level, s.section, s.birth_date, s.blood_type, s.address,
-                            u.email, u.phone
+                            u.email, u.phone, u.full_name as user_full_name
                      FROM students s
                      LEFT JOIN users u ON s.user_id = u.user_id
                      WHERE s.student_id = :student_id AND s.is_active = 1";
@@ -60,15 +60,35 @@ try {
     }
     
     $studentRow = $studentStmt->fetch(PDO::FETCH_ASSOC);
-    $fullName = trim($studentRow['first_name'] . ' ' . ($studentRow['middle_name'] ? $studentRow['middle_name'] . ' ' : '') . $studentRow['last_name']);
+    
+    // Handle case where first_name/last_name are empty but user_full_name exists
+    $firstName = !empty($studentRow['first_name']) ? $studentRow['first_name'] : '';
+    $middleName = !empty($studentRow['middle_name']) ? $studentRow['middle_name'] : '';
+    $lastName = !empty($studentRow['last_name']) ? $studentRow['last_name'] : '';
+    
+    // If student names are empty, try to use user's full_name
+    if (empty($firstName) && empty($lastName) && !empty($studentRow['user_full_name'])) {
+        $nameParts = explode(' ', trim($studentRow['user_full_name']));
+        if (count($nameParts) >= 2) {
+            $firstName = $nameParts[0];
+            $lastName = end($nameParts);
+            if (count($nameParts) > 2) {
+                $middleName = implode(' ', array_slice($nameParts, 1, -1));
+            }
+        } else {
+            $firstName = $studentRow['user_full_name'];
+        }
+    }
+    
+    $fullName = trim($firstName . ' ' . ($middleName ? $middleName . ' ' : '') . $lastName);
     
     $student = [
         'student_id' => intval($studentRow['student_id']),
         'student_number' => $studentRow['student_number'],
         'name' => $fullName,
-        'first_name' => $studentRow['first_name'],
-        'middle_name' => $studentRow['middle_name'],
-        'last_name' => $studentRow['last_name'],
+        'first_name' => $firstName,
+        'middle_name' => $middleName,
+        'last_name' => $lastName,
         'gender' => $studentRow['gender'],
         'grade_level' => $studentRow['grade_level'],
         'section' => $studentRow['section'],
