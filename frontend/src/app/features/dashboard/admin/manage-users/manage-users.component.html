@@ -4,9 +4,14 @@
       <h1>Manage Users</h1>
       <p>View, edit, and manage all system users</p>
     </div>
-    <button class="btn btn-primary create-user-btn" (click)="openCreateUserModal()">
-      <i class="fa-solid fa-user-plus"></i> Create New User
-    </button>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="openBulkImportModal()" *ngIf="selectedRole === 'student' || selectedRole === 'all'">
+        <i class="fa-solid fa-file-csv"></i> Bulk Import Students
+      </button>
+      <button class="btn btn-primary create-user-btn" (click)="openCreateUserModal()">
+        <i class="fa-solid fa-user-plus"></i> Create New User
+      </button>
+    </div>
   </div>
 
   <!-- Filters -->
@@ -434,6 +439,110 @@
         </button>
         <button class="btn btn-outline" (click)="closeCreateUserModal()" [disabled]="creatingUser">Cancel</button>
       </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Bulk Import Modal -->
+<div class="modal-overlay" *ngIf="showBulkImportModal" (click)="closeBulkImportModal()">
+  <div class="modal-content bulk-import-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2><i class="fa-solid fa-file-csv"></i> Bulk Import Students</h2>
+      <button class="close-btn" (click)="closeBulkImportModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Instructions -->
+      <div class="import-instructions">
+        <h3>📋 Instructions</h3>
+        <ol>
+          <li>Download the CSV template below</li>
+          <li>Fill in student information (one student per row)</li>
+          <li>Upload the completed CSV file</li>
+          <li>Review the import results</li>
+        </ol>
+      </div>
+
+      <!-- CSV Template Download -->
+      <div class="template-section">
+        <h3>1. Download Template</h3>
+        <button class="btn btn-outline" (click)="downloadCSVTemplate()">
+          <i class="fa-solid fa-download"></i> Download CSV Template
+        </button>
+        <p class="help-text">Required columns: student_number, first_name, last_name, email, grade_level, section</p>
+        <p class="help-text">Optional columns: gender, date_of_birth</p>
+      </div>
+
+      <!-- File Upload -->
+      <div class="upload-section">
+        <h3>2. Upload CSV File</h3>
+        <div class="file-upload-area" 
+             [class.drag-over]="isDragging"
+             [class.file-selected]="selectedFile"
+             (dragover)="onDragOver($event)" 
+             (dragleave)="onDragLeave($event)" 
+             (drop)="onDrop($event)">
+          <input 
+            type="file" 
+            #fileInput 
+            accept=".csv,text/csv,application/vnd.ms-excel" 
+            (change)="onFileSelected($event)" 
+            style="display: none">
+          <div class="upload-content" (click)="fileInput.click()">
+            <i class="fa-solid fa-cloud-upload-alt" *ngIf="!selectedFile"></i>
+            <i class="fa-solid fa-file-csv" *ngIf="selectedFile" style="color: #4caf50; font-size: 48px;"></i>
+            <p *ngIf="!selectedFile">Click to browse or drag and drop CSV file here</p>
+            <p *ngIf="selectedFile" class="selected-file">
+              <strong>{{ selectedFile.name }}</strong> ({{ formatFileSize(selectedFile.size) }})
+            </p>
+            <p *ngIf="selectedFile" style="color: #4caf50; font-size: 14px; margin-top: 10px;">
+              ✓ File ready to import
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Import Results -->
+      <div class="import-results" *ngIf="importResults">
+        <h3>3. Import Results</h3>
+        <div class="results-summary" [class.has-errors]="importResults.error_count > 0">
+          <div class="result-stat success">
+            <i class="fa-solid fa-check-circle"></i>
+            <span>{{ importResults.success_count }} Successful</span>
+          </div>
+          <div class="result-stat error" *ngIf="importResults.error_count > 0">
+            <i class="fa-solid fa-exclamation-circle"></i>
+            <span>{{ importResults.error_count }} Failed</span>
+          </div>
+        </div>
+
+        <!-- Error Details -->
+        <div class="error-details" *ngIf="importResults.errors && importResults.errors.length > 0">
+          <h4>❌ Errors:</h4>
+          <div class="error-list">
+            <div class="error-item" *ngFor="let error of importResults.errors">
+              <strong>Row {{ error.row }}:</strong> {{ error.student_number }} - {{ error.error }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="import-progress" *ngIf="importing">
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        <p><i class="fa-solid fa-spinner fa-spin"></i> Importing students...</p>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" (click)="uploadCSV()" [disabled]="!selectedFile || importing">
+        <span *ngIf="!importing"><i class="fa-solid fa-upload"></i> Import Students</span>
+        <span *ngIf="importing"><i class="fa-solid fa-spinner fa-spin"></i> Importing...</span>
+      </button>
+      <button class="btn btn-outline" (click)="closeBulkImportModal()" [disabled]="importing">Close</button>
     </div>
   </div>
 </div>

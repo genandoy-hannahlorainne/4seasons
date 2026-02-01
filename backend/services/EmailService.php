@@ -421,6 +421,13 @@ class EmailService {
     }
     
     /**
+     * Send student credentials email
+     */
+    public function sendStudentCredentials($recipientEmail, $recipientName, $username, $tempPassword) {
+        return $this->sendAccountCreationEmail($recipientEmail, $recipientName, $username, $tempPassword, 'Student');
+    }
+    
+    /**
      * Test email configuration
      */
     public function testEmailConfig() {
