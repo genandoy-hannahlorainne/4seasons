@@ -391,7 +391,7 @@
           <div class="form-row">
             <div class="form-group">
               <label>Advisory Grade Level</label>
-              <select [(ngModel)]="newUser.grade_level" class="form-control">
+              <select [(ngModel)]="newUser.grade_level" (change)="onGradeLevelChange()" class="form-control">
                 <option value="">-- None --</option>
                 <option value="7">Grade 7</option>
                 <option value="8">Grade 8</option>
@@ -403,19 +403,18 @@
             </div>
             <div class="form-group">
               <label>Advisory Section</label>
-              <select [(ngModel)]="newUser.section" class="form-control">
-                <option value="">-- None --</option>
-                <option value="STEM 1">STEM 1</option>
-                <option value="STEM 2">STEM 2</option>
-                <option value="ABM 1">ABM 1</option>
-                <option value="ABM 2">ABM 2</option>
-                <option value="HUMSS 1">HUMSS 1</option>
-                <option value="HUMSS 2">HUMSS 2</option>
-                <option value="TVL-HE 1">TVL-HE 1</option>
-                <option value="TVL-HE 2">TVL-HE 2</option>
-                <option value="TVL-EIM 1">TVL-EIM 1</option>
-                <option value="TVL-EIM 2">TVL-EIM 2</option>
+              <select [(ngModel)]="newUser.section" class="form-control" [disabled]="!newUser.grade_level">
+                <option value="">{{ newUser.grade_level ? '-- None --' : 'Select Grade Level First' }}</option>
+                <option *ngFor="let section of getAvailableSections()" [value]="section">
+                  {{ section }}
+                </option>
               </select>
+              <small *ngIf="newUser.grade_level && parseInt(newUser.grade_level) >= 7 && parseInt(newUser.grade_level) <= 10">
+                Sections 1-3 for Grade {{ newUser.grade_level }}
+              </small>
+              <small *ngIf="newUser.grade_level && (parseInt(newUser.grade_level) === 11 || parseInt(newUser.grade_level) === 12)">
+                Strand-based sections for Grade {{ newUser.grade_level }}
+              </small>
             </div>
           </div>
         </div>
