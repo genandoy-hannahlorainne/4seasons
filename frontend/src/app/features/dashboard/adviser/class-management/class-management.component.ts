@@ -154,7 +154,7 @@ interface ClassRoster {
                 <select [(ngModel)]="targetSectionId">
                   <option value="">-- Select Section --</option>
                   <option *ngFor="let section of targetSections" [value]="section.id">
-                    {{ section.section_name }}
+                    Grade {{ section.level_number }} - Section {{ section.section_name }} ({{ section.current_enrollment }}/{{ section.capacity }} students)
                   </option>
                 </select>
                 <small *ngIf="targetSections.length === 0 && targetSchoolYearId">

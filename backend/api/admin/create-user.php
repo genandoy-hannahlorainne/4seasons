@@ -156,6 +156,53 @@ try {
         
         $roleSpecificId = $db->lastInsertId();
         
+        // If grade_level and section are provided, assign adviser to that section
+        if (!empty($data->grade_level) && !empty($data->section)) {
+            error_log("Assigning adviser to section: Grade {$data->grade_level}, Section {$data->section}");
+            
+            // Get active school year
+            $activeSchoolYearQuery = "SELECT id FROM school_years WHERE is_active = 1 LIMIT 1";
+            $activeSchoolYearStmt = $db->query($activeSchoolYearQuery);
+            
+            if ($activeSchoolYearStmt->rowCount() > 0) {
+                $activeSchoolYear = $activeSchoolYearStmt->fetch(PDO::FETCH_ASSOC);
+                $schoolYearId = $activeSchoolYear['id'];
+                
+                // Find the section
+                $findSectionQuery = "SELECT sec.id 
+                                    FROM sections sec
+                                    JOIN grade_levels gl ON sec.grade_level_id = gl.id
+                                    WHERE gl.level_number = :grade_level
+                                    AND sec.section_name = :section_name
+                                    AND sec.school_year_id = :school_year_id
+                                    AND sec.is_active = 1
+                                    LIMIT 1";
+                $findSectionStmt = $db->prepare($findSectionQuery);
+                $findSectionStmt->bindParam(':grade_level', $data->grade_level);
+                $findSectionStmt->bindParam(':section_name', $data->section);
+                $findSectionStmt->bindParam(':school_year_id', $schoolYearId);
+                $findSectionStmt->execute();
+                
+                if ($findSectionStmt->rowCount() > 0) {
+                    $section = $findSectionStmt->fetch(PDO::FETCH_ASSOC);
+                    $sectionId = $section['id'];
+                    
+                    // Assign adviser to section (use user_id, not adviser_id)
+                    $assignSectionQuery = "UPDATE sections SET adviser_id = :user_id WHERE id = :section_id";
+                    $assignSectionStmt = $db->prepare($assignSectionQuery);
+                    $assignSectionStmt->bindParam(':user_id', $userId);
+                    $assignSectionStmt->bindParam(':section_id', $sectionId);
+                    $assignSectionStmt->execute();
+                    
+                    error_log("✓ Assigned adviser (user_id: $userId) to section (id: $sectionId)");
+                } else {
+                    error_log("⚠️ Section not found: Grade {$data->grade_level}, Section {$data->section}, School Year {$schoolYearId}");
+                }
+            } else {
+                error_log("⚠️ No active school year found, cannot assign adviser to section");
+            }
+        }
+        
     } elseif (strtolower($data->role) === 'clinic_staff') {
         $staffQuery = "INSERT INTO clinic_staff (
                         user_id, staff_code, position, is_active

@@ -53,11 +53,11 @@ try {
                 gl.level_name,
                 gl.level_number,
                 sy.year_name,
-                CONCAT(u.first_name, ' ', u.last_name) as adviser_name
+                CONCAT(adv.first_name, ' ', adv.last_name) as adviser_name
               FROM sections sec
               INNER JOIN grade_levels gl ON sec.grade_level_id = gl.id
               INNER JOIN school_years sy ON sec.school_year_id = sy.id
-              LEFT JOIN users u ON sec.adviser_id = u.user_id
+              LEFT JOIN advisers adv ON sec.adviser_id = adv.user_id
               WHERE sec.is_active = 1";
     
     $params = [];
