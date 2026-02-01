@@ -28,6 +28,32 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private refreshInterval = 30000; // 30 seconds
 
+  // Create User Modal
+  showCreateUserModal = false;
+  creatingUser = false;
+  createSuccessMessage = '';
+  createErrorMessage = '';
+  newUser: any = {
+    role: '',
+    email: '',
+    phone: '',
+    full_name: '',
+    // Student fields
+    student_number: '',
+    first_name: '',
+    middle_name: '',
+    last_name: '',
+    gender: '',
+    birth_date: '',
+    grade_level: '',
+    section: '',
+    // Adviser fields
+    employee_number: '',
+    // Clinic Staff fields
+    staff_code: '',
+    position: ''
+  };
+
   // Debug properties
   userCounts = {
     students: 0,
@@ -312,5 +338,128 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   getStatusText(isActive: boolean): string {
     return isActive ? 'Active' : 'Inactive';
+  }
+
+  // Create User Modal Methods
+  openCreateUserModal(): void {
+    this.showCreateUserModal = true;
+    this.resetNewUserForm();
+    this.createSuccessMessage = '';
+    this.createErrorMessage = '';
+  }
+
+  closeCreateUserModal(): void {
+    this.showCreateUserModal = false;
+    this.resetNewUserForm();
+  }
+
+  resetNewUserForm(): void {
+    this.newUser = {
+      role: '',
+      email: '',
+      phone: '',
+      full_name: '',
+      student_number: '',
+      first_name: '',
+      middle_name: '',
+      last_name: '',
+      gender: '',
+      birth_date: '',
+      grade_level: '',
+      section: '',
+      employee_number: '',
+      staff_code: '',
+      position: ''
+    };
+  }
+
+  onRoleSelect(): void {
+    // Clear role-specific fields when role changes
+    this.newUser.student_number = '';
+    this.newUser.first_name = '';
+    this.newUser.middle_name = '';
+    this.newUser.last_name = '';
+    this.newUser.gender = '';
+    this.newUser.birth_date = '';
+    this.newUser.grade_level = '';
+    this.newUser.section = '';
+    this.newUser.employee_number = '';
+    this.newUser.staff_code = '';
+    this.newUser.position = '';
+    this.newUser.full_name = '';
+  }
+
+  isCreateFormValid(): boolean {
+    // Basic validation
+    if (!this.newUser.role || !this.newUser.email) {
+      return false;
+    }
+
+    // Role-specific validation
+    if (this.newUser.role === 'student') {
+      return !!(
+        this.newUser.student_number &&
+        this.newUser.first_name &&
+        this.newUser.last_name &&
+        this.newUser.gender &&
+        this.newUser.birth_date &&
+        this.newUser.grade_level &&
+        this.newUser.section
+      );
+    } else if (this.newUser.role === 'adviser') {
+      return !!(
+        this.newUser.employee_number &&
+        this.newUser.first_name &&
+        this.newUser.last_name
+      );
+    } else if (this.newUser.role === 'clinic_staff') {
+      return !!(
+        this.newUser.full_name &&
+        this.newUser.staff_code &&
+        this.newUser.position
+      );
+    }
+
+    return false;
+  }
+
+  createUser(): void {
+    if (!this.isCreateFormValid()) {
+      this.createErrorMessage = 'Please fill in all required fields';
+      return;
+    }
+
+    this.creatingUser = true;
+    this.createSuccessMessage = '';
+    this.createErrorMessage = '';
+
+    // Build full_name for student and adviser
+    if (this.newUser.role === 'student' || this.newUser.role === 'adviser') {
+      this.newUser.full_name = `${this.newUser.first_name} ${this.newUser.middle_name || ''} ${this.newUser.last_name}`.trim();
+    }
+
+    this.adminService.createUser(this.newUser).subscribe({
+      next: (response) => {
+        this.creatingUser = false;
+        if (response.success) {
+          this.createSuccessMessage = `Account created successfully! Username: ${response.data.username}. An email has been sent with login credentials.`;
+          
+          // Reload users list
+          this.loadUsers();
+          
+          // Close modal after 3 seconds
+          setTimeout(() => {
+            this.closeCreateUserModal();
+          }, 3000);
+        } else {
+          this.createErrorMessage = response.message || 'Failed to create user account';
+        }
+      },
+      error: (err) => {
+        this.creatingUser = false;
+        console.error('Error creating user:', err);
+        this.createErrorMessage = err.error?.message || 'Failed to create user account. Please try again.';
+      }
+    });
   }
 }

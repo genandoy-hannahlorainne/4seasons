@@ -239,6 +239,13 @@ export class AdminLoginComponent {
     this.authService.login(username, password).subscribe({
       next: (user) => {
         this.loading = false;
+
+        // Check if password must be changed
+        if (user.password_must_change) {
+          this.router.navigate(['/force-change-password']);
+          return;
+        }
+
         if (user && (user.role_name === 'admin' || user.role_name === 'Admin')) {
           this.router.navigate(['/dashboard/admin']);
         } else {

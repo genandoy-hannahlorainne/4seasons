@@ -42,8 +42,10 @@ if (isset($_GET['student_id'])) {
                         s.height_cm,
                         s.weight_kg,
                         s.bmi,
-                        s.bmi_category
+                        s.bmi_category,
+                        u.full_name as user_full_name
                      FROM students s
+                     LEFT JOIN users u ON s.user_id = u.user_id
                      WHERE s.student_id = :student_id AND s.is_active = 1";
     
     $studentStmt = $db->prepare($studentQuery);
@@ -74,8 +76,10 @@ if (isset($_GET['student_id'])) {
                         s.height_cm,
                         s.weight_kg,
                         s.bmi,
-                        s.bmi_category
+                        s.bmi_category,
+                        u.full_name as user_full_name
                      FROM students s
+                     LEFT JOIN users u ON s.user_id = u.user_id
                      WHERE s.user_id = :user_id AND s.is_active = 1";
     
     $studentStmt = $db->prepare($studentQuery);
@@ -109,8 +113,10 @@ if (isset($_GET['student_id'])) {
                         s.height_cm,
                         s.weight_kg,
                         s.bmi,
-                        s.bmi_category
+                        s.bmi_category,
+                        u.full_name as user_full_name
                      FROM students s
+                     LEFT JOIN users u ON s.user_id = u.user_id
                      WHERE s.user_id = :user_id AND s.is_active = 1";
     
     $studentStmt = $db->prepare($studentQuery);
@@ -292,7 +298,9 @@ try {
             'personal_info' => [
                 'student_id' => (int)$student['student_id'],
                 'student_number' => $student['student_number'],
-                'full_name' => trim($student['first_name'] . ' ' . ($student['middle_name'] ? $student['middle_name'] . ' ' : '') . $student['last_name']),
+                'full_name' => !empty($student['first_name']) || !empty($student['last_name']) 
+                    ? trim($student['first_name'] . ' ' . ($student['middle_name'] ? $student['middle_name'] . ' ' : '') . $student['last_name'])
+                    : ($student['user_full_name'] ?: 'Unknown'),
                 'birth_date' => $student['birth_date'],
                 'gender' => $student['gender'],
                 'blood_type' => $student['blood_type'],

@@ -84,9 +84,9 @@ import { CommonModule } from '@angular/common';
         <div class="info-section">
           <h3><i class="fa-solid fa-phone"></i> Emergency Contact</h3>
           <div class="emergency-contact">
-            <div class="contact-name">{{ student?.emergencyContact?.name || 'Maria Genandoy' }}</div>
-            <div class="contact-relation">{{ student?.emergencyContact?.relation || 'Mother' }}</div>
-            <div class="contact-phone">{{ student?.emergencyContact?.phone || '09187654321' }}</div>
+            <div class="contact-name">{{ student?.emergencyContact?.name || 'Not provided' }}</div>
+            <div class="contact-relation">{{ student?.emergencyContact?.relation || 'N/A' }}</div>
+            <div class="contact-phone">{{ student?.emergencyContact?.phone || 'N/A' }}</div>
           </div>
         </div>
 
