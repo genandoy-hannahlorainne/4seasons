@@ -89,10 +89,8 @@ import { QrScannerComponent } from './qr-scanner.component';
               <label>Visit Type *</label>
               <select [(ngModel)]="visit.visitType" name="visitType" class="form-control" required>
                 <option value="">Select type</option>
-                <option value="walk-in">Walk-in</option>
+                <option value="routine">Routine</option>
                 <option value="emergency">Emergency</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="follow-up">Follow-up</option>
               </select>
             </div>
           </div>

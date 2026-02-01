@@ -46,7 +46,6 @@ export interface AdvisedStudent {
     visit_date: string;
     reason: string;
     diagnosis: string;
-    treatment: string;
     status: string;
   } | null;
 }
@@ -107,5 +106,14 @@ export class AdviserService {
 
   getAdviserNotifications(): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/get-adviser-notifications.php`);
+  }
+
+  // Grade Promotion & Class Management
+  getSchoolYears(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/school-years/list.php`);
+  }
+
+  getClassRoster(schoolYearId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/adviser/get-class-roster.php?school_year_id=${schoolYearId}`);
   }
 }

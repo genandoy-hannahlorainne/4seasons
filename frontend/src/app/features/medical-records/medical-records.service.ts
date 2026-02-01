@@ -10,13 +10,17 @@ export interface PersonalMedicalInfo {
   full_name: string;
   birth_date: string;
   gender: string;
-  blood_type: string;
+  blood_type?: string;
   address: string;
   emergency_contact: string;
   grade_level: string;
   section: string;
   adviser_name?: string;
   adviser_contact?: string;
+  height_cm?: number;
+  weight_kg?: number;
+  bmi?: number;
+  bmi_category?: string;
 }
 
 export interface Allergy {

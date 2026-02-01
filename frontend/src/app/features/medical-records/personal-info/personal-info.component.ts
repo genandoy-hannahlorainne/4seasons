@@ -2,299 +2,115 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MedicalRecordsService, MedicalRecord, PersonalMedicalInfo } from '../medical-records.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { StudentService } from '../../../core/services/student.service';
+
+interface PersonalInfo {
+  full_name: string;
+  student_number: string;
+  grade_level: string;
+  section: string;
+  birth_date: string;
+  gender: string;
+  address: string;
+  phone_number: string;
+  emergency_contact_person: string;
+  emergency_contact_relation: string;
+}
+
+interface PhysicalInfo {
+  height_cm: number | null;
+  weight_kg: number | null;
+  blood_type: string;
+}
+
+interface Allergy {
+  allergy_text: string;
+  severity: 'Mild' | 'Moderate' | 'Severe';
+}
+
+interface MedicalHistory {
+  allergies: {
+    medicine: boolean;
+    pollens: boolean;
+    food: boolean;
+    stinging_insects: boolean;
+  };
+  medical_conditions: {
+    error_refraction: boolean;
+    heart_problem: boolean;
+    bleeding_disorder: boolean;
+    hernia: boolean;
+    asthma: boolean;
+    anemia: boolean;
+    anxiety_depression: boolean;
+    seizure: boolean;
+  };
+  surgery_hospitalization: boolean;
+  family_history: {
+    tuberculosis: boolean;
+    cancer: boolean;
+    stroke_cardiac: boolean;
+    diabetes: boolean;
+    hypertension: boolean;
+    depression: boolean;
+    thyroid: boolean;
+    phobia: boolean;
+  };
+  smoke_exposure: boolean;
+}
+
+interface MedicalRecord {
+  personal_info: PersonalInfo;
+  physical_info: PhysicalInfo;
+  allergies: Allergy[];
+  medical_history: MedicalHistory;
+}
 
 @Component({
   selector: 'app-personal-info',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
-  template: `
-    <div class="personal-info-container">
-      <div class="header">
-        <button class="back-btn" routerLink="/dashboard/student/medical-records">
-          ← Back to Medical Records
-        </button>
-        <h1>Personal Medical Information Form</h1>
-        <p class="subtitle">Complete medical information and health record</p>
-      </div>
-
-      <div *ngIf="loading" class="loading">
-        <div class="loading-spinner"></div>
-        <p>Loading personal information...</p>
-      </div>
-
-      <div *ngIf="error" class="error-message">
-        {{ error }}
-      </div>
-
-      <div *ngIf="medicalRecord && !loading" class="content">
-        <!-- Student Information Section -->
-        <div class="info-card">
-          <div class="card-header">
-            <h2>Student Information</h2>
-            <span class="readonly-badge">Read Only</span>
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Name of Learner</label>
-              <input type="text" [value]="personalInfo.full_name" readonly>
-            </div>
-            <div class="form-group">
-              <label>LRN</label>
-              <input type="text" [value]="personalInfo.student_number" readonly>
-            </div>
-            <div class="form-group">
-              <label>Grade Level & Section</label>
-              <input type="text" [value]="personalInfo.grade_level + ' - ' + personalInfo.section" readonly>
-            </div>
-            <div class="form-group">
-              <label>Birthday</label>
-              <input type="date" [value]="personalInfo.birth_date" readonly>
-            </div>
-            <div class="form-group">
-              <label>Sex/Age</label>
-              <input type="text" [value]="personalInfo.gender + '/' + getAge()" readonly>
-            </div>
-            <div class="form-group">
-              <label>Adviser</label>
-              <input type="text" [value]="adviserName" readonly>
-            </div>
-          </div>
-        </div>
-
-        <!-- Contact Information Section -->
-        <div class="info-card">
-          <div class="card-header">
-            <h2>Contact Information</h2>
-            <button *ngIf="!editMode" class="edit-btn" (click)="toggleEditMode()">
-              Edit
-            </button>
-            <div *ngIf="editMode" class="edit-actions">
-              <button class="save-btn" (click)="saveChanges()" [disabled]="saving">
-                {{ saving ? 'Saving...' : 'Save' }}
-              </button>
-              <button class="cancel-btn" (click)="cancelEdit()">Cancel</button>
-            </div>
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Contact Person in Case of Emergency</label>
-              <input type="text" 
-                [(ngModel)]="editableInfo.emergency_contact_person" 
-                [readonly]="!editMode"
-                placeholder="Enter emergency contact name">
-            </div>
-            <div class="form-group">
-              <label>Relation</label>
-              <select 
-                [(ngModel)]="editableInfo.emergency_contact_relation" 
-                [disabled]="!editMode"
-                class="form-control">
-                <option value="">Select Relation</option>
-                <option value="Mother">Mother</option>
-                <option value="Father">Father</option>
-                <option value="Guardian">Guardian</option>
-                <option value="Sister">Sister</option>
-                <option value="Brother">Brother</option>
-                <option value="Aunt">Aunt</option>
-                <option value="Uncle">Uncle</option>
-                <option value="Grandmother">Grandmother</option>
-                <option value="Grandfather">Grandfather</option>
-                <option value="Cousin">Cousin</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div class="form-group full-width">
-              <label>Address</label>
-              <textarea 
-                [(ngModel)]="editableInfo.address" 
-                [readonly]="!editMode"
-                rows="2"
-                placeholder="Enter complete address">
-              </textarea>
-            </div>
-            <div class="form-group">
-              <label>Phone No.</label>
-              <input type="text" 
-                [(ngModel)]="editableInfo.phone_number" 
-                [readonly]="!editMode"
-                placeholder="Enter phone number">
-            </div>
-          </div>
-        </div>
-
-        <!-- Medical History Section -->
-        <div class="info-card">
-          <div class="card-header">
-            <h2>Medical History (For Learners)</h2>
-            <button *ngIf="!medicalHistoryEditMode" class="edit-btn" (click)="toggleMedicalHistoryEdit()">
-              Edit
-            </button>
-            <div *ngIf="medicalHistoryEditMode" class="edit-actions">
-              <button class="save-btn" (click)="saveMedicalHistory()" [disabled]="saving">
-                {{ saving ? 'Saving...' : 'Save' }}
-              </button>
-              <button class="cancel-btn" (click)="cancelMedicalHistoryEdit()">Cancel</button>
-            </div>
-          </div>
-          
-          <!-- Allergies -->
-          <div class="medical-section">
-            <h3>1. Does your child have any allergies?</h3>
-            <div class="checkbox-grid">
-              <div class="checkbox-group">
-                <label>Medicine</label>
-                <div class="checkbox-options">
-                  <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.allergies.medicine" [disabled]="!medicalHistoryEditMode"> Yes</label>
-                  <label><input type="checkbox" [checked]="!medicalHistoryEdit.allergies.medicine" [disabled]="!medicalHistoryEditMode"> No</label>
-                </div>
-              </div>
-              <div class="checkbox-group">
-                <label>Pollens</label>
-                <div class="checkbox-options">
-                  <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.allergies.pollens" [disabled]="!medicalHistoryEditMode"> Yes</label>
-                  <label><input type="checkbox" [checked]="!medicalHistoryEdit.allergies.pollens" [disabled]="!medicalHistoryEditMode"> No</label>
-                </div>
-              </div>
-              <div class="checkbox-group">
-                <label>Food</label>
-                <div class="checkbox-options">
-                  <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.allergies.food" [disabled]="!medicalHistoryEditMode"> Yes</label>
-                  <label><input type="checkbox" [checked]="!medicalHistoryEdit.allergies.food" [disabled]="!medicalHistoryEditMode"> No</label>
-                </div>
-              </div>
-              <div class="checkbox-group">
-                <label>Stinging Insects</label>
-                <div class="checkbox-options">
-                  <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.allergies.stinging_insects" [disabled]="!medicalHistoryEditMode"> Yes</label>
-                  <label><input type="checkbox" [checked]="!medicalHistoryEdit.allergies.stinging_insects" [disabled]="!medicalHistoryEditMode"> No</label>
-                </div>
-              </div>
-            </div>
-            
-            <div class="allergies-display">
-              <h4>Known Allergies:</h4>
-              <div *ngFor="let allergy of medicalRecord.allergies" class="allergy-item">
-                <span class="allergy-text">{{ allergy.allergy_text }}</span>
-                <span class="allergy-severity" [class]="'severity-' + allergy.severity.toLowerCase()">
-                  {{ allergy.severity }}
-                </span>
-              </div>
-              <div *ngIf="medicalRecord.allergies.length === 0" class="no-allergies">
-                No known allergies recorded
-              </div>
-            </div>
-          </div>
-
-          <!-- Medical Conditions -->
-          <div class="medical-section">
-            <h3>2. Does your child have any ongoing medical condition?</h3>
-            <div class="checkbox-grid">
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.medical_conditions.error_refraction" [disabled]="!medicalHistoryEditMode"> Error of refraction (Wearing Corrective Lenses)</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.medical_conditions.heart_problem" [disabled]="!medicalHistoryEditMode"> Heart problem</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.medical_conditions.bleeding_disorder" [disabled]="!medicalHistoryEditMode"> Bleeding disorder (nose, etc.)</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.medical_conditions.hernia" [disabled]="!medicalHistoryEditMode"> Hernia (painful bulge in the groin area)</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.medical_conditions.asthma" [disabled]="!medicalHistoryEditMode"> Asthma</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.medical_conditions.anemia" [disabled]="!medicalHistoryEditMode"> Anemia</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.medical_conditions.anxiety_depression" [disabled]="!medicalHistoryEditMode"> Anxiety/Depression</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.medical_conditions.seizure" [disabled]="!medicalHistoryEditMode"> Seizure</label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Surgery/Hospitalization -->
-          <div class="medical-section">
-            <h3>3. Does your child have ever had surgery/hospitalization?</h3>
-            <div class="radio-options">
-              <label><input type="radio" name="surgery" [(ngModel)]="medicalHistoryEdit.surgery_hospitalization" [value]="true" [disabled]="!medicalHistoryEditMode"> Yes</label>
-              <label><input type="radio" name="surgery" [(ngModel)]="medicalHistoryEdit.surgery_hospitalization" [value]="false" [disabled]="!medicalHistoryEditMode"> No</label>
-            </div>
-          </div>
-
-          <!-- Family History -->
-          <div class="medical-section">
-            <h3>Family History</h3>
-            <h4>4. Does anyone in your family have the following conditions:</h4>
-            <div class="checkbox-grid">
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.family_history.tuberculosis" [disabled]="!medicalHistoryEditMode"> Tuberculosis</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.family_history.cancer" [disabled]="!medicalHistoryEditMode"> Cancer</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.family_history.stroke_cardiac" [disabled]="!medicalHistoryEditMode"> Stroke/Cardiac Problem</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.family_history.diabetes" [disabled]="!medicalHistoryEditMode"> Diabetes Mellitus</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.family_history.hypertension" [disabled]="!medicalHistoryEditMode"> Hypertension</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.family_history.depression" [disabled]="!medicalHistoryEditMode"> Depression</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.family_history.thyroid" [disabled]="!medicalHistoryEditMode"> Thyroid Problem</label>
-              </div>
-              <div class="checkbox-item">
-                <label><input type="checkbox" [(ngModel)]="medicalHistoryEdit.family_history.phobia" [disabled]="!medicalHistoryEditMode"> Phobia</label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Smoke Exposure -->
-          <div class="medical-section">
-            <h3>5. Exposure to cigarette/vape smoke at home?</h3>
-            <div class="radio-options">
-              <label><input type="radio" name="smoke" [(ngModel)]="medicalHistoryEdit.smoke_exposure" [value]="true" [disabled]="!medicalHistoryEditMode"> Yes</label>
-              <label><input type="radio" name="smoke" [(ngModel)]="medicalHistoryEdit.smoke_exposure" [value]="false" [disabled]="!medicalHistoryEditMode"> No</label>
-            </div>
-          </div>
-        </div>
-
-
-
-        <div *ngIf="successMessage" class="success-message">
-          {{ successMessage }}
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './personal-info.component.html',
   styleUrls: ['./personal-info.component.scss']
 })
 export class PersonalInfoComponent implements OnInit {
+  loading = true;
+  error = '';
+  successMessage = '';
+  saving = false;
+  
   medicalRecord: MedicalRecord | null = null;
-  personalInfo!: PersonalMedicalInfo;
-  adviserName = 'Loading...';
-  editableInfo: { 
-    address: string; 
-    emergency_contact_person: string;
-    emergency_contact_relation: string;
-    phone_number: string;
-  } = {
+  personalInfo: PersonalInfo = {
+    full_name: '',
+    student_number: '',
+    grade_level: '',
+    section: '',
+    birth_date: '',
+    gender: '',
     address: '',
+    phone_number: '',
     emergency_contact_person: '',
-    emergency_contact_relation: '',
-    phone_number: ''
+    emergency_contact_relation: ''
   };
-
-  medicalHistoryEdit = {
+  
+  adviserName = '';
+  
+  // Edit modes
+  editMode = false;
+  physicalInfoEditMode = false;
+  allergiesEditMode = false;
+  medicalHistoryEditMode = false;
+  
+  // Editable copies
+  editableInfo: PersonalInfo = { ...this.personalInfo };
+  physicalInfoEdit: PhysicalInfo = {
+    height_cm: null,
+    weight_kg: null,
+    blood_type: ''
+  };
+  
+  public medicalHistoryData: MedicalHistory = {
     allergies: {
       medicine: false,
       pollens: false,
@@ -324,202 +140,344 @@ export class PersonalInfoComponent implements OnInit {
     },
     smoke_exposure: false
   };
-
-  medicalHistoryEditMode = false;
   
-  loading = true;
-  error: string | null = null;
-  editMode = false;
-  saving = false;
-  successMessage: string | null = null;
+  newAllergy: Allergy = {
+    allergy_text: '',
+    severity: 'Mild'
+  };
 
-  constructor(private medicalRecordsService: MedicalRecordsService) {}
+  constructor(
+    private authService: AuthService,
+    private studentService: StudentService
+  ) {}
 
   ngOnInit() {
-    this.loadMedicalRecord();
+    this.loadPersonalInfo();
   }
 
-  private loadMedicalRecord() {
-    this.loading = true;
-    this.error = null;
-
-    this.medicalRecordsService.getMedicalRecord().subscribe({
-      next: (response) => { 
-        if (response.success && response.data) {
-          this.medicalRecord = response.data;
-          this.personalInfo = response.data.personal_info;
-          this.parseEmergencyContact();
-          this.fetchAdviserName();
-        } else {
-          this.error = response.message || 'Failed to load medical record';
-        }
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading medical record:', error);
-        this.error = 'Failed to load medical record. Please try again.';
-        this.loading = false;
+  async loadPersonalInfo() {
+    try {
+      this.loading = true;
+      this.error = '';
+      
+      const currentUser = this.authService.currentUserValue;
+      if (!currentUser) {
+        this.error = 'User not authenticated';
+        return;
       }
-    });
-  }
 
-  private fetchAdviserName() {
-    // Fetch adviser based on student's grade level and section
-    this.medicalRecordsService.getAdviserByGradeSection(
-      this.personalInfo.grade_level,
-      this.personalInfo.section
-    ).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.adviserName = response.data.adviser_name || 'N/A';
+      console.log('Loading personal info for user:', currentUser.user_id);
+
+      // Load student profile and medical data
+      const [profileResponse, medicalResponse] = await Promise.all([
+        this.studentService.getStudentProfile(currentUser.user_id).toPromise(),
+        this.studentService.getStudentMedicalData(currentUser.user_id).toPromise()
+      ]);
+
+      console.log('Profile response:', profileResponse);
+      console.log('Medical response:', medicalResponse);
+
+      if (profileResponse?.success && medicalResponse?.success) {
+        // Handle the actual API response structure
+        const profileData = profileResponse.student || profileResponse.profile || profileResponse.data;
+        const medicalData = medicalResponse.data;
+        
+        console.log('Profile data:', profileData);
+        console.log('Medical data:', medicalData);
+        
+        if (profileData && medicalData && medicalData.personal_info) {
+          // Map the profile data to the expected format
+          this.personalInfo = {
+            full_name: medicalData.personal_info.full_name || profileData.name || 
+                      (profileData.first_name + ' ' + (profileData.middle_name ? profileData.middle_name + ' ' : '') + profileData.last_name),
+            student_number: medicalData.personal_info.student_number || profileData.student_number,
+            grade_level: medicalData.personal_info.grade_level || profileData.grade_level,
+            section: medicalData.personal_info.section || profileData.section,
+            birth_date: medicalData.personal_info.birth_date || profileData.birth_date,
+            gender: medicalData.personal_info.gender || profileData.gender,
+            address: medicalData.personal_info.address || '',
+            phone_number: profileData.phone || '',
+            emergency_contact_person: medicalData.personal_info.emergency_contact || '',
+            emergency_contact_relation: ''
+          };
+          
+          this.editableInfo = { ...this.personalInfo };
+          
+          this.medicalRecord = {
+            personal_info: this.personalInfo,
+            physical_info: {
+              height_cm: medicalData.personal_info.height_cm,
+              weight_kg: medicalData.personal_info.weight_kg,
+              blood_type: medicalData.personal_info.blood_type || profileData.blood_type
+            },
+            allergies: medicalData.allergies || [],
+            medical_history: medicalData.medical_history || this.medicalHistoryData
+          };
+          
+          this.physicalInfoEdit = { ...this.medicalRecord.physical_info };
+          this.medicalHistoryData = { ...this.medicalRecord.medical_history };
+          
+          // Load adviser name if available
+          if (medicalData.personal_info?.adviser_name) {
+            this.adviserName = medicalData.personal_info.adviser_name;
+          }
+          
+          console.log('Successfully loaded data:', {
+            personalInfo: this.personalInfo,
+            medicalRecord: this.medicalRecord,
+            adviserName: this.adviserName
+          });
         } else {
-          this.adviserName = 'N/A';
+          console.error('Invalid data structure:', { profileData, medicalData });
+          this.error = 'Invalid data format received from server';
         }
-      },
-      error: (error) => {
-        console.error('Error fetching adviser:', error);
-        this.adviserName = 'N/A';
+      } else {
+        console.error('API responses failed:', { profileResponse, medicalResponse });
+        this.error = profileResponse?.message || medicalResponse?.message || 'Failed to load personal information';
       }
-    });
-  }
-
-  private parseEmergencyContact() {
-    // Parse emergency contact string to separate fields
-    const emergencyContact = this.personalInfo.emergency_contact || '';
-    
-    // Try to parse format like "Mother: Maria Santos - 09123456789"
-    const contactMatch = emergencyContact.match(/(\w+):\s*([^-]+)\s*-\s*(.+)/);
-    
-    if (contactMatch) {
-      this.editableInfo = {
-        emergency_contact_relation: contactMatch[1],
-        emergency_contact_person: contactMatch[2].trim(),
-        phone_number: contactMatch[3].trim(),
-        address: this.personalInfo.address || ''
-      };
-    } else {
-      this.editableInfo = {
-        emergency_contact_person: emergencyContact,
-        emergency_contact_relation: '',
-        phone_number: '',
-        address: this.personalInfo.address || ''
-      };
+    } catch (error) {
+      console.error('Error loading personal info:', error);
+      this.error = 'An error occurred while loading your information';
+    } finally {
+      this.loading = false;
     }
   }
 
-  getAge(): string {
-    if (!this.personalInfo.birth_date) return 'N/A';
+  getAge(): number {
+    if (!this.personalInfo.birth_date) return 0;
     
+    const birthDate = new Date(this.personalInfo.birth_date);
     const today = new Date();
-    const birth = new Date(this.personalInfo.birth_date);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
     
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
     
-    return age.toString();
+    return age;
   }
 
+  calculateBMI(): string {
+    if (!this.physicalInfoEdit.height_cm || !this.physicalInfoEdit.weight_kg) {
+      return '';
+    }
+    
+    const heightInMeters = this.physicalInfoEdit.height_cm / 100;
+    const bmi = this.physicalInfoEdit.weight_kg / (heightInMeters * heightInMeters);
+    return bmi.toFixed(1);
+  }
+
+  getBMICategory(): string {
+    const bmiValue = parseFloat(this.calculateBMI());
+    if (!bmiValue) return '';
+    
+    if (bmiValue < 18.5) return 'Underweight';
+    if (bmiValue < 25) return 'Normal weight';
+    if (bmiValue < 30) return 'Overweight';
+    return 'Obese';
+  }
+
+  // Contact Information Edit Methods
   toggleEditMode() {
     this.editMode = !this.editMode;
-    this.successMessage = null;
-    
-    if (!this.editMode) {
-      // Reset to original values if canceling
-      this.parseEmergencyContact();
+    if (this.editMode) {
+      this.editableInfo = { ...this.personalInfo };
     }
   }
 
   cancelEdit() {
     this.editMode = false;
-    this.parseEmergencyContact();
-    this.successMessage = null;
+    this.editableInfo = { ...this.personalInfo };
   }
 
+  async saveChanges() {
+    try {
+      this.saving = true;
+      this.error = '';
+      
+      const currentUser = this.authService.currentUserValue;
+      if (!currentUser) {
+        this.error = 'User not authenticated';
+        return;
+      }
+
+      const response = await this.studentService.updateStudentProfile(currentUser.user_id, this.editableInfo).toPromise();
+      
+      if (response?.success) {
+        this.personalInfo = { ...this.editableInfo };
+        this.editMode = false;
+        this.successMessage = 'Contact information updated successfully';
+        setTimeout(() => this.successMessage = '', 3000);
+      } else {
+        this.error = response?.message || 'Failed to update contact information';
+      }
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      this.error = 'An error occurred while saving changes';
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  // Physical Information Edit Methods
+  togglePhysicalInfoEdit() {
+    this.physicalInfoEditMode = !this.physicalInfoEditMode;
+    if (this.physicalInfoEditMode && this.medicalRecord) {
+      this.physicalInfoEdit = { ...this.medicalRecord.physical_info };
+    }
+  }
+
+  cancelPhysicalInfoEdit() {
+    this.physicalInfoEditMode = false;
+    if (this.medicalRecord) {
+      this.physicalInfoEdit = { ...this.medicalRecord.physical_info };
+    }
+  }
+
+  async savePhysicalInfo() {
+    try {
+      this.saving = true;
+      this.error = '';
+      
+      const currentUser = this.authService.currentUserValue;
+      if (!currentUser) {
+        this.error = 'User not authenticated';
+        return;
+      }
+
+      const response = await this.studentService.updateStudentPhysicalInfo(currentUser.user_id, this.physicalInfoEdit).toPromise();
+      
+      if (response?.success) {
+        if (this.medicalRecord) {
+          this.medicalRecord.physical_info = { ...this.physicalInfoEdit };
+        }
+        this.physicalInfoEditMode = false;
+        this.successMessage = 'Physical information updated successfully';
+        setTimeout(() => this.successMessage = '', 3000);
+      } else {
+        this.error = response?.message || 'Failed to update physical information';
+      }
+    } catch (error) {
+      console.error('Error saving physical info:', error);
+      this.error = 'An error occurred while saving physical information';
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  // Allergies Edit Methods
+  toggleAllergiesEdit() {
+    this.allergiesEditMode = !this.allergiesEditMode;
+    if (!this.allergiesEditMode) {
+      this.newAllergy = { allergy_text: '', severity: 'Mild' };
+    }
+  }
+
+  cancelAllergiesEdit() {
+    this.allergiesEditMode = false;
+    this.newAllergy = { allergy_text: '', severity: 'Mild' };
+  }
+
+  addAllergy() {
+    if (!this.newAllergy.allergy_text.trim()) return;
+    
+    if (this.medicalRecord) {
+      this.medicalRecord.allergies.push({ ...this.newAllergy });
+      this.newAllergy = { allergy_text: '', severity: 'Mild' };
+    }
+  }
+
+  removeAllergy(index: number) {
+    if (this.medicalRecord) {
+      this.medicalRecord.allergies.splice(index, 1);
+    }
+  }
+
+  async saveAllergies() {
+    try {
+      this.saving = true;
+      this.error = '';
+      
+      const currentUser = this.authService.currentUserValue;
+      if (!currentUser) {
+        this.error = 'User not authenticated';
+        return;
+      }
+
+      if (!this.medicalRecord) {
+        this.error = 'No medical record found';
+        return;
+      }
+
+      console.log('Saving allergies:', {
+        userId: currentUser.user_id,
+        allergies: this.medicalRecord.allergies
+      });
+
+      const response = await this.studentService.updateStudentAllergies(currentUser.user_id, this.medicalRecord.allergies).toPromise();
+      
+      console.log('Save allergies response:', response);
+      
+      if (response?.success) {
+        this.allergiesEditMode = false;
+        this.successMessage = 'Allergies updated successfully';
+        setTimeout(() => this.successMessage = '', 3000);
+      } else {
+        console.error('Save allergies failed:', response);
+        this.error = response?.message || 'Failed to update allergies';
+      }
+    } catch (error) {
+      console.error('Error saving allergies:', error);
+      this.error = 'An error occurred while saving allergies';
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  // Medical History Edit Methods
   toggleMedicalHistoryEdit() {
     this.medicalHistoryEditMode = !this.medicalHistoryEditMode;
-    this.successMessage = null;
+    if (this.medicalHistoryEditMode && this.medicalRecord) {
+      this.medicalHistoryData = { ...this.medicalRecord.medical_history };
+    }
   }
 
   cancelMedicalHistoryEdit() {
     this.medicalHistoryEditMode = false;
-    this.successMessage = null;
+    if (this.medicalRecord) {
+      this.medicalHistoryData = { ...this.medicalRecord.medical_history };
+    }
   }
 
-  saveMedicalHistory() {
-    this.saving = true;
-    this.error = null;
-    this.successMessage = null;
-
-    // TODO: Implement backend API call to save medical history
-    // For now, just toggle edit mode and show success message
-    setTimeout(() => {
-      this.medicalHistoryEditMode = false;
-      this.successMessage = 'Medical history updated successfully!';
-      this.saving = false;
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        this.successMessage = null;
-      }, 3000);
-    }, 500);
-  }
-
-  saveChanges() {
-    this.saving = true;
-    this.error = null;
-    this.successMessage = null;
-
-    // Combine emergency contact fields back into single string
-    const emergencyContactString = `${this.editableInfo.emergency_contact_relation}: ${this.editableInfo.emergency_contact_person} - ${this.editableInfo.phone_number}`;
-
-    const updateData: { address?: string; emergency_contact?: string } = {};
-    
-    if (this.editableInfo.address !== this.personalInfo.address) {
-      updateData.address = this.editableInfo.address;
-    }
-    
-    if (emergencyContactString !== this.personalInfo.emergency_contact) {
-      updateData.emergency_contact = emergencyContactString;
-    }
-
-    if (Object.keys(updateData).length === 0) {
-      this.editMode = false;
-      this.saving = false;
-      return;
-    }
-
-    console.log('Sending update data:', updateData);
-
-    this.medicalRecordsService.updateMedicalInfo(updateData).subscribe({
-      next: (response) => {
-        console.log('Update response:', response);
-        if (response.success) {
-          // Update local data
-          this.personalInfo.address = this.editableInfo.address;
-          this.personalInfo.emergency_contact = emergencyContactString;
-          
-          this.editMode = false;
-          this.successMessage = 'Information updated successfully!';
-          
-          // Clear success message after 3 seconds
-          setTimeout(() => {
-            this.successMessage = null;
-          }, 3000);
-        } else {
-          this.error = response.message || 'Failed to update information';
-        }
-        this.saving = false;
-      },
-      error: (error) => {
-        console.error('Error updating medical info:', error);
-        console.error('Error status:', error.status);
-        console.error('Error response:', error.error);
-        this.error = 'Failed to update information. Please try again.';
-        this.saving = false;
+  async saveMedicalHistory() {
+    try {
+      this.saving = true;
+      this.error = '';
+      
+      const currentUser = this.authService.currentUserValue;
+      if (!currentUser) {
+        this.error = 'User not authenticated';
+        return;
       }
-    });
+
+      const response = await this.studentService.updateMedicalHistory(currentUser.user_id, this.medicalHistoryData).toPromise();
+      
+      if (response?.success) {
+        if (this.medicalRecord) {
+          this.medicalRecord.medical_history = { ...this.medicalHistoryData };
+        }
+        this.medicalHistoryEditMode = false;
+        this.successMessage = 'Medical history updated successfully';
+        setTimeout(() => this.successMessage = '', 3000);
+      } else {
+        this.error = response?.message || 'Failed to update medical history';
+      }
+    } catch (error) {
+      console.error('Error saving medical history:', error);
+      this.error = 'An error occurred while saving medical history';
+    } finally {
+      this.saving = false;
+    }
   }
 }

@@ -54,9 +54,77 @@ try {
         exit();
     }
     
-    // Get health visit notifications from clinic staff
+    // Get health visit notifications from clinic staff AND system notifications
     $placeholders = implode(',', array_fill(0, count($student_ids), '?'));
     
+    // Check if notifications table has user_id column (enhanced structure)
+    $checkColumns = "SHOW COLUMNS FROM notifications LIKE 'user_id'";
+    $checkStmt = $db->prepare($checkColumns);
+    $checkStmt->execute();
+    $hasUserIdColumn = $checkStmt->rowCount() > 0;
+    
+    $notifications = [];
+    
+    // Get system notifications if enhanced structure exists
+    if ($hasUserIdColumn) {
+        $systemNotifQuery = "SELECT n.*, 
+                                   s.first_name, s.last_name, s.student_number, s.grade_level, s.section,
+                                   mv.visit_type, mv.chief_complaint, mv.status as visit_status,
+                                   cs.position as staff_position,
+                                   u.full_name as staff_name
+                            FROM notifications n
+                            LEFT JOIN students s ON n.student_id = s.student_id
+                            LEFT JOIN medical_visits mv ON n.visit_id = mv.visit_id
+                            LEFT JOIN clinic_staff cs ON mv.clinic_staff_id = cs.clinic_staff_id
+                            LEFT JOIN users u ON cs.user_id = u.user_id
+                            WHERE n.user_id = :adviser_id 
+                              AND n.channel = 'System'
+                              AND n.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                            ORDER BY n.created_at DESC";
+        
+        $systemStmt = $db->prepare($systemNotifQuery);
+        $systemStmt->bindParam(':adviser_id', $adviser_id, PDO::PARAM_INT);
+        $systemStmt->execute();
+        
+        while ($row = $systemStmt->fetch(PDO::FETCH_ASSOC)) {
+            $created_at = new DateTime($row['created_at']);
+            $now = new DateTime();
+            $interval = $now->diff($created_at);
+            
+            // Format time ago
+            if ($interval->days > 0) {
+                $time_ago = $interval->days . 'd ago';
+            } elseif ($interval->h > 0) {
+                $time_ago = $interval->h . 'h ago';
+            } elseif ($interval->i > 0) {
+                $time_ago = $interval->i . 'm ago';
+            } else {
+                $time_ago = 'Just now';
+            }
+            
+            $notifications[] = [
+                'id' => 'sys_' . intval($row['notification_id']),
+                'senderName' => 'Clinic System',
+                'senderRole' => 'System',
+                'studentName' => trim($row['first_name'] . ' ' . $row['last_name']),
+                'studentNumber' => $row['student_number'],
+                'subject' => ucfirst($row['visit_type']) . ' Visit Notification',
+                'previewText' => substr($row['message'], 0, 100) . (strlen($row['message']) > 100 ? '...' : ''),
+                'fullMessage' => $row['message'],
+                'timeAgo' => $time_ago,
+                'fullDate' => $created_at->format('M d, Y \a\t h:i A'),
+                'visitType' => ucfirst($row['visit_type']),
+                'priority' => $row['priority'] ?? 'normal',
+                'isRead' => false,
+                'isExpanded' => false,
+                'visitDate' => $row['created_at'],
+                'staffUserId' => null,
+                'type' => 'system'
+            ];
+        }
+    }
+    
+    // Get traditional medical visit notifications
     $query = "SELECT 
                 mv.visit_id,
                 mv.student_id,
@@ -89,7 +157,6 @@ try {
     
     $stmt->execute();
     
-    $notifications = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $created_at = new DateTime($row['created_at']);
         $now = new DateTime();
@@ -123,9 +190,15 @@ try {
             'isRead' => false,
             'isExpanded' => false,
             'visitDate' => $row['visit_date'],
-            'staffUserId' => intval($row['staff_user_id'])
+            'staffUserId' => intval($row['staff_user_id']),
+            'type' => 'visit'
         ];
     }
+    
+    // Sort all notifications by creation date (newest first)
+    usort($notifications, function($a, $b) {
+        return strtotime($b['fullDate']) - strtotime($a['fullDate']);
+    });
     
     error_log("Found " . count($notifications) . " notifications");
     
