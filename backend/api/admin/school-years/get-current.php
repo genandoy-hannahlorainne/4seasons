@@ -39,21 +39,19 @@ if (!$auth->hasRole('Admin') && !$auth->hasRole('Adviser')) {
 try {
     $currentDate = date('Y-m-d');
     
-    // Get the currently active school year
-    $query = "SELECT id, year_name, start_date, end_date, is_active 
+    // Get the current school year (marked with is_current = 1)
+    $query = "SELECT id, year_name, start_date, end_date, is_active, is_current 
               FROM school_years 
-              WHERE is_active = TRUE 
-              OR (start_date <= ? AND end_date >= ?)
-              ORDER BY is_active DESC, start_date DESC 
+              WHERE is_current = 1 
               LIMIT 1";
     
     $stmt = $db->prepare($query);
-    $stmt->execute([$currentDate, $currentDate]);
+    $stmt->execute();
     $currentSchoolYear = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // If no active school year found, get the most recent one
+    // If no current school year found, get the most recent one
     if (!$currentSchoolYear) {
-        $fallbackQuery = "SELECT id, year_name, start_date, end_date, is_active 
+        $fallbackQuery = "SELECT id, year_name, start_date, end_date, is_active, is_current 
                          FROM school_years 
                          ORDER BY start_date DESC 
                          LIMIT 1";

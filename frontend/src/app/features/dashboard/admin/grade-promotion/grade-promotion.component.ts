@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AdminService } from '../../../../core/services/admin.service';
 
 interface PromotionSummary {
@@ -15,6 +16,15 @@ interface TargetSection {
   total_sections: number;
   total_capacity: number;
   current_enrollment: number;
+  sections_with_advisers: number;
+  sections_without_advisers: number;
+}
+
+interface AdviserAssignmentStatus {
+  total_sections: number;
+  sections_with_advisers: number;
+  sections_without_advisers: number;
+  all_assigned: boolean;
 }
 
 @Component({
@@ -24,6 +34,18 @@ interface TargetSection {
   template: `
     <div class="promotion-container">
       <h2>Grade Promotion Management</h2>
+
+      <!-- Important Notice -->
+      <div class="notice-banner">
+        <div class="notice-icon">⚠️</div>
+        <div class="notice-content">
+          <h3>Before Promoting Students</h3>
+          <p>Make sure advisers are assigned to sections for the target school year. Students will be automatically assigned to their new advisers based on their sections.</p>
+          <button class="btn-link" (click)="navigateToSchoolYearManagement()">
+            <i class="fa-solid fa-arrow-right"></i> Go to School Year Management
+          </button>
+        </div>
+      </div>
 
       <div class="promotion-setup">
         <div class="form-section">
@@ -57,6 +79,30 @@ interface TargetSection {
 
       <div *ngIf="promotionSummary" class="summary-section">
         <h3>Promotion Summary</h3>
+
+        <!-- Adviser Assignment Check -->
+        <div class="adviser-check" *ngIf="targetSections">
+          <h4>Target Year Section Status</h4>
+          <div class="status-grid">
+            <div class="status-card">
+              <div class="status-label">Total Sections</div>
+              <div class="status-value">{{ getTotalSections() }}</div>
+            </div>
+            <div class="status-card success">
+              <div class="status-label">With Advisers</div>
+              <div class="status-value">{{ getSectionsWithAdvisers() }}</div>
+            </div>
+            <div class="status-card warning">
+              <div class="status-label">Without Advisers</div>
+              <div class="status-value">{{ getSectionsWithoutAdvisers() }}</div>
+            </div>
+          </div>
+          <div class="warning-message" *ngIf="getSectionsWithoutAdvisers() > 0">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Warning: {{ getSectionsWithoutAdvisers() }} section(s) don't have advisers assigned. Students promoted to these sections won't have advisers.</span>
+            <button class="btn-small" (click)="navigateToSchoolYearManagement()">Assign Advisers</button>
+          </div>
+        </div>
         
         <div class="summary-grid">
           <div class="summary-card" *ngFor="let item of promotionSummary">
@@ -147,6 +193,125 @@ interface TargetSection {
       padding: 20px;
       max-width: 1200px;
       margin: 0 auto;
+    }
+
+    .notice-banner {
+      background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+      border-left: 4px solid #ffc107;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 15px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .notice-icon {
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .notice-content {
+      flex: 1;
+    }
+
+    .notice-content h3 {
+      margin: 0 0 8px 0;
+      color: #856404;
+      font-size: 1.2rem;
+    }
+
+    .notice-content p {
+      margin: 0 0 12px 0;
+      color: #856404;
+      line-height: 1.5;
+    }
+
+    .btn-link {
+      background: #ffc107;
+      color: #856404;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-link:hover {
+      background: #ffb300;
+      transform: translateX(4px);
+    }
+
+    .adviser-check {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .adviser-check h4 {
+      margin: 0 0 15px 0;
+      color: #2c3e50;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .status-card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      border: 2px solid #e9ecef;
+    }
+
+    .status-card.success {
+      border-color: #28a745;
+      background: #d4edda;
+    }
+
+    .status-card.warning {
+      border-color: #ffc107;
+      background: #fff3cd;
+    }
+
+    .status-label {
+      font-size: 0.9rem;
+      color: #6c757d;
+      margin-bottom: 8px;
+    }
+
+    .status-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .warning-message {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 6px;
+      padding: 12px 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #856404;
+    }
+
+    .warning-message i {
+      font-size: 1.2rem;
+    }
+
+    .warning-message span {
+      flex: 1;
     }
 
     .form-section {
@@ -293,11 +458,15 @@ export class GradePromotionComponent implements OnInit {
   targetSchoolYearId: number | null = null;
   promotionSummary: PromotionSummary[] | null = null;
   targetSections: TargetSection[] | null = null;
+  adviserAssignmentStatus: AdviserAssignmentStatus | null = null;
   manualCases: any[] = [];
   isProcessing = false;
   promotionResult: any = null;
 
-  constructor(private adminService: AdminService) {}
+  constructor(
+    private adminService: AdminService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.loadSchoolYears();
@@ -334,6 +503,7 @@ export class GradePromotionComponent implements OnInit {
       (response: any) => {
         this.promotionSummary = response.summary;
         this.targetSections = response.target_sections;
+        this.adviserAssignmentStatus = response.adviser_assignment_status;
         this.manualCases = response.manual_cases;
       },
       (error) => {
@@ -396,5 +566,21 @@ export class GradePromotionComponent implements OnInit {
   openManualAdjustment(student: any) {
     // TODO: Open modal for manual adjustment
     console.log('Open manual adjustment for student:', student);
+  }
+
+  navigateToSchoolYearManagement() {
+    this.router.navigate(['/dashboard/admin/school-year-management']);
+  }
+
+  getTotalSections(): number {
+    return this.adviserAssignmentStatus?.total_sections || 0;
+  }
+
+  getSectionsWithAdvisers(): number {
+    return this.adviserAssignmentStatus?.sections_with_advisers || 0;
+  }
+
+  getSectionsWithoutAdvisers(): number {
+    return this.adviserAssignmentStatus?.sections_without_advisers || 0;
   }
 }
