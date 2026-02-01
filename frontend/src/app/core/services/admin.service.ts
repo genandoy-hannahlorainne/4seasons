@@ -63,6 +63,13 @@ export class AdminService {
     return this.http.post<any>(`${environment.apiUrl}/admin/create-user.php`, userData);
   }
 
+  // Bulk Import Students
+  bulkImportStudents(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('csv_file', file);
+    return this.http.post<any>(`${environment.apiUrl}/admin/students/bulk-import.php`, formData);
+  }
+
   // System Settings
   getSystemSettings(): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/system-settings.php?action=get-all`);

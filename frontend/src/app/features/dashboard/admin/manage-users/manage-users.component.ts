@@ -62,6 +62,13 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     admins: 0
   };
 
+  // Bulk Import properties
+  showBulkImportModal = false;
+  selectedFile: File | null = null;
+  importing = false;
+  isDragging = false;
+  importResults: any = null;
+
   constructor(private adminService: AdminService) {}
 
   ngOnInit(): void {
@@ -459,6 +466,130 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         this.creatingUser = false;
         console.error('Error creating user:', err);
         this.createErrorMessage = err.error?.message || 'Failed to create user account. Please try again.';
+      }
+    });
+  }
+
+  // Bulk Import Methods
+  openBulkImportModal(): void {
+    this.showBulkImportModal = true;
+    this.selectedFile = null;
+    this.importResults = null;
+  }
+
+  closeBulkImportModal(): void {
+    this.showBulkImportModal = false;
+    this.selectedFile = null;
+    this.importResults = null;
+    this.isDragging = false;
+  }
+
+  downloadCSVTemplate(): void {
+    const csvContent = 'student_number,first_name,last_name,email,grade_level,section,gender,date_of_birth\n' +
+                      '2024001,Juan,Dela Cruz,juan.delacruz@example.com,7,Section A,Male,2010-01-15\n' +
+                      '2024002,Maria,Santos,maria.santos@example.com,7,Section A,Female,2010-03-20\n' +
+                      '2024003,Pedro,Reyes,pedro.reyes@example.com,8,Section B,Male,2009-05-10';
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'student_import_template.csv';
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    console.log('File selected:', file);
+    if (file) {
+      // Accept both text/csv and application/vnd.ms-excel
+      if (file.type === 'text/csv' || file.type === 'application/vnd.ms-excel' || file.name.endsWith('.csv')) {
+        this.selectedFile = file;
+        this.importResults = null;
+        console.log('File accepted:', file.name, file.type);
+      } else {
+        console.error('Invalid file type:', file.type);
+        alert('Please select a valid CSV file');
+      }
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+
+    const files = event.dataTransfer?.files;
+    console.log('Files dropped:', files);
+    if (files && files.length > 0) {
+      const file = files[0];
+      console.log('Dropped file:', file.name, file.type);
+      // Accept both text/csv and application/vnd.ms-excel
+      if (file.type === 'text/csv' || file.type === 'application/vnd.ms-excel' || file.name.endsWith('.csv')) {
+        this.selectedFile = file;
+        this.importResults = null;
+        console.log('File accepted from drop:', file.name);
+      } else {
+        console.error('Invalid file type from drop:', file.type);
+        alert('Please drop a valid CSV file');
+      }
+    }
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  uploadCSV(): void {
+    if (!this.selectedFile) {
+      alert('Please select a CSV file first');
+      return;
+    }
+
+    console.log('Starting CSV upload:', this.selectedFile.name);
+    this.importing = true;
+    this.importResults = null;
+
+    this.adminService.bulkImportStudents(this.selectedFile).subscribe({
+      next: (response) => {
+        console.log('Import response:', response);
+        this.importing = false;
+        if (response.success) {
+          this.importResults = response;
+          this.successMessage = response.message;
+          
+          // Refresh user list
+          this.loadUsers();
+          
+          // Clear file selection if all successful
+          if (response.error_count === 0) {
+            setTimeout(() => {
+              this.closeBulkImportModal();
+            }, 3000);
+          }
+        } else {
+          this.errorMessage = response.message || 'Import failed';
+        }
+      },
+      error: (err) => {
+        console.error('Import error:', err);
+        this.importing = false;
+        this.errorMessage = err.error?.message || 'Failed to import students. Please check your CSV file and try again.';
       }
     });
   }
