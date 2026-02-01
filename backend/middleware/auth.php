@@ -4,6 +4,11 @@
  * Validates user authentication and role-based access control
  */
 
+// Suppress display errors to prevent HTML output in JSON responses
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 class Auth {
     private $database;
     private $user_id;

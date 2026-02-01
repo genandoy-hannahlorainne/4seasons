@@ -198,7 +198,7 @@ export class PersonalInfoComponent implements OnInit {
             address: medicalData.personal_info.address || '',
             phone_number: profileData.phone || '',
             emergency_contact_person: medicalData.personal_info.emergency_contact || '',
-            emergency_contact_relation: ''
+            emergency_contact_relation: medicalData.personal_info.emergency_contact_relation || ''
           };
           
           this.editableInfo = { ...this.personalInfo };
@@ -302,13 +302,34 @@ export class PersonalInfoComponent implements OnInit {
         return;
       }
 
-      const response = await this.studentService.updateStudentProfile(currentUser.user_id, this.editableInfo).toPromise();
+      // Transform the data to match backend expectations
+      const updateData = {
+        full_name: this.editableInfo.full_name,
+        birth_date: this.editableInfo.birth_date,
+        gender: this.editableInfo.gender,
+        grade_level: this.editableInfo.grade_level,
+        section: this.editableInfo.section,
+        address: this.editableInfo.address,
+        phone: this.editableInfo.phone_number,
+        emergency_contact: this.editableInfo.emergency_contact_person,
+        emergency_contact_relation: this.editableInfo.emergency_contact_relation,
+        email: currentUser.email // Keep existing email
+      };
+
+      console.log('Saving personal info with data:', updateData);
+
+      const response = await this.studentService.updateStudentProfile(currentUser.user_id, updateData).toPromise();
+      
+      console.log('Save response:', response);
       
       if (response?.success) {
         this.personalInfo = { ...this.editableInfo };
         this.editMode = false;
         this.successMessage = 'Contact information updated successfully';
         setTimeout(() => this.successMessage = '', 3000);
+        
+        // Reload data to ensure consistency
+        await this.loadPersonalInfo();
       } else {
         this.error = response?.message || 'Failed to update contact information';
       }
@@ -423,6 +444,9 @@ export class PersonalInfoComponent implements OnInit {
         this.allergiesEditMode = false;
         this.successMessage = 'Allergies updated successfully';
         setTimeout(() => this.successMessage = '', 3000);
+        
+        // Reload data to ensure consistency
+        await this.loadPersonalInfo();
       } else {
         console.error('Save allergies failed:', response);
         this.error = response?.message || 'Failed to update allergies';
@@ -461,7 +485,14 @@ export class PersonalInfoComponent implements OnInit {
         return;
       }
 
+      console.log('Saving medical history:', {
+        userId: currentUser.user_id,
+        medicalHistory: this.medicalHistoryData
+      });
+
       const response = await this.studentService.updateMedicalHistory(currentUser.user_id, this.medicalHistoryData).toPromise();
+      
+      console.log('Save medical history response:', response);
       
       if (response?.success) {
         if (this.medicalRecord) {
@@ -470,6 +501,9 @@ export class PersonalInfoComponent implements OnInit {
         this.medicalHistoryEditMode = false;
         this.successMessage = 'Medical history updated successfully';
         setTimeout(() => this.successMessage = '', 3000);
+        
+        // Reload data to ensure consistency
+        await this.loadPersonalInfo();
       } else {
         this.error = response?.message || 'Failed to update medical history';
       }

@@ -1,2 +1,7 @@
 # CORS is handled by PHP files (cors.php)
 
+# Disable PHP error display to prevent HTML output in JSON responses
+php_flag display_errors off
+php_flag display_startup_errors off
+php_value error_reporting E_ALL
+php_flag log_errors on

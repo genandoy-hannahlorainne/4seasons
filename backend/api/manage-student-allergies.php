@@ -12,7 +12,12 @@ $db = $database->getConnection();
 
 // Authenticate user
 $auth = new Auth($database);
-$auth->requireRole('Student');
+// Allow both Student and Admin roles to manage allergies
+if (!$auth->hasRole('Student') && !$auth->hasRole('Admin')) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Access denied. Student or Admin role required.']);
+    exit();
+}
 
 $method = $_SERVER['REQUEST_METHOD'];
 $data = json_decode(file_get_contents("php://input"));
@@ -22,9 +27,16 @@ error_log("Method: " . $method);
 error_log("Request data: " . json_encode($data));
 
 try {
-    // Get student ID from authenticated user
+    // Get student ID from authenticated user or from request
     $userId = $auth->userId();
-    error_log("Authenticated user ID: " . $userId);
+    
+    // If user_id is provided in request and user is admin, use that instead
+    if (isset($data->user_id) && $auth->hasRole('Admin')) {
+        $userId = $data->user_id;
+        error_log("Admin accessing allergies for user ID: " . $userId);
+    } else {
+        error_log("Authenticated user ID: " . $userId);
+    }
     
     // Get student record
     $studentQuery = "SELECT student_id FROM students WHERE user_id = :user_id AND is_active = 1";
@@ -33,6 +45,7 @@ try {
     $studentStmt->execute();
     
     if ($studentStmt->rowCount() === 0) {
+        error_log("❌ Student not found for user_id: " . $userId);
         http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'Student record not found']);
         exit();
@@ -40,6 +53,7 @@ try {
     
     $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
     $studentId = $student['student_id'];
+    error_log("✅ Found student_id: " . $studentId);
     
     switch ($method) {
         case 'POST':

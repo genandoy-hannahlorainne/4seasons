@@ -5,17 +5,28 @@
  */
 
 class EmailConfig {
-    // SMTP Configuration
-    const SMTP_HOST = 'smtp.gmail.com'; // Change to your SMTP server
-    const SMTP_PORT = 587;
-    const SMTP_USERNAME = 'your-email@gmail.com'; // Change to your email
-    const SMTP_PASSWORD = 'your-app-password'; // Use app password for Gmail
+    // SMTP Configuration - UPDATE THESE WITH YOUR MAILTRAP OR GMAIL CREDENTIALS
+    // For Mailtrap (FREE): Get credentials from https://mailtrap.io
+    // For Gmail: Use your email and app password from https://myaccount.google.com/apppasswords
+    
+    // PRODUCTION: Gmail SMTP (comment out when using Mailtrap)
+    // const SMTP_HOST = 'smtp.gmail.com';
+    // const SMTP_PORT = 587;
+    // const SMTP_USERNAME = '4seasons.iska@gmail.com'; // Your Gmail address
+    // const SMTP_PASSWORD = 'YOUR_APP_PASSWORD_HERE'; // Your Gmail app password (16 characters)
+    // const SMTP_ENCRYPTION = 'tls';
+    
+    // TESTING: Mailtrap (ACTIVE - working configuration)
+    const SMTP_HOST = 'sandbox.smtp.mailtrap.io';
+    const SMTP_PORT = 2525;
+    const SMTP_USERNAME = 'da41244fa1af3f';
+    const SMTP_PASSWORD = '0250a28bcffa58';
     const SMTP_ENCRYPTION = 'tls';
     
     // Email Settings
-    const FROM_EMAIL = 'noreply@fourseasons-clinic.edu.ph';
-    const FROM_NAME = 'Four Seasons School Clinic';
-    const REPLY_TO = 'clinic@fourseasons.edu.ph';
+    const FROM_EMAIL = '4seasons.iska@gmail.com';
+    const FROM_NAME = 'Studentcare+ PDMHS Medical Record System';
+    const REPLY_TO = '4seasons.iska@gmail.com';
     
     // Email Templates Directory
     const TEMPLATES_DIR = __DIR__ . '/../email-templates/';
