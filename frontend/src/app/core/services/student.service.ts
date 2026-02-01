@@ -73,6 +73,7 @@ export class StudentService {
   updateStudentAllergies(userId: number, allergies: any[]): Observable<any> {
     return this.http.post<any>(`${environment.apiUrl}/manage-student-allergies.php`, {
       action: 'bulk_update',
+      user_id: userId,
       allergies: allergies
     });
   }
