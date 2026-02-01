@@ -116,4 +116,26 @@ export class AdviserService {
   getClassRoster(schoolYearId: number): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/adviser/get-class-roster.php?school_year_id=${schoolYearId}`);
   }
+
+  promoteStudents(promotionData: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/adviser/promote-students.php`, promotionData);
+  }
+
+  getSections(schoolYearId?: number, gradeLevel?: number): Observable<any> {
+    let url = `${environment.apiUrl}/admin/sections/list.php`;
+    const params = [];
+    
+    if (schoolYearId) {
+      params.push(`school_year_id=${schoolYearId}`);
+    }
+    if (gradeLevel) {
+      params.push(`grade_level=${gradeLevel}`);
+    }
+    
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
+    
+    return this.http.get<any>(url);
+  }
 }
