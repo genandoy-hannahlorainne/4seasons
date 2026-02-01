@@ -20,14 +20,6 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/admin-login/admin-login.component').then(m => m.AdminLoginComponent)
   },
   {
-    path: 'signup',
-    loadComponent: () => import('./features/auth/signup/signup.component').then(m => m.SignupComponent)
-  },
-  {
-    path: 'register',
-    loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent)
-  },
-  {
     path: 'force-change-password',
     loadComponent: () => import('./features/auth/force-change-password/force-change-password.component').then(m => m.ForceChangePasswordComponent)
   },

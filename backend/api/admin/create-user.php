@@ -1,4 +1,9 @@
 <?php
+// Suppress all output except JSON
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 // Handle CORS
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
@@ -10,9 +15,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// Start output buffering to catch any stray output
+ob_start();
+
 require_once '../../config/database.php';
 require_once '../../middleware/auth.php';
 require_once '../../services/EmailService.php';
+
+error_log("=== CREATE USER API CALLED ===");
 
 $database = new Database();
 $db = $database->getConnection();
@@ -20,6 +30,8 @@ $db = $database->getConnection();
 // Authenticate admin
 $auth = new Auth($database);
 $auth->requireRole('Admin');
+
+error_log("Admin authenticated, processing request...");
 
 $data = json_decode(file_get_contents("php://input"));
 
@@ -111,6 +123,18 @@ try {
         
         $roleSpecificId = $db->lastInsertId();
         
+        // Generate QR code for student
+        $qrToken = bin2hex(random_bytes(16)); // Generate unique token
+        
+        $qrCodeQuery = "INSERT INTO qr_codes (student_id, qr_token, qr_generated_at) 
+                        VALUES (:student_id, :qr_token, NOW())";
+        $qrStmt = $db->prepare($qrCodeQuery);
+        $qrStmt->bindParam(':student_id', $roleSpecificId);
+        $qrStmt->bindParam(':qr_token', $qrToken);
+        $qrStmt->execute();
+        
+        error_log("✅ QR code generated for student_id: " . $roleSpecificId . " with token: " . $qrToken);
+        
     } elseif (strtolower($data->role) === 'adviser') {
         $adviserQuery = "INSERT INTO advisers (
                           user_id, first_name, last_name, employee_number,
@@ -160,6 +184,11 @@ try {
     $logStmt->execute();
     
     // Send email with credentials
+    error_log("=== SENDING EMAIL ===");
+    error_log("Email: " . $data->email);
+    error_log("Username: " . $username);
+    error_log("Temp Password: " . $tempPassword);
+    
     $emailService = new EmailService($database);
     $emailSent = $emailService->sendAccountCreationEmail(
         $data->email,
@@ -169,8 +198,12 @@ try {
         $data->role
     );
     
+    error_log("Email sent: " . ($emailSent ? 'YES' : 'NO'));
+    
     $db->commit();
     
+    // Clear any buffered output and send clean JSON
+    ob_clean();
     http_response_code(201);
     echo json_encode([
         'success' => true,
@@ -185,13 +218,19 @@ try {
     ]);
     
 } catch (PDOException $e) {
-    $db->rollBack();
+    if ($db->inTransaction()) {
+        $db->rollBack();
+    }
     error_log("Error creating user: " . $e->getMessage());
+    ob_clean();
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 } catch (Exception $e) {
-    $db->rollBack();
+    if ($db->inTransaction()) {
+        $db->rollBack();
+    }
     error_log("Error creating user: " . $e->getMessage());
+    ob_clean();
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }

@@ -15,8 +15,4 @@ export class LandingComponent {
   navigateToLogin(): void {
     this.router.navigate(['/role-selection']);
   }
-
-  navigateToSignup(): void {
-    this.router.navigate(['/register']);
-  }
 }

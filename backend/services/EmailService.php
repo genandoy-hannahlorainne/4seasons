@@ -330,34 +330,90 @@ class EmailService {
     }
     
     /**
-     * Send email using PHP's mail function (basic implementation)
-     * In production, use PHPMailer or similar library
+     * Send email using PHPMailer with SMTP
      */
     private function sendEmail($to, $toName, $subject, $htmlBody, $priority = EmailConfig::PRIORITY_NORMAL) {
         try {
-            // Basic headers
-            $headers = [
-                'MIME-Version: 1.0',
-                'Content-type: text/html; charset=UTF-8',
-                'From: ' . $this->config['from_name'] . ' <' . $this->config['from_email'] . '>',
-                'Reply-To: ' . $this->config['reply_to'],
-                'X-Priority: ' . ($priority === EmailConfig::PRIORITY_HIGH ? '1' : '3'),
-                'X-Mailer: Four Seasons Clinic System'
-            ];
+            error_log("=== ATTEMPTING TO SEND EMAIL ===");
+            error_log("To: $to ($toName)");
+            error_log("Subject: $subject");
+            error_log("SMTP Host: " . $this->config['host']);
+            error_log("SMTP Port: " . $this->config['port']);
+            error_log("SMTP Username: " . $this->config['username']);
             
-            $headerString = implode("\r\n", $headers);
+            // Check if SMTP is configured
+            $isConfigured = EmailConfig::SMTP_USERNAME !== 'your-mailtrap-username' && 
+                           EmailConfig::SMTP_USERNAME !== 'your-email@gmail.com';
+            
+            error_log("SMTP Configured: " . ($isConfigured ? 'YES' : 'NO'));
+            
+            if (!$isConfigured) {
+                // Log email to file for development
+                error_log("=== EMAIL WOULD BE SENT (SMTP NOT CONFIGURED) ===");
+                error_log("To: $to ($toName)");
+                error_log("Subject: $subject");
+                
+                $this->logEmailAttempt($to, $subject, $priority);
+                $this->logEmailResult($to, $subject, true, 'Logged to file (SMTP not configured)');
+                
+                return true;
+            }
+            
+            // Use PHPMailer for SMTP
+            require_once __DIR__ . '/../../vendor/autoload.php';
+            
+            $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+            
+            // Enable debug output only for errors (set to 0 to disable all debug output)
+            $mail->SMTPDebug = 0; // 0 = off, 1 = client, 2 = client and server
+            $mail->Debugoutput = function($str, $level) {
+                error_log("PHPMailer: $str");
+            };
+            
+            // Server settings
+            $mail->isSMTP();
+            $mail->Host = $this->config['host'];
+            $mail->SMTPAuth = true;
+            $mail->Username = $this->config['username'];
+            $mail->Password = $this->config['password'];
+            $mail->SMTPSecure = $this->config['encryption'];
+            $mail->Port = $this->config['port'];
+            
+            // Recipients
+            $mail->setFrom($this->config['from_email'], $this->config['from_name']);
+            $mail->addAddress($to, $toName);
+            $mail->addReplyTo($this->config['reply_to'], $this->config['from_name']);
+            
+            // Content
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = $htmlBody;
+            $mail->AltBody = strip_tags($htmlBody);
+            
+            // Priority
+            if ($priority === EmailConfig::PRIORITY_HIGH) {
+                $mail->Priority = 1;
+            }
             
             // Log email attempt
             $this->logEmailAttempt($to, $subject, $priority);
             
+            error_log("Attempting to send email via PHPMailer...");
+            
             // Send email
-            $result = mail($to, $subject, $htmlBody, $headerString);
+            $result = $mail->send();
+            
+            error_log("Email sent successfully: " . ($result ? 'YES' : 'NO'));
             
             // Log result
             $this->logEmailResult($to, $subject, $result);
             
             return $result;
             
+        } catch (\PHPMailer\PHPMailer\Exception $e) {
+            error_log("PHPMailer Error: " . $e->getMessage());
+            $this->logEmailResult($to, $subject, false, $e->getMessage());
+            return false;
         } catch (Exception $e) {
             error_log("Email sending failed: " . $e->getMessage());
             $this->logEmailResult($to, $subject, false, $e->getMessage());
