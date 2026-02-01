@@ -58,6 +58,11 @@ export class AdminService {
     return this.http.delete<any>(`${environment.apiUrl}/manage-user.php?action=delete&user_id=${userId}`);
   }
 
+  // Create User
+  createUser(userData: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/create-user.php`, userData);
+  }
+
   // System Settings
   getSystemSettings(): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/system-settings.php?action=get-all`);

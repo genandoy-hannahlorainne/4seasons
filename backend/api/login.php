@@ -21,7 +21,7 @@ $data = json_decode(file_get_contents("php://input"));
 
 if (!empty($data->username) && !empty($data->password)) {
     
-    $query = "SELECT u.user_id, u.username, u.password_hash, u.email, u.full_name, u.role_id, r.role_name, u.is_active
+    $query = "SELECT u.user_id, u.username, u.password_hash, u.email, u.full_name, u.role_id, r.role_name, u.is_active, u.password_must_change
               FROM users u
               INNER JOIN roles r ON u.role_id = r.role_id
               WHERE u.username = :username AND u.is_active = 1 AND u.deleted_at IS NULL";
@@ -95,7 +95,8 @@ if (!empty($data->username) && !empty($data->password)) {
                 'email' => $row['email'],
                 'full_name' => $row['full_name'],
                 'role_id' => $row['role_id'],
-                'role_name' => $row['role_name']
+                'role_name' => $row['role_name'],
+                'password_must_change' => (bool)$row['password_must_change']
             ];
             
             // Fetch role-specific data

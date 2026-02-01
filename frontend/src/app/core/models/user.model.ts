@@ -7,6 +7,7 @@ export interface User {
   phone?: string;
   full_name?: string;
   is_active: boolean;
+  password_must_change?: boolean;
   student_info?: any;
   adviser_info?: any;
   staff_info?: any;

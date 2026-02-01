@@ -93,8 +93,8 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
           this.studentName = `${profile.first_name} ${profile.last_name}`;
           this.studentId = profile.student_number || '';
           this.gradeLevel = profile.grade_level && profile.section 
-            ? `${profile.grade_level} - ${profile.section}` 
-            : profile.grade_level || 'Not assigned';
+            ? `Grade ${profile.grade_level} - ${profile.section}` 
+            : profile.grade_level ? `Grade ${profile.grade_level}` : 'Not assigned';
           
           // Set gender
           this.studentGender = profile.gender || '';
@@ -132,13 +132,12 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
         if (response.success && response.data) {
           const data = response.data;
           
-          // Set vitals data - vitals is null in current implementation
-          // In future, vitals could be stored in a separate table
-          if (data.vitals) {
-            this.height = data.vitals.height_cm ? `${data.vitals.height_cm} cm` : '--';
-            this.weight = data.vitals.weight_kg ? `${data.vitals.weight_kg} kg` : '--';
-            this.bmi = data.vitals.bmi || '--';
-            this.bmiPercentage = data.vitals.bmi ? `${data.vitals.bmi}%` : '--';
+          // Set vitals data from personal_info
+          if (data.personal_info) {
+            this.height = data.personal_info.height_cm ? `${data.personal_info.height_cm} cm` : '--';
+            this.weight = data.personal_info.weight_kg ? `${data.personal_info.weight_kg} kg` : '--';
+            this.bmi = data.personal_info.bmi ? data.personal_info.bmi.toFixed(1) : '--';
+            this.bmiPercentage = data.personal_info.bmi ? `${data.personal_info.bmi.toFixed(1)}` : '--';
           } else {
             // Use default values when no vitals are available
             this.height = '--';
