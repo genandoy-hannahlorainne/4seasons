@@ -223,18 +223,17 @@ try {
     $lastVisitStmt->execute();
     $lastVisit = $lastVisitStmt->fetch(PDO::FETCH_ASSOC);
     
-    // Get adviser information
+    // Get adviser information from section assignment
     $adviserQuery = "SELECT 
-                        a.adviser_id,
-                        a.first_name,
-                        a.last_name,
-                        a.contact_phone,
+                        u.user_id,
+                        u.full_name,
+                        u.phone,
                         u.email
-                     FROM advisers a
-                     INNER JOIN users u ON a.user_id = u.user_id
-                     INNER JOIN student_adviser sa ON a.adviser_id = sa.adviser_id
-                     WHERE a.is_active = 1
-                     AND sa.student_id = :student_id
+                     FROM students s
+                     LEFT JOIN sections sec ON s.current_section_id = sec.id
+                     LEFT JOIN users u ON sec.adviser_id = u.user_id
+                     WHERE s.student_id = :student_id
+                     AND s.is_active = 1
                      LIMIT 1";
     
     $adviserStmt = $db->prepare($adviserQuery);
@@ -316,8 +315,8 @@ try {
                 'weight_kg' => $student['weight_kg'] ? (float)$student['weight_kg'] : null,
                 'bmi' => $student['bmi'] ? (float)$student['bmi'] : null,
                 'bmi_category' => $student['bmi_category'],
-                'adviser_name' => $adviser ? trim($adviser['first_name'] . ' ' . $adviser['last_name']) : 'Not assigned',
-                'adviser_contact' => $adviser ? ($adviser['contact_phone'] ?: $adviser['email']) : 'N/A'
+                'adviser_name' => $adviser ? $adviser['full_name'] : 'Not assigned',
+                'adviser_contact' => $adviser ? ($adviser['phone'] ?: $adviser['email']) : 'N/A'
             ],
             'recent_visits_count' => (int)$recentVisitsCount,
             'total_visits_count' => (int)$totalVisitsCount

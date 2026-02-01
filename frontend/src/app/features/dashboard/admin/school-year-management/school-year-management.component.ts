@@ -37,6 +37,12 @@ interface Adviser {
   email: string;
 }
 
+interface GradeLevel {
+  id: number;
+  level_name: string;
+  level_number: number;
+}
+
 @Component({
   selector: 'app-school-year-management',
   standalone: true,
@@ -98,16 +104,22 @@ interface Adviser {
       <div *ngIf="!loading && selectedSchoolYearId" class="sections-container">
         <div class="sections-header">
           <h2>Sections for {{ getSelectedSchoolYearName() }}</h2>
-          <div class="stats">
-            <span class="stat">
-              <strong>{{ sections.length }}</strong> Sections
-            </span>
-            <span class="stat">
-              <strong>{{ getAssignedCount() }}</strong> Assigned
-            </span>
-            <span class="stat">
-              <strong>{{ getUnassignedCount() }}</strong> Unassigned
-            </span>
+          <div class="header-actions">
+            <button class="btn-create-section" (click)="openCreateSectionModal()">
+              <i class="fa-solid fa-plus"></i>
+              Create Section
+            </button>
+            <div class="stats">
+              <span class="stat">
+                <strong>{{ sections.length }}</strong> Sections
+              </span>
+              <span class="stat">
+                <strong>{{ getAssignedCount() }}</strong> Assigned
+              </span>
+              <span class="stat">
+                <strong>{{ getUnassignedCount() }}</strong> Unassigned
+              </span>
+            </div>
           </div>
         </div>
 
@@ -274,6 +286,66 @@ interface Adviser {
             <button class="btn-cancel" (click)="closeCreateYearModal()">Cancel</button>
             <button class="btn-save" (click)="createSchoolYear()" [disabled]="!isYearFormValid() || saving">
               {{ saving ? 'Creating...' : 'Create School Year' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create Section Modal -->
+      <div *ngIf="showCreateSectionModal" class="modal-overlay" (click)="closeCreateSectionModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Create New Section</h3>
+            <button class="close-btn" (click)="closeCreateSectionModal()">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="section-info">
+              <p><strong>School Year:</strong> {{ getSelectedSchoolYearName() }}</p>
+            </div>
+
+            <div class="form-group">
+              <label>Grade Level: <span class="required">*</span></label>
+              <select [(ngModel)]="newSection.grade_level_id" class="form-select">
+                <option [value]="null">-- Select Grade Level --</option>
+                <option *ngFor="let grade of gradeLevels" [value]="grade.id">
+                  {{ grade.level_name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Section Name: <span class="required">*</span></label>
+              <input 
+                type="text" 
+                [(ngModel)]="newSection.section_name" 
+                class="form-input" 
+                placeholder="e.g., Section A, Section B">
+              <small class="help-text">Enter the section name (e.g., A, B, C, Diamond, Ruby)</small>
+            </div>
+
+            <div class="form-group">
+              <label>Capacity: <span class="required">*</span></label>
+              <input 
+                type="number" 
+                [(ngModel)]="newSection.capacity" 
+                class="form-input" 
+                min="1"
+                max="100"
+                placeholder="50">
+              <small class="help-text">Maximum number of students (default: 50)</small>
+            </div>
+
+            <div class="info-box">
+              <i class="fa-solid fa-info-circle"></i>
+              <div>
+                <strong>Note:</strong> After creating the section, you can assign an adviser to it.
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeCreateSectionModal()">Cancel</button>
+            <button class="btn-save" (click)="createSection()" [disabled]="!isSectionFormValid() || saving">
+              {{ saving ? 'Creating...' : 'Create Section' }}
             </button>
           </div>
         </div>
@@ -504,6 +576,37 @@ interface Adviser {
         color: #2c3e50;
         margin: 0;
         font-weight: 700;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+      }
+
+      .btn-create-section {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+
+        &:hover {
+          background: #2980b9;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        i {
+          font-size: 1rem;
+        }
       }
 
       .stats {
@@ -946,6 +1049,7 @@ export class SchoolYearManagementComponent implements OnInit {
   schoolYears: SchoolYear[] = [];
   sections: Section[] = [];
   advisers: Adviser[] = [];
+  gradeLevels: GradeLevel[] = [];
   
   selectedSchoolYearId: number | null = null;
   selectedSection: Section | null = null;
@@ -953,6 +1057,7 @@ export class SchoolYearManagementComponent implements OnInit {
   
   showAssignModal = false;
   showCreateYearModal = false;
+  showCreateSectionModal = false;
   loading = false;
   saving = false;
   settingCurrent = false;
@@ -965,6 +1070,12 @@ export class SchoolYearManagementComponent implements OnInit {
   };
   yearNameError = '';
   
+  newSection = {
+    section_name: '',
+    grade_level_id: null as number | null,
+    capacity: 50
+  };
+  
   message = '';
   messageType: 'success' | 'error' = 'success';
 
@@ -975,6 +1086,7 @@ export class SchoolYearManagementComponent implements OnInit {
   ngOnInit(): void {
     this.loadSchoolYears();
     this.loadAdvisers();
+    this.loadGradeLevels();
   }
 
   loadSchoolYears(): void {
@@ -1025,6 +1137,19 @@ export class SchoolYearManagementComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading advisers:', err);
+      }
+    });
+  }
+
+  loadGradeLevels(): void {
+    this.http.get<any>(`${this.apiUrl}/admin/grade-levels/list.php`).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.gradeLevels = response.data;
+        }
+      },
+      error: (err) => {
+        console.error('Error loading grade levels:', err);
       }
     });
   }
@@ -1217,6 +1342,62 @@ export class SchoolYearManagementComponent implements OnInit {
       error: (err) => {
         console.error('Error creating school year:', err);
         this.showMessage(err.error?.error || 'Error creating school year', 'error');
+        this.saving = false;
+      }
+    });
+  }
+
+  openCreateSectionModal(): void {
+    this.showCreateSectionModal = true;
+    this.resetSectionForm();
+  }
+
+  closeCreateSectionModal(): void {
+    this.showCreateSectionModal = false;
+    this.resetSectionForm();
+  }
+
+  resetSectionForm(): void {
+    this.newSection = {
+      section_name: '',
+      grade_level_id: null,
+      capacity: 50
+    };
+  }
+
+  isSectionFormValid(): boolean {
+    return !!(
+      this.newSection.section_name &&
+      this.newSection.grade_level_id &&
+      this.newSection.capacity > 0
+    );
+  }
+
+  createSection(): void {
+    if (!this.isSectionFormValid() || !this.selectedSchoolYearId) return;
+
+    this.saving = true;
+    const data = {
+      section_name: this.newSection.section_name,
+      grade_level_id: this.newSection.grade_level_id,
+      school_year_id: this.selectedSchoolYearId,
+      capacity: this.newSection.capacity
+    };
+
+    this.http.post<any>(`${this.apiUrl}/admin/sections/create.php`, data).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.showMessage(`Section "${this.newSection.section_name}" created successfully!`, 'success');
+          this.loadSections();
+          this.closeCreateSectionModal();
+        } else {
+          this.showMessage(response.error || 'Error creating section', 'error');
+        }
+        this.saving = false;
+      },
+      error: (err) => {
+        console.error('Error creating section:', err);
+        this.showMessage(err.error?.error || 'Error creating section', 'error');
         this.saving = false;
       }
     });
