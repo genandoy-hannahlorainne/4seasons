@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { MedicalVisit, Vitals, Diagnosis, Medication } from '../models/medical-visit.model';
+import { MedicalVisit, Vitals, Diagnosis } from '../models/medical-visit.model';
 
 @Injectable({
   providedIn: 'root'
@@ -38,9 +38,5 @@ export class MedicalVisitService {
 
   addDiagnosis(visitId: number, diagnosis: Partial<Diagnosis>): Observable<Diagnosis> {
     return this.http.post<Diagnosis>(`${this.apiUrl}/${visitId}/diagnoses`, diagnosis);
-  }
-
-  addMedication(visitId: number, medication: Partial<Medication>): Observable<Medication> {
-    return this.http.post<Medication>(`${this.apiUrl}/${visitId}/medications`, medication);
   }
 }

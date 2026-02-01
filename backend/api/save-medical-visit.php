@@ -6,6 +6,7 @@ header("Content-Type: application/json; charset=UTF-8");
 
 require_once '../config/database.php';
 require_once '../middleware/auth.php';
+require_once '../services/EmailService.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -13,6 +14,9 @@ $db = $database->getConnection();
 // Authenticate user
 $auth = new Auth($database);
 $auth->requireRole('Clinic Staff');
+
+// Initialize email service
+$emailService = new EmailService($database);
 
 $data = json_decode(file_get_contents("php://input"));
 
@@ -46,13 +50,11 @@ try {
     error_log("Save visit request: " . json_encode($data));
     
     // Map visit_type from form to database enum
-    // Form sends: walk-in, emergency, scheduled, follow-up
+    // Form sends: routine, emergency
     // DB expects: Routine, Emergency, Follow-up, Referral
     $visitTypeMap = [
-        'walk-in' => 'Routine',
-        'emergency' => 'Emergency',
-        'scheduled' => 'Routine',
-        'follow-up' => 'Follow-up'
+        'routine' => 'Routine',
+        'emergency' => 'Emergency'
     ];
     $visitType = isset($visitTypeMap[$data->visit_type]) ? $visitTypeMap[$data->visit_type] : 'Routine';
     
@@ -66,16 +68,10 @@ try {
     ];
     $status = isset($statusMap[$data->status]) ? $statusMap[$data->status] : 'Open';
     
-    // Build notes field with all the extra info (diagnosis, treatment, medications, recommendations)
+    // Build notes field with all the extra info (diagnosis, recommendations)
     $notesArray = [];
     if (!empty($data->diagnosis)) {
         $notesArray[] = "Diagnosis: " . $data->diagnosis;
-    }
-    if (!empty($data->treatment)) {
-        $notesArray[] = "Treatment: " . $data->treatment;
-    }
-    if (!empty($data->medications)) {
-        $notesArray[] = "Medications: " . $data->medications;
     }
     if (!empty($data->recommendations)) {
         $notesArray[] = "Recommendations: " . $data->recommendations;
@@ -183,30 +179,83 @@ try {
         $diagStmt->execute();
     }
     
-    // Insert treatment into treatments table if provided
-    if (!empty($data->treatment)) {
-        $treatQuery = "INSERT INTO treatments (visit_id, treatment_text) VALUES (:visit_id, :treatment_text)";
-        $treatStmt = $db->prepare($treatQuery);
-        $treatStmt->bindParam(':visit_id', $visitId);
-        $treatStmt->bindParam(':treatment_text', $data->treatment);
-        $treatStmt->execute();
-    }
+    // Treatment and medication tables have been removed - no longer inserting these
     
-    // Insert medications into medications table if provided
-    if (!empty($data->medications)) {
-        $medQuery = "INSERT INTO medications (visit_id, medication_name, notes) VALUES (:visit_id, :medication_name, :notes)";
-        $medStmt = $db->prepare($medQuery);
-        $medStmt->bindParam(':visit_id', $visitId);
-        $medStmt->bindParam(':medication_name', $data->medications);
-        $medNotes = !empty($data->recommendations) ? $data->recommendations : null;
-        $medStmt->bindParam(':notes', $medNotes);
-        $medStmt->execute();
-    }
-    
-    // If notify adviser is checked, create notification
-    if (!empty($data->notify_adviser) && $data->notify_adviser === true) {
-        // Get student's adviser
-        $adviserQuery = "SELECT a.adviser_id, a.user_id, u.email
+    // Implement different workflows based on visit type
+    if ($data->visit_type === 'emergency') {
+        // EMERGENCY WORKFLOW
+        
+        // 1. Notify Admin immediately
+        $adminQuery = "SELECT u.user_id, u.email, u.full_name 
+                       FROM users u 
+                       INNER JOIN roles r ON u.role_id = r.role_id
+                       WHERE r.role_name = 'Admin' AND u.is_active = 1";
+        $adminStmt = $db->prepare($adminQuery);
+        $adminStmt->execute();
+        
+        while ($admin = $adminStmt->fetch(PDO::FETCH_ASSOC)) {
+            // Get student info for notification
+            $studentQuery = "SELECT CONCAT(first_name, ' ', last_name) as full_name, student_number, grade_level, section
+                            FROM students WHERE student_id = :student_id";
+            $studentStmt = $db->prepare($studentQuery);
+            $studentStmt->bindParam(':student_id', $data->student_id);
+            $studentStmt->execute();
+            $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
+            
+            $emergencyMessage = "EMERGENCY ALERT: Student {$student['full_name']} ({$student['student_number']}) from Grade {$student['grade_level']}-{$student['section']} has been flagged for emergency medical attention. Complaint: {$data->chief_complaint}";
+            
+            // Check if notifications table has user_id and priority columns
+            $checkColumns = "SHOW COLUMNS FROM notifications LIKE 'user_id'";
+            $checkStmt = $db->prepare($checkColumns);
+            $checkStmt->execute();
+            $hasUserIdColumn = $checkStmt->rowCount() > 0;
+            
+            if ($hasUserIdColumn) {
+                // Use enhanced notification structure
+                $adminNotifQuery = "INSERT INTO notifications (user_id, visit_id, student_id, channel, message, priority, status, created_at) 
+                                   VALUES (:user_id, :visit_id, :student_id, 'System', :message, 'urgent', 'Pending', NOW())";
+                $adminNotifStmt = $db->prepare($adminNotifQuery);
+                $adminNotifStmt->bindParam(':user_id', $admin['user_id']);
+                $adminNotifStmt->bindParam(':visit_id', $visitId);
+                $adminNotifStmt->bindParam(':student_id', $data->student_id);
+                $adminNotifStmt->bindParam(':message', $emergencyMessage);
+                $adminNotifStmt->execute();
+            } else {
+                // Fallback to basic notification structure
+                error_log("EMERGENCY: Admin {$admin['full_name']} should be notified about emergency visit for student {$student['full_name']} - {$emergencyMessage}");
+            }
+            
+            // Send email notification for emergency
+            if (!empty($admin['email'])) {
+                $visitData = [
+                    'chief_complaint' => $data->chief_complaint,
+                    'visit_datetime' => $visitDateTime,
+                    'staff_name' => 'Clinic Staff' // You can get actual staff name if needed
+                ];
+                
+                $emailSent = $emailService->sendEmergencyNotification(
+                    $admin['email'],
+                    $admin['full_name'],
+                    $student,
+                    $visitData
+                );
+                
+                if ($emailSent) {
+                    error_log("EMERGENCY EMAIL: Sent to admin {$admin['full_name']} at {$admin['email']}");
+                } else {
+                    error_log("EMERGENCY EMAIL FAILED: Could not send to admin {$admin['full_name']} at {$admin['email']}");
+                }
+            }
+        }
+        
+        // 2. Force parent notification for emergency cases
+        $data->notify_parent = true;
+        
+    } else {
+        // ROUTINE WORKFLOW
+        
+        // 1. Notify Adviser for routine visits
+        $adviserQuery = "SELECT a.adviser_id, a.user_id, u.email, u.full_name
                          FROM students s
                          JOIN advisers a ON s.grade_level = a.grade_level AND s.section = a.section
                          JOIN users u ON a.user_id = u.user_id
@@ -227,9 +276,50 @@ try {
             $studentStmt->execute();
             $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
             
-            // Create notification record (you can expand this table later)
-            // For now, just log it
-            error_log("Notification: Adviser {$adviser['adviser_id']} notified about student {$student['full_name']} visit");
+            $routineMessage = "Student {$student['full_name']} ({$student['student_number']}) visited the clinic for routine care. Complaint: {$data->chief_complaint}";
+            
+            // Check if notifications table has user_id and priority columns
+            $checkColumns = "SHOW COLUMNS FROM notifications LIKE 'user_id'";
+            $checkStmt = $db->prepare($checkColumns);
+            $checkStmt->execute();
+            $hasUserIdColumn = $checkStmt->rowCount() > 0;
+            
+            if ($hasUserIdColumn) {
+                // Use enhanced notification structure
+                $adviserNotifQuery = "INSERT INTO notifications (user_id, visit_id, student_id, channel, message, priority, status, created_at) 
+                                     VALUES (:user_id, :visit_id, :student_id, 'System', :message, 'normal', 'Pending', NOW())";
+                $adviserNotifStmt = $db->prepare($adviserNotifQuery);
+                $adviserNotifStmt->bindParam(':user_id', $adviser['user_id']);
+                $adviserNotifStmt->bindParam(':visit_id', $visitId);
+                $adviserNotifStmt->bindParam(':student_id', $data->student_id);
+                $adviserNotifStmt->bindParam(':message', $routineMessage);
+                $adviserNotifStmt->execute();
+            } else {
+                // Fallback to basic notification structure
+                error_log("ROUTINE: Adviser {$adviser['full_name']} should be notified about routine visit for student {$student['full_name']} - {$routineMessage}");
+            }
+            
+            // Send email notification for routine visit
+            if (!empty($adviser['email'])) {
+                $visitData = [
+                    'chief_complaint' => $data->chief_complaint,
+                    'visit_datetime' => $visitDateTime,
+                    'staff_name' => 'Clinic Staff'
+                ];
+                
+                $emailSent = $emailService->sendRoutineNotification(
+                    $adviser['email'],
+                    $adviser['full_name'],
+                    $student,
+                    $visitData
+                );
+                
+                if ($emailSent) {
+                    error_log("ROUTINE EMAIL: Sent to adviser {$adviser['full_name']} at {$adviser['email']}");
+                } else {
+                    error_log("ROUTINE EMAIL FAILED: Could not send to adviser {$adviser['full_name']} at {$adviser['email']}");
+                }
+            }
         }
     }
     

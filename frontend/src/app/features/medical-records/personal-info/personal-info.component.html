@@ -1,0 +1,387 @@
+<div class="personal-info-container">
+  <div class="header">
+    <button class="back-btn" routerLink="/dashboard/student/medical-records">
+      ← Back to Medical Records
+    </button>
+    <h1>Personal Medical Information Form</h1>
+    <p class="subtitle">Complete medical information and health record</p>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <div class="loading-spinner"></div>
+    <p>Loading personal information...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div *ngIf="medicalRecord && !loading" class="content">
+    <!-- Student Information Section -->
+    <div class="info-card">
+      <div class="card-header">
+        <h2>Student Information</h2>
+        <span class="readonly-badge">Read Only</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Name of Learner</label>
+          <input type="text" [value]="personalInfo.full_name" readonly>
+        </div>
+        <div class="form-group">
+          <label>LRN</label>
+          <input type="text" [value]="personalInfo.student_number" readonly>
+        </div>
+        <div class="form-group">
+          <label>Grade Level & Section</label>
+          <input type="text" [value]="personalInfo.grade_level + ' - ' + personalInfo.section" readonly>
+        </div>
+        <div class="form-group">
+          <label>Birthday</label>
+          <input type="date" [value]="personalInfo.birth_date" readonly>
+        </div>
+        <div class="form-group">
+          <label>Sex/Age</label>
+          <input type="text" [value]="personalInfo.gender + '/' + getAge()" readonly>
+        </div>
+        <div class="form-group">
+          <label>Adviser</label>
+          <input type="text" [value]="adviserName" readonly>
+        </div>
+      </div>
+    </div>
+
+    <!-- Physical & Medical Information Section -->
+    <div class="info-card">
+      <div class="card-header">
+        <h2>Physical & Medical Information</h2>
+        <button *ngIf="!physicalInfoEditMode" class="edit-btn" (click)="togglePhysicalInfoEdit()">
+          Edit
+        </button>
+        <div *ngIf="physicalInfoEditMode" class="edit-actions">
+          <button class="save-btn" (click)="savePhysicalInfo()" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+          <button class="cancel-btn" (click)="cancelPhysicalInfoEdit()">Cancel</button>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Height (cm)</label>
+          <input type="number" 
+            [(ngModel)]="physicalInfoEdit.height_cm" 
+            [readonly]="!physicalInfoEditMode"
+            placeholder="Enter height in cm"
+            step="0.1">
+        </div>
+        <div class="form-group">
+          <label>Weight (kg)</label>
+          <input type="number" 
+            [(ngModel)]="physicalInfoEdit.weight_kg" 
+            [readonly]="!physicalInfoEditMode"
+            placeholder="Enter weight in kg"
+            step="0.1">
+        </div>
+        <div class="form-group">
+          <label>BMI</label>
+          <input type="text" 
+            [value]="calculateBMI()" 
+            readonly
+            placeholder="Auto-calculated">
+        </div>
+        <div class="form-group">
+          <label>BMI Category</label>
+          <input type="text" 
+            [value]="getBMICategory()" 
+            readonly
+            placeholder="Auto-determined">
+        </div>
+        <div class="form-group">
+          <label>Blood Type</label>
+          <select 
+            [(ngModel)]="physicalInfoEdit.blood_type" 
+            [disabled]="!physicalInfoEditMode"
+            class="form-control">
+            <option value="">Select Blood Type</option>
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Allergies Information Section -->
+    <div class="info-card">
+      <div class="card-header">
+        <h2>Allergies Information</h2>
+        <button *ngIf="!allergiesEditMode" class="edit-btn" (click)="toggleAllergiesEdit()">
+          Edit
+        </button>
+        <div *ngIf="allergiesEditMode" class="edit-actions">
+          <button class="save-btn" (click)="saveAllergies()" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+          <button class="cancel-btn" (click)="cancelAllergiesEdit()">Cancel</button>
+        </div>
+      </div>
+      
+      <div class="allergies-container">
+        <div class="current-allergies">
+          <h4>Current Allergies:</h4>
+          <div *ngFor="let allergy of medicalRecord.allergies; let i = index" class="allergy-item">
+            <div class="allergy-info">
+              <span class="allergy-text">{{ allergy.allergy_text }}</span>
+              <span class="allergy-severity" [class]="'severity-' + allergy.severity.toLowerCase()">
+                {{ allergy.severity }}
+              </span>
+            </div>
+            <button *ngIf="allergiesEditMode" class="remove-allergy" (click)="removeAllergy(i)">×</button>
+          </div>
+          <div *ngIf="medicalRecord.allergies.length === 0" class="no-allergies">
+            No known allergies recorded
+          </div>
+        </div>
+
+        <div *ngIf="allergiesEditMode" class="add-allergy-section">
+          <h4>Add New Allergy:</h4>
+          <div class="add-allergy-form">
+            <div class="form-group">
+              <label>Allergy</label>
+              <input type="text" 
+                [(ngModel)]="newAllergy.allergy_text" 
+                placeholder="Enter allergy (e.g., Peanuts, Shellfish)"
+                class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Severity</label>
+              <select [(ngModel)]="newAllergy.severity" class="form-control">
+                <option value="Mild">Mild</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Severe">Severe</option>
+              </select>
+            </div>
+            <button type="button" class="add-btn" (click)="addAllergy()" [disabled]="!newAllergy.allergy_text">
+              Add Allergy
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Information Section -->
+    <div class="info-card">
+      <div class="card-header">
+        <h2>Contact Information</h2>
+        <button *ngIf="!editMode" class="edit-btn" (click)="toggleEditMode()">
+          Edit
+        </button>
+        <div *ngIf="editMode" class="edit-actions">
+          <button class="save-btn" (click)="saveChanges()" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+          <button class="cancel-btn" (click)="cancelEdit()">Cancel</button>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Contact Person in Case of Emergency</label>
+          <input type="text" 
+            [(ngModel)]="editableInfo.emergency_contact_person" 
+            [readonly]="!editMode"
+            placeholder="Enter emergency contact name">
+        </div>
+        <div class="form-group">
+          <label>Relation</label>
+          <select 
+            [(ngModel)]="editableInfo.emergency_contact_relation" 
+            [disabled]="!editMode"
+            class="form-control">
+            <option value="">Select Relation</option>
+            <option value="Mother">Mother</option>
+            <option value="Father">Father</option>
+            <option value="Guardian">Guardian</option>
+            <option value="Sister">Sister</option>
+            <option value="Brother">Brother</option>
+            <option value="Aunt">Aunt</option>
+            <option value="Uncle">Uncle</option>
+            <option value="Grandmother">Grandmother</option>
+            <option value="Grandfather">Grandfather</option>
+            <option value="Cousin">Cousin</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group full-width">
+          <label>Address</label>
+          <textarea 
+            [(ngModel)]="editableInfo.address" 
+            [readonly]="!editMode"
+            rows="2"
+            placeholder="Enter complete address">
+          </textarea>
+        </div>
+        <div class="form-group">
+          <label>Phone No.</label>
+          <input type="text" 
+            [(ngModel)]="editableInfo.phone_number" 
+            [readonly]="!editMode"
+            placeholder="Enter phone number">
+        </div>
+      </div>
+    </div>
+
+    <!-- Medical History Section -->
+    <div class="info-card">
+      <div class="card-header">
+        <h2>Medical History (For Learners)</h2>
+        <button *ngIf="!medicalHistoryEditMode" class="edit-btn" (click)="toggleMedicalHistoryEdit()">
+          Edit
+        </button>
+        <div *ngIf="medicalHistoryEditMode" class="edit-actions">
+          <button class="save-btn" (click)="saveMedicalHistory()" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+          <button class="cancel-btn" (click)="cancelMedicalHistoryEdit()">Cancel</button>
+        </div>
+      </div>
+      
+      <!-- Allergies -->
+      <div class="medical-section">
+        <h3>1. Do you have any allergies?</h3>
+        <div class="checkbox-grid">
+          <div class="checkbox-group">
+            <label>Medicine</label>
+            <div class="checkbox-options">
+              <label><input type="checkbox" [(ngModel)]="medicalHistoryData.allergies.medicine" [disabled]="!medicalHistoryEditMode"> Yes</label>
+              <label><input type="checkbox" [checked]="!medicalHistoryData.allergies.medicine" [disabled]="!medicalHistoryEditMode"> No</label>
+            </div>
+          </div>
+          <div class="checkbox-group">
+            <label>Pollens</label>
+            <div class="checkbox-options">
+              <label><input type="checkbox" [(ngModel)]="medicalHistoryData.allergies.pollens" [disabled]="!medicalHistoryEditMode"> Yes</label>
+              <label><input type="checkbox" [checked]="!medicalHistoryData.allergies.pollens" [disabled]="!medicalHistoryEditMode"> No</label>
+            </div>
+          </div>
+          <div class="checkbox-group">
+            <label>Food</label>
+            <div class="checkbox-options">
+              <label><input type="checkbox" [(ngModel)]="medicalHistoryData.allergies.food" [disabled]="!medicalHistoryEditMode"> Yes</label>
+              <label><input type="checkbox" [checked]="!medicalHistoryData.allergies.food" [disabled]="!medicalHistoryEditMode"> No</label>
+            </div>
+          </div>
+          <div class="checkbox-group">
+            <label>Stinging Insects</label>
+            <div class="checkbox-options">
+              <label><input type="checkbox" [(ngModel)]="medicalHistoryData.allergies.stinging_insects" [disabled]="!medicalHistoryEditMode"> Yes</label>
+              <label><input type="checkbox" [checked]="!medicalHistoryData.allergies.stinging_insects" [disabled]="!medicalHistoryEditMode"> No</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="allergies-display">
+          <h4>Known Allergies:</h4>
+          <div *ngFor="let allergy of medicalRecord.allergies" class="allergy-item">
+            <span class="allergy-text">{{ allergy.allergy_text }}</span>
+            <span class="allergy-severity" [class]="'severity-' + allergy.severity.toLowerCase()">
+              {{ allergy.severity }}
+            </span>
+          </div>
+          <div *ngIf="medicalRecord.allergies.length === 0" class="no-allergies">
+            No known allergies recorded
+          </div>
+        </div>
+      </div>
+
+      <!-- Medical Conditions -->
+      <div class="medical-section">
+        <h3>2. Do you have any ongoing medical condition?</h3>
+        <div class="checkbox-grid">
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.medical_conditions.error_refraction" [disabled]="!medicalHistoryEditMode"> Error of refraction (Wearing Corrective Lenses)</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.medical_conditions.heart_problem" [disabled]="!medicalHistoryEditMode"> Heart problem</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.medical_conditions.bleeding_disorder" [disabled]="!medicalHistoryEditMode"> Bleeding disorder (nose, etc.)</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.medical_conditions.hernia" [disabled]="!medicalHistoryEditMode"> Hernia (painful bulge in the groin area)</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.medical_conditions.asthma" [disabled]="!medicalHistoryEditMode"> Asthma</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.medical_conditions.anemia" [disabled]="!medicalHistoryEditMode"> Anemia</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.medical_conditions.anxiety_depression" [disabled]="!medicalHistoryEditMode"> Anxiety/Depression</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.medical_conditions.seizure" [disabled]="!medicalHistoryEditMode"> Seizure</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Surgery/Hospitalization -->
+      <div class="medical-section">
+        <h3>3. Have you ever had surgery or been hospitalized?</h3>
+        <div class="radio-options">
+          <label><input type="radio" name="surgery" [(ngModel)]="medicalHistoryData.surgery_hospitalization" [value]="true" [disabled]="!medicalHistoryEditMode"> Yes</label>
+          <label><input type="radio" name="surgery" [(ngModel)]="medicalHistoryData.surgery_hospitalization" [value]="false" [disabled]="!medicalHistoryEditMode"> No</label>
+        </div>
+      </div>
+
+      <!-- Family History -->
+      <div class="medical-section">
+        <h3>Family History</h3>
+        <h4>4. Does anyone in your family have the following conditions:</h4>
+        <div class="checkbox-grid">
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.family_history.tuberculosis" [disabled]="!medicalHistoryEditMode"> Tuberculosis</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.family_history.cancer" [disabled]="!medicalHistoryEditMode"> Cancer</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.family_history.stroke_cardiac" [disabled]="!medicalHistoryEditMode"> Stroke/Cardiac Problem</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.family_history.diabetes" [disabled]="!medicalHistoryEditMode"> Diabetes Mellitus</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.family_history.hypertension" [disabled]="!medicalHistoryEditMode"> Hypertension</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.family_history.depression" [disabled]="!medicalHistoryEditMode"> Depression</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.family_history.thyroid" [disabled]="!medicalHistoryEditMode"> Thyroid Problem</label>
+          </div>
+          <div class="checkbox-item">
+            <label><input type="checkbox" [(ngModel)]="medicalHistoryData.family_history.phobia" [disabled]="!medicalHistoryEditMode"> Phobia</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smoke Exposure -->
+      <div class="medical-section">
+        <h3>5. Are you exposed to cigarette/vape smoke at home?</h3>
+        <div class="radio-options">
+          <label><input type="radio" name="smoke" [(ngModel)]="medicalHistoryData.smoke_exposure" [value]="true" [disabled]="!medicalHistoryEditMode"> Yes</label>
+          <label><input type="radio" name="smoke" [(ngModel)]="medicalHistoryData.smoke_exposure" [value]="false" [disabled]="!medicalHistoryEditMode"> No</label>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="successMessage" class="success-message">
+      {{ successMessage }}
+    </div>
+  </div>
+</div>

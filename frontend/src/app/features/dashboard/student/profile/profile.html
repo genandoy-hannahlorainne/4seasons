@@ -23,18 +23,16 @@
         <div class="profile-grid">
           <div class="profile-item">
             <div class="profile-label">Full Name</div>
-            <div class="profile-value">
-              {{ profileForm.get('firstName')?.value }} {{ profileForm.get('middleName')?.value }} {{ profileForm.get('lastName')?.value }}
-            </div>
+            <div class="profile-value">{{ displayName || 'Loading...' }}</div>
             <div class="profile-label">Sex</div>
-            <div class="profile-value">{{ (profileForm.get('gender')?.value || '') | titlecase }}</div>
+            <div class="profile-value">{{ (displayGender || 'Loading...') | titlecase }}</div>
           </div>
 
           <div class="profile-item">
             <div class="profile-label">Date of Birth</div>
-            <div class="profile-value">{{ profileForm.get('birthday')?.value }}</div>
+            <div class="profile-value">{{ displayBirthday || 'Loading...' }}</div>
             <div class="profile-label">Student ID</div>
-            <div class="profile-value">{{ profileForm.get('studentNumber')?.value }}</div>
+            <div class="profile-value">{{ displayStudentNumber || 'Loading...' }}</div>
           </div>
         </div>
       </div>

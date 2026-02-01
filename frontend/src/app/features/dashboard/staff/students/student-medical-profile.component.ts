@@ -29,8 +29,6 @@ export class StudentMedicalProfileComponent implements OnInit {
 
   vitalsHistory: any[] = [];
   diagnoses: any[] = [];
-  treatments: any[] = [];
-  medications: any[] = [];
   immunizations: any[] = [];
   allergies: any[] = [];
 
@@ -78,8 +76,6 @@ export class StudentMedicalProfileComponent implements OnInit {
           
           this.vitalsHistory = response.vitals || [];
           this.diagnoses = response.diagnoses || [];
-          this.treatments = response.treatments || [];
-          this.medications = response.medications || [];
           this.immunizations = response.immunizations || [];
           this.allergies = response.allergies || [];
           
@@ -91,8 +87,6 @@ export class StudentMedicalProfileComponent implements OnInit {
           this.hasMedicalRecord = 
             this.vitalsHistory.length > 0 ||
             this.diagnoses.length > 0 ||
-            this.treatments.length > 0 ||
-            this.medications.length > 0 ||
             this.immunizations.length > 0 ||
             this.allergies.length > 0;
             

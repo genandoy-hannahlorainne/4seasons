@@ -27,6 +27,12 @@ export class StudentProfileComponent implements OnInit {
   passwordError = '';
   passwordSuccess = '';
   
+  // Display values
+  displayName = '';
+  displayGender = '';
+  displayBirthday = '';
+  displayStudentNumber = '';
+  
   // QR Code data
   qrCodeData = '';
   qrCodeLoading = false;
@@ -115,6 +121,12 @@ export class StudentProfileComponent implements OnInit {
           
           // Store student_id for QR code generation
           this.studentId = profile.student_id;
+          
+          // Set display values
+          this.displayName = `${profile.first_name} ${profile.middle_name || ''} ${profile.last_name}`.trim();
+          this.displayGender = genderMap[profile.gender] || 'other';
+          this.displayBirthday = profile.birth_date;
+          this.displayStudentNumber = profile.student_number;
           
           this.profileForm.patchValue({
             studentNumber: profile.student_number,

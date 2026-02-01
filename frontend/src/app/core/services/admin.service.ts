@@ -145,4 +145,79 @@ export class AdminService {
   restoreBackup(filename: string): Observable<any> {
     return this.http.post<any>(`${environment.apiUrl}/restore-backup.php`, { filename });
   }
+
+  // Grade Promotion
+  getSchoolYears(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/school-years/list.php`);
+  }
+
+  createSchoolYear(yearName: string, startDate: string, endDate: string, isActive: boolean = false): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/school-years/create.php`, {
+      year_name: yearName,
+      start_date: startDate,
+      end_date: endDate,
+      is_active: isActive
+    });
+  }
+
+  createSection(sectionName: string, gradeLevelId: number, schoolYearId: number, capacity: number = 50): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/sections/create.php`, {
+      section_name: sectionName,
+      grade_level_id: gradeLevelId,
+      school_year_id: schoolYearId,
+      capacity
+    });
+  }
+
+  assignAdviserToSection(sectionId: number, adviserId: number, schoolYearId: number): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/sections/assign-adviser.php`, {
+      section_id: sectionId,
+      adviser_id: adviserId,
+      school_year_id: schoolYearId
+    });
+  }
+
+  getPromotionSummary(currentSchoolYearId: number, targetSchoolYearId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/promotions/get-summary.php?current_school_year_id=${currentSchoolYearId}&target_school_year_id=${targetSchoolYearId}`);
+  }
+
+  bulkPromoteStudents(currentSchoolYearId: number, targetSchoolYearId: number, promotionRules: any, excludeStudentIds: number[] = []): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/students/bulk-promote.php`, {
+      current_school_year_id: currentSchoolYearId,
+      target_school_year_id: targetSchoolYearId,
+      promotion_rules: promotionRules,
+      exclude_student_ids: excludeStudentIds
+    });
+  }
+
+  manualAdjustPromotion(studentId: number, action: string, newGradeLevelId?: number, newSectionId?: number, notes?: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/students/manual-adjust-promotion.php`, {
+      student_id: studentId,
+      action,
+      new_grade_level_id: newGradeLevelId,
+      new_section_id: newSectionId,
+      notes
+    });
+  }
+
+  // Notifications
+  getNotifications(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/get-admin-notifications.php`);
+  }
+
+  markNotificationAsRead(notificationId: number): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/manage-notifications.php`, {
+      notification_id: notificationId
+    });
+  }
+
+  markAllNotificationsAsRead(): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/manage-notifications.php`, {});
+  }
+
+  deleteNotification(notificationId: number): Observable<any> {
+    return this.http.request<any>('DELETE', `${environment.apiUrl}/manage-notifications.php`, {
+      body: { notification_id: notificationId }
+    });
+  }
 }

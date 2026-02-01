@@ -37,12 +37,51 @@ export class StudentService {
     });
   }
 
-  getStudentMedicalData(studentId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/get-student-medical-data.php?student_id=${studentId}`);
+  getStudentMedicalData(userId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/get-student-medical-data.php?user_id=${userId}`);
   }
 
   getStudentQRCode(studentId: number): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/get-student-qr.php?student_id=${studentId}`);
+  }
+
+  updatePhysicalInfo(physicalData: any): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/update-student-physical-info.php`, physicalData);
+  }
+
+  addAllergy(allergyData: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/manage-student-allergies.php`, allergyData);
+  }
+
+  updateAllergy(allergyData: any): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/manage-student-allergies.php`, allergyData);
+  }
+
+  removeAllergy(allergyId: number): Observable<any> {
+    return this.http.request<any>('DELETE', `${environment.apiUrl}/manage-student-allergies.php`, {
+      body: { allergy_id: allergyId }
+    });
+  }
+
+  updateStudentPhysicalInfo(userId: number, physicalData: any): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/update-student-physical-info.php`, {
+      user_id: userId,
+      ...physicalData
+    });
+  }
+
+  updateStudentAllergies(userId: number, allergies: any[]): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/manage-student-allergies.php`, {
+      action: 'bulk_update',
+      allergies: allergies
+    });
+  }
+
+  updateMedicalHistory(userId: number, medicalHistory: any): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/update-medical-info.php`, {
+      user_id: userId,
+      medical_history: medicalHistory
+    });
   }
 
   // TODO: Implement these methods when backend APIs are ready

@@ -31,14 +31,3 @@ export interface Diagnosis {
   icd_code?: string;
   diagnosis_text?: string;
 }
-
-export interface Medication {
-  med_id: number;
-  visit_id: number;
-  medication_name?: string;
-  dosage?: string;
-  route?: string;
-  frequency?: string;
-  duration?: string;
-  notes?: string;
-}

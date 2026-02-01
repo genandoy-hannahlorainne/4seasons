@@ -8,6 +8,7 @@ import { AdviserDashboardComponent } from './adviser/adviser-dashboard.component
 import { AdviserAlertsComponent } from './adviser/alerts/adviser-alerts.component';
 import { AdviserHealthStatusComponent } from './adviser/health-status/adviser-health-status.component';
 import { AdviserProfileComponent } from './adviser/profile/adviser-profile.component';
+import { ClassManagementComponent } from './adviser/class-management/class-management.component';
 import { StaffLayoutComponent } from './staff/staff-layout.component';
 import { ClinicDashboardComponent } from './staff/clinic-dashboard.component';
 import { StudentListComponent } from './staff/students/student-list.component';
@@ -23,6 +24,7 @@ import { ManageUsersComponent } from './admin/manage-users/manage-users.componen
 import { SystemSettingsComponent } from './admin/system-settings/system-settings.component';
 import { ViewReportsComponent } from './admin/view-reports/view-reports.component';
 import { BackupRecoveryComponent } from './admin/backup-recovery/backup-recovery.component';
+import { GradePromotionComponent } from './admin/grade-promotion/grade-promotion.component';
 import { AdminGuard } from '../../core/guards/admin.guard';
 import { roleGuard } from '../../core/guards/role.guard';
 
@@ -52,7 +54,8 @@ export const dashboardRoutes: Routes = [
       { path: '', component: AdviserDashboardComponent },
       { path: 'alerts', component: AdviserAlertsComponent },
       { path: 'health-status', redirectTo: '', pathMatch: 'full' },
-      { path: 'profile', component: AdviserProfileComponent }
+      { path: 'profile', component: AdviserProfileComponent },
+      { path: 'class-management', component: ClassManagementComponent }
     ]
   },
   {
@@ -83,7 +86,8 @@ export const dashboardRoutes: Routes = [
       { path: 'manage-users', component: ManageUsersComponent },
       { path: 'settings', component: SystemSettingsComponent },
       { path: 'reports', component: ViewReportsComponent },
-      { path: 'backup-recovery', component: BackupRecoveryComponent }
+      { path: 'backup-recovery', component: BackupRecoveryComponent },
+      { path: 'grade-promotion', component: GradePromotionComponent }
     ]
   }
 ];
