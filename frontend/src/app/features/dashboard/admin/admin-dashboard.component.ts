@@ -94,6 +94,32 @@ interface UsersResponse {
           </div>
         </div>
 
+        <!-- Notification History -->
+        <div class="notification-history" *ngIf="notificationHistory.length > 0">
+          <div class="history-header">
+            <h2><i class="fa-solid fa-clock-rotate-left"></i> Recent Notifications</h2>
+            <span class="history-count">{{ notificationHistory.length }} notification{{ notificationHistory.length > 1 ? 's' : '' }}</span>
+          </div>
+          <div class="history-list">
+            <div *ngFor="let notification of notificationHistory" class="history-item" [ngClass]="notification.priority">
+              <div class="history-icon">
+                <i class="fa-solid" [ngClass]="notification.priority === 'urgent' ? 'fa-triangle-exclamation' : 'fa-circle-info'"></i>
+              </div>
+              <div class="history-content">
+                <div class="history-message">{{ notification.message }}</div>
+                <div class="history-meta">
+                  <span class="history-student">{{ notification.student?.full_name }} ({{ notification.student?.student_number }})</span>
+                  <span class="history-time">{{ notification.timeAgo }}</span>
+                  <span class="history-status" [ngClass]="notification.status.toLowerCase()">{{ notification.status }}</span>
+                </div>
+              </div>
+              <button class="history-view" (click)="viewNotificationDetails(notification)" title="View Details">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Statistics Cards -->
         <div class="stats-grid">
           <div class="stat-card users">
@@ -397,6 +423,162 @@ interface UsersResponse {
       100% { box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3); }
     }
 
+    .notification-history {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+      .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+
+        h2 {
+          font-size: 1.2rem;
+          color: #2c3e50;
+          margin: 0;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          i { color: #3498db; }
+        }
+
+        .history-count {
+          background: #e3f2fd;
+          color: #1976d2;
+          padding: 0.25rem 0.75rem;
+          border-radius: 20px;
+          font-size: 0.85rem;
+          font-weight: 600;
+        }
+      }
+
+      .history-list {
+        .history-item {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1rem;
+          border-radius: 8px;
+          margin-bottom: 0.75rem;
+          border-left: 4px solid;
+          transition: all 0.2s ease;
+
+          &.urgent {
+            background: #fff5f5;
+            border-color: #e74c3c;
+          }
+
+          &.normal {
+            background: #f8f9fa;
+            border-color: #3498db;
+          }
+
+          &:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateX(4px);
+          }
+
+          .history-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+          }
+
+          &.urgent .history-icon {
+            background: #ffebee;
+            color: #e74c3c;
+          }
+
+          &.normal .history-icon {
+            background: #e3f2fd;
+            color: #3498db;
+          }
+
+          .history-content {
+            flex: 1;
+
+            .history-message {
+              font-weight: 500;
+              color: #2c3e50;
+              margin-bottom: 0.5rem;
+              line-height: 1.4;
+            }
+
+            .history-meta {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 1rem;
+              font-size: 0.85rem;
+              color: #7f8c8d;
+
+              .history-student {
+                font-weight: 500;
+                color: #34495e;
+              }
+
+              .history-time {
+                color: #95a5a6;
+              }
+
+              .history-status {
+                padding: 0.2rem 0.6rem;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 0.75rem;
+
+                &.pending {
+                  background: #fff3cd;
+                  color: #856404;
+                }
+
+                &.read {
+                  background: #d4edda;
+                  color: #155724;
+                }
+
+                &.sent {
+                  background: #d1ecf1;
+                  color: #0c5460;
+                }
+              }
+            }
+          }
+
+          .history-view {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #495057;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+
+            &:hover {
+              background: #3498db;
+              color: white;
+              border-color: #3498db;
+            }
+
+            i { font-size: 1rem; }
+          }
+        }
+      }
+    }
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -694,6 +876,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   systemAlerts: any[] = [];
   activityLog: any[] = [];
   emergencyNotifications: any[] = [];
+  notificationHistory: any[] = [];
 
   constructor(
     private router: Router,
@@ -783,17 +966,28 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       next: (response) => {
         console.log('✅ Admin notifications response:', response);
         if (response?.success && Array.isArray(response.notifications)) {
-          this.emergencyNotifications = response.notifications
-            .filter((notif: any) => notif.priority === 'urgent')
-            .map((notif: any) => {
-              console.log('🔍 Notification structure:', notif);
-              console.log('🔍 Visit ID:', notif.visit?.visit_id || notif.visit_id);
-              return {
-                ...notif,
-                timeAgo: this.formatTimestamp(notif.created_at)
-              };
-            });
+          // Separate urgent (pending) from history (read/sent)
+          const allNotifications = response.notifications.map((notif: any) => {
+            console.log('🔍 Notification structure:', notif);
+            console.log('🔍 Visit ID:', notif.visit?.visit_id || notif.visit_id);
+            return {
+              ...notif,
+              timeAgo: this.formatTimestamp(notif.created_at)
+            };
+          });
+          
+          // Emergency notifications (urgent + pending)
+          this.emergencyNotifications = allNotifications.filter(
+            (notif: any) => notif.priority === 'urgent' && notif.status === 'Pending'
+          );
+          
+          // Notification history (all read/sent notifications, or normal priority)
+          this.notificationHistory = allNotifications.filter(
+            (notif: any) => notif.status !== 'Pending' || notif.priority === 'normal'
+          ).slice(0, 10); // Show last 10
+          
           console.log('✅ Emergency notifications loaded:', this.emergencyNotifications.length);
+          console.log('✅ Notification history loaded:', this.notificationHistory.length);
         }
       },
       error: (err) => {
@@ -1002,7 +1196,16 @@ Position: ${notification.staff.position || 'N/A'}
       this.adminService.markAllNotificationsAsRead().subscribe({
         next: (response) => {
           if (response.success) {
+            // Move emergency notifications to history
+            this.notificationHistory = [
+              ...this.emergencyNotifications.map(n => ({ ...n, status: 'Read' })),
+              ...this.notificationHistory
+            ].slice(0, 10);
+            
+            // Clear emergency notifications
             this.emergencyNotifications = [];
+            
+            alert('All emergency notifications marked as read');
           }
         },
         error: (err) => {
@@ -1037,5 +1240,28 @@ Position: ${notification.staff.position || 'N/A'}
         }
       });
     }
+  }
+
+  viewNotificationDetails(notification: any): void {
+    const details = `
+Notification Details:
+
+Student: ${notification.student?.full_name || 'N/A'}
+Student Number: ${notification.student?.student_number || 'N/A'}
+Grade & Section: ${notification.student?.grade_section || 'N/A'}
+
+Visit Type: ${notification.visit?.visit_type || 'N/A'}
+Complaint: ${notification.visit?.chief_complaint || 'N/A'}
+Visit Status: ${notification.visit?.status || 'N/A'}
+
+Priority: ${notification.priority || 'N/A'}
+Status: ${notification.status || 'N/A'}
+Created: ${notification.timeAgo || 'N/A'}
+
+Message:
+${notification.message || 'N/A'}
+    `.trim();
+    
+    alert(details);
   }
 }
