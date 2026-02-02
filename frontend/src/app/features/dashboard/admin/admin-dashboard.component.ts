@@ -84,7 +84,12 @@ interface UsersResponse {
                   <span>{{ notification.timeAgo }}</span>
                 </div>
               </div>
-              <button class="emergency-view" (click)="viewEmergencyDetails(notification)">View</button>
+              <div class="emergency-actions">
+                <button class="emergency-sms" (click)="sendSMSToParent(notification)" title="Send SMS to Parent">
+                  <i class="fa-solid fa-message"></i> SMS Parent
+                </button>
+                <button class="emergency-view" (click)="viewEmergencyDetails(notification)">View</button>
+              </div>
             </div>
           </div>
         </div>
@@ -341,6 +346,30 @@ interface UsersResponse {
                 margin-right: 1rem;
                 &:last-child { margin-right: 0; }
               }
+            }
+          }
+
+          .emergency-actions {
+            display: flex;
+            gap: 0.5rem;
+          }
+
+          .emergency-sms {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid rgba(46, 204, 113, 0.4);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            &:hover {
+              background: rgba(46, 204, 113, 0.3);
+              border-color: rgba(46, 204, 113, 0.6);
             }
           }
 
@@ -973,6 +1002,26 @@ Position: ${notification.staff.position || 'N/A'}
         },
         error: (err) => {
           console.error('Failed to mark all notifications as read:', err);
+        }
+      });
+    }
+  }
+
+  sendSMSToParent(notification: any): void {
+    const studentName = notification.student?.full_name || 'the student';
+    
+    if (confirm(`Send SMS notification to ${studentName}'s parent/guardian about this emergency visit?`)) {
+      this.adminService.sendParentSMS(notification.visit_id).subscribe({
+        next: (response) => {
+          if (response.success) {
+            alert(`SMS sent successfully to ${response.phone}\n\nMessage: ${response.sms_message}`);
+          } else {
+            alert('Failed to send SMS: ' + response.message);
+          }
+        },
+        error: (err) => {
+          console.error('Failed to send SMS:', err);
+          alert('Failed to send SMS. ' + (err.error?.message || 'Please try again.'));
         }
       });
     }
