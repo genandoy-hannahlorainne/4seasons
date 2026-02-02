@@ -4,11 +4,37 @@
  * POST /api/admin/students/bulk-promote
  */
 
-header('Content-Type: application/json');
+// CORS headers
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, X-Requested-With");
+header("Access-Control-Max-Age: 3600");
+header("Content-Type: application/json; charset=UTF-8");
+
+// Handle preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 require_once '../../../config/database.php';
 require_once '../../../middleware/auth.php';
 
-verifyAdminRole();
+$database = new Database();
+$db = $database->getConnection();
+
+// Authenticate user
+$auth = new Auth($database);
+
+// Require Admin role
+if (!$auth->hasRole('Admin')) {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Access denied. Admin role required.'
+    ]);
+    exit();
+}
 
 try {
     $data = json_decode(file_get_contents('php://input'), true);
@@ -16,7 +42,10 @@ try {
     // Validate required fields
     if (!isset($data['current_school_year_id']) || !isset($data['target_school_year_id']) || !isset($data['promotion_rules'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Missing required fields']);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Missing required fields'
+        ]);
         exit;
     }
 
@@ -24,7 +53,7 @@ try {
     $target_school_year_id = (int)$data['target_school_year_id'];
     $promotion_rules = $data['promotion_rules']; // Array: grade_id => new_grade_id or 'graduated'
     $exclude_student_ids = $data['exclude_student_ids'] ?? [];
-    $current_user_id = $_SESSION['user_id'];
+    $current_user_id = $auth->userId();
 
     // Validate school years exist
     $yearQuery = "SELECT id FROM school_years WHERE id IN (?, ?)";
@@ -198,7 +227,11 @@ try {
     }
 
 } catch (Exception $e) {
+    error_log("Error in bulk-promote.php: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => 'Server error: ' . $e->getMessage()]);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Server error: ' . $e->getMessage()
+    ]);
 }
 ?>

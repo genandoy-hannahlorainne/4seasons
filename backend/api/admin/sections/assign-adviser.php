@@ -1,85 +1,114 @@
 <?php
 /**
  * Assign Adviser to Section
- * POST /api/admin/sections/assign-adviser
+ * POST /api/admin/sections/assign-adviser.php
+ * Body: { section_id, adviser_user_id }
  */
 
-header('Content-Type: application/json');
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, X-Requested-With");
+header("Access-Control-Max-Age: 3600");
+header("Content-Type: application/json; charset=UTF-8");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 require_once '../../../config/database.php';
 require_once '../../../middleware/auth.php';
 
-verifyAdminRole();
+$database = new Database();
+$db = $database->getConnection();
+
+$auth = new Auth($database);
+
+if (!$auth->hasRole('Admin')) {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Access denied. Admin role required.'
+    ]);
+    exit();
+}
 
 try {
     $data = json_decode(file_get_contents('php://input'), true);
-
-    // Validate required fields
-    if (!isset($data['section_id']) || !isset($data['adviser_id']) || !isset($data['school_year_id'])) {
+    
+    if (!isset($data['section_id'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Missing required fields']);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Missing section_id'
+        ]);
         exit;
     }
-
-    $section_id = (int)$data['section_id'];
-    $adviser_id = (int)$data['adviser_id'];
-    $school_year_id = (int)$data['school_year_id'];
-    $current_user_id = $_SESSION['user_id'];
-
-    // Validate section exists
-    $sectionQuery = "SELECT id FROM sections WHERE id = ? AND school_year_id = ?";
-    $sectionStmt = $db->prepare($sectionQuery);
-    $sectionStmt->execute([$section_id, $school_year_id]);
-    if ($sectionStmt->rowCount() === 0) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Section not found']);
-        exit;
-    }
-
-    // Validate adviser exists and is active
-    $adviserQuery = "SELECT user_id FROM users WHERE user_id = ? AND role = 'adviser' AND is_active = 1";
-    $adviserStmt = $db->prepare($adviserQuery);
-    $adviserStmt->execute([$adviser_id]);
-    if ($adviserStmt->rowCount() === 0) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Adviser not found or inactive']);
-        exit;
-    }
-
-    // Start transaction
-    $db->beginTransaction();
-
-    try {
-        // Unassign previous adviser if exists
-        $unassignQuery = "UPDATE adviser_assignments SET is_active = FALSE, unassigned_date = NOW() 
-                         WHERE section_id = ? AND school_year_id = ? AND is_active = TRUE";
-        $db->prepare($unassignQuery)->execute([$section_id, $school_year_id]);
-
-        // Assign new adviser
-        $assignQuery = "INSERT INTO adviser_assignments (adviser_id, section_id, school_year_id, assigned_by_admin_id) 
-                       VALUES (?, ?, ?, ?)";
-        $db->prepare($assignQuery)->execute([$adviser_id, $section_id, $school_year_id, $current_user_id]);
-
-        // Update section adviser
-        $updateQuery = "UPDATE sections SET adviser_id = ? WHERE id = ?";
-        $db->prepare($updateQuery)->execute([$adviser_id, $section_id]);
-
-        $db->commit();
-
+    
+    $sectionId = $data['section_id'];
+    $adviserUserId = $data['adviser_user_id'] ?? null;
+    
+    // If adviser_user_id is null, we're removing the adviser
+    if ($adviserUserId === null) {
+        $query = "UPDATE sections SET adviser_id = NULL WHERE id = :section_id";
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':section_id', $sectionId);
+        $stmt->execute();
+        
         http_response_code(200);
         echo json_encode([
             'success' => true,
-            'message' => 'Adviser assigned successfully',
-            'section_id' => $section_id,
-            'adviser_id' => $adviser_id
+            'message' => 'Adviser removed from section'
         ]);
-
-    } catch (Exception $e) {
-        $db->rollBack();
-        throw $e;
+        exit;
     }
-
+    
+    // Verify adviser exists
+    $adviserQuery = "SELECT adviser_id FROM advisers WHERE user_id = :user_id AND is_active = 1";
+    $adviserStmt = $db->prepare($adviserQuery);
+    $adviserStmt->bindParam(':user_id', $adviserUserId);
+    $adviserStmt->execute();
+    
+    if ($adviserStmt->rowCount() === 0) {
+        http_response_code(404);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Adviser not found or inactive'
+        ]);
+        exit;
+    }
+    
+    // Update section
+    $query = "UPDATE sections SET adviser_id = :adviser_id WHERE id = :section_id";
+    $stmt = $db->prepare($query);
+    $stmt->bindParam(':adviser_id', $adviserUserId);
+    $stmt->bindParam(':section_id', $sectionId);
+    $stmt->execute();
+    
+    // Update all students in this section to have this adviser
+    $updateStudentsQuery = "UPDATE students 
+                           SET current_adviser_id = :adviser_id 
+                           WHERE current_section_id = :section_id 
+                           AND enrollment_status = 'active'";
+    $updateStudentsStmt = $db->prepare($updateStudentsQuery);
+    $updateStudentsStmt->bindParam(':adviser_id', $adviserUserId);
+    $updateStudentsStmt->bindParam(':section_id', $sectionId);
+    $updateStudentsStmt->execute();
+    $studentsUpdated = $updateStudentsStmt->rowCount();
+    
+    http_response_code(200);
+    echo json_encode([
+        'success' => true,
+        'message' => 'Adviser assigned successfully',
+        'students_updated' => $studentsUpdated
+    ]);
+    
 } catch (Exception $e) {
+    error_log("Error in assign-adviser.php: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => 'Server error: ' . $e->getMessage()]);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error assigning adviser: ' . $e->getMessage()
+    ]);
 }
 ?>

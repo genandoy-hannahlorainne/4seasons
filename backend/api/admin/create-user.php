@@ -101,12 +101,20 @@ try {
     $roleSpecificId = null;
     
     if (strtolower($data->role) === 'student') {
+        // Get current school year
+        $currentSchoolYearQuery = "SELECT id FROM school_years WHERE is_current = 1 LIMIT 1";
+        $currentSchoolYearStmt = $db->query($currentSchoolYearQuery);
+        $currentSchoolYear = $currentSchoolYearStmt->fetch(PDO::FETCH_ASSOC);
+        $currentSchoolYearId = $currentSchoolYear ? $currentSchoolYear['id'] : null;
+        
         $studentQuery = "INSERT INTO students (
                           user_id, student_number, first_name, middle_name, last_name,
-                          birth_date, gender, grade_level, section, is_active
+                          birth_date, gender, grade_level, section, 
+                          current_school_year_id, is_active
                         ) VALUES (
                           :user_id, :student_number, :first_name, :middle_name, :last_name,
-                          :birth_date, :gender, :grade_level, :section, 1
+                          :birth_date, :gender, :grade_level, :section,
+                          :current_school_year_id, 1
                         )";
         
         $studentStmt = $db->prepare($studentQuery);
@@ -119,9 +127,12 @@ try {
         $studentStmt->bindParam(':gender', $data->gender);
         $studentStmt->bindParam(':grade_level', $data->grade_level);
         $studentStmt->bindParam(':section', $data->section);
+        $studentStmt->bindParam(':current_school_year_id', $currentSchoolYearId);
         $studentStmt->execute();
         
         $roleSpecificId = $db->lastInsertId();
+        
+        error_log("✅ Student created with current_school_year_id: " . ($currentSchoolYearId ?? 'NULL'));
         
         // Generate QR code for student
         $qrToken = bin2hex(random_bytes(16)); // Generate unique token
@@ -155,6 +166,57 @@ try {
         $adviserStmt->execute();
         
         $roleSpecificId = $db->lastInsertId();
+        
+        // If grade_level and section are provided, assign adviser to that section
+        if (!empty($data->grade_level) && !empty($data->section)) {
+            error_log("Assigning adviser to section: Grade {$data->grade_level}, Section {$data->section}");
+            
+            // Get current school year
+            $currentSchoolYearQuery = "SELECT id FROM school_years WHERE is_current = 1 LIMIT 1";
+            $currentSchoolYearStmt = $db->query($currentSchoolYearQuery);
+            
+            if ($currentSchoolYearStmt->rowCount() > 0) {
+                $currentSchoolYear = $currentSchoolYearStmt->fetch(PDO::FETCH_ASSOC);
+                $schoolYearId = $currentSchoolYear['id'];
+                
+                error_log("Using current school year ID: $schoolYearId");
+                
+                // Find the section
+                $findSectionQuery = "SELECT sec.id 
+                                    FROM sections sec
+                                    JOIN grade_levels gl ON sec.grade_level_id = gl.id
+                                    WHERE gl.level_number = :grade_level
+                                    AND sec.section_name = :section_name
+                                    AND sec.school_year_id = :school_year_id
+                                    AND sec.is_active = 1
+                                    LIMIT 1";
+                $findSectionStmt = $db->prepare($findSectionQuery);
+                $findSectionStmt->bindParam(':grade_level', $data->grade_level);
+                $findSectionStmt->bindParam(':section_name', $data->section);
+                $findSectionStmt->bindParam(':school_year_id', $schoolYearId);
+                $findSectionStmt->execute();
+                
+                if ($findSectionStmt->rowCount() > 0) {
+                    $section = $findSectionStmt->fetch(PDO::FETCH_ASSOC);
+                    $sectionId = $section['id'];
+                    
+                    // Assign adviser to section (use user_id, not adviser_id)
+                    $assignSectionQuery = "UPDATE sections SET adviser_id = :user_id WHERE id = :section_id";
+                    $assignSectionStmt = $db->prepare($assignSectionQuery);
+                    $assignSectionStmt->bindParam(':user_id', $userId);
+                    $assignSectionStmt->bindParam(':section_id', $sectionId);
+                    $assignSectionStmt->execute();
+                    
+                    error_log("✓ Assigned adviser (user_id: $userId) to section (id: $sectionId) for current school year");
+                } else {
+                    error_log("⚠️ Section not found: Grade {$data->grade_level}, Section {$data->section}, School Year {$schoolYearId}");
+                }
+            } else {
+                error_log("⚠️ No current school year set. Please set a current school year first.");
+            }
+        } else {
+            error_log("⚠️ No active school year found, cannot assign adviser to section");
+        }
         
     } elseif (strtolower($data->role) === 'clinic_staff') {
         $staffQuery = "INSERT INTO clinic_staff (
