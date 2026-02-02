@@ -191,7 +191,15 @@ CREATE TABLE notifications (
 ## 🚀 Deployment Steps
 
 1. **Pull latest code** from repository
-2. **No database changes needed** (uses existing tables)
+2. **Run database setup script**:
+   ```bash
+   php setup-emergency-notifications.php
+   ```
+   This will:
+   - Check if notifications table has required columns
+   - Add `user_id` and `priority` columns if missing
+   - Update `channel` enum to include 'System'
+   - Verify the setup with a test notification
 3. **Restart backend server** (if needed)
 4. **Clear Angular cache**: `npm run build` in frontend
 5. **Test emergency visit creation**

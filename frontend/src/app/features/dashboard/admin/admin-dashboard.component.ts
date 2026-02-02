@@ -785,10 +785,15 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         if (response?.success && Array.isArray(response.notifications)) {
           this.emergencyNotifications = response.notifications
             .filter((notif: any) => notif.priority === 'urgent')
-            .map((notif: any) => ({
-              ...notif,
-              timeAgo: this.formatTimestamp(notif.created_at)
-            }));
+            .map((notif: any) => {
+              console.log('🔍 Notification structure:', notif);
+              console.log('🔍 Visit ID:', notif.visit?.visit_id || notif.visit_id);
+              return {
+                ...notif,
+                timeAgo: this.formatTimestamp(notif.created_at)
+              };
+            });
+          console.log('✅ Emergency notifications loaded:', this.emergencyNotifications.length);
         }
       },
       error: (err) => {
@@ -1009,9 +1014,16 @@ Position: ${notification.staff.position || 'N/A'}
 
   sendSMSToParent(notification: any): void {
     const studentName = notification.student?.full_name || 'the student';
+    const visitId = notification.visit?.visit_id || notification.visit_id;
+    
+    if (!visitId) {
+      alert('Error: Visit ID not found in notification');
+      console.error('Notification object:', notification);
+      return;
+    }
     
     if (confirm(`Send SMS notification to ${studentName}'s parent/guardian about this emergency visit?`)) {
-      this.adminService.sendParentSMS(notification.visit_id).subscribe({
+      this.adminService.sendParentSMS(visitId).subscribe({
         next: (response) => {
           if (response.success) {
             alert(`SMS sent successfully to ${response.phone}\n\nMessage: ${response.sms_message}`);

@@ -34,11 +34,25 @@ try {
             $hasUserIdColumn = $checkStmt->rowCount() > 0;
             
             if ($hasUserIdColumn) {
-                // Update notification status
-                $query = "UPDATE notifications 
-                         SET status = 'Read', read_at = NOW() 
-                         WHERE notification_id = :notification_id 
-                           AND user_id = :user_id";
+                // Update notification status (without read_at if column doesn't exist)
+                // Check if read_at column exists
+                $checkReadAt = "SHOW COLUMNS FROM notifications LIKE 'read_at'";
+                $checkStmt2 = $db->prepare($checkReadAt);
+                $checkStmt2->execute();
+                $hasReadAt = $checkStmt2->rowCount() > 0;
+                
+                if ($hasReadAt) {
+                    $query = "UPDATE notifications 
+                             SET status = 'Read', read_at = NOW() 
+                             WHERE notification_id = :notification_id 
+                               AND user_id = :user_id";
+                } else {
+                    $query = "UPDATE notifications 
+                             SET status = 'Read' 
+                             WHERE notification_id = :notification_id 
+                               AND user_id = :user_id";
+                }
+                
                 $stmt = $db->prepare($query);
                 $stmt->bindParam(':notification_id', $data->notification_id);
                 $stmt->bindParam(':user_id', $auth->userId());
@@ -94,9 +108,22 @@ try {
             $hasUserIdColumn = $checkStmt->rowCount() > 0;
             
             if ($hasUserIdColumn) {
-                $query = "UPDATE notifications 
-                         SET status = 'Read', read_at = NOW() 
-                         WHERE user_id = :user_id AND status = 'Pending'";
+                // Check if read_at column exists
+                $checkReadAt = "SHOW COLUMNS FROM notifications LIKE 'read_at'";
+                $checkStmt2 = $db->prepare($checkReadAt);
+                $checkStmt2->execute();
+                $hasReadAt = $checkStmt2->rowCount() > 0;
+                
+                if ($hasReadAt) {
+                    $query = "UPDATE notifications 
+                             SET status = 'Read', read_at = NOW() 
+                             WHERE user_id = :user_id AND status = 'Pending'";
+                } else {
+                    $query = "UPDATE notifications 
+                             SET status = 'Read' 
+                             WHERE user_id = :user_id AND status = 'Pending'";
+                }
+                
                 $stmt = $db->prepare($query);
                 $stmt->bindParam(':user_id', $auth->userId());
                 $stmt->execute();

@@ -52,19 +52,23 @@ try {
                 'created_at' => $row['created_at'],
                 'student' => [
                     'student_id' => $row['student_id'],
-                    'full_name' => trim($row['first_name'] . ' ' . $row['last_name']),
-                    'student_number' => $row['student_number'],
-                    'grade_section' => $row['grade_level'] . '-' . $row['section']
+                    'full_name' => $row['first_name'] && $row['last_name'] 
+                        ? trim($row['first_name'] . ' ' . $row['last_name']) 
+                        : 'Unknown Student',
+                    'student_number' => $row['student_number'] ?? 'N/A',
+                    'grade_section' => ($row['grade_level'] && $row['section']) 
+                        ? $row['grade_level'] . '-' . $row['section'] 
+                        : 'N/A'
                 ],
                 'visit' => [
-                    'visit_id' => $row['visit_id'],
-                    'visit_type' => $row['visit_type'],
-                    'chief_complaint' => $row['chief_complaint'],
-                    'status' => $row['visit_status']
+                    'visit_id' => $row['visit_id'] ?? null,
+                    'visit_type' => $row['visit_type'] ?? 'N/A',
+                    'chief_complaint' => $row['chief_complaint'] ?? 'N/A',
+                    'status' => $row['visit_status'] ?? 'N/A'
                 ],
                 'staff' => [
-                    'name' => $row['staff_name'],
-                    'position' => $row['staff_position']
+                    'name' => $row['staff_name'] ?? 'N/A',
+                    'position' => $row['staff_position'] ?? 'N/A'
                 ]
             ];
         }
@@ -86,6 +90,8 @@ try {
     }
     
 } catch (PDOException $e) {
+    error_log("Admin Notifications Error: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
