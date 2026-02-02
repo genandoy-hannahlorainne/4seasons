@@ -25,6 +25,7 @@ import { SystemSettingsComponent } from './admin/system-settings/system-settings
 import { ViewReportsComponent } from './admin/view-reports/view-reports.component';
 import { BackupRecoveryComponent } from './admin/backup-recovery/backup-recovery.component';
 import { GradePromotionComponent } from './admin/grade-promotion/grade-promotion.component';
+import { SchoolYearManagementComponent } from './admin/school-year-management/school-year-management.component';
 import { AdminGuard } from '../../core/guards/admin.guard';
 import { roleGuard } from '../../core/guards/role.guard';
 
@@ -84,6 +85,7 @@ export const dashboardRoutes: Routes = [
       { path: '', component: AdminDashboardComponent },
       { path: 'profile', component: AdminProfileComponent },
       { path: 'manage-users', component: ManageUsersComponent },
+      { path: 'school-year-management', component: SchoolYearManagementComponent },
       { path: 'settings', component: SystemSettingsComponent },
       { path: 'reports', component: ViewReportsComponent },
       { path: 'backup-recovery', component: BackupRecoveryComponent },

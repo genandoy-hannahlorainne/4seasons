@@ -4,30 +4,54 @@
  * GET /api/admin/school-years/get-current.php
  */
 
-header('Content-Type: application/json');
+// CORS headers
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, X-Requested-With");
+header("Access-Control-Max-Age: 3600");
+header("Content-Type: application/json; charset=UTF-8");
+
+// Handle preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 require_once '../../../config/database.php';
 require_once '../../../middleware/auth.php';
 
-verifyAdminRole();
+$database = new Database();
+$db = $database->getConnection();
+
+// Authenticate user
+$auth = new Auth($database);
+
+// Allow both Admin and Adviser roles
+if (!$auth->hasRole('Admin') && !$auth->hasRole('Adviser')) {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Access denied. Admin or Adviser role required.'
+    ]);
+    exit();
+}
 
 try {
     $currentDate = date('Y-m-d');
     
-    // Get the currently active school year
-    $query = "SELECT id, year_name, start_date, end_date, is_active 
+    // Get the current school year (marked with is_current = 1)
+    $query = "SELECT id, year_name, start_date, end_date, is_active, is_current 
               FROM school_years 
-              WHERE is_active = TRUE 
-              OR (start_date <= ? AND end_date >= ?)
-              ORDER BY is_active DESC, start_date DESC 
+              WHERE is_current = 1 
               LIMIT 1";
     
     $stmt = $db->prepare($query);
-    $stmt->execute([$currentDate, $currentDate]);
+    $stmt->execute();
     $currentSchoolYear = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // If no active school year found, get the most recent one
+    // If no current school year found, get the most recent one
     if (!$currentSchoolYear) {
-        $fallbackQuery = "SELECT id, year_name, start_date, end_date, is_active 
+        $fallbackQuery = "SELECT id, year_name, start_date, end_date, is_active, is_current 
                          FROM school_years 
                          ORDER BY start_date DESC 
                          LIMIT 1";
@@ -58,19 +82,21 @@ try {
             $nextStartDate = date('Y-m-d', strtotime($currentSchoolYear['start_date'] . ' +1 year'));
             $nextEndDate = date('Y-m-d', strtotime($currentSchoolYear['end_date'] . ' +1 year'));
             
-            // Create next school year automatically
-            $createQuery = "INSERT INTO school_years (year_name, start_date, end_date, is_active) 
-                           VALUES (?, ?, ?, FALSE)";
-            $createStmt = $db->prepare($createQuery);
-            $createStmt->execute([$nextYearName, $nextStartDate, $nextEndDate]);
-            
-            $nextSchoolYear = [
-                'id' => $db->lastInsertId(),
-                'year_name' => $nextYearName,
-                'start_date' => $nextStartDate,
-                'end_date' => $nextEndDate,
-                'is_active' => false
-            ];
+            // Create next school year automatically (only if Admin)
+            if ($auth->hasRole('Admin')) {
+                $createQuery = "INSERT INTO school_years (year_name, start_date, end_date, is_active) 
+                               VALUES (?, ?, ?, FALSE)";
+                $createStmt = $db->prepare($createQuery);
+                $createStmt->execute([$nextYearName, $nextStartDate, $nextEndDate]);
+                
+                $nextSchoolYear = [
+                    'id' => $db->lastInsertId(),
+                    'year_name' => $nextYearName,
+                    'start_date' => $nextStartDate,
+                    'end_date' => $nextEndDate,
+                    'is_active' => false
+                ];
+            }
         }
     }
 
@@ -84,7 +110,11 @@ try {
     ]);
 
 } catch (Exception $e) {
+    error_log("Error getting current school year: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => 'Server error: ' . $e->getMessage()]);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Server error: ' . $e->getMessage()
+    ]);
 }
 ?>

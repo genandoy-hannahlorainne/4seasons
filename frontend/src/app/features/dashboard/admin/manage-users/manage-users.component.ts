@@ -396,6 +396,42 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.newUser.full_name = '';
   }
 
+  onGradeLevelChange(): void {
+    // Clear section when grade level changes
+    this.newUser.section = '';
+  }
+
+  getAvailableSections(): string[] {
+    const gradeLevel = parseInt(this.newUser.grade_level);
+    
+    // For grades 7-10, show sections 1-3
+    if (gradeLevel >= 7 && gradeLevel <= 10) {
+      return ['1', '2', '3'];
+    }
+    
+    // For grades 11-12, show strand-based sections
+    if (gradeLevel === 11 || gradeLevel === 12) {
+      return [
+        'STEM 1',
+        'STEM 2',
+        'ABM 1',
+        'ABM 2',
+        'HUMSS 1',
+        'HUMSS 2',
+        'TVL-HE 1',
+        'TVL-HE 2',
+        'TVL-EIM 1',
+        'TVL-EIM 2'
+      ];
+    }
+    
+    return [];
+  }
+
+  parseInt(value: string): number {
+    return parseInt(value);
+  }
+
   isCreateFormValid(): boolean {
     // Basic validation
     if (!this.newUser.role || !this.newUser.email) {
