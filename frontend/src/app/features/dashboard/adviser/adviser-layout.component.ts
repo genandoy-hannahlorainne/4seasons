@@ -13,6 +13,7 @@ import { AuthService } from '../../../core/services/auth.service';
       <nav class="top-nav">
         <div class="nav-links">
           <a routerLink="/dashboard/adviser" class="nav-link" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
+          <a routerLink="/dashboard/adviser/health-monitoring" class="nav-link" routerLinkActive="active">Health Monitor</a>
           <a routerLink="/dashboard/adviser/alerts" class="nav-link" routerLinkActive="active">Alerts</a>
           <a routerLink="/dashboard/adviser/class-management" class="nav-link" routerLinkActive="active">My Class</a>
         </div>
