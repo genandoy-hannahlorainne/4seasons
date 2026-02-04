@@ -49,8 +49,10 @@ try {
         exit;
     }
 
-    // Get adviser_id from user_id
-    $adviserQuery = "SELECT adviser_id FROM advisers WHERE user_id = :user_id AND is_active = 1";
+    // Get adviser's grade level and section
+    $adviserQuery = "SELECT a.adviser_id, a.grade_level, a.section 
+                     FROM advisers a
+                     WHERE a.user_id = :user_id AND a.is_active = 1";
     $adviserStmt = $db->prepare($adviserQuery);
     $adviserStmt->bindParam(':user_id', $user_id);
     $adviserStmt->execute();
@@ -66,52 +68,46 @@ try {
     
     $adviser = $adviserStmt->fetch(PDO::FETCH_ASSOC);
     $adviser_id = $adviser['adviser_id'];
+    $grade_level = $adviser['grade_level'];
+    $section = $adviser['section'];
 
-    // Get adviser's current section (sections.adviser_id references users.user_id)
-    $sectionQuery = "SELECT sec.id, sec.section_name, gl.level_name, gl.level_number
-                    FROM sections sec
-                    LEFT JOIN grade_levels gl ON sec.grade_level_id = gl.id
-                    WHERE sec.adviser_id = ? AND sec.school_year_id = ?";
-    
-    $sectionStmt = $db->prepare($sectionQuery);
-    $sectionStmt->execute([$user_id, $school_year_id]);
-    
-    if ($sectionStmt->rowCount() === 0) {
-        http_response_code(404);
-        echo json_encode([
-            'success' => false,
-            'message' => 'No section assigned for this school year'
-        ]);
-        exit;
-    }
-
-    $section = $sectionStmt->fetch(PDO::FETCH_ASSOC);
-
-    // Get students in this section
+    // Get students in this adviser's grade level and section
     $studentQuery = "SELECT 
                     s.student_id,
                     s.first_name,
                     s.last_name,
                     s.student_number,
+                    s.grade_level,
+                    s.section,
                     COUNT(mv.visit_id) as total_medical_visits,
                     MAX(mv.visit_datetime) as last_visit_date,
-                    s.enrollment_status
+                    s.is_active
                     FROM students s
                     LEFT JOIN medical_visits mv ON s.student_id = mv.student_id
-                    WHERE s.current_section_id = ? 
-                    AND s.current_school_year_id = ?
-                    AND s.enrollment_status = 'active'
-                    GROUP BY s.student_id, s.first_name, s.last_name, s.student_number, s.enrollment_status
+                    WHERE s.grade_level = :grade_level
+                    AND s.section = :section
+                    AND s.is_active = 1
+                    GROUP BY s.student_id, s.first_name, s.last_name, s.student_number, s.grade_level, s.section, s.is_active
                     ORDER BY s.last_name, s.first_name";
 
     $studentStmt = $db->prepare($studentQuery);
-    $studentStmt->execute([$section['id'], $school_year_id]);
+    $studentStmt->bindParam(':grade_level', $grade_level);
+    $studentStmt->bindParam(':section', $section);
+    $studentStmt->execute();
     $students = $studentStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Build section info
+    $sectionInfo = [
+        'id' => null,
+        'section_name' => $section,
+        'level_name' => "Grade $grade_level",
+        'level_number' => intval($grade_level)
+    ];
 
     http_response_code(200);
     echo json_encode([
         'success' => true,
-        'section' => $section,
+        'section' => $sectionInfo,
         'students' => $students,
         'total_students' => count($students)
     ]);
