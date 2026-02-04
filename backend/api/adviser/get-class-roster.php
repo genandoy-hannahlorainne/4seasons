@@ -71,7 +71,7 @@ try {
     $grade_level = $adviser['grade_level'];
     $section = $adviser['section'];
 
-    // Get students in this adviser's grade level and section
+    // Get students in this adviser's grade level and section for the selected school year
     $studentQuery = "SELECT 
                     s.student_id,
                     s.first_name,
@@ -79,6 +79,7 @@ try {
                     s.student_number,
                     s.grade_level,
                     s.section,
+                    s.current_school_year_id,
                     COUNT(mv.visit_id) as total_medical_visits,
                     MAX(mv.visit_datetime) as last_visit_date,
                     s.is_active
@@ -86,13 +87,15 @@ try {
                     LEFT JOIN medical_visits mv ON s.student_id = mv.student_id
                     WHERE s.grade_level = :grade_level
                     AND s.section = :section
+                    AND s.current_school_year_id = :school_year_id
                     AND s.is_active = 1
-                    GROUP BY s.student_id, s.first_name, s.last_name, s.student_number, s.grade_level, s.section, s.is_active
+                    GROUP BY s.student_id, s.first_name, s.last_name, s.student_number, s.grade_level, s.section, s.current_school_year_id, s.is_active
                     ORDER BY s.last_name, s.first_name";
 
     $studentStmt = $db->prepare($studentQuery);
     $studentStmt->bindParam(':grade_level', $grade_level);
     $studentStmt->bindParam(':section', $section);
+    $studentStmt->bindParam(':school_year_id', $school_year_id);
     $studentStmt->execute();
     $students = $studentStmt->fetchAll(PDO::FETCH_ASSOC);
 
