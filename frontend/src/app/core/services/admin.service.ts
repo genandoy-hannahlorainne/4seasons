@@ -232,4 +232,11 @@ export class AdminService {
       body: { notification_id: notificationId }
     });
   }
+
+  // Send SMS to parent
+  sendParentSMS(visitId: number): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/send-parent-sms.php`, {
+      visit_id: visitId
+    });
+  }
 }
