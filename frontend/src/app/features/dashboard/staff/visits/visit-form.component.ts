@@ -87,7 +87,7 @@ import { QrScannerComponent } from './qr-scanner.component';
             </div>
             <div class="form-group">
               <label>Visit Type *</label>
-              <select [(ngModel)]="visit.visitType" name="visitType" class="form-control" required>
+              <select [(ngModel)]="visit.visitType" name="visitType" class="form-control" required (ngModelChange)="onVisitTypeChange()">
                 <option value="">Select type</option>
                 <option value="routine">Routine</option>
                 <option value="emergency">Emergency</option>
@@ -155,14 +155,18 @@ import { QrScannerComponent } from './qr-scanner.component';
           </div>
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
-              <input type="checkbox" [(ngModel)]="visit.notifyParent" name="notifyParent">
+              <input type="checkbox" [(ngModel)]="visit.notifyParent" name="notifyParent" [disabled]="visit.visitType === 'emergency'">
               <span>Notify Parent/Guardian via SMS</span>
+              <span class="auto-checked-badge" *ngIf="visit.visitType === 'emergency'">Auto-enabled for Emergency</span>
             </label>
             <div class="parent-phone" *ngIf="visit.notifyParent && selectedStudent?.parentPhone">
               <small>SMS will be sent to: {{ selectedStudent.parentPhone }}</small>
             </div>
             <div class="parent-phone warning" *ngIf="visit.notifyParent && !selectedStudent?.parentPhone">
-              <small>No parent phone number on file for this student</small>
+              <small>⚠️ No parent phone number on file for this student</small>
+            </div>
+            <div class="emergency-notice" *ngIf="visit.visitType === 'emergency'">
+              <small>🚨 Emergency visits automatically notify admin and parents</small>
             </div>
           </div>
         </div>
@@ -341,8 +345,22 @@ import { QrScannerComponent } from './qr-scanner.component';
         gap: 0.5rem;
         cursor: pointer;
 
-        input[type="checkbox"] { width: 18px; height: 18px; }
+        input[type="checkbox"] { 
+          width: 18px; 
+          height: 18px;
+          &:disabled { cursor: not-allowed; opacity: 0.6; }
+        }
         span { color: #2c3e50; }
+        
+        .auto-checked-badge {
+          background: #dc3545;
+          color: white;
+          padding: 0.2rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          margin-left: 0.5rem;
+        }
       }
 
       .parent-phone {
@@ -355,6 +373,18 @@ import { QrScannerComponent } from './qr-scanner.component';
         &.warning {
           background: #fff3cd;
           small { color: #856404; }
+        }
+      }
+      
+      .emergency-notice {
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        small { 
+          color: #721c24; 
+          font-weight: 500;
         }
       }
     }
@@ -425,6 +455,13 @@ export class VisitFormComponent implements OnInit {
     status: 'pending',
     notifyParent: false
   };
+
+  // Watch for visit type changes to auto-check notify parent for emergency
+  onVisitTypeChange(): void {
+    if (this.visit.visitType === 'emergency') {
+      this.visit.notifyParent = true;
+    }
+  }
 
   constructor(
     private route: ActivatedRoute,
