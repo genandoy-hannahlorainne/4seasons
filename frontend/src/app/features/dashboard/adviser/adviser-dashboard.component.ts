@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdviserService, AdvisedStudent } from '../../../core/services/adviser.service';
 import { StudentProfileModalComponent } from './student-profile-modal/student-profile-modal.component';
@@ -7,7 +8,7 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
 @Component({
   selector: 'app-adviser-dashboard',
   standalone: true,
-  imports: [CommonModule, StudentProfileModalComponent],
+  imports: [CommonModule, RouterModule, StudentProfileModalComponent],
   template: `
     <div class="adviser-dashboard">
       <!-- Loading State -->
@@ -86,6 +87,23 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
                 <div class="activity-time">{{ activity.time }}</div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Health Monitoring Quick Link -->
+        <div class="card health-monitor-card">
+          <div class="monitor-content">
+            <div class="monitor-icon">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div class="monitor-info">
+              <h3>Class Health Monitoring</h3>
+              <p>View health trends and clinic visit patterns for your class</p>
+            </div>
+            <button class="btn-monitor" routerLink="/dashboard/adviser/health-monitoring">
+              View Heat Map
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -301,6 +319,65 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
           flex: 1;
           .activity-text { color: #2c3e50; font-size: 0.95rem; }
           .activity-time { color: #95a5a6; font-size: 0.8rem; margin-top: 0.25rem; }
+        }
+      }
+    }
+
+    .health-monitor-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      
+      .monitor-content {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+      }
+      
+      .monitor-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        flex-shrink: 0;
+      }
+      
+      .monitor-info {
+        flex: 1;
+        
+        h3 {
+          font-size: 1.2rem;
+          font-weight: 700;
+          margin: 0 0 0.5rem 0;
+        }
+        
+        p {
+          margin: 0;
+          opacity: 0.9;
+          font-size: 0.9rem;
+        }
+      }
+      
+      .btn-monitor {
+        padding: 0.75rem 1.5rem;
+        background: white;
+        color: #667eea;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        flex-shrink: 0;
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
       }
     }

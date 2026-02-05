@@ -138,4 +138,9 @@ export class AdviserService {
     
     return this.http.get<any>(url);
   }
+
+  // Health Monitoring Heat Map
+  getHealthHeatmap(days: number = 7): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/adviser/get-health-heatmap.php?days=${days}`);
+  }
 }

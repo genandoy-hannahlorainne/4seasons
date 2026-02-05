@@ -9,6 +9,7 @@ import { AdviserAlertsComponent } from './adviser/alerts/adviser-alerts.componen
 import { AdviserHealthStatusComponent } from './adviser/health-status/adviser-health-status.component';
 import { AdviserProfileComponent } from './adviser/profile/adviser-profile.component';
 import { ClassManagementComponent } from './adviser/class-management/class-management.component';
+import { HealthMonitoringComponent } from './adviser/health-monitoring/health-monitoring.component';
 import { StaffLayoutComponent } from './staff/staff-layout.component';
 import { ClinicDashboardComponent } from './staff/clinic-dashboard.component';
 import { StudentListComponent } from './staff/students/student-list.component';
@@ -55,6 +56,7 @@ export const dashboardRoutes: Routes = [
       { path: '', component: AdviserDashboardComponent },
       { path: 'alerts', component: AdviserAlertsComponent },
       { path: 'health-status', redirectTo: '', pathMatch: 'full' },
+      { path: 'health-monitoring', component: HealthMonitoringComponent },
       { path: 'profile', component: AdviserProfileComponent },
       { path: 'class-management', component: ClassManagementComponent }
     ]
