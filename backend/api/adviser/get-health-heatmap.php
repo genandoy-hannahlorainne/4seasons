@@ -30,7 +30,7 @@ $auth = new Auth($database);
 if (!$auth->hasRole('Adviser')) {
     http_response_code(403);
     echo json_encode([
-        'success' => false,what 
+        'success' => false,
         'message' => 'Access denied. Adviser role required.'
     ]);
     exit();
