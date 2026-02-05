@@ -210,6 +210,79 @@ try {
         $immunizations = [];
     }
     
+    // Get medical history
+    $medicalHistoryQuery = "SELECT 
+                              allergy_medicine,
+                              allergy_pollens,
+                              allergy_food,
+                              allergy_stinging_insects,
+                              condition_error_refraction,
+                              condition_heart_problem,
+                              condition_bleeding_disorder,
+                              condition_hernia,
+                              condition_asthma,
+                              condition_anemia,
+                              condition_anxiety_depression,
+                              condition_seizure,
+                              surgery_hospitalization,
+                              family_tuberculosis,
+                              family_cancer,
+                              family_stroke_cardiac,
+                              family_diabetes,
+                              family_hypertension,
+                              family_depression,
+                              family_thyroid,
+                              family_phobia,
+                              smoke_exposure
+                           FROM medical_history
+                           WHERE student_id = :student_id";
+    
+    $medicalHistoryStmt = $db->prepare($medicalHistoryQuery);
+    $medicalHistoryStmt->bindParam(":student_id", $student_id);
+    
+    $medicalHistory = null;
+    try {
+        $medicalHistoryStmt->execute();
+        $historyData = $medicalHistoryStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($historyData) {
+            // Convert database format to frontend format
+            $medicalHistory = [
+                'allergies' => [
+                    'medicine' => (bool)$historyData['allergy_medicine'],
+                    'pollens' => (bool)$historyData['allergy_pollens'],
+                    'food' => (bool)$historyData['allergy_food'],
+                    'stinging_insects' => (bool)$historyData['allergy_stinging_insects']
+                ],
+                'medical_conditions' => [
+                    'error_refraction' => (bool)$historyData['condition_error_refraction'],
+                    'heart_problem' => (bool)$historyData['condition_heart_problem'],
+                    'bleeding_disorder' => (bool)$historyData['condition_bleeding_disorder'],
+                    'hernia' => (bool)$historyData['condition_hernia'],
+                    'asthma' => (bool)$historyData['condition_asthma'],
+                    'anemia' => (bool)$historyData['condition_anemia'],
+                    'anxiety_depression' => (bool)$historyData['condition_anxiety_depression'],
+                    'seizure' => (bool)$historyData['condition_seizure']
+                ],
+                'surgery_hospitalization' => (bool)$historyData['surgery_hospitalization'],
+                'family_history' => [
+                    'tuberculosis' => (bool)$historyData['family_tuberculosis'],
+                    'cancer' => (bool)$historyData['family_cancer'],
+                    'stroke_cardiac' => (bool)$historyData['family_stroke_cardiac'],
+                    'diabetes' => (bool)$historyData['family_diabetes'],
+                    'hypertension' => (bool)$historyData['family_hypertension'],
+                    'depression' => (bool)$historyData['family_depression'],
+                    'thyroid' => (bool)$historyData['family_thyroid'],
+                    'phobia' => (bool)$historyData['family_phobia']
+                ],
+                'smoke_exposure' => (bool)$historyData['smoke_exposure']
+            ];
+        }
+    } catch (PDOException $e) {
+        error_log("Medical history table error: " . $e->getMessage());
+        $medicalHistory = null;
+    }
+    
     // Get last visit
     $lastVisitQuery = "SELECT 
                           visit_datetime,
@@ -294,6 +367,7 @@ try {
                     'notes' => $imm['notes']
                 ];
             }, $immunizations),
+            'medical_history' => $medicalHistory,
             'last_visit' => $lastVisit ? [
                 'visit_datetime' => $lastVisit['visit_datetime'],
                 'visit_type' => $lastVisit['visit_type'],
