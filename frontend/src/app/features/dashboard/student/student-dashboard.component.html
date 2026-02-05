@@ -3,6 +3,21 @@
     <div *ngIf="loading" class="loading-message">Loading student data...</div>
     <div *ngIf="error" class="error-message">{{ error }}</div>
 
+    <!-- Incomplete Form Notification -->
+    <div *ngIf="showIncompleteFormNotification && !loading" class="notification-banner">
+      <div class="notification-content">
+        <div class="notification-icon">⚠️</div>
+        <div class="notification-text">
+          <div class="notification-title">Complete Your Medical Information</div>
+          <div class="notification-message">{{ incompleteFormMessage }}</div>
+        </div>
+        <div class="notification-actions">
+          <button class="btn-complete" (click)="goToMedicalForm()">Complete Form</button>
+          <button class="btn-dismiss" (click)="dismissNotification()">×</button>
+        </div>
+      </div>
+    </div>
+
     <div class="dashboard-wrap">
       <div class="overview-card">
         <div class="overview-title">Dashboard Overview</div>

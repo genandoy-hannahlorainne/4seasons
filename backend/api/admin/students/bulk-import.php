@@ -97,6 +97,7 @@ try {
             $firstName = trim($row[$headerMap['first_name']] ?? '');
             $lastName = trim($row[$headerMap['last_name']] ?? '');
             $email = trim($row[$headerMap['email']] ?? '');
+            $phone = trim($row[$headerMap['phone']] ?? '');
             $gradeLevel = trim($row[$headerMap['grade_level']] ?? '');
             $section = trim($row[$headerMap['section']] ?? '');
             $gender = trim($row[$headerMap['gender']] ?? 'Other');
@@ -140,14 +141,15 @@ try {
             $passwordHash = password_hash($tempPassword, PASSWORD_BCRYPT);
             
             // Create user account
-            $userQuery = "INSERT INTO users (role_id, username, password_hash, email, full_name, is_active, password_must_change, temp_password, created_by_admin_id) 
-                         VALUES (:role_id, :username, :password_hash, :email, :full_name, 1, 1, :temp_password, :admin_id)";
+            $userQuery = "INSERT INTO users (role_id, username, password_hash, email, phone, full_name, is_active, password_must_change, temp_password, created_by_admin_id) 
+                         VALUES (:role_id, :username, :password_hash, :email, :phone, :full_name, 1, 1, :temp_password, :admin_id)";
             $userStmt = $db->prepare($userQuery);
             $fullName = $firstName . ' ' . $lastName;
             $userStmt->bindParam(':role_id', $studentRoleId);
             $userStmt->bindParam(':username', $username);
             $userStmt->bindParam(':password_hash', $passwordHash);
             $userStmt->bindParam(':email', $email);
+            $userStmt->bindParam(':phone', $phone);
             $userStmt->bindParam(':full_name', $fullName);
             $userStmt->bindParam(':temp_password', $tempPassword);
             $userStmt->bindParam(':admin_id', $adminId);
@@ -175,6 +177,51 @@ try {
             }
             
             $studentStmt->execute();
+            
+            $studentId = $db->lastInsertId();
+            
+            // Link student to section if grade_level and section are provided
+            if (!empty($gradeLevel) && !empty($section)) {
+                // Get current school year
+                $currentSchoolYearQuery = "SELECT id FROM school_years WHERE is_current = 1 LIMIT 1";
+                $currentSchoolYearStmt = $db->query($currentSchoolYearQuery);
+                $currentSchoolYear = $currentSchoolYearStmt->fetch(PDO::FETCH_ASSOC);
+                $currentSchoolYearId = $currentSchoolYear ? $currentSchoolYear['id'] : null;
+                
+                if ($currentSchoolYearId) {
+                    // Find matching section
+                    $findSectionQuery = "SELECT s.id, s.section_name, gl.level 
+                                        FROM sections s
+                                        LEFT JOIN grade_levels gl ON s.grade_level_id = gl.grade_level_id
+                                        WHERE gl.level = :grade_level 
+                                        AND s.section_name = :section_name
+                                        AND s.school_year_id = :school_year_id
+                                        AND s.is_active = 1
+                                        LIMIT 1";
+                    $findSectionStmt = $db->prepare($findSectionQuery);
+                    $findSectionStmt->bindParam(':grade_level', $gradeLevel);
+                    $findSectionStmt->bindParam(':section_name', $section);
+                    $findSectionStmt->bindParam(':school_year_id', $currentSchoolYearId);
+                    $findSectionStmt->execute();
+                    $matchingSection = $findSectionStmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($matchingSection) {
+                        // Update student's current_section_id
+                        $updateSectionLinkQuery = "UPDATE students SET current_section_id = :section_id, current_school_year_id = :school_year_id WHERE student_id = :student_id";
+                        $updateSectionLinkStmt = $db->prepare($updateSectionLinkQuery);
+                        $updateSectionLinkStmt->bindParam(':section_id', $matchingSection['id']);
+                        $updateSectionLinkStmt->bindParam(':school_year_id', $currentSchoolYearId);
+                        $updateSectionLinkStmt->bindParam(':student_id', $studentId);
+                        $updateSectionLinkStmt->execute();
+                        
+                        // Update section enrollment count
+                        $updateEnrollmentQuery = "UPDATE sections SET current_enrollment = current_enrollment + 1 WHERE id = :section_id";
+                        $updateEnrollmentStmt = $db->prepare($updateEnrollmentQuery);
+                        $updateEnrollmentStmt->bindParam(':section_id', $matchingSection['id']);
+                        $updateEnrollmentStmt->execute();
+                    }
+                }
+            }
             
             // Send welcome email with credentials
             try {
