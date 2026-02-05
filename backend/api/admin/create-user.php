@@ -134,6 +134,44 @@ try {
         
         error_log("✅ Student created with current_school_year_id: " . ($currentSchoolYearId ?? 'NULL'));
         
+        // Link student to section if grade_level and section are provided
+        if (!empty($data->grade_level) && !empty($data->section) && $currentSchoolYearId) {
+            // Find matching section
+            $findSectionQuery = "SELECT s.id, s.section_name, gl.level 
+                                FROM sections s
+                                LEFT JOIN grade_levels gl ON s.grade_level_id = gl.grade_level_id
+                                WHERE gl.level = :grade_level 
+                                AND s.section_name = :section_name
+                                AND s.school_year_id = :school_year_id
+                                AND s.is_active = 1
+                                LIMIT 1";
+            $findSectionStmt = $db->prepare($findSectionQuery);
+            $findSectionStmt->bindParam(':grade_level', $data->grade_level);
+            $findSectionStmt->bindParam(':section_name', $data->section);
+            $findSectionStmt->bindParam(':school_year_id', $currentSchoolYearId);
+            $findSectionStmt->execute();
+            $matchingSection = $findSectionStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($matchingSection) {
+                // Update student's current_section_id
+                $updateSectionLinkQuery = "UPDATE students SET current_section_id = :section_id WHERE student_id = :student_id";
+                $updateSectionLinkStmt = $db->prepare($updateSectionLinkQuery);
+                $updateSectionLinkStmt->bindParam(':section_id', $matchingSection['id']);
+                $updateSectionLinkStmt->bindParam(':student_id', $roleSpecificId);
+                $updateSectionLinkStmt->execute();
+                
+                // Update section enrollment count
+                $updateEnrollmentQuery = "UPDATE sections SET current_enrollment = current_enrollment + 1 WHERE id = :section_id";
+                $updateEnrollmentStmt = $db->prepare($updateEnrollmentQuery);
+                $updateEnrollmentStmt->bindParam(':section_id', $matchingSection['id']);
+                $updateEnrollmentStmt->execute();
+                
+                error_log("✅ Student linked to section ID: " . $matchingSection['id'] . " (" . $matchingSection['section_name'] . ")");
+            } else {
+                error_log("⚠️ No matching section found for Grade {$data->grade_level} - {$data->section}");
+            }
+        }
+        
         // Generate QR code for student
         $qrToken = bin2hex(random_bytes(16)); // Generate unique token
         
