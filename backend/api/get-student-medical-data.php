@@ -315,7 +315,7 @@ try {
                 'weight_kg' => $student['weight_kg'] ? (float)$student['weight_kg'] : null,
                 'bmi' => $student['bmi'] ? (float)$student['bmi'] : null,
                 'bmi_category' => $student['bmi_category'],
-                'adviser_name' => $adviser ? $adviser['full_name'] : 'Not assigned',
+                'adviser_name' => $adviser ? preg_replace('/\s+/', ' ', trim($adviser['full_name'])) : 'Not assigned',
                 'adviser_contact' => $adviser ? ($adviser['phone'] ?: $adviser['email']) : 'N/A'
             ],
             'recent_visits_count' => (int)$recentVisitsCount,
