@@ -97,6 +97,7 @@ try {
             $firstName = trim($row[$headerMap['first_name']] ?? '');
             $lastName = trim($row[$headerMap['last_name']] ?? '');
             $email = trim($row[$headerMap['email']] ?? '');
+            $phone = trim($row[$headerMap['phone']] ?? '');
             $gradeLevel = trim($row[$headerMap['grade_level']] ?? '');
             $section = trim($row[$headerMap['section']] ?? '');
             $gender = trim($row[$headerMap['gender']] ?? 'Other');
@@ -140,14 +141,15 @@ try {
             $passwordHash = password_hash($tempPassword, PASSWORD_BCRYPT);
             
             // Create user account
-            $userQuery = "INSERT INTO users (role_id, username, password_hash, email, full_name, is_active, password_must_change, temp_password, created_by_admin_id) 
-                         VALUES (:role_id, :username, :password_hash, :email, :full_name, 1, 1, :temp_password, :admin_id)";
+            $userQuery = "INSERT INTO users (role_id, username, password_hash, email, phone, full_name, is_active, password_must_change, temp_password, created_by_admin_id) 
+                         VALUES (:role_id, :username, :password_hash, :email, :phone, :full_name, 1, 1, :temp_password, :admin_id)";
             $userStmt = $db->prepare($userQuery);
             $fullName = $firstName . ' ' . $lastName;
             $userStmt->bindParam(':role_id', $studentRoleId);
             $userStmt->bindParam(':username', $username);
             $userStmt->bindParam(':password_hash', $passwordHash);
             $userStmt->bindParam(':email', $email);
+            $userStmt->bindParam(':phone', $phone);
             $userStmt->bindParam(':full_name', $fullName);
             $userStmt->bindParam(':temp_password', $tempPassword);
             $userStmt->bindParam(':admin_id', $adminId);
