@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 05, 2026 at 09:26 AM
+-- Generation Time: Feb 05, 2026 at 12:34 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -1305,7 +1305,80 @@ INSERT INTO `activity_logs` (`log_id`, `user_id`, `action`, `details`, `ip_addre
 (1682, 32, 'Created User Account', 'Created student account: 136663100330 (Wallance  Delgado)', '::1', '2026-02-05 08:22:46'),
 (1683, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 08:22:50'),
 (1684, 61, 'Login', NULL, '::1', '2026-02-05 08:23:35'),
-(1685, 61, 'Password Changed', 'User changed password (forced change)', '::1', '2026-02-05 08:23:46');
+(1685, 61, 'Password Changed', 'User changed password (forced change)', '::1', '2026-02-05 08:23:46'),
+(1686, 60, 'Login', NULL, '::1', '2026-02-05 08:29:26'),
+(1687, 61, 'Login', NULL, '::1', '2026-02-05 08:30:19'),
+(1688, 60, 'Login', NULL, '::1', '2026-02-05 08:31:28'),
+(1689, 61, 'Login', NULL, '::1', '2026-02-05 09:20:05'),
+(1690, 61, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-05 09:54:49'),
+(1691, 32, 'Login', NULL, '::1', '2026-02-05 10:01:52'),
+(1692, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:01:53'),
+(1693, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:01:53'),
+(1694, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:01:56'),
+(1695, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:01:56'),
+(1696, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:02:27'),
+(1697, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:02:57'),
+(1698, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:03:27'),
+(1699, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:03:57'),
+(1700, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:04:27'),
+(1701, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:04:57'),
+(1702, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:06:19'),
+(1703, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:07:21'),
+(1704, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:08:18'),
+(1705, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:09:18'),
+(1706, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:10:18'),
+(1707, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:11:18'),
+(1708, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:12:19'),
+(1709, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:12:33'),
+(1710, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:12:36'),
+(1711, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:12:36'),
+(1712, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:13:07'),
+(1713, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:13:36'),
+(1714, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:14:06'),
+(1715, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:14:36'),
+(1716, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:15:06'),
+(1717, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:15:37'),
+(1718, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:16:18'),
+(1719, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:17:18'),
+(1720, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:17:35'),
+(1721, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:17:35'),
+(1722, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:17:40'),
+(1723, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 10:17:40'),
+(1724, 61, 'Login', NULL, '::1', '2026-02-05 10:18:25'),
+(1725, 61, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-05 10:33:19'),
+(1726, 61, 'Update Medical History', 'Updated medical history for student ID: 21', '::1', '2026-02-05 11:06:00'),
+(1727, 61, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-05 11:06:13'),
+(1728, 61, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-05 11:07:34'),
+(1729, 61, 'Update Medical History', 'Updated medical history for student ID: 21', '::1', '2026-02-05 11:07:59'),
+(1730, 61, 'Update Medical History', 'Updated medical history for student ID: 21', '::1', '2026-02-05 11:10:04'),
+(1731, 61, 'Update Medical History', 'Updated medical history for student ID: 21', '::1', '2026-02-05 11:21:05'),
+(1732, 32, 'Login', NULL, '::1', '2026-02-05 11:25:02'),
+(1733, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 11:25:02'),
+(1734, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 11:25:02'),
+(1735, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 11:25:06'),
+(1736, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 11:25:06'),
+(1737, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 11:25:36'),
+(1738, 32, 'Created User Account', 'Created student account: 136883100330 (Hannah   Lorainne)', '::1', '2026-02-05 11:26:05'),
+(1739, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-05 11:26:06'),
+(1740, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-05 11:26:12'),
+(1741, 62, 'Login', NULL, '::1', '2026-02-05 11:26:34'),
+(1742, 62, 'Password Changed', 'User changed password (forced change)', '::1', '2026-02-05 11:26:41'),
+(1743, 62, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-05 11:26:57'),
+(1744, 62, 'Update Allergies', 'Updated allergies list - 1 allergies saved', '::1', '2026-02-05 11:27:08'),
+(1745, 62, 'Update Medical History', 'Updated medical history for student ID: 22', '::1', '2026-02-05 11:27:40'),
+(1746, 62, 'Update Allergies', 'Updated allergies list - 1 allergies saved', '::1', '2026-02-05 11:27:51'),
+(1747, 62, 'Update Medical History', 'Updated medical history for student ID: 22', '::1', '2026-02-05 11:28:32'),
+(1748, 62, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-05 11:29:14'),
+(1749, 32, 'Login', NULL, '::1', '2026-02-05 11:30:07'),
+(1750, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-05 11:30:07'),
+(1751, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-05 11:30:07'),
+(1752, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-05 11:30:09'),
+(1753, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-05 11:30:09'),
+(1754, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-05 11:30:40'),
+(1755, 32, 'Created User Account', 'Created clinic_staff account: STAFF-01 (Lulubelle Gabasa)', '::1', '2026-02-05 11:30:45'),
+(1756, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-05 11:30:50'),
+(1757, 63, 'Login', NULL, '::1', '2026-02-05 11:31:29'),
+(1758, 63, 'Password Changed', 'User changed password (forced change)', '::1', '2026-02-05 11:31:37');
 
 -- --------------------------------------------------------
 
@@ -1368,6 +1441,13 @@ CREATE TABLE `allergies` (
   `recorded_at` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `allergies`
+--
+
+INSERT INTO `allergies` (`allergy_id`, `student_id`, `allergy_text`, `severity`, `recorded_at`) VALUES
+(15, 22, 'Seafood ', 'Moderate', '2026-02-05');
+
 -- --------------------------------------------------------
 
 --
@@ -1384,6 +1464,13 @@ CREATE TABLE `clinic_staff` (
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `clinic_staff`
+--
+
+INSERT INTO `clinic_staff` (`clinic_staff_id`, `user_id`, `staff_code`, `position`, `created_at`, `is_active`, `deleted_at`) VALUES
+(3, 63, 'STAFF-01', 'School Clinic Staff', '2026-02-05 11:30:45', 1, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -1396,6 +1483,13 @@ CREATE TABLE `diagnoses` (
   `icd_code` varchar(20) DEFAULT NULL,
   `diagnosis_text` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `diagnoses`
+--
+
+INSERT INTO `diagnoses` (`diagnosis_id`, `visit_id`, `icd_code`, `diagnosis_text`) VALUES
+(16, 17, NULL, 'Fever');
 
 -- --------------------------------------------------------
 
@@ -1420,7 +1514,10 @@ CREATE TABLE `email_logs` (
 
 INSERT INTO `email_logs` (`log_id`, `recipient`, `subject`, `priority`, `status`, `error_message`, `created_at`, `sent_at`) VALUES
 (29, 'h.igot@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-05 08:20:38', '2026-02-05 08:20:42'),
-(30, 'wallance@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-05 08:22:46', '2026-02-05 08:22:50');
+(30, 'wallance@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-05 08:22:46', '2026-02-05 08:22:50'),
+(31, 'hannah@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-05 11:26:06', '2026-02-05 11:26:12'),
+(32, 'lulubelle@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-05 11:30:45', '2026-02-05 11:30:50'),
+(33, 'h.igot@gmail.com', 'Student Medical Visit Notification - Hannah Lorainne', 'normal', 'sent', NULL, '2026-02-05 11:32:26', '2026-02-05 11:32:30');
 
 -- --------------------------------------------------------
 
@@ -1485,6 +1582,14 @@ CREATE TABLE `medical_history` (
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `medical_history`
+--
+
+INSERT INTO `medical_history` (`history_id`, `student_id`, `recorded_at`, `allergy_medicine`, `allergy_pollens`, `allergy_food`, `allergy_stinging_insects`, `condition_error_refraction`, `condition_heart_problem`, `condition_bleeding_disorder`, `condition_hernia`, `condition_asthma`, `condition_anemia`, `condition_anxiety_depression`, `condition_seizure`, `surgery_hospitalization`, `surgery_details`, `family_tuberculosis`, `family_cancer`, `family_stroke_cardiac`, `family_diabetes`, `family_hypertension`, `family_depression`, `family_thyroid`, `family_phobia`, `smoke_exposure`, `notes`, `updated_at`) VALUES
+(3, 21, '2026-02-05 11:06:00', 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, NULL, 0, 0, 0, 1, 0, 0, 0, 0, 1, NULL, '2026-02-05 11:21:05'),
+(4, 22, '2026-02-05 11:27:40', 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, NULL, 0, 0, 0, 1, 0, 0, 0, 0, 1, NULL, '2026-02-05 11:28:32');
+
 -- --------------------------------------------------------
 
 --
@@ -1506,6 +1611,13 @@ CREATE TABLE `medical_visits` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `medical_visits`
+--
+
+INSERT INTO `medical_visits` (`visit_id`, `student_id`, `clinic_staff_id`, `visit_datetime`, `visit_type`, `chief_complaint`, `notes`, `status`, `notify_parent`, `parent_notified_at`, `notification_method`, `created_at`) VALUES
+(17, 22, 3, '2026-02-05 11:31:00', 'Routine', 'Fever', 'Diagnosis: Fever', 'Closed', 0, NULL, 'none', '2026-02-05 11:32:26');
+
 -- --------------------------------------------------------
 
 --
@@ -1526,6 +1638,14 @@ CREATE TABLE `notifications` (
   `sent_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`notification_id`, `parent_id`, `user_id`, `student_id`, `visit_id`, `channel`, `message`, `status`, `priority`, `provider_id`, `sent_at`, `created_at`) VALUES
+(11, NULL, 60, 22, 17, 'System', 'Student Hannah Lorainne (136883100330) visited the clinic for routine care. Complaint: Fever', 'Pending', 'normal', NULL, NULL, '2026-02-05 11:32:26'),
+(12, NULL, NULL, 22, 17, 'SMS', 'Good day! This is from Four Seasons School Clinic. Your child Hannah Lorainne visited the clinic today. Reason: Fever. Please contact the clinic for more details.', 'Pending', 'normal', NULL, NULL, '2026-02-05 11:32:30');
 
 -- --------------------------------------------------------
 
@@ -1611,7 +1731,8 @@ CREATE TABLE `qr_codes` (
 --
 
 INSERT INTO `qr_codes` (`qr_id`, `student_id`, `qr_token`, `qr_generated_at`, `qr_expires_at`) VALUES
-(19, 21, 'c297e50c650e25b72f98fce580f6a117', '2026-02-05 08:22:46', NULL);
+(19, 21, 'c297e50c650e25b72f98fce580f6a117', '2026-02-05 08:22:46', NULL),
+(20, 22, 'db35d844c53429ea3030feab1db862ff', '2026-02-05 11:26:05', NULL);
 
 -- --------------------------------------------------------
 
@@ -1789,6 +1910,7 @@ CREATE TABLE `students` (
   `blood_type` varchar(5) DEFAULT NULL,
   `emergency_contact` varchar(150) DEFAULT NULL,
   `emergency_contact_relation` varchar(50) DEFAULT NULL,
+  `emergency_contact_phone` varchar(20) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `deleted_at` datetime DEFAULT NULL,
@@ -1803,8 +1925,9 @@ CREATE TABLE `students` (
 -- Dumping data for table `students`
 --
 
-INSERT INTO `students` (`student_id`, `current_grade_level_id`, `current_section_id`, `current_adviser_id`, `current_school_year_id`, `enrollment_status`, `promotion_date`, `last_promotion_date`, `student_number`, `user_id`, `first_name`, `middle_name`, `last_name`, `birth_date`, `gender`, `grade_level`, `section`, `address`, `blood_type`, `emergency_contact`, `emergency_contact_relation`, `created_at`, `is_active`, `deleted_at`, `height_cm`, `weight_kg`, `bmi`, `bmi_category`, `last_physical_update`) VALUES
-(21, NULL, NULL, NULL, NULL, 'active', NULL, NULL, '136663100330', 61, 'Wallance', '', 'Delgado', '2005-04-07', 'M', '7', '1', NULL, NULL, NULL, NULL, '2026-02-05 08:22:46', 1, NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `students` (`student_id`, `current_grade_level_id`, `current_section_id`, `current_adviser_id`, `current_school_year_id`, `enrollment_status`, `promotion_date`, `last_promotion_date`, `student_number`, `user_id`, `first_name`, `middle_name`, `last_name`, `birth_date`, `gender`, `grade_level`, `section`, `address`, `blood_type`, `emergency_contact`, `emergency_contact_relation`, `emergency_contact_phone`, `created_at`, `is_active`, `deleted_at`, `height_cm`, `weight_kg`, `bmi`, `bmi_category`, `last_physical_update`) VALUES
+(21, NULL, NULL, NULL, NULL, 'active', NULL, NULL, '136663100330', 61, 'Wallance', NULL, 'Delgado', '2005-04-07', 'M', '7', '1', 'Mulawin, Taguig City', 'O+', 'Carina Delgado', 'Mother', '09021204851', '2026-02-05 08:22:46', 1, NULL, 190.00, 67.00, 18.56, 'Normal weight', '2026-02-05 11:07:34'),
+(22, NULL, NULL, NULL, NULL, 'active', NULL, NULL, '136883100330', 62, 'Hannah', '', 'Lorainne', '2005-04-03', 'F', '7', '1', 'GK Taguig City', 'A+', 'Airen Genandoy', 'Mother', '09501296187', '2026-02-05 11:26:05', 1, NULL, 157.00, 57.00, 23.12, 'Normal weight', '2026-02-05 11:29:14');
 
 -- --------------------------------------------------------
 
@@ -1817,6 +1940,13 @@ CREATE TABLE `student_adviser` (
   `adviser_id` int(10) UNSIGNED NOT NULL,
   `assigned_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `student_adviser`
+--
+
+INSERT INTO `student_adviser` (`student_id`, `adviser_id`, `assigned_date`) VALUES
+(21, 12, '2026-02-05');
 
 -- --------------------------------------------------------
 
@@ -1883,7 +2013,9 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`user_id`, `role_id`, `username`, `password_hash`, `password_must_change`, `password_changed_at`, `created_by_admin_id`, `temp_password`, `email`, `phone`, `full_name`, `created_at`, `is_active`, `deleted_at`) VALUES
 (32, 1, 'admin', '$2y$10$VRKSez9gbIAB7fyx695fPeaHPg8Qo.VmabPGUBrRWquZYLV5Epd6W', 0, NULL, NULL, NULL, 'admin@pdmhs.edu.ph', '09171234567', 'System Administrator', '2026-02-01 11:46:49', 1, NULL),
 (60, 3, '2026-01', '$2y$10$skFaVbGjh5qnOttJel3Ep.H4199W8nhpAtdmJC5SJx7EHMDZSOOtu', 0, '2026-02-05 16:21:43', 32, NULL, 'h.igot@gmail.com', '09123456789', 'Heart   Igot', '2026-02-05 08:20:38', 1, NULL),
-(61, 2, '136663100330', '$2y$10$Fp1gdjZi415fqhtatwRn..Zda38iIqLtbYgfbGLRkti8tVYjzMT/C', 0, '2026-02-05 16:23:46', 32, NULL, 'wallance@gmail.com', '09987654532', 'Wallance  Delgado', '2026-02-05 08:22:46', 1, NULL);
+(61, 2, '136663100330', '$2y$10$Fp1gdjZi415fqhtatwRn..Zda38iIqLtbYgfbGLRkti8tVYjzMT/C', 0, '2026-02-05 16:23:46', 32, NULL, 'wallance@gmail.com', '', 'Wallance Delgado', '2026-02-05 08:22:46', 1, NULL),
+(62, 2, '136883100330', '$2y$10$oyMwFBXkS4W3erRWaucLMeMt9xrfBEC4p2YeHkpccuKbBgsJrmbb6', 0, '2026-02-05 19:26:41', 32, NULL, 'hannah@gmail.com', '', 'Hannah Lorainne', '2026-02-05 11:26:05', 1, NULL),
+(63, 4, 'STAFF-01', '$2y$10$.F12YbZRlhRwfJWHy2bG3ueOPEpR3pcteiXxjRv3E.iIrde26U7hC', 0, '2026-02-05 19:31:37', 32, NULL, 'lulubelle@gmail.com', '09849212853', 'Lulubelle Gabasa', '2026-02-05 11:30:45', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -1914,7 +2046,8 @@ CREATE TABLE `vitals` (
 INSERT INTO `vitals` (`vitals_id`, `visit_id`, `recorded_at`, `weight_kg`, `height_cm`, `temperature_c`, `bp_systolic`, `bp_diastolic`, `pulse_rate`, `respiration_rate`, `notes`) VALUES
 (0, 13, '2026-01-16 11:55:00', NULL, NULL, 40.00, 120, 90, 75, NULL, NULL),
 (0, 14, '2026-02-02 10:15:00', NULL, NULL, 38.00, 120, 90, 75, NULL, NULL),
-(0, 15, '2026-02-02 10:50:00', NULL, NULL, 37.00, 120, 80, 72, NULL, NULL);
+(0, 15, '2026-02-02 10:50:00', NULL, NULL, 37.00, 120, 80, 72, NULL, NULL),
+(0, 17, '2026-02-05 11:31:00', NULL, NULL, 40.00, 120, 90, 73, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2192,7 +2325,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1686;
+  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1759;
 
 --
 -- AUTO_INCREMENT for table `advisers`
@@ -2210,25 +2343,25 @@ ALTER TABLE `adviser_assignments`
 -- AUTO_INCREMENT for table `allergies`
 --
 ALTER TABLE `allergies`
-  MODIFY `allergy_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `allergy_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `clinic_staff`
 --
 ALTER TABLE `clinic_staff`
-  MODIFY `clinic_staff_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `clinic_staff_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `diagnoses`
 --
 ALTER TABLE `diagnoses`
-  MODIFY `diagnosis_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `diagnosis_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `email_logs`
 --
 ALTER TABLE `email_logs`
-  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `grade_levels`
@@ -2240,19 +2373,19 @@ ALTER TABLE `grade_levels`
 -- AUTO_INCREMENT for table `medical_history`
 --
 ALTER TABLE `medical_history`
-  MODIFY `history_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `history_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `medical_visits`
 --
 ALTER TABLE `medical_visits`
-  MODIFY `visit_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `visit_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `notification_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `notification_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `parents`
@@ -2276,7 +2409,7 @@ ALTER TABLE `promotion_rules`
 -- AUTO_INCREMENT for table `qr_codes`
 --
 ALTER TABLE `qr_codes`
-  MODIFY `qr_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `qr_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -2306,7 +2439,7 @@ ALTER TABLE `sms_logs`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `student_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `student_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `student_promotions`
@@ -2318,7 +2451,7 @@ ALTER TABLE `student_promotions`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- Constraints for dumped tables
