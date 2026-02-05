@@ -19,7 +19,7 @@ echo "\n=== Checking students table structure ===\n";
 $stmt = $db->query("DESCRIBE students");
 while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     if(stripos($row['Field'], 'emergency') !== false || stripos($row['Field'], 'parent') !== false) {
-        echo "  " . $row['Field'] . " (" . $row['Type'] . ")\n";v 
+        echo "  " . $row['Field'] . " (" . $row['Type'] . ")\n";
     }
 }
 ?>
