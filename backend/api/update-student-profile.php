@@ -43,7 +43,8 @@ $address = $input['address'] ?? null;
 $bloodType = $input['bloodType'] ?? $input['blood_type'] ?? null;
 $emergencyContact = $input['emergency_contact'] ?? $input['emergency_contact_person'] ?? null;
 $emergencyContactRelation = $input['emergency_contact_relation'] ?? null;
-$contactNumber = $input['contactNumber'] ?? $input['phone_number'] ?? $input['phone'] ?? null;
+$emergencyContactPhone = $input['emergency_contact_phone'] ?? $input['phone_number'] ?? null;
+$contactNumber = $input['contactNumber'] ?? $input['phone'] ?? null;
 $email = $input['email'] ?? null;
 
 if (!$userId) {
@@ -106,7 +107,8 @@ try {
                             address = :address,
                             blood_type = :blood_type,
                             emergency_contact = :emergency_contact,
-                            emergency_contact_relation = :emergency_contact_relation
+                            emergency_contact_relation = :emergency_contact_relation,
+                            emergency_contact_phone = :emergency_contact_phone
                           WHERE student_id = :student_id";
     
     $updateStudentStmt = $db->prepare($updateStudentQuery);
@@ -122,6 +124,7 @@ try {
     $updateStudentStmt->bindParam(':blood_type', $bloodType);
     $updateStudentStmt->bindParam(':emergency_contact', $emergencyContact);
     $updateStudentStmt->bindParam(':emergency_contact_relation', $emergencyContactRelation);
+    $updateStudentStmt->bindParam(':emergency_contact_phone', $emergencyContactPhone);
     
     $updateStudentStmt->execute();
     error_log("✅ Students table updated");

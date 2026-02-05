@@ -196,7 +196,7 @@ export class PersonalInfoComponent implements OnInit {
             birth_date: medicalData.personal_info.birth_date || profileData.birth_date,
             gender: medicalData.personal_info.gender || profileData.gender,
             address: medicalData.personal_info.address || '',
-            phone_number: profileData.phone || '',
+            phone_number: medicalData.personal_info.emergency_contact_phone || '',
             emergency_contact_person: medicalData.personal_info.emergency_contact || '',
             emergency_contact_relation: medicalData.personal_info.emergency_contact_relation || ''
           };
@@ -310,9 +310,10 @@ export class PersonalInfoComponent implements OnInit {
         grade_level: this.editableInfo.grade_level,
         section: this.editableInfo.section,
         address: this.editableInfo.address,
-        phone: this.editableInfo.phone_number,
+        phone: currentUser.phone || '', // Keep student's own phone from users table
         emergency_contact: this.editableInfo.emergency_contact_person,
         emergency_contact_relation: this.editableInfo.emergency_contact_relation,
+        emergency_contact_phone: this.editableInfo.phone_number,
         email: currentUser.email // Keep existing email
       };
 
