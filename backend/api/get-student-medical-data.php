@@ -38,6 +38,7 @@ if (isset($_GET['student_id'])) {
                         s.address,
                         s.emergency_contact,
                         s.emergency_contact_relation,
+                        s.emergency_contact_phone,
                         s.grade_level,
                         s.section,
                         s.height_cm,
@@ -73,6 +74,7 @@ if (isset($_GET['student_id'])) {
                         s.address,
                         s.emergency_contact,
                         s.emergency_contact_relation,
+                        s.emergency_contact_phone,
                         s.grade_level,
                         s.section,
                         s.height_cm,
@@ -111,6 +113,7 @@ if (isset($_GET['student_id'])) {
                         s.address,
                         s.emergency_contact,
                         s.emergency_contact_relation,
+                        s.emergency_contact_phone,
                         s.grade_level,
                         s.section,
                         s.height_cm,
@@ -207,6 +210,79 @@ try {
         $immunizations = [];
     }
     
+    // Get medical history
+    $medicalHistoryQuery = "SELECT 
+                              allergy_medicine,
+                              allergy_pollens,
+                              allergy_food,
+                              allergy_stinging_insects,
+                              condition_error_refraction,
+                              condition_heart_problem,
+                              condition_bleeding_disorder,
+                              condition_hernia,
+                              condition_asthma,
+                              condition_anemia,
+                              condition_anxiety_depression,
+                              condition_seizure,
+                              surgery_hospitalization,
+                              family_tuberculosis,
+                              family_cancer,
+                              family_stroke_cardiac,
+                              family_diabetes,
+                              family_hypertension,
+                              family_depression,
+                              family_thyroid,
+                              family_phobia,
+                              smoke_exposure
+                           FROM medical_history
+                           WHERE student_id = :student_id";
+    
+    $medicalHistoryStmt = $db->prepare($medicalHistoryQuery);
+    $medicalHistoryStmt->bindParam(":student_id", $student_id);
+    
+    $medicalHistory = null;
+    try {
+        $medicalHistoryStmt->execute();
+        $historyData = $medicalHistoryStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($historyData) {
+            // Convert database format to frontend format
+            $medicalHistory = [
+                'allergies' => [
+                    'medicine' => (bool)$historyData['allergy_medicine'],
+                    'pollens' => (bool)$historyData['allergy_pollens'],
+                    'food' => (bool)$historyData['allergy_food'],
+                    'stinging_insects' => (bool)$historyData['allergy_stinging_insects']
+                ],
+                'medical_conditions' => [
+                    'error_refraction' => (bool)$historyData['condition_error_refraction'],
+                    'heart_problem' => (bool)$historyData['condition_heart_problem'],
+                    'bleeding_disorder' => (bool)$historyData['condition_bleeding_disorder'],
+                    'hernia' => (bool)$historyData['condition_hernia'],
+                    'asthma' => (bool)$historyData['condition_asthma'],
+                    'anemia' => (bool)$historyData['condition_anemia'],
+                    'anxiety_depression' => (bool)$historyData['condition_anxiety_depression'],
+                    'seizure' => (bool)$historyData['condition_seizure']
+                ],
+                'surgery_hospitalization' => (bool)$historyData['surgery_hospitalization'],
+                'family_history' => [
+                    'tuberculosis' => (bool)$historyData['family_tuberculosis'],
+                    'cancer' => (bool)$historyData['family_cancer'],
+                    'stroke_cardiac' => (bool)$historyData['family_stroke_cardiac'],
+                    'diabetes' => (bool)$historyData['family_diabetes'],
+                    'hypertension' => (bool)$historyData['family_hypertension'],
+                    'depression' => (bool)$historyData['family_depression'],
+                    'thyroid' => (bool)$historyData['family_thyroid'],
+                    'phobia' => (bool)$historyData['family_phobia']
+                ],
+                'smoke_exposure' => (bool)$historyData['smoke_exposure']
+            ];
+        }
+    } catch (PDOException $e) {
+        error_log("Medical history table error: " . $e->getMessage());
+        $medicalHistory = null;
+    }
+    
     // Get last visit
     $lastVisitQuery = "SELECT 
                           visit_datetime,
@@ -223,15 +299,15 @@ try {
     $lastVisitStmt->execute();
     $lastVisit = $lastVisitStmt->fetch(PDO::FETCH_ASSOC);
     
-    // Get adviser information from section assignment
+    // Get adviser information based on student's grade_level and section
     $adviserQuery = "SELECT 
                         u.user_id,
                         u.full_name,
                         u.phone,
                         u.email
                      FROM students s
-                     LEFT JOIN sections sec ON s.current_section_id = sec.id
-                     LEFT JOIN users u ON sec.adviser_id = u.user_id
+                     LEFT JOIN advisers a ON s.grade_level = a.grade_level AND s.section = a.section AND a.is_active = 1
+                     LEFT JOIN users u ON a.user_id = u.user_id
                      WHERE s.student_id = :student_id
                      AND s.is_active = 1
                      LIMIT 1";
@@ -291,6 +367,7 @@ try {
                     'notes' => $imm['notes']
                 ];
             }, $immunizations),
+            'medical_history' => $medicalHistory,
             'last_visit' => $lastVisit ? [
                 'visit_datetime' => $lastVisit['visit_datetime'],
                 'visit_type' => $lastVisit['visit_type'],
@@ -309,13 +386,14 @@ try {
                 'address' => $student['address'],
                 'emergency_contact' => $student['emergency_contact'],
                 'emergency_contact_relation' => $student['emergency_contact_relation'],
+                'emergency_contact_phone' => $student['emergency_contact_phone'],
                 'grade_level' => $student['grade_level'],
                 'section' => $student['section'],
                 'height_cm' => $student['height_cm'] ? (float)$student['height_cm'] : null,
                 'weight_kg' => $student['weight_kg'] ? (float)$student['weight_kg'] : null,
                 'bmi' => $student['bmi'] ? (float)$student['bmi'] : null,
                 'bmi_category' => $student['bmi_category'],
-                'adviser_name' => $adviser ? $adviser['full_name'] : 'Not assigned',
+                'adviser_name' => $adviser ? preg_replace('/\s+/', ' ', trim($adviser['full_name'])) : 'Not assigned',
                 'adviser_contact' => $adviser ? ($adviser['phone'] ?: $adviser['email']) : 'N/A'
             ],
             'recent_visits_count' => (int)$recentVisitsCount,

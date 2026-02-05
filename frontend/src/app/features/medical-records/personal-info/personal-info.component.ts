@@ -196,7 +196,7 @@ export class PersonalInfoComponent implements OnInit {
             birth_date: medicalData.personal_info.birth_date || profileData.birth_date,
             gender: medicalData.personal_info.gender || profileData.gender,
             address: medicalData.personal_info.address || '',
-            phone_number: profileData.phone || '',
+            phone_number: medicalData.personal_info.emergency_contact_phone || '',
             emergency_contact_person: medicalData.personal_info.emergency_contact || '',
             emergency_contact_relation: medicalData.personal_info.emergency_contact_relation || ''
           };
@@ -211,11 +211,46 @@ export class PersonalInfoComponent implements OnInit {
               blood_type: medicalData.personal_info.blood_type || profileData.blood_type
             },
             allergies: medicalData.allergies || [],
-            medical_history: medicalData.medical_history || this.medicalHistoryData
+            medical_history: medicalData.medical_history || {
+              allergies: {
+                medicine: false,
+                pollens: false,
+                food: false,
+                stinging_insects: false
+              },
+              medical_conditions: {
+                error_refraction: false,
+                heart_problem: false,
+                bleeding_disorder: false,
+                hernia: false,
+                asthma: false,
+                anemia: false,
+                anxiety_depression: false,
+                seizure: false
+              },
+              surgery_hospitalization: false,
+              family_history: {
+                tuberculosis: false,
+                cancer: false,
+                stroke_cardiac: false,
+                diabetes: false,
+                hypertension: false,
+                depression: false,
+                thyroid: false,
+                phobia: false
+              },
+              smoke_exposure: false
+            }
           };
           
           this.physicalInfoEdit = { ...this.medicalRecord.physical_info };
-          this.medicalHistoryData = { ...this.medicalRecord.medical_history };
+          // Always use the medical_history from the API response, not the old cached value
+          if (medicalData.medical_history) {
+            this.medicalHistoryData = { ...medicalData.medical_history };
+          } else {
+            // Initialize with default values if no medical history exists
+            this.medicalHistoryData = { ...this.medicalRecord.medical_history };
+          }
           
           // Load adviser name if available
           if (medicalData.personal_info?.adviser_name) {
@@ -310,9 +345,10 @@ export class PersonalInfoComponent implements OnInit {
         grade_level: this.editableInfo.grade_level,
         section: this.editableInfo.section,
         address: this.editableInfo.address,
-        phone: this.editableInfo.phone_number,
+        phone: currentUser.phone || '', // Keep student's own phone from users table
         emergency_contact: this.editableInfo.emergency_contact_person,
         emergency_contact_relation: this.editableInfo.emergency_contact_relation,
+        emergency_contact_phone: this.editableInfo.phone_number,
         email: currentUser.email // Keep existing email
       };
 
