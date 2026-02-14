@@ -121,10 +121,7 @@ try {
             'rawDateTime' => $row['visit_datetime'],
             'visit_type' => $visitType,
             'visitType' => $visitType,
-            'chief_complaint' => $row['chief_complaint'],
-            'chiefComplaint' => $row['chief_complaint'],
-            'notes' => $row['notes'],
-            'diagnosis' => $row['diagnosis_text'] ?: null,
+            'diagnosis' => $row['diagnosis_text'] ?: 'No diagnosis recorded',
             'status' => $frontendStatus,
             'vitals' => [
                 'temperature' => $row['temperature_c'] ?: null,

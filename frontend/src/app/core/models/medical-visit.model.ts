@@ -4,8 +4,7 @@ export interface MedicalVisit {
   clinic_staff_id?: number;
   visit_datetime: string;
   visit_type: 'Routine' | 'Emergency';
-  chief_complaint?: string;
-  notes?: string;
+  diagnosis?: string;
   status: 'Open' | 'Closed' | 'Referred';
 }
 

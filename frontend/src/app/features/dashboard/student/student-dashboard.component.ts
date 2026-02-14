@@ -171,7 +171,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
           // Set recent activities (medical visits)
           if (data.recent_visits && data.recent_visits.length > 0) {
             this.recentActivities = data.recent_visits.map((visit: any) => ({
-              activity: `Clinic Visit - ${visit.chief_complaint || 'General checkup'}`,
+              activity: `Clinic Visit - ${visit.diagnosis || 'General checkup'}`,
               date: this.formatDate(visit.visit_datetime),
               type: visit.visit_type || 'Routine',
               status: visit.status || 'Completed'

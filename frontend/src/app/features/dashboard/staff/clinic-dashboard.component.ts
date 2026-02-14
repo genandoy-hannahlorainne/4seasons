@@ -73,7 +73,7 @@ import { environment } from '../../../../environments/environment';
                 </div>
                 <div class="visit-info">
                   <div class="visit-name">{{ visit.studentName }}</div>
-                  <div class="visit-reason">{{ visit.chiefComplaint }}</div>
+                  <div class="visit-reason">{{ visit.diagnosis }}</div>
                 </div>
                 <div class="visit-meta">
                   <div class="visit-time">{{ visit.dateTime }}</div>

@@ -41,8 +41,7 @@ export interface MedicalVisit {
   visit_id: number;
   visit_datetime: string;
   visit_type: string;
-  chief_complaint: string;
-  notes: string;
+  diagnosis: string;
   status: string;
   clinic_staff?: {
     name: string;

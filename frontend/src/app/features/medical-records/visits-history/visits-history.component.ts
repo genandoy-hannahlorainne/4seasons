@@ -67,7 +67,7 @@ import { MedicalRecordsService, MedicalVisit } from '../medical-records.service'
             
             <div class="visit-content">
               <div class="visit-type">{{ visit.visit_type }}</div>
-              <div class="visit-complaint">{{ visit.chief_complaint }}</div>
+              <div class="visit-diagnosis">{{ visit.diagnosis }}</div>
               <div *ngIf="visit.clinic_staff" class="visit-staff">
                 Attended by: {{ visit.clinic_staff.name }} ({{ visit.clinic_staff.position }})
               </div>
@@ -116,13 +116,8 @@ import { MedicalRecordsService, MedicalVisit } from '../medical-records.service'
               </div>
               
               <div class="detail-item full-width">
-                <label>Chief Complaint</label>
-                <div class="detail-value">{{ selectedVisit.chief_complaint }}</div>
-              </div>
-              
-              <div *ngIf="selectedVisit.notes" class="detail-item full-width">
-                <label>Notes</label>
-                <div class="detail-value notes">{{ selectedVisit.notes }}</div>
+                <label>Diagnosis</label>
+                <div class="detail-value">{{ selectedVisit.diagnosis }}</div>
               </div>
               
               <div *ngIf="selectedVisit.clinic_staff" class="detail-item full-width">
