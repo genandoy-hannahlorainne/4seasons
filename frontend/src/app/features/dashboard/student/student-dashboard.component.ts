@@ -224,7 +224,6 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     switch (type.toLowerCase()) {
       case 'emergency': return 'activity-emergency';
       case 'routine': return 'activity-routine';
-      case 'follow-up': return 'activity-followup';
       default: return 'activity-info';
     }
   }

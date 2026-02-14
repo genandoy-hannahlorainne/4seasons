@@ -64,7 +64,7 @@ try {
                   SELECT DISTINCT mv.student_id 
                   FROM medical_visits mv
                   WHERE mv.status = 'Open'
-                  AND mv.visit_type IN ('Emergency', 'Follow-up')
+                  AND mv.visit_type = 'Emergency'
                   AND mv.visit_datetime >= DATE_SUB(NOW(), INTERVAL 30 DAY)
               )";
     $stmt = $db->prepare($query);
@@ -79,11 +79,11 @@ try {
     $stmt->execute();
     $pendingAssessment = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
-    // Restricted activities (students with recent emergency/follow-up visits)
+    // Restricted activities (students with recent emergency visits)
     $query = "SELECT COUNT(DISTINCT student_id) as count
               FROM medical_visits
               WHERE status = 'Open'
-              AND visit_type IN ('Emergency', 'Follow-up')
+              AND visit_type = 'Emergency'
               AND visit_datetime >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
     $stmt = $db->prepare($query);
     $stmt->execute();
@@ -109,7 +109,7 @@ try {
                         SELECT 1 FROM medical_visits mv 
                         WHERE mv.student_id = s.student_id 
                         AND mv.status = 'Open'
-                        AND mv.visit_type IN ('Emergency', 'Follow-up')
+                        AND mv.visit_type = 'Emergency'
                         AND mv.visit_datetime >= DATE_SUB(NOW(), INTERVAL 30 DAY)
                     ) THEN 'Restricted'
                     ELSE 'Fit'

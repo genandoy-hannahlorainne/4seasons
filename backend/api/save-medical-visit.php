@@ -51,7 +51,7 @@ try {
     
     // Map visit_type from form to database enum
     // Form sends: routine, emergency
-    // DB expects: Routine, Emergency, Follow-up, Referral
+    // DB expects: Routine, Emergency
     $visitTypeMap = [
         'routine' => 'Routine',
         'emergency' => 'Emergency'

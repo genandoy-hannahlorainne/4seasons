@@ -473,7 +473,6 @@ export class AdviserHealthStatusComponent implements OnInit {
     const status = (student.last_visit?.status || '').toLowerCase();
     if (status === 'pending' || status === 'ongoing') return 'pending';
     if (student.allergies && student.allergies.length > 0) return 'restricted';
-    if (status === 'follow-up' || status === 'referred') return 'special';
     return 'fit';
   }
 

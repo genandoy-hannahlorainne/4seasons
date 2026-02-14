@@ -105,7 +105,7 @@ try {
         $statusMap = ['Open' => 'pending', 'Closed' => 'completed', 'Referred' => 'referred'];
         $frontendStatus = isset($statusMap[$row['status']]) ? $statusMap[$row['status']] : strtolower($row['status']);
         
-        // Keep visit type as-is from database (Routine, Emergency, Follow-up, Referral)
+        // Keep visit type as-is from database (Routine, Emergency only)
         $visitType = $row['visit_type'] ?: 'Routine';
         
         $visits[] = [

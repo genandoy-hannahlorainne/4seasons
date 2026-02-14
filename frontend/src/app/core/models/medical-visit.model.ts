@@ -3,7 +3,7 @@ export interface MedicalVisit {
   student_id: number;
   clinic_staff_id?: number;
   visit_datetime: string;
-  visit_type: 'Routine' | 'Emergency' | 'Follow-up' | 'Referral';
+  visit_type: 'Routine' | 'Emergency';
   chief_complaint?: string;
   notes?: string;
   status: 'Open' | 'Closed' | 'Referred';
