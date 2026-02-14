@@ -80,7 +80,7 @@ try {
     $stmt = $db->prepare("
         SELECT 
             DATE(mv.visit_datetime) as visit_date,
-            mv.diagnosis_text,
+            mv.notes as diagnosis,
             COUNT(DISTINCT mv.student_id) as student_count,
             GROUP_CONCAT(DISTINCT CONCAT(s.first_name, ' ', s.last_name) SEPARATOR ', ') as students
         FROM medical_visits mv
@@ -88,7 +88,7 @@ try {
         WHERE s.grade_level = :grade_level
         AND s.section = :section
         AND DATE(mv.visit_datetime) BETWEEN :start_date AND :end_date
-        GROUP BY DATE(mv.visit_datetime), mv.diagnosis_text
+        GROUP BY DATE(mv.visit_datetime), mv.notes
         ORDER BY visit_date DESC, student_count DESC
     ");
     $stmt->bindParam(':grade_level', $gradeLevel);
@@ -102,7 +102,7 @@ try {
     
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $date = $row['visit_date'];
-        $symptom = categorizeSymptom($row['diagnosis_text']);
+        $symptom = categorizeSymptom($row['diagnosis']);
         
         if (!isset($visitsByDate[$date])) {
             $visitsByDate[$date] = [
@@ -153,7 +153,7 @@ try {
     // Get trending symptoms (most common in period)
     $stmt = $db->prepare("
         SELECT 
-            mv.diagnosis_text,
+            mv.notes as diagnosis,
             COUNT(DISTINCT mv.student_id) as student_count,
             COUNT(*) as visit_count
         FROM medical_visits mv
@@ -161,7 +161,7 @@ try {
         WHERE s.grade_level = :grade_level
         AND s.section = :section
         AND DATE(mv.visit_datetime) BETWEEN :start_date AND :end_date
-        GROUP BY mv.diagnosis_text
+        GROUP BY mv.notes
         ORDER BY student_count DESC
         LIMIT 5
     ");
@@ -174,7 +174,7 @@ try {
     $trendingSymptoms = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $trendingSymptoms[] = [
-            'symptom' => categorizeSymptom($row['diagnosis_text']),
+            'symptom' => categorizeSymptom($row['diagnosis']),
             'student_count' => $row['student_count'],
             'visit_count' => $row['visit_count'],
             'percentage' => round(($row['student_count'] / $totalStudents) * 100, 1)
