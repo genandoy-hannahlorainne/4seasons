@@ -1160,7 +1160,9 @@ Emergency Details:
 Student: ${notification.student.full_name}
 Student Number: ${notification.student.student_number}
 Grade & Section: ${notification.student.grade_section}
-Complaint: ${notification.visit.chief_complaint}
+
+Visit Type: ${notification.visit.visit_type}
+Diagnosis: ${notification.visit.diagnosis || notification.visit.chief_complaint || 'N/A'}
 Visit Status: ${notification.visit.status}
 Time: ${notification.timeAgo}
 
@@ -1251,7 +1253,7 @@ Student Number: ${notification.student?.student_number || 'N/A'}
 Grade & Section: ${notification.student?.grade_section || 'N/A'}
 
 Visit Type: ${notification.visit?.visit_type || 'N/A'}
-Complaint: ${notification.visit?.chief_complaint || 'N/A'}
+Diagnosis: ${notification.visit?.diagnosis || notification.visit?.chief_complaint || 'N/A'}
 Visit Status: ${notification.visit?.status || 'N/A'}
 
 Priority: ${notification.priority || 'N/A'}
