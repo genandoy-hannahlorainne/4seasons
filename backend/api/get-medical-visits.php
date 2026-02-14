@@ -37,15 +37,13 @@ try {
     // Optimized query using LEFT JOINs to fetch all data in one query
     $query = "SELECT DISTINCT
                      mv.visit_id, mv.student_id, mv.visit_datetime, mv.visit_type,
-                     mv.chief_complaint, mv.notes, mv.status,
+                     mv.notes as diagnosis, mv.status,
                      s.student_number, s.first_name, s.last_name, s.gender,
                      s.grade_level, s.section,
-                     v.temperature_c, v.bp_systolic, v.bp_diastolic, v.pulse_rate, v.respiration_rate,
-                     d.diagnosis_text
+                     v.temperature_c, v.bp_systolic, v.bp_diastolic, v.pulse_rate, v.respiration_rate
               FROM medical_visits mv
               INNER JOIN students s ON mv.student_id = s.student_id
               LEFT JOIN vitals v ON mv.visit_id = v.visit_id
-              LEFT JOIN diagnoses d ON mv.visit_id = d.visit_id
               WHERE s.is_active = 1";
     
     $params = [];
@@ -121,7 +119,7 @@ try {
             'rawDateTime' => $row['visit_datetime'],
             'visit_type' => $visitType,
             'visitType' => $visitType,
-            'diagnosis' => $row['diagnosis_text'] ?: 'No diagnosis recorded',
+            'diagnosis' => $row['diagnosis'] ?: 'No diagnosis recorded',
             'status' => $frontendStatus,
             'vitals' => [
                 'temperature' => $row['temperature_c'] ?: null,

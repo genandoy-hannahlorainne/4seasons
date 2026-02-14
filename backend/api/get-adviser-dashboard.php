@@ -94,7 +94,7 @@ try {
                 mv.visit_id,
                 mv.visit_datetime,
                 mv.visit_type,
-                mv.chief_complaint,
+                mv.notes as diagnosis,
                 mv.status,
                 CONCAT(s.first_name, ' ', s.last_name) as student_name,
                 s.student_number,

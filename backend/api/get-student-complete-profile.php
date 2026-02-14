@@ -95,8 +95,7 @@ try {
     $lastVisitQuery = "SELECT 
                         mv.visit_id,
                         mv.visit_datetime,
-                        mv.chief_complaint,
-                        mv.notes,
+                        mv.notes as diagnosis,
                         mv.status,
                         mv.visit_type
                      FROM medical_visits mv
@@ -113,8 +112,7 @@ try {
     $recentVisitsQuery = "SELECT 
                             mv.visit_id,
                             mv.visit_datetime,
-                            mv.chief_complaint,
-                            mv.notes,
+                            mv.notes as diagnosis,
                             mv.status,
                             mv.visit_type
                          FROM medical_visits mv
@@ -140,7 +138,7 @@ try {
     $formattedVisits = array_map(function($v) {
         return [
             'date' => date('M d, Y', strtotime($v['visit_datetime'])),
-            'reason' => $v['chief_complaint'] ?: 'General Checkup',
+            'reason' => $v['diagnosis'] ?: 'General Checkup',
             'status' => strtolower($v['status'] ?: 'completed'),
             'statusText' => $v['status'] ?: 'Completed'
         ];
@@ -172,7 +170,7 @@ try {
             'emergencyContact' => $student['emergency_contact'] ?: 'N/A',
             'lastVisit' => $lastVisit ? [
                 'date' => date('M d, Y', strtotime($lastVisit['visit_datetime'])),
-                'reason' => $lastVisit['chief_complaint'] ?: 'General Checkup',
+                'reason' => $lastVisit['diagnosis'] ?: 'General Checkup',
                 'status' => strtolower($lastVisit['status'] ?: 'completed'),
                 'statusText' => $lastVisit['status'] ?: 'Completed'
             ] : null,

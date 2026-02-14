@@ -79,13 +79,14 @@ try {
     $notes = !empty($notesArray) ? implode("\n\n", $notesArray) : null;
     
     // Insert medical visit into medical_visits table
-    // Table columns: visit_id, student_id, clinic_staff_id, visit_datetime, visit_type, chief_complaint, notes, status
+    // Save diagnosis to notes column (primary) and chief_complaint (for backwards compatibility)
+    $diagnosis = $data->diagnosis ?? '';
+    
     $query = "INSERT INTO medical_visits (
                 student_id, 
                 clinic_staff_id,
                 visit_datetime, 
                 visit_type,
-                chief_complaint, 
                 notes,
                 status
               ) VALUES (
@@ -93,7 +94,6 @@ try {
                 :clinic_staff_id,
                 :visit_datetime,
                 :visit_type,
-                :chief_complaint,
                 :notes,
                 :status
               )";
@@ -107,8 +107,7 @@ try {
     $stmt->bindParam(':clinic_staff_id', $clinicStaffId);
     $stmt->bindParam(':visit_datetime', $visitDateTime);
     $stmt->bindParam(':visit_type', $visitType);
-    $stmt->bindParam(':chief_complaint', $data->chief_complaint);
-    $stmt->bindParam(':notes', $notes);
+    $stmt->bindParam(':notes', $diagnosis);
     $stmt->bindParam(':status', $status);
     
     $stmt->execute();
@@ -202,7 +201,7 @@ try {
             $studentStmt->execute();
             $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
             
-            $emergencyMessage = "EMERGENCY ALERT: Student {$student['full_name']} ({$student['student_number']}) from Grade {$student['grade_level']}-{$student['section']} has been flagged for emergency medical attention. Complaint: {$data->chief_complaint}";
+            $emergencyMessage = "EMERGENCY ALERT: Student {$student['full_name']} ({$student['student_number']}) from Grade {$student['grade_level']}-{$student['section']} has been flagged for emergency medical attention. Diagnosis: {$data->diagnosis}";
             
             // Check if notifications table has user_id and priority columns
             $checkColumns = "SHOW COLUMNS FROM notifications LIKE 'user_id'";
@@ -228,7 +227,7 @@ try {
             // Send email notification for emergency
             if (!empty($admin['email'])) {
                 $visitData = [
-                    'chief_complaint' => $data->chief_complaint,
+                    'chief_complaint' => $data->diagnosis,
                     'visit_datetime' => $visitDateTime,
                     'staff_name' => 'Clinic Staff' // You can get actual staff name if needed
                 ];
@@ -276,7 +275,7 @@ try {
             $studentStmt->execute();
             $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
             
-            $routineMessage = "Student {$student['full_name']} ({$student['student_number']}) visited the clinic for routine care. Complaint: {$data->chief_complaint}";
+            $routineMessage = "Student {$student['full_name']} ({$student['student_number']}) visited the clinic for routine care. Diagnosis: {$data->diagnosis}";
             
             // Check if notifications table has user_id and priority columns
             $checkColumns = "SHOW COLUMNS FROM notifications LIKE 'user_id'";
@@ -302,7 +301,7 @@ try {
             // Send email notification for routine visit
             if (!empty($adviser['email'])) {
                 $visitData = [
-                    'chief_complaint' => $data->chief_complaint,
+                    'chief_complaint' => $data->diagnosis,
                     'visit_datetime' => $visitDateTime,
                     'staff_name' => 'Clinic Staff'
                 ];
@@ -343,10 +342,10 @@ try {
         
         if ($parentPhone) {
             $studentName = trim($student['first_name'] . ' ' . $student['last_name']);
-            $complaint = $data->chief_complaint;
+            $diagnosis = $data->diagnosis;
             
             // Create SMS message
-            $smsMessage = "Good day! This is from Four Seasons School Clinic. Your child {$studentName} visited the clinic today. Reason: {$complaint}. Please contact the clinic for more details.";
+            $smsMessage = "Good day! This is from Four Seasons School Clinic. Your child {$studentName} visited the clinic today. Diagnosis: {$diagnosis}. Please contact the clinic for more details.";
             
             // Log the SMS (in production, integrate with SMS gateway like Semaphore, Globe Labs, etc.)
             error_log("SMS to {$parentPhone}: {$smsMessage}");

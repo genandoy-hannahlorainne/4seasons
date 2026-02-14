@@ -180,12 +180,14 @@ try {
             'studentName' => $row['student_name'],
             'studentNumber' => $row['student_number'],
             'subject' => ucfirst($row['visit_type']) . ' Visit',
-            'previewText' => substr($row['chief_complaint'] ?? $row['notes'] ?? '', 0, 100) . (strlen($row['chief_complaint'] ?? $row['notes'] ?? '') > 100 ? '...' : ''),
-            'fullMessage' => $row['notes'] ?? $row['chief_complaint'] ?? '',
+            'previewText' => substr($row['notes'] ?? '', 0, 100) . (strlen($row['notes'] ?? '') > 100 ? '...' : ''),
+            'fullMessage' => $row['notes'] ?? '',
+            'diagnosis' => $row['notes'] ?? '',
             'timeAgo' => $time_ago,
             'fullDate' => $created_at->format('M d, Y \a\t h:i A'),
             'visitType' => ucfirst($row['visit_type']),
-            'priority' => (strpos(strtolower($row['notes'] ?? ''), 'urgent') !== false || 
+            'priority' => (strtolower($row['visit_type']) === 'emergency' || 
+                          strpos(strtolower($row['notes'] ?? ''), 'urgent') !== false || 
                           strpos(strtolower($row['notes'] ?? ''), 'critical') !== false) ? 'urgent' : 'normal',
             'isRead' => false,
             'isExpanded' => false,
