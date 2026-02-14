@@ -105,8 +105,8 @@ try {
         $statusMap = ['Open' => 'pending', 'Closed' => 'completed', 'Referred' => 'referred'];
         $frontendStatus = isset($statusMap[$row['status']]) ? $statusMap[$row['status']] : strtolower($row['status']);
         
-        $visitTypeMap = ['Routine' => 'walk-in', 'Emergency' => 'emergency', 'Follow-up' => 'follow-up', 'Referral' => 'referred'];
-        $frontendVisitType = isset($visitTypeMap[$row['visit_type']]) ? $visitTypeMap[$row['visit_type']] : strtolower($row['visit_type']);
+        // Keep visit type as-is from database (Routine, Emergency, Follow-up, Referral)
+        $visitType = $row['visit_type'] ?: 'Routine';
         
         $visits[] = [
             'id' => $visitId,
@@ -119,8 +119,8 @@ try {
             'dateTime' => date('M d, Y h:i A', strtotime($row['visit_datetime'])),
             'visit_datetime' => $row['visit_datetime'],
             'rawDateTime' => $row['visit_datetime'],
-            'visit_type' => $frontendVisitType,
-            'visitType' => $frontendVisitType,
+            'visit_type' => $visitType,
+            'visitType' => $visitType,
             'chief_complaint' => $row['chief_complaint'],
             'chiefComplaint' => $row['chief_complaint'],
             'notes' => $row['notes'],
