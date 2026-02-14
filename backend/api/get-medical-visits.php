@@ -110,14 +110,18 @@ try {
         
         $visits[] = [
             'id' => $visitId,
+            'visit_id' => $visitId,
             'student_id' => $row['student_id'],
             'studentName' => $fullName,
             'studentNumber' => $row['student_number'],
             'gradeSection' => $gradeSection,
             'avatar' => $row['gender'] === 'F' ? 'assets/user-female.png' : 'assets/user-male.png',
             'dateTime' => date('M d, Y h:i A', strtotime($row['visit_datetime'])),
+            'visit_datetime' => $row['visit_datetime'],
             'rawDateTime' => $row['visit_datetime'],
+            'visit_type' => $frontendVisitType,
             'visitType' => $frontendVisitType,
+            'chief_complaint' => $row['chief_complaint'],
             'chiefComplaint' => $row['chief_complaint'],
             'notes' => $row['notes'],
             'diagnosis' => $row['diagnosis_text'] ?: null,
