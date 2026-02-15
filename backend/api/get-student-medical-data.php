@@ -175,7 +175,7 @@ try {
     $recentVisitsQuery = "SELECT 
                              visit_datetime,
                              visit_type,
-                             chief_complaint,
+                             notes as diagnosis,
                              status
                           FROM medical_visits
                           WHERE student_id = :student_id
@@ -287,8 +287,7 @@ try {
     $lastVisitQuery = "SELECT 
                           visit_datetime,
                           visit_type,
-                          chief_complaint,
-                          notes
+                          notes as diagnosis
                        FROM medical_visits
                        WHERE student_id = :student_id
                        ORDER BY visit_datetime DESC
@@ -354,7 +353,7 @@ try {
                 return [
                     'visit_datetime' => $visit['visit_datetime'],
                     'visit_type' => $visit['visit_type'],
-                    'chief_complaint' => $visit['chief_complaint'],
+                    'diagnosis' => $visit['diagnosis'],
                     'status' => $visit['status']
                 ];
             }, $recentVisits),
@@ -371,8 +370,7 @@ try {
             'last_visit' => $lastVisit ? [
                 'visit_datetime' => $lastVisit['visit_datetime'],
                 'visit_type' => $lastVisit['visit_type'],
-                'chief_complaint' => $lastVisit['chief_complaint'],
-                'notes' => $lastVisit['notes']
+                'diagnosis' => $lastVisit['diagnosis']
             ] : null,
             'personal_info' => [
                 'student_id' => (int)$student['student_id'],

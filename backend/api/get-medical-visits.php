@@ -37,15 +37,13 @@ try {
     // Optimized query using LEFT JOINs to fetch all data in one query
     $query = "SELECT DISTINCT
                      mv.visit_id, mv.student_id, mv.visit_datetime, mv.visit_type,
-                     mv.chief_complaint, mv.notes, mv.status,
+                     mv.notes as diagnosis, mv.status,
                      s.student_number, s.first_name, s.last_name, s.gender,
                      s.grade_level, s.section,
-                     v.temperature_c, v.bp_systolic, v.bp_diastolic, v.pulse_rate, v.respiration_rate,
-                     d.diagnosis_text
+                     v.temperature_c, v.bp_systolic, v.bp_diastolic, v.pulse_rate, v.respiration_rate
               FROM medical_visits mv
               INNER JOIN students s ON mv.student_id = s.student_id
               LEFT JOIN vitals v ON mv.visit_id = v.visit_id
-              LEFT JOIN diagnoses d ON mv.visit_id = d.visit_id
               WHERE s.is_active = 1";
     
     $params = [];
@@ -105,22 +103,23 @@ try {
         $statusMap = ['Open' => 'pending', 'Closed' => 'completed', 'Referred' => 'referred'];
         $frontendStatus = isset($statusMap[$row['status']]) ? $statusMap[$row['status']] : strtolower($row['status']);
         
-        $visitTypeMap = ['Routine' => 'walk-in', 'Emergency' => 'emergency', 'Follow-up' => 'follow-up', 'Referral' => 'referred'];
-        $frontendVisitType = isset($visitTypeMap[$row['visit_type']]) ? $visitTypeMap[$row['visit_type']] : strtolower($row['visit_type']);
+        // Keep visit type as-is from database (Routine, Emergency only)
+        $visitType = $row['visit_type'] ?: 'Routine';
         
         $visits[] = [
             'id' => $visitId,
+            'visit_id' => $visitId,
             'student_id' => $row['student_id'],
             'studentName' => $fullName,
             'studentNumber' => $row['student_number'],
             'gradeSection' => $gradeSection,
             'avatar' => $row['gender'] === 'F' ? 'assets/user-female.png' : 'assets/user-male.png',
             'dateTime' => date('M d, Y h:i A', strtotime($row['visit_datetime'])),
+            'visit_datetime' => $row['visit_datetime'],
             'rawDateTime' => $row['visit_datetime'],
-            'visitType' => $frontendVisitType,
-            'chiefComplaint' => $row['chief_complaint'],
-            'notes' => $row['notes'],
-            'diagnosis' => $row['diagnosis_text'] ?: null,
+            'visit_type' => $visitType,
+            'visitType' => $visitType,
+            'diagnosis' => $row['diagnosis'] ?: 'No diagnosis recorded',
             'status' => $frontendStatus,
             'vitals' => [
                 'temperature' => $row['temperature_c'] ?: null,

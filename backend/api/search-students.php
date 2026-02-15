@@ -1,7 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, X-Requested-With");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, User-Id, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -50,6 +50,13 @@ try {
         $fullName = trim($row['first_name'] . ' ' . ($row['middle_name'] ? $row['middle_name'] . ' ' : '') . $row['last_name']);
         $gradeSection = 'Grade ' . $row['grade_level'] . ' - ' . $row['section'];
         
+        // Get allergies for this student
+        $allergyQuery = "SELECT allergy_text FROM allergies WHERE student_id = :student_id";
+        $allergyStmt = $db->prepare($allergyQuery);
+        $allergyStmt->bindParam(':student_id', $row['student_id']);
+        $allergyStmt->execute();
+        $allergies = $allergyStmt->fetchAll(PDO::FETCH_COLUMN);
+        
         // Use parent_phone if available, otherwise use emergency_contact
         $parentPhone = $row['parent_phone'] ?: $row['emergency_contact'];
         
@@ -59,7 +66,8 @@ try {
             'full_name' => $fullName,
             'grade_section' => $gradeSection,
             'avatar' => $row['gender'] === 'F' ? 'assets/user-female.png' : 'assets/user-male.png',
-            'parentPhone' => $parentPhone
+            'parentPhone' => $parentPhone,
+            'allergies' => $allergies
         ];
     }
     

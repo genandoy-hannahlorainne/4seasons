@@ -98,7 +98,7 @@ try {
         $student['allergies'] = $allergies;
 
         // Get last clinic visit
-        $visitQuery = "SELECT visit_id, visit_datetime as visit_date, chief_complaint as reason, notes as diagnosis, status 
+        $visitQuery = "SELECT visit_id, visit_datetime as visit_date, notes as reason, notes as diagnosis, status 
                        FROM medical_visits 
                        WHERE student_id = :student_id 
                        ORDER BY visit_datetime DESC 

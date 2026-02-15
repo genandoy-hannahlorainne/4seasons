@@ -29,7 +29,7 @@ try {
                 mv.visit_id,
                 mv.visit_datetime,
                 mv.visit_type,
-                mv.chief_complaint,
+                mv.notes as diagnosis,
                 mv.status,
                 s.student_id,
                 s.first_name,
@@ -72,13 +72,13 @@ try {
     // Create SMS message
     $studentName = trim($visit['first_name'] . ' ' . $visit['last_name']);
     $visitType = $visit['visit_type'];
-    $complaint = $visit['chief_complaint'];
+    $diagnosis = $visit['diagnosis'];
     $visitDate = date('M d, Y g:i A', strtotime($visit['visit_datetime']));
     
     if ($visitType === 'Emergency') {
-        $smsMessage = "URGENT: Your child {$studentName} had an emergency clinic visit on {$visitDate}. Reason: {$complaint}. Please contact Four Seasons School Clinic immediately at [CLINIC_PHONE].";
+        $smsMessage = "URGENT: Your child {$studentName} had an emergency clinic visit on {$visitDate}. Diagnosis: {$diagnosis}. Please contact Four Seasons School Clinic immediately at [CLINIC_PHONE].";
     } else {
-        $smsMessage = "Good day! Your child {$studentName} visited Four Seasons School Clinic on {$visitDate}. Reason: {$complaint}. For more details, please contact the clinic.";
+        $smsMessage = "Good day! Your child {$studentName} visited Four Seasons School Clinic on {$visitDate}. Diagnosis: {$diagnosis}. For more details, please contact the clinic.";
     }
     
     // Log the SMS (in production, integrate with SMS gateway like Semaphore, Globe Labs, etc.)

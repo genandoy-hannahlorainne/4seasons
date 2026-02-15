@@ -137,10 +137,10 @@ try {
         // Link student to section if grade_level and section are provided
         if (!empty($data->grade_level) && !empty($data->section) && $currentSchoolYearId) {
             // Find matching section
-            $findSectionQuery = "SELECT s.id, s.section_name, gl.level 
+            $findSectionQuery = "SELECT s.id, s.section_name, gl.level_number 
                                 FROM sections s
-                                LEFT JOIN grade_levels gl ON s.grade_level_id = gl.grade_level_id
-                                WHERE gl.level = :grade_level 
+                                LEFT JOIN grade_levels gl ON s.grade_level_id = gl.id
+                                WHERE gl.level_number = :grade_level 
                                 AND s.section_name = :section_name
                                 AND s.school_year_id = :school_year_id
                                 AND s.is_active = 1

@@ -1,7 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, user_id, User-Id, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -29,7 +29,7 @@ try {
     if ($student_id) {
         $query = "SELECT s.student_id, s.student_number, s.first_name, s.middle_name, s.last_name,
                          s.gender, s.birth_date, s.grade_level, s.section, s.blood_type,
-                         s.emergency_contact, s.contact_number, s.address
+                         s.emergency_contact, s.emergency_contact_phone, s.address
                   FROM students s
                   WHERE s.student_id = :student_id AND s.is_active = 1";
         $stmt = $db->prepare($query);
@@ -37,7 +37,7 @@ try {
     } else {
         $query = "SELECT s.student_id, s.student_number, s.first_name, s.middle_name, s.last_name,
                          s.gender, s.birth_date, s.grade_level, s.section, s.blood_type,
-                         s.emergency_contact, s.contact_number, s.address
+                         s.emergency_contact, s.emergency_contact_phone, s.address
                   FROM students s
                   WHERE s.student_number = :student_number AND s.is_active = 1";
         $stmt = $db->prepare($query);
@@ -60,7 +60,7 @@ try {
         $allergies = $allergyStmt->fetchAll(PDO::FETCH_COLUMN);
         
         // Get last visit
-        $visitQuery = "SELECT visit_datetime, chief_complaint, diagnosis, status 
+        $visitQuery = "SELECT visit_datetime, notes as diagnosis, status 
                        FROM medical_visits 
                        WHERE student_id = :student_id 
                        ORDER BY visit_datetime DESC LIMIT 1";
@@ -88,7 +88,7 @@ try {
                 'grade_section' => $gradeSection,
                 'blood_type' => $student['blood_type'],
                 'emergency_contact' => $student['emergency_contact'],
-                'contact_number' => $student['contact_number'],
+                'parentPhone' => $student['emergency_contact_phone'],
                 'address' => $student['address'],
                 'allergies' => $allergies,
                 'last_visit' => $lastVisit,
