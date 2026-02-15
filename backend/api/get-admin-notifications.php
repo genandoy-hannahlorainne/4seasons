@@ -25,7 +25,7 @@ try {
         // Use enhanced notification structure
         $query = "SELECT n.*, 
                          s.first_name, s.last_name, s.student_number, s.grade_level, s.section,
-                         mv.visit_type, mv.chief_complaint, mv.status as visit_status,
+                         mv.visit_type, mv.notes as diagnosis, mv.status as visit_status,
                          cs.position as staff_position,
                          u.full_name as staff_name
                   FROM notifications n
@@ -63,7 +63,7 @@ try {
                 'visit' => [
                     'visit_id' => $row['visit_id'] ?? null,
                     'visit_type' => $row['visit_type'] ?? 'N/A',
-                    'chief_complaint' => $row['chief_complaint'] ?? 'N/A',
+                    'diagnosis' => $row['diagnosis'] ?? 'N/A',
                     'status' => $row['visit_status'] ?? 'N/A'
                 ],
                 'staff' => [

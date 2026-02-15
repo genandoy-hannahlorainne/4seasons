@@ -73,7 +73,7 @@ export interface RecentVisit {
   visit_date: string;
   visit_time: string;
   visit_type: string;
-  chief_complaint: string;
+  diagnosis: string;
   status: string;
   student_name: string;
   student_number: string;

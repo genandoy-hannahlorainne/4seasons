@@ -385,3 +385,36 @@
     </div>
   </div>
 </div>
+
+<!-- QR Code Modal -->
+<div *ngIf="showQRModal" class="qr-modal-overlay" (click)="closeQRModal()">
+  <div class="qr-modal" (click)="$event.stopPropagation()">
+    <div class="qr-modal-header">
+      <h2>🎉 Your Medical Form is Complete!</h2>
+      <button class="close-btn" (click)="closeQRModal()">×</button>
+    </div>
+    <div class="qr-modal-body">
+      <p class="qr-message">
+        Please download your unique QR code. You'll need this for clinic visits.
+      </p>
+      <div class="qr-code-container">
+        <qrcode 
+          [qrdata]="qrCodeImage" 
+          [width]="256" 
+          [errorCorrectionLevel]="'M'"
+          [elementType]="'canvas'">
+        </qrcode>
+      </div>
+      <div class="student-info">
+        <p><strong>Name:</strong> {{ personalInfo.full_name }}</p>
+        <p><strong>Student Number:</strong> {{ personalInfo.student_number }}</p>
+      </div>
+      <button class="download-btn" (click)="downloadQRCode()">
+        📥 Download QR Code
+      </button>
+      <p class="qr-note">
+        Keep this QR code safe. You can also access it anytime from your profile.
+      </p>
+    </div>
+  </div>
+</div>

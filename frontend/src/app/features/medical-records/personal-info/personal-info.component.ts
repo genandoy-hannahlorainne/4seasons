@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { StudentService } from '../../../core/services/student.service';
+import { QRCodeComponent } from 'angularx-qrcode';
 
 interface PersonalInfo {
   full_name: string;
@@ -70,7 +71,7 @@ interface MedicalRecord {
 @Component({
   selector: 'app-personal-info',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, QRCodeComponent],
   templateUrl: './personal-info.component.html',
   styleUrls: ['./personal-info.component.scss']
 })
@@ -101,6 +102,11 @@ export class PersonalInfoComponent implements OnInit {
   physicalInfoEditMode = false;
   allergiesEditMode = false;
   medicalHistoryEditMode = false;
+  
+  // QR Code Modal
+  showQRModal = false;
+  qrCodeData: any = null;
+  qrCodeImage: string = '';
   
   // Editable copies
   editableInfo: PersonalInfo = { ...this.personalInfo };
@@ -540,6 +546,9 @@ export class PersonalInfoComponent implements OnInit {
         
         // Reload data to ensure consistency
         await this.loadPersonalInfo();
+        
+        // Check if forms are complete and show QR code modal
+        await this.checkAndShowQRCode();
       } else {
         this.error = response?.message || 'Failed to update medical history';
       }
@@ -548,6 +557,92 @@ export class PersonalInfoComponent implements OnInit {
       this.error = 'An error occurred while saving medical history';
     } finally {
       this.saving = false;
+    }
+  }
+
+  async checkAndShowQRCode() {
+    try {
+      const currentUser = this.authService.currentUserValue;
+      if (!currentUser || !this.medicalRecord) return;
+
+      // Check if all required forms are completed
+      const isComplete = this.isFormComplete();
+      
+      if (isComplete) {
+        // Check if QR was already downloaded (stored in localStorage)
+        const qrDownloaded = localStorage.getItem(`qr_downloaded_${currentUser.user_id}`);
+        
+        if (!qrDownloaded) {
+          // Fetch QR code data
+          const medicalData = await this.studentService.getStudentMedicalData(currentUser.user_id).toPromise();
+          if (medicalData?.success && medicalData.data?.personal_info?.student_id) {
+            const studentId = medicalData.data.personal_info.student_id;
+            
+            // Generate QR code content
+            this.qrCodeData = {
+              student_id: studentId,
+              student_number: this.personalInfo.student_number,
+              name: this.personalInfo.full_name
+            };
+            
+            this.qrCodeImage = JSON.stringify(this.qrCodeData);
+            this.showQRModal = true;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking QR code:', error);
+    }
+  }
+
+  isFormComplete(): boolean {
+    if (!this.medicalRecord) return false;
+    
+    const info = this.medicalRecord.personal_info;
+    const physical = this.medicalRecord.physical_info;
+    const history = this.medicalRecord.medical_history;
+    
+    // Check if all required fields are filled
+    return !!(
+      info.address &&
+      info.emergency_contact_person &&
+      info.emergency_contact_relation &&
+      info.phone_number &&
+      physical.height_cm &&
+      physical.weight_kg &&
+      history // Medical history exists
+    );
+  }
+
+  closeQRModal() {
+    this.showQRModal = false;
+  }
+
+  downloadQRCode() {
+    try {
+      const canvas = document.querySelector('.qr-modal canvas') as HTMLCanvasElement;
+      if (canvas) {
+        const url = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `QR_Code_${this.personalInfo.student_number}.png`;
+        link.click();
+        
+        // Mark as downloaded
+        const currentUser = this.authService.currentUserValue;
+        if (currentUser) {
+          localStorage.setItem(`qr_downloaded_${currentUser.user_id}`, 'true');
+        }
+        
+        this.successMessage = 'QR Code downloaded successfully!';
+        setTimeout(() => {
+          this.successMessage = '';
+          this.closeQRModal();
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error downloading QR code:', error);
+      this.error = 'Failed to download QR code';
     }
   }
 }

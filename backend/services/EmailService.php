@@ -26,7 +26,7 @@ class EmailService {
             'student_name' => $studentData['full_name'],
             'student_number' => $studentData['student_number'],
             'grade_section' => $studentData['grade_level'] . '-' . $studentData['section'],
-            'chief_complaint' => $visitData['chief_complaint'],
+            'diagnosis' => $visitData['diagnosis'],
             'visit_datetime' => $visitData['visit_datetime'],
             'clinic_staff' => $visitData['staff_name'],
             'timestamp' => date('Y-m-d H:i:s')
@@ -46,7 +46,7 @@ class EmailService {
             'student_name' => $studentData['full_name'],
             'student_number' => $studentData['student_number'],
             'grade_section' => $studentData['grade_level'] . '-' . $studentData['section'],
-            'chief_complaint' => $visitData['chief_complaint'],
+            'diagnosis' => $visitData['diagnosis'],
             'visit_datetime' => $visitData['visit_datetime'],
             'clinic_staff' => $visitData['staff_name'],
             'timestamp' => date('Y-m-d H:i:s')
@@ -68,7 +68,7 @@ class EmailService {
             'student_name' => $studentData['full_name'],
             'student_number' => $studentData['student_number'],
             'grade_section' => $studentData['grade_level'] . '-' . $studentData['section'],
-            'chief_complaint' => $visitData['chief_complaint'],
+            'diagnosis' => $visitData['diagnosis'],
             'visit_datetime' => $visitData['visit_datetime'],
             'clinic_staff' => $visitData['staff_name'],
             'is_emergency' => $isEmergency,
@@ -147,7 +147,7 @@ class EmailService {
                     <p><strong>Name:</strong> {$vars['student_name']}</p>
                     <p><strong>Student Number:</strong> {$vars['student_number']}</p>
                     <p><strong>Grade & Section:</strong> {$vars['grade_section']}</p>
-                    <p><strong>Chief Complaint:</strong> {$vars['chief_complaint']}</p>
+                    <p><strong>Diagnosis:</strong> {$vars['diagnosis']}</p>
                     <p><strong>Visit Time:</strong> {$vars['visit_datetime']}</p>
                     <p><strong>Attended by:</strong> {$vars['clinic_staff']}</p>
                 </div>
@@ -191,7 +191,7 @@ class EmailService {
                     <p><strong>Student:</strong> {$vars['student_name']}</p>
                     <p><strong>Student Number:</strong> {$vars['student_number']}</p>
                     <p><strong>Grade & Section:</strong> {$vars['grade_section']}</p>
-                    <p><strong>Reason for Visit:</strong> {$vars['chief_complaint']}</p>
+                    <p><strong>Diagnosis:</strong> {$vars['diagnosis']}</p>
                     <p><strong>Visit Time:</strong> {$vars['visit_datetime']}</p>
                     <p><strong>Attended by:</strong> {$vars['clinic_staff']}</p>
                 </div>
@@ -240,7 +240,7 @@ class EmailService {
                     <p><strong>Student:</strong> {$vars['student_name']}</p>
                     <p><strong>Student Number:</strong> {$vars['student_number']}</p>
                     <p><strong>Grade & Section:</strong> {$vars['grade_section']}</p>
-                    <p><strong>Reason for Visit:</strong> {$vars['chief_complaint']}</p>
+                    <p><strong>Diagnosis:</strong> {$vars['diagnosis']}</p>
                     <p><strong>Visit Time:</strong> {$vars['visit_datetime']}</p>
                     <p><strong>Attended by:</strong> {$vars['clinic_staff']}</p>
                 </div>

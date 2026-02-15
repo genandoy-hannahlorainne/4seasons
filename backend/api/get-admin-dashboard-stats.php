@@ -47,7 +47,7 @@ try {
                         s.last_name,
                         s.student_number,
                         mv.visit_datetime,
-                        mv.chief_complaint,
+                        mv.notes as diagnosis,
                         cs.position
                     FROM medical_visits mv
                     JOIN students s ON mv.student_id = s.student_id
