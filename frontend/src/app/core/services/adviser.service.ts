@@ -88,8 +88,7 @@ export class AdviserService {
   constructor(private http: HttpClient) {}
 
   getAdviserDashboard(userId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/get-adviser-dashboard.php?user_id=${userId}`);
-
+    return this.http.post<any>(`${environment.apiUrl}/get-adviser-dashboard.php`, { user_id: userId });
   }
 
   getAdvisoryStudents(userId: number): Observable<AdvisoryStudentsResponse> {
@@ -142,5 +141,13 @@ export class AdviserService {
   // Health Monitoring Heat Map
   getHealthHeatmap(days: number = 7): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/adviser/get-health-heatmap.php?days=${days}`);
+  }
+
+  // Profile Management
+  updateAdviserProfile(userId: number, profileData: any): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/update-adviser-profile.php`, {
+      user_id: userId,
+      ...profileData
+    });
   }
 }

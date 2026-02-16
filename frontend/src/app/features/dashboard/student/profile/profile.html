@@ -68,8 +68,11 @@
             <span class="input-icon" aria-hidden="true">
               <img src="assets/contact-icon.png" alt="" class="input-icon-img">
             </span>
-            <input type="tel" id="contactNumber" formControlName="contactNumber" class="form-control" [readonly]="!isEditing">
+            <input type="tel" id="contactNumber" formControlName="contactNumber" class="form-control" [readonly]="!isEditing" placeholder="Enter your phone number">
           </div>
+          <small class="field-note" *ngIf="!profileForm.get('contactNumber')?.value && !isEditing">
+            No phone number on file. Click Edit to add one.
+          </small>
         </div>
 
         <div class="field">

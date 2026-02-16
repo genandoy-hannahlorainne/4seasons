@@ -49,62 +49,74 @@ try {
         exit;
     }
 
-    // Get adviser's grade level and section
-    $adviserQuery = "SELECT a.adviser_id, a.grade_level, a.section 
-                     FROM advisers a
-                     WHERE a.user_id = :user_id AND a.is_active = 1";
-    $adviserStmt = $db->prepare($adviserQuery);
-    $adviserStmt->bindParam(':user_id', $user_id);
-    $adviserStmt->execute();
+    // Get adviser's assigned section(s) for the school year
+    $sectionQuery = "SELECT 
+                        s.id as section_id,
+                        s.section_name,
+                        s.grade_level_id,
+                        s.school_year_id,
+                        gl.level_name,
+                        gl.level_number
+                     FROM sections s
+                     INNER JOIN grade_levels gl ON s.grade_level_id = gl.id
+                     WHERE s.adviser_id = :user_id 
+                       AND s.school_year_id = :school_year_id
+                       AND s.is_active = 1
+                     LIMIT 1";
     
-    if ($adviserStmt->rowCount() === 0) {
-        http_response_code(404);
+    $sectionStmt = $db->prepare($sectionQuery);
+    $sectionStmt->bindParam(':user_id', $user_id);
+    $sectionStmt->bindParam(':school_year_id', $school_year_id);
+    $sectionStmt->execute();
+    
+    if ($sectionStmt->rowCount() === 0) {
+        http_response_code(200);
         echo json_encode([
-            'success' => false,
-            'message' => 'Adviser record not found'
+            'success' => true,
+            'section' => null,
+            'students' => [],
+            'total_students' => 0,
+            'message' => 'No section assigned for this school year'
         ]);
         exit;
     }
     
-    $adviser = $adviserStmt->fetch(PDO::FETCH_ASSOC);
-    $adviser_id = $adviser['adviser_id'];
-    $grade_level = $adviser['grade_level'];
-    $section = $adviser['section'];
+    $section = $sectionStmt->fetch(PDO::FETCH_ASSOC);
 
-    // Get students in this adviser's grade level and section for the selected school year
+    // Get students in this section
     $studentQuery = "SELECT 
-                    s.student_id,
-                    s.first_name,
-                    s.last_name,
-                    s.student_number,
-                    s.grade_level,
-                    s.section,
-                    s.current_school_year_id,
-                    COUNT(mv.visit_id) as total_medical_visits,
-                    MAX(mv.visit_datetime) as last_visit_date,
-                    s.is_active
-                    FROM students s
-                    LEFT JOIN medical_visits mv ON s.student_id = mv.student_id
-                    WHERE s.grade_level = :grade_level
-                    AND s.section = :section
-                    AND s.current_school_year_id = :school_year_id
-                    AND s.is_active = 1
-                    GROUP BY s.student_id, s.first_name, s.last_name, s.student_number, s.grade_level, s.section, s.current_school_year_id, s.is_active
-                    ORDER BY s.last_name, s.first_name";
+                        s.student_id,
+                        s.first_name,
+                        s.last_name,
+                        s.student_number,
+                        s.grade_level,
+                        s.section,
+                        s.current_school_year_id,
+                        COUNT(mv.visit_id) as total_medical_visits,
+                        MAX(mv.visit_datetime) as last_visit_date,
+                        s.is_active
+                     FROM students s
+                     LEFT JOIN medical_visits mv ON s.student_id = mv.student_id
+                     WHERE s.current_section_id = :section_id
+                       AND s.current_school_year_id = :school_year_id
+                       AND s.is_active = 1
+                       AND s.enrollment_status = 'active'
+                     GROUP BY s.student_id, s.first_name, s.last_name, s.student_number, 
+                              s.grade_level, s.section, s.current_school_year_id, s.is_active
+                     ORDER BY s.last_name, s.first_name";
 
     $studentStmt = $db->prepare($studentQuery);
-    $studentStmt->bindParam(':grade_level', $grade_level);
-    $studentStmt->bindParam(':section', $section);
+    $studentStmt->bindParam(':section_id', $section['section_id']);
     $studentStmt->bindParam(':school_year_id', $school_year_id);
     $studentStmt->execute();
     $students = $studentStmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Build section info
     $sectionInfo = [
-        'id' => null,
-        'section_name' => $section,
-        'level_name' => "Grade $grade_level",
-        'level_number' => intval($grade_level)
+        'id' => $section['section_id'],
+        'section_name' => $section['section_name'],
+        'level_name' => $section['level_name'],
+        'level_number' => intval($section['level_number'])
     ];
 
     http_response_code(200);

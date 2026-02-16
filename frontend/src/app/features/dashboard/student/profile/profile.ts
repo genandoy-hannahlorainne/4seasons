@@ -114,6 +114,7 @@ export class StudentProfileComponent implements OnInit {
         if (response.success && response.profile) {
           const profile = response.profile;
           console.log('Profile data:', profile);
+          console.log('Phone number from API:', profile.phone, profile.contact_number);
           
           // Convert gender from database format to form format
           const genderMap: any = { 'M': 'male', 'F': 'female', 'Other': 'other' };
@@ -139,9 +140,12 @@ export class StudentProfileComponent implements OnInit {
             section: profile.section || '',
             address: profile.address || '',
             bloodType: profile.blood_type || '',
-            contactNumber: profile.contact_number || '',
+            contactNumber: profile.contact_number || profile.phone || '',
             email: profile.email || ''
           });
+          
+          // Debug log to verify phone number is set
+          console.log('Contact number set to:', profile.contact_number || profile.phone || '');
           
           // Disable form after loading
           this.profileForm.disable();

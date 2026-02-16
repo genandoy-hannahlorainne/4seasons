@@ -91,7 +91,7 @@ if (!empty($data->role) && !empty($data->password)) {
         $userStmt->bindParam(":password_hash", $password_hash);
         $email = $data->email ?? null;
         $userStmt->bindParam(":email", $email);
-        $phone = $data->contactNumber ?? null;
+        $phone = $data->contactNumber ?? $data->phone ?? null;
         $userStmt->bindParam(":phone", $phone);
         $userStmt->bindParam(":full_name", $full_name);
         $userStmt->execute();
@@ -208,7 +208,7 @@ if (!empty($data->role) && !empty($data->password)) {
             $adviserStmt->bindParam(":user_id", $user_id);
             $adviserStmt->bindParam(":first_name", $data->firstName);
             $adviserStmt->bindParam(":last_name", $data->lastName);
-            $contactPhone = $data->contactNumber ?? null;
+            $contactPhone = $data->contactNumber ?? $data->phone ?? null;
             $adviserStmt->bindParam(":contact_phone", $contactPhone);
             $gradeLevel = $data->gradeLevel ?? null;
             $adviserStmt->bindParam(":grade_level", $gradeLevel);
