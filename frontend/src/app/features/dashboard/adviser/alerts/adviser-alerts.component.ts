@@ -50,15 +50,15 @@ interface Alert {
           </button>
           <button 
             class="filter-btn" 
-            [class.active]="activeFilter === 'unread'"
-            (click)="setFilter('unread')">
-            Unread ({{ unreadCount }})
+            [class.active]="activeFilter === 'recent'"
+            (click)="setFilter('recent')">
+            Recent ({{ recentCount }})
           </button>
           <button 
             class="filter-btn" 
-            [class.active]="activeFilter === 'urgent'"
-            (click)="setFilter('urgent')">
-            Urgent ({{ urgentCount }})
+            [class.active]="activeFilter === 'unread'"
+            (click)="setFilter('unread')">
+            Unread ({{ unreadCount }})
           </button>
         </div>
 
@@ -424,21 +424,56 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
 
   get filteredAlerts(): Alert[] {
     switch (this.activeFilter) {
+      case 'recent':
+        // Show alerts from last 7 days
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return this.alerts.filter(a => {
+          const alertDate = this.parseTimeAgo(a.timeAgo);
+          return alertDate >= sevenDaysAgo;
+        });
       case 'unread':
         return this.alerts.filter(a => !a.isRead);
-      case 'urgent':
-        return this.alerts.filter(a => a.priority === 'urgent');
       default:
         return this.alerts;
     }
+  }
+
+  get recentCount(): number {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return this.alerts.filter(a => {
+      const alertDate = this.parseTimeAgo(a.timeAgo);
+      return alertDate >= sevenDaysAgo;
+    }).length;
   }
 
   get unreadCount(): number {
     return this.alerts.filter(a => !a.isRead).length;
   }
 
-  get urgentCount(): number {
-    return this.alerts.filter(a => a.priority === 'urgent').length;
+  // Helper to parse timeAgo string to Date
+  private parseTimeAgo(timeAgo: string): Date {
+    const now = new Date();
+    const match = timeAgo.match(/(\d+)([smhd])/);
+    
+    if (!match) return now;
+    
+    const value = parseInt(match[1]);
+    const unit = match[2];
+    
+    switch (unit) {
+      case 's': // seconds
+        return new Date(now.getTime() - value * 1000);
+      case 'm': // minutes
+        return new Date(now.getTime() - value * 60 * 1000);
+      case 'h': // hours
+        return new Date(now.getTime() - value * 60 * 60 * 1000);
+      case 'd': // days
+        return new Date(now.getTime() - value * 24 * 60 * 60 * 1000);
+      default:
+        return now;
+    }
   }
 
   ngOnInit(): void {

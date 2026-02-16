@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 05, 2026 at 12:34 PM
+-- Generation Time: Feb 16, 2026 at 05:48 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -1378,7 +1378,277 @@ INSERT INTO `activity_logs` (`log_id`, `user_id`, `action`, `details`, `ip_addre
 (1755, 32, 'Created User Account', 'Created clinic_staff account: STAFF-01 (Lulubelle Gabasa)', '::1', '2026-02-05 11:30:45'),
 (1756, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-05 11:30:50'),
 (1757, 63, 'Login', NULL, '::1', '2026-02-05 11:31:29'),
-(1758, 63, 'Password Changed', 'User changed password (forced change)', '::1', '2026-02-05 11:31:37');
+(1758, 63, 'Password Changed', 'User changed password (forced change)', '::1', '2026-02-05 11:31:37'),
+(1759, 60, 'Login', NULL, '::1', '2026-02-05 11:56:40'),
+(1760, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-05 11:57:09'),
+(1761, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-05 11:57:09'),
+(1762, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-05 11:57:39'),
+(1763, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-05 11:58:09'),
+(1764, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-05 11:58:45'),
+(1765, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-05 11:58:45'),
+(1766, 32, 'Login', NULL, '::1', '2026-02-05 11:59:13'),
+(1767, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-05 11:59:14'),
+(1768, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-05 11:59:14'),
+(1769, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-05 11:59:16'),
+(1770, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-05 11:59:16'),
+(1771, 62, 'Login', NULL, '::1', '2026-02-05 11:59:51'),
+(1772, 60, 'Login', NULL, '::1', '2026-02-05 12:15:30'),
+(1773, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-05 12:15:33'),
+(1774, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-05 12:15:33'),
+(1775, 32, 'Login', NULL, '::1', '2026-02-05 12:16:03'),
+(1776, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-05 12:16:03'),
+(1777, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-05 12:16:03'),
+(1778, 62, 'Login', NULL, '::1', '2026-02-05 13:38:57'),
+(1779, 60, 'Login', NULL, '::1', '2026-02-05 13:39:17'),
+(1780, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-05 13:39:26'),
+(1781, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-05 13:39:26'),
+(1782, 61, 'Login', NULL, '::1', '2026-02-05 13:40:52'),
+(1783, 62, 'Login', NULL, '::1', '2026-02-14 08:07:02'),
+(1784, 61, 'Login', NULL, '::1', '2026-02-14 08:52:18'),
+(1785, 63, 'Login', NULL, '::1', '2026-02-14 08:53:20'),
+(1786, 61, 'Login', NULL, '::1', '2026-02-14 10:22:18'),
+(1787, 32, 'Login', NULL, '::1', '2026-02-14 10:22:45'),
+(1788, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:22:45'),
+(1789, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:22:45'),
+(1790, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:23:15'),
+(1791, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:23:46'),
+(1792, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:24:15'),
+(1793, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:26:31'),
+(1794, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:26:48'),
+(1795, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:26:50'),
+(1796, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:26:50'),
+(1797, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:26:51'),
+(1798, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:26:51'),
+(1799, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:27:20'),
+(1800, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:27:22'),
+(1801, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:27:50'),
+(1802, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:27:52'),
+(1803, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:28:20'),
+(1804, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:28:23'),
+(1805, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:28:35'),
+(1806, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:28:36'),
+(1807, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:28:37'),
+(1808, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:28:37'),
+(1809, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:29:05'),
+(1810, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:29:11'),
+(1811, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:29:35'),
+(1812, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:29:38'),
+(1813, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:30:05'),
+(1814, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:30:08'),
+(1815, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:30:35'),
+(1816, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:30:38'),
+(1817, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:30:41'),
+(1818, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:30:41'),
+(1819, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:31:08'),
+(1820, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:31:12'),
+(1821, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:31:38'),
+(1822, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:31:42'),
+(1823, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:32:12'),
+(1824, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:32:42'),
+(1825, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:33:00'),
+(1826, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:33:12'),
+(1827, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:33:42'),
+(1828, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:34:00'),
+(1829, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:35:00'),
+(1830, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:35:00'),
+(1831, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:36:00'),
+(1832, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:36:02'),
+(1833, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:36:03'),
+(1834, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:36:03'),
+(1835, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 10:36:13'),
+(1836, 60, 'Login', NULL, '::1', '2026-02-14 10:36:52'),
+(1837, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:41:15'),
+(1838, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:41:15'),
+(1839, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:41:24'),
+(1840, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:41:24'),
+(1841, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:41:55'),
+(1842, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:42:25'),
+(1843, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:42:55'),
+(1844, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:43:25'),
+(1845, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:43:58'),
+(1846, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:44:25'),
+(1847, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:44:55'),
+(1848, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:45:25'),
+(1849, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:46:00'),
+(1850, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:47:00'),
+(1851, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:48:00'),
+(1852, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:49:00'),
+(1853, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:50:00'),
+(1854, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:51:00'),
+(1855, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:51:12'),
+(1856, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:51:12'),
+(1857, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:51:48'),
+(1858, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:51:48'),
+(1859, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:52:20'),
+(1860, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:52:49'),
+(1861, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:53:19'),
+(1862, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:53:49'),
+(1863, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:54:19'),
+(1864, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:54:49'),
+(1865, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:55:43'),
+(1866, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:56:00'),
+(1867, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:57:00'),
+(1868, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:58:04'),
+(1869, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 10:59:05'),
+(1870, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:05:31'),
+(1871, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:05:31'),
+(1872, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:06:01'),
+(1873, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:06:31'),
+(1874, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:07:01'),
+(1875, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:07:31'),
+(1876, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:08:01'),
+(1877, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:08:31'),
+(1878, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:09:58'),
+(1879, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:10:59'),
+(1880, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:12:00'),
+(1881, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:13:00'),
+(1882, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:14:00'),
+(1883, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:15:00'),
+(1884, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:16:00'),
+(1885, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:16:31'),
+(1886, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:16:31'),
+(1887, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:17:39'),
+(1888, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-14 11:17:39'),
+(1889, 61, 'Login', NULL, '::1', '2026-02-14 11:18:00'),
+(1890, 32, 'Login', NULL, '::1', '2026-02-14 11:31:36'),
+(1891, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:31:37'),
+(1892, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:31:37'),
+(1893, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:31:47'),
+(1894, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:31:47'),
+(1895, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:32:17'),
+(1896, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:32:47'),
+(1897, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:33:17'),
+(1898, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:33:48'),
+(1899, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:34:18'),
+(1900, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:34:48'),
+(1901, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:35:18'),
+(1902, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:36:00'),
+(1903, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:37:00'),
+(1904, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:38:00'),
+(1905, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:38:28'),
+(1906, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:38:31'),
+(1907, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:38:31'),
+(1908, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:39:01'),
+(1909, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:39:31'),
+(1910, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:40:01'),
+(1911, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:40:31'),
+(1912, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:41:01'),
+(1913, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:41:31'),
+(1914, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:42:01'),
+(1915, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:42:31'),
+(1916, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:43:01'),
+(1917, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:43:31'),
+(1918, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-14 11:44:01'),
+(1919, 32, 'Created User Account', 'Created student account: 136883100331 (Irish  Grande  Gallaza)', '::1', '2026-02-14 11:44:19'),
+(1920, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-14 11:44:23'),
+(1921, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-14 11:44:31'),
+(1922, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-14 11:45:01'),
+(1923, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-14 11:46:00'),
+(1924, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-14 11:47:00'),
+(1925, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-14 11:48:00'),
+(1926, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-14 11:49:00'),
+(1927, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-14 11:50:00'),
+(1928, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-14 11:51:00'),
+(1929, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-14 11:51:31'),
+(1930, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-14 11:52:01'),
+(1931, 65, 'Login', NULL, '::1', '2026-02-14 11:52:25'),
+(1932, 65, 'Password Changed', 'User changed password (forced change)', '::1', '2026-02-14 11:52:35'),
+(1933, 65, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-14 11:52:55'),
+(1934, 65, 'Update Medical History', 'Updated medical history for student ID: 24', '::1', '2026-02-14 11:53:52'),
+(1935, 65, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-14 11:54:14'),
+(1936, 60, 'Login', NULL, '::1', '2026-02-14 11:54:31'),
+(1937, 62, 'Login', NULL, '::1', '2026-02-16 14:32:13'),
+(1938, 65, 'Login', NULL, '::1', '2026-02-16 14:32:41'),
+(1939, 60, 'Login', NULL, '::1', '2026-02-16 14:33:17'),
+(1940, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:33:34'),
+(1941, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:33:34'),
+(1942, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:34:04'),
+(1943, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:34:34'),
+(1944, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:35:05'),
+(1945, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:35:35'),
+(1946, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:36:05'),
+(1947, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:36:35'),
+(1948, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:37:54'),
+(1949, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:38:54'),
+(1950, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:39:54'),
+(1951, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:40:54'),
+(1952, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:41:54'),
+(1953, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:42:54'),
+(1954, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:43:54'),
+(1955, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:44:54'),
+(1956, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:45:12'),
+(1957, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:45:35'),
+(1958, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:46:04'),
+(1959, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:46:35'),
+(1960, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:48:24'),
+(1961, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:48:24'),
+(1962, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:48:54'),
+(1963, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:49:24'),
+(1964, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:49:54'),
+(1965, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:50:24'),
+(1966, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:50:54'),
+(1967, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:51:24'),
+(1968, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:51:54'),
+(1969, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:52:54'),
+(1970, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:53:55'),
+(1971, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:54:03'),
+(1972, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:54:03'),
+(1973, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:54:34'),
+(1974, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:55:04'),
+(1975, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:55:34'),
+(1976, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:56:04'),
+(1977, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:56:34'),
+(1978, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:57:04'),
+(1979, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:57:54'),
+(1980, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:58:54'),
+(1981, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 14:59:54'),
+(1982, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 15:00:19'),
+(1983, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 15:00:22'),
+(1984, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 15:00:22'),
+(1985, 60, 'View Notifications', 'Viewed adviser notifications - 3 notifications', '::1', '2026-02-16 15:00:53'),
+(1986, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 15:01:16'),
+(1987, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 15:01:16'),
+(1988, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 15:01:46'),
+(1989, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 15:02:01'),
+(1990, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 15:02:01'),
+(1991, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 15:02:31'),
+(1992, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 15:03:01'),
+(1993, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 15:03:31'),
+(1994, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 15:03:44'),
+(1995, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 15:03:44'),
+(1996, 63, 'Login', NULL, '::1', '2026-02-16 15:33:57'),
+(1997, 62, 'Login', NULL, '::1', '2026-02-16 16:35:50'),
+(1998, 32, 'Login', NULL, '::1', '2026-02-16 16:36:14'),
+(1999, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:36:15'),
+(2000, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:36:15'),
+(2001, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:36:20'),
+(2002, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:36:20'),
+(2003, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:37:31'),
+(2004, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:37:31'),
+(2005, 61, 'Login', NULL, '::1', '2026-02-16 16:37:58'),
+(2006, 65, 'Login', NULL, '::1', '2026-02-16 16:38:15'),
+(2007, 62, 'Login', NULL, '::1', '2026-02-16 16:38:28'),
+(2008, 32, 'Login', NULL, '::1', '2026-02-16 16:41:51'),
+(2009, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-16 16:41:52'),
+(2010, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-16 16:41:52'),
+(2011, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-16 16:41:53'),
+(2012, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-16 16:41:53'),
+(2013, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-02-16 16:42:23'),
+(2014, 32, 'Created User Account', 'Created student account: 136883100331 (Irish Grande Gallaza)', '::1', '2026-02-16 16:42:37'),
+(2015, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:42:42'),
+(2016, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:42:54'),
+(2017, 66, 'Login', NULL, '::1', '2026-02-16 16:43:05'),
+(2018, 66, 'Password Changed', 'User changed password (forced change)', '::1', '2026-02-16 16:43:15'),
+(2019, 66, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-16 16:43:38'),
+(2020, 66, 'Update Allergies', 'Updated allergies list - 1 allergies saved', '::1', '2026-02-16 16:43:56'),
+(2021, 66, 'Update Medical History', 'Updated medical history for student ID: 26', '::1', '2026-02-16 16:44:51'),
+(2022, 66, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-16 16:45:52'),
+(2023, 60, 'Login', NULL, '::1', '2026-02-16 16:46:17'),
+(2024, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 16:46:20'),
+(2025, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 16:46:20'),
+(2026, 32, 'Login', NULL, '::1', '2026-02-16 16:46:38'),
+(2027, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:46:38'),
+(2028, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:46:38');
 
 -- --------------------------------------------------------
 
@@ -1446,7 +1716,50 @@ CREATE TABLE `allergies` (
 --
 
 INSERT INTO `allergies` (`allergy_id`, `student_id`, `allergy_text`, `severity`, `recorded_at`) VALUES
-(15, 22, 'Seafood ', 'Moderate', '2026-02-05');
+(15, 22, 'Seafood ', 'Moderate', '2026-02-05'),
+(16, 26, 'Peanuts', 'Mild', '2026-02-16');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `clearance_requests`
+--
+
+CREATE TABLE `clearance_requests` (
+  `request_id` bigint(20) UNSIGNED NOT NULL,
+  `student_id` int(10) UNSIGNED NOT NULL COMMENT 'Student requesting clearance',
+  `requested_by` int(10) UNSIGNED NOT NULL COMMENT 'User who made the request',
+  `clearance_type` enum('off_campus','sports','field_trip','swimming','general') DEFAULT 'general',
+  `activity_name` varchar(200) DEFAULT NULL COMMENT 'Name of specific activity',
+  `activity_date` date DEFAULT NULL COMMENT 'Date of activity',
+  `reason` text DEFAULT NULL COMMENT 'Reason clearance is needed',
+  `status` enum('pending','approved','denied','cancelled') DEFAULT 'pending',
+  `processed_by` int(10) UNSIGNED DEFAULT NULL COMMENT 'Staff who processed request',
+  `processed_at` datetime DEFAULT NULL COMMENT 'When request was processed',
+  `response_notes` text DEFAULT NULL COMMENT 'Notes from processing staff',
+  `parent_notified` tinyint(1) DEFAULT 0 COMMENT 'Parent has been notified',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Tracks clearance requests from teachers/staff';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `clearance_violations`
+--
+
+CREATE TABLE `clearance_violations` (
+  `violation_id` bigint(20) UNSIGNED NOT NULL,
+  `student_id` int(10) UNSIGNED NOT NULL COMMENT 'Student who was flagged',
+  `scanned_by` int(10) UNSIGNED NOT NULL COMMENT 'Staff who scanned QR',
+  `activity_type` varchar(100) DEFAULT NULL COMMENT 'Activity they were trying to join',
+  `violation_reason` text DEFAULT NULL COMMENT 'Why they were flagged',
+  `clearance_status` varchar(50) DEFAULT NULL COMMENT 'Their clearance status at time of scan',
+  `action_taken` text DEFAULT NULL COMMENT 'What action was taken',
+  `parent_notified` tinyint(1) DEFAULT 0 COMMENT 'Parent was notified of violation',
+  `resolved` tinyint(1) DEFAULT 0 COMMENT 'Issue has been resolved',
+  `resolved_at` datetime DEFAULT NULL COMMENT 'When issue was resolved',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Tracks when students are flagged for clearance issues';
 
 -- --------------------------------------------------------
 
@@ -1489,7 +1802,8 @@ CREATE TABLE `diagnoses` (
 --
 
 INSERT INTO `diagnoses` (`diagnosis_id`, `visit_id`, `icd_code`, `diagnosis_text`) VALUES
-(16, 17, NULL, 'Fever');
+(16, 17, NULL, 'Fever'),
+(17, 18, NULL, 'Fever');
 
 -- --------------------------------------------------------
 
@@ -1517,7 +1831,10 @@ INSERT INTO `email_logs` (`log_id`, `recipient`, `subject`, `priority`, `status`
 (30, 'wallance@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-05 08:22:46', '2026-02-05 08:22:50'),
 (31, 'hannah@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-05 11:26:06', '2026-02-05 11:26:12'),
 (32, 'lulubelle@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-05 11:30:45', '2026-02-05 11:30:50'),
-(33, 'h.igot@gmail.com', 'Student Medical Visit Notification - Hannah Lorainne', 'normal', 'sent', NULL, '2026-02-05 11:32:26', '2026-02-05 11:32:30');
+(33, 'h.igot@gmail.com', 'Student Medical Visit Notification - Hannah Lorainne', 'normal', 'sent', NULL, '2026-02-05 11:32:26', '2026-02-05 11:32:30'),
+(34, 'admin@pdmhs.edu.ph', '🚨 EMERGENCY ALERT - Medical Attention Required', 'high', 'sent', NULL, '2026-02-14 10:21:54', '2026-02-14 10:21:58'),
+(35, 'lorainne@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-14 11:44:19', '2026-02-14 11:44:23'),
+(36, 'irish@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-16 16:42:38', '2026-02-16 16:42:42');
 
 -- --------------------------------------------------------
 
@@ -1544,6 +1861,39 @@ INSERT INTO `grade_levels` (`id`, `level_number`, `level_name`, `description`, `
 (4, 10, 'Grade 10', 'Fourth Year - Junior High School', '2026-01-15 08:03:58'),
 (5, 11, 'Grade 11', 'First Year - Senior High School', '2026-01-15 08:03:58'),
 (6, 12, 'Grade 12', 'Second Year - Senior High School', '2026-01-15 08:03:58');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medical_clearances`
+--
+
+CREATE TABLE `medical_clearances` (
+  `clearance_id` bigint(20) UNSIGNED NOT NULL,
+  `student_id` int(10) UNSIGNED NOT NULL COMMENT 'Student requiring clearance',
+  `clearance_type` enum('off_campus','sports','field_trip','swimming','general') DEFAULT 'general' COMMENT 'Type of activity clearance',
+  `status` enum('approved','pending','denied','expired') DEFAULT 'pending' COMMENT 'Clearance status',
+  `required_for` text DEFAULT NULL COMMENT 'Specific medical conditions requiring clearance',
+  `issued_date` date DEFAULT NULL COMMENT 'Date clearance was approved',
+  `expiry_date` date DEFAULT NULL COMMENT 'Date clearance expires',
+  `issued_by` varchar(150) DEFAULT NULL COMMENT 'Staff member who approved',
+  `parent_consent` tinyint(1) DEFAULT 0 COMMENT 'Parent has given consent',
+  `doctor_approval` tinyint(1) DEFAULT 0 COMMENT 'Doctor has approved',
+  `doctor_name` varchar(150) DEFAULT NULL COMMENT 'Approving doctor name',
+  `medical_notes` text DEFAULT NULL COMMENT 'Medical notes or restrictions',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Tracks medical clearances for various activities';
+
+--
+-- Dumping data for table `medical_clearances`
+--
+
+INSERT INTO `medical_clearances` (`clearance_id`, `student_id`, `clearance_type`, `status`, `required_for`, `issued_date`, `expiry_date`, `issued_by`, `parent_consent`, `doctor_approval`, `doctor_name`, `medical_notes`, `created_at`, `updated_at`) VALUES
+(1, 21, 'off_campus', 'approved', 'General off-campus activities', '2026-02-16', '2026-08-16', NULL, 1, 1, NULL, 'Student cleared for normal off-campus activities', '2026-02-16 15:20:42', '2026-02-16 15:20:42'),
+(2, 22, 'off_campus', 'approved', 'General off-campus activities', '2026-02-16', '2026-08-16', NULL, 1, 1, NULL, 'Student cleared for normal off-campus activities', '2026-02-16 15:20:42', '2026-02-16 15:20:42'),
+(3, 24, 'off_campus', 'approved', 'General off-campus activities', '2026-02-16', '2026-08-16', NULL, 1, 1, NULL, 'Student cleared for normal off-campus activities', '2026-02-16 15:20:42', '2026-02-16 15:20:42'),
+(4, 25, 'off_campus', 'pending', 'Heart condition - requires doctor approval', '2026-02-16', '2026-08-16', NULL, 1, 1, NULL, 'Student has heart condition. Requires parent consent and doctor approval before off-campus activities.', '2026-02-16 15:43:28', '2026-02-16 15:47:03');
 
 -- --------------------------------------------------------
 
@@ -1588,7 +1938,10 @@ CREATE TABLE `medical_history` (
 
 INSERT INTO `medical_history` (`history_id`, `student_id`, `recorded_at`, `allergy_medicine`, `allergy_pollens`, `allergy_food`, `allergy_stinging_insects`, `condition_error_refraction`, `condition_heart_problem`, `condition_bleeding_disorder`, `condition_hernia`, `condition_asthma`, `condition_anemia`, `condition_anxiety_depression`, `condition_seizure`, `surgery_hospitalization`, `surgery_details`, `family_tuberculosis`, `family_cancer`, `family_stroke_cardiac`, `family_diabetes`, `family_hypertension`, `family_depression`, `family_thyroid`, `family_phobia`, `smoke_exposure`, `notes`, `updated_at`) VALUES
 (3, 21, '2026-02-05 11:06:00', 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, NULL, 0, 0, 0, 1, 0, 0, 0, 0, 1, NULL, '2026-02-05 11:21:05'),
-(4, 22, '2026-02-05 11:27:40', 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, NULL, 0, 0, 0, 1, 0, 0, 0, 0, 1, NULL, '2026-02-05 11:28:32');
+(4, 22, '2026-02-05 11:27:40', 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, NULL, 0, 0, 0, 1, 0, 0, 0, 0, 1, NULL, '2026-02-05 11:28:32'),
+(5, 24, '2026-02-14 11:53:52', 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, NULL, 0, 0, 0, 1, 0, 0, 0, 0, 1, NULL, NULL),
+(6, 25, '2026-02-16 15:43:28', 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL),
+(7, 26, '2026-02-16 16:44:51', 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, NULL, 0, 0, 0, 1, 0, 0, 0, 0, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1616,7 +1969,8 @@ CREATE TABLE `medical_visits` (
 --
 
 INSERT INTO `medical_visits` (`visit_id`, `student_id`, `clinic_staff_id`, `visit_datetime`, `visit_type`, `chief_complaint`, `notes`, `status`, `notify_parent`, `parent_notified_at`, `notification_method`, `created_at`) VALUES
-(17, 22, 3, '2026-02-05 11:31:00', 'Routine', 'Fever', 'Diagnosis: Fever', 'Closed', 0, NULL, 'none', '2026-02-05 11:32:26');
+(17, 22, 3, '2026-02-05 11:31:00', 'Routine', 'Fever', 'Fever', 'Closed', 0, NULL, 'none', '2026-02-05 11:32:26'),
+(18, 21, 3, '2026-02-14 10:21:00', 'Emergency', NULL, 'Fever', 'Closed', 0, NULL, 'none', '2026-02-14 10:21:54');
 
 -- --------------------------------------------------------
 
@@ -1639,14 +1993,6 @@ CREATE TABLE `notifications` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `notifications`
---
-
-INSERT INTO `notifications` (`notification_id`, `parent_id`, `user_id`, `student_id`, `visit_id`, `channel`, `message`, `status`, `priority`, `provider_id`, `sent_at`, `created_at`) VALUES
-(11, NULL, 60, 22, 17, 'System', 'Student Hannah Lorainne (136883100330) visited the clinic for routine care. Complaint: Fever', 'Pending', 'normal', NULL, NULL, '2026-02-05 11:32:26'),
-(12, NULL, NULL, 22, 17, 'SMS', 'Good day! This is from Four Seasons School Clinic. Your child Hannah Lorainne visited the clinic today. Reason: Fever. Please contact the clinic for more details.', 'Pending', 'normal', NULL, NULL, '2026-02-05 11:32:30');
-
 -- --------------------------------------------------------
 
 --
@@ -1666,6 +2012,15 @@ CREATE TABLE `parents` (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `parents`
+--
+
+INSERT INTO `parents` (`parent_id`, `user_id`, `first_name`, `last_name`, `relation`, `phone`, `email`, `address`, `created_at`, `is_active`, `deleted_at`) VALUES
+(1, NULL, 'Carina', 'Delgado', 'Mother', '09021204851', NULL, 'Taguig City', '2026-02-05 11:53:03', 1, NULL),
+(2, NULL, 'Ilene', '', 'Aunt', '09932012942', NULL, 'Taguig City', '2026-02-14 11:53:34', 1, NULL),
+(3, NULL, 'Ryan', 'Gallaza', 'Father', '09493202295', NULL, 'Taguig City', '2026-02-16 16:44:30', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -1732,7 +2087,8 @@ CREATE TABLE `qr_codes` (
 
 INSERT INTO `qr_codes` (`qr_id`, `student_id`, `qr_token`, `qr_generated_at`, `qr_expires_at`) VALUES
 (19, 21, 'c297e50c650e25b72f98fce580f6a117', '2026-02-05 08:22:46', NULL),
-(20, 22, 'db35d844c53429ea3030feab1db862ff', '2026-02-05 11:26:05', NULL);
+(20, 22, 'db35d844c53429ea3030feab1db862ff', '2026-02-05 11:26:05', NULL),
+(22, 26, 'b8d8ae0d274f7dbb022ce52062aa3eef', '2026-02-16 16:42:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -1779,7 +2135,7 @@ CREATE TABLE `school_years` (
 --
 
 INSERT INTO `school_years` (`id`, `year_name`, `start_date`, `end_date`, `is_active`, `is_current`, `created_at`, `updated_at`, `created_by`) VALUES
-(11, '2026-2027', '2026-06-07', '2027-03-31', 1, 0, '2026-02-05 08:18:59', '2026-02-05 08:18:59', 32);
+(11, '2026-2027', '2026-06-07', '2027-03-31', 1, 1, '2026-02-05 08:18:59', '2026-02-05 12:22:25', 32);
 
 -- --------------------------------------------------------
 
@@ -1859,7 +2215,7 @@ INSERT INTO `sections` (`id`, `section_name`, `grade_level_id`, `school_year_id`
 (60, 'Daffodils', 2, 9, 55, 50, 0, 1, '2026-02-01 22:26:53', '2026-02-01 22:35:58', 32),
 (61, 'Bonifacio', 3, 10, 53, 50, 0, 1, '2026-02-01 22:38:23', '2026-02-01 22:44:36', 32),
 (62, '2', 3, 9, 57, 40, 0, 1, '2026-02-01 22:52:17', '2026-02-01 22:52:17', NULL),
-(63, 'Mapagmahal', 1, 11, 60, 50, 0, 1, '2026-02-05 08:19:23', '2026-02-05 08:21:10', 32);
+(63, 'Mapagmahal', 1, 11, 60, 50, 2, 1, '2026-02-05 08:19:23', '2026-02-05 12:26:13', 32);
 
 -- --------------------------------------------------------
 
@@ -1918,6 +2274,10 @@ CREATE TABLE `students` (
   `weight_kg` decimal(5,2) DEFAULT NULL COMMENT 'Weight in kilograms',
   `bmi` decimal(4,2) DEFAULT NULL COMMENT 'Body Mass Index',
   `bmi_category` varchar(20) DEFAULT NULL COMMENT 'BMI Category (Underweight, Normal, Overweight, Obese)',
+  `general_clearance_status` enum('approved','pending','denied','not_required') DEFAULT 'not_required' COMMENT 'General clearance status',
+  `clearance_expiry_date` date DEFAULT NULL COMMENT 'When general clearance expires',
+  `requires_special_clearance` tinyint(1) DEFAULT 0 COMMENT 'Student needs special medical clearance',
+  `clearance_notes` text DEFAULT NULL COMMENT 'Special clearance requirements or notes',
   `last_physical_update` timestamp NULL DEFAULT NULL COMMENT 'Last time physical info was updated'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -1925,9 +2285,10 @@ CREATE TABLE `students` (
 -- Dumping data for table `students`
 --
 
-INSERT INTO `students` (`student_id`, `current_grade_level_id`, `current_section_id`, `current_adviser_id`, `current_school_year_id`, `enrollment_status`, `promotion_date`, `last_promotion_date`, `student_number`, `user_id`, `first_name`, `middle_name`, `last_name`, `birth_date`, `gender`, `grade_level`, `section`, `address`, `blood_type`, `emergency_contact`, `emergency_contact_relation`, `emergency_contact_phone`, `created_at`, `is_active`, `deleted_at`, `height_cm`, `weight_kg`, `bmi`, `bmi_category`, `last_physical_update`) VALUES
-(21, NULL, NULL, NULL, NULL, 'active', NULL, NULL, '136663100330', 61, 'Wallance', NULL, 'Delgado', '2005-04-07', 'M', '7', '1', 'Mulawin, Taguig City', 'O+', 'Carina Delgado', 'Mother', '09021204851', '2026-02-05 08:22:46', 1, NULL, 190.00, 67.00, 18.56, 'Normal weight', '2026-02-05 11:07:34'),
-(22, NULL, NULL, NULL, NULL, 'active', NULL, NULL, '136883100330', 62, 'Hannah', '', 'Lorainne', '2005-04-03', 'F', '7', '1', 'GK Taguig City', 'A+', 'Airen Genandoy', 'Mother', '09501296187', '2026-02-05 11:26:05', 1, NULL, 157.00, 57.00, 23.12, 'Normal weight', '2026-02-05 11:29:14');
+INSERT INTO `students` (`student_id`, `current_grade_level_id`, `current_section_id`, `current_adviser_id`, `current_school_year_id`, `enrollment_status`, `promotion_date`, `last_promotion_date`, `student_number`, `user_id`, `first_name`, `middle_name`, `last_name`, `birth_date`, `gender`, `grade_level`, `section`, `address`, `blood_type`, `emergency_contact`, `emergency_contact_relation`, `emergency_contact_phone`, `created_at`, `is_active`, `deleted_at`, `height_cm`, `weight_kg`, `bmi`, `bmi_category`, `general_clearance_status`, `clearance_expiry_date`, `requires_special_clearance`, `clearance_notes`, `last_physical_update`) VALUES
+(21, NULL, 63, NULL, 11, 'active', NULL, NULL, '136663100330', 61, 'Wallance', NULL, 'Delgado', '2005-04-07', 'M', '7', '1', 'Taguig City', NULL, 'Carina Delgado', 'Mother', '09021204851', '2026-02-05 08:22:46', 1, NULL, 190.00, 67.00, 18.56, 'Normal weight', 'not_required', NULL, 0, NULL, '2026-02-05 11:07:34'),
+(22, NULL, 63, NULL, 11, 'active', NULL, NULL, '136883100330', 62, 'Hannah', '', 'Lorainne', '2005-04-03', 'F', '7', '1', 'GK Taguig City', 'A+', 'Airen Genandoy', 'Mother', '09501296187', '2026-02-05 11:26:05', 1, NULL, 157.00, 57.00, 23.12, 'Normal weight', 'not_required', NULL, 0, NULL, '2026-02-05 11:29:14'),
+(26, NULL, NULL, NULL, 11, 'active', NULL, NULL, '136883100331', 66, 'Irish', 'Grande', 'Gallaza', '2005-02-23', 'F', '7', '1', 'Taguig City', 'O+', 'Ryan Gallaza', 'Father', '09493202295', '2026-02-16 16:42:37', 1, NULL, 150.00, 48.00, 21.33, 'Normal weight', 'not_required', NULL, 0, NULL, '2026-02-16 16:45:52');
 
 -- --------------------------------------------------------
 
@@ -1946,7 +2307,10 @@ CREATE TABLE `student_adviser` (
 --
 
 INSERT INTO `student_adviser` (`student_id`, `adviser_id`, `assigned_date`) VALUES
-(21, 12, '2026-02-05');
+(21, 12, '2026-02-05'),
+(22, 12, '2026-02-05'),
+(24, 12, '2026-02-14'),
+(26, 12, '2026-02-17');
 
 -- --------------------------------------------------------
 
@@ -1959,6 +2323,15 @@ CREATE TABLE `student_parent` (
   `parent_id` int(10) UNSIGNED NOT NULL,
   `relationship_note` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `student_parent`
+--
+
+INSERT INTO `student_parent` (`student_id`, `parent_id`, `relationship_note`) VALUES
+(21, 1, 'Emergency Contact'),
+(24, 2, 'Emergency Contact'),
+(26, 3, 'Emergency Contact');
 
 -- --------------------------------------------------------
 
@@ -2015,7 +2388,8 @@ INSERT INTO `users` (`user_id`, `role_id`, `username`, `password_hash`, `passwor
 (60, 3, '2026-01', '$2y$10$skFaVbGjh5qnOttJel3Ep.H4199W8nhpAtdmJC5SJx7EHMDZSOOtu', 0, '2026-02-05 16:21:43', 32, NULL, 'h.igot@gmail.com', '09123456789', 'Heart   Igot', '2026-02-05 08:20:38', 1, NULL),
 (61, 2, '136663100330', '$2y$10$Fp1gdjZi415fqhtatwRn..Zda38iIqLtbYgfbGLRkti8tVYjzMT/C', 0, '2026-02-05 16:23:46', 32, NULL, 'wallance@gmail.com', '', 'Wallance Delgado', '2026-02-05 08:22:46', 1, NULL),
 (62, 2, '136883100330', '$2y$10$oyMwFBXkS4W3erRWaucLMeMt9xrfBEC4p2YeHkpccuKbBgsJrmbb6', 0, '2026-02-05 19:26:41', 32, NULL, 'hannah@gmail.com', '', 'Hannah Lorainne', '2026-02-05 11:26:05', 1, NULL),
-(63, 4, 'STAFF-01', '$2y$10$.F12YbZRlhRwfJWHy2bG3ueOPEpR3pcteiXxjRv3E.iIrde26U7hC', 0, '2026-02-05 19:31:37', 32, NULL, 'lulubelle@gmail.com', '09849212853', 'Lulubelle Gabasa', '2026-02-05 11:30:45', 1, NULL);
+(63, 4, 'STAFF-01', '$2y$10$.F12YbZRlhRwfJWHy2bG3ueOPEpR3pcteiXxjRv3E.iIrde26U7hC', 0, '2026-02-05 19:31:37', 32, NULL, 'lulubelle@gmail.com', '09849212853', 'Lulubelle Gabasa', '2026-02-05 11:30:45', 1, NULL),
+(66, 2, '136883100331', '$2y$10$mQ5adrtetleDLKrc.jXueezmVZrE84VTVw7Fk2gCP2o2cvqQiM4/.', 0, '2026-02-17 00:43:15', 32, NULL, 'irish@gmail.com', '', 'Irish Grande Gallaza', '2026-02-16 16:42:37', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -2047,7 +2421,45 @@ INSERT INTO `vitals` (`vitals_id`, `visit_id`, `recorded_at`, `weight_kg`, `heig
 (0, 13, '2026-01-16 11:55:00', NULL, NULL, 40.00, 120, 90, 75, NULL, NULL),
 (0, 14, '2026-02-02 10:15:00', NULL, NULL, 38.00, 120, 90, 75, NULL, NULL),
 (0, 15, '2026-02-02 10:50:00', NULL, NULL, 37.00, 120, 80, 72, NULL, NULL),
-(0, 17, '2026-02-05 11:31:00', NULL, NULL, 40.00, 120, 90, 73, NULL, NULL);
+(0, 17, '2026-02-05 11:31:00', NULL, NULL, 40.00, 120, 90, 73, NULL, NULL),
+(0, 18, '2026-02-14 10:21:00', NULL, NULL, 40.00, 140, 80, 75, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `vw_expired_clearances`
+-- (See below for the actual view)
+--
+CREATE TABLE `vw_expired_clearances` (
+`student_id` int(10) unsigned
+,`student_number` varchar(30)
+,`full_name` varchar(161)
+,`clearance_type` enum('off_campus','sports','field_trip','swimming','general')
+,`expiry_date` date
+,`days_expired` int(7)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `vw_students_requiring_clearance`
+-- (See below for the actual view)
+--
+CREATE TABLE `vw_students_requiring_clearance` (
+`student_id` int(10) unsigned
+,`student_number` varchar(30)
+,`full_name` varchar(161)
+,`grade_level` varchar(20)
+,`section` varchar(50)
+,`general_clearance_status` enum('approved','pending','denied','not_required')
+,`clearance_expiry_date` date
+,`requires_special_clearance` tinyint(1)
+,`clearance_notes` text
+,`clearance_type` enum('off_campus','sports','field_trip','swimming','general')
+,`clearance_status` enum('approved','pending','denied','expired')
+,`specific_expiry` date
+,`medical_notes` text
+);
 
 -- --------------------------------------------------------
 
@@ -2081,6 +2493,24 @@ CREATE TABLE `vw_student_medical_profile` (
 ,`allergy_count` bigint(21)
 ,`last_visit_date` datetime
 );
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `vw_expired_clearances`
+--
+DROP TABLE IF EXISTS `vw_expired_clearances`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_expired_clearances`  AS SELECT `s`.`student_id` AS `student_id`, `s`.`student_number` AS `student_number`, concat(`s`.`first_name`,' ',`s`.`last_name`) AS `full_name`, `mc`.`clearance_type` AS `clearance_type`, `mc`.`expiry_date` AS `expiry_date`, to_days(curdate()) - to_days(`mc`.`expiry_date`) AS `days_expired` FROM (`students` `s` join `medical_clearances` `mc` on(`s`.`student_id` = `mc`.`student_id`)) WHERE `mc`.`expiry_date` < curdate() AND `mc`.`status` = 'approved' ORDER BY `mc`.`expiry_date` DESC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `vw_students_requiring_clearance`
+--
+DROP TABLE IF EXISTS `vw_students_requiring_clearance`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_students_requiring_clearance`  AS SELECT `s`.`student_id` AS `student_id`, `s`.`student_number` AS `student_number`, concat(`s`.`first_name`,' ',`s`.`last_name`) AS `full_name`, `s`.`grade_level` AS `grade_level`, `s`.`section` AS `section`, `s`.`general_clearance_status` AS `general_clearance_status`, `s`.`clearance_expiry_date` AS `clearance_expiry_date`, `s`.`requires_special_clearance` AS `requires_special_clearance`, `s`.`clearance_notes` AS `clearance_notes`, `mc`.`clearance_type` AS `clearance_type`, `mc`.`status` AS `clearance_status`, `mc`.`expiry_date` AS `specific_expiry`, `mc`.`medical_notes` AS `medical_notes` FROM (`students` `s` left join `medical_clearances` `mc` on(`s`.`student_id` = `mc`.`student_id` and `mc`.`clearance_type` = 'off_campus' and `mc`.`status` in ('approved','pending'))) WHERE `s`.`requires_special_clearance` = 1 OR `s`.`general_clearance_status` in ('pending','denied') ORDER BY `s`.`grade_level` ASC, `s`.`section` ASC, `s`.`last_name` ASC ;
 
 -- --------------------------------------------------------
 
@@ -2131,6 +2561,25 @@ ALTER TABLE `allergies`
   ADD KEY `fk_allergy_student` (`student_id`);
 
 --
+-- Indexes for table `clearance_requests`
+--
+ALTER TABLE `clearance_requests`
+  ADD PRIMARY KEY (`request_id`),
+  ADD KEY `idx_student` (`student_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_requested_by` (`requested_by`),
+  ADD KEY `idx_activity_date` (`activity_date`);
+
+--
+-- Indexes for table `clearance_violations`
+--
+ALTER TABLE `clearance_violations`
+  ADD PRIMARY KEY (`violation_id`),
+  ADD KEY `idx_student` (`student_id`),
+  ADD KEY `idx_scanned_by` (`scanned_by`),
+  ADD KEY `idx_resolved` (`resolved`);
+
+--
 -- Indexes for table `clinic_staff`
 --
 ALTER TABLE `clinic_staff`
@@ -2161,6 +2610,16 @@ ALTER TABLE `grade_levels`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `level_number` (`level_number`),
   ADD KEY `idx_level_number` (`level_number`);
+
+--
+-- Indexes for table `medical_clearances`
+--
+ALTER TABLE `medical_clearances`
+  ADD PRIMARY KEY (`clearance_id`),
+  ADD KEY `idx_student` (`student_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_type` (`clearance_type`),
+  ADD KEY `idx_expiry` (`expiry_date`);
 
 --
 -- Indexes for table `medical_history`
@@ -2325,7 +2784,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1759;
+  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2029;
 
 --
 -- AUTO_INCREMENT for table `advisers`
@@ -2343,7 +2802,19 @@ ALTER TABLE `adviser_assignments`
 -- AUTO_INCREMENT for table `allergies`
 --
 ALTER TABLE `allergies`
-  MODIFY `allergy_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `allergy_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `clearance_requests`
+--
+ALTER TABLE `clearance_requests`
+  MODIFY `request_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `clearance_violations`
+--
+ALTER TABLE `clearance_violations`
+  MODIFY `violation_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `clinic_staff`
@@ -2355,13 +2826,13 @@ ALTER TABLE `clinic_staff`
 -- AUTO_INCREMENT for table `diagnoses`
 --
 ALTER TABLE `diagnoses`
-  MODIFY `diagnosis_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `diagnosis_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `email_logs`
 --
 ALTER TABLE `email_logs`
-  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `grade_levels`
@@ -2370,28 +2841,34 @@ ALTER TABLE `grade_levels`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
+-- AUTO_INCREMENT for table `medical_clearances`
+--
+ALTER TABLE `medical_clearances`
+  MODIFY `clearance_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `medical_history`
 --
 ALTER TABLE `medical_history`
-  MODIFY `history_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `history_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `medical_visits`
 --
 ALTER TABLE `medical_visits`
-  MODIFY `visit_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `visit_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `notification_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `notification_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `parents`
 --
 ALTER TABLE `parents`
-  MODIFY `parent_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `parent_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `promotion_batch_logs`
@@ -2409,7 +2886,7 @@ ALTER TABLE `promotion_rules`
 -- AUTO_INCREMENT for table `qr_codes`
 --
 ALTER TABLE `qr_codes`
-  MODIFY `qr_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `qr_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -2439,7 +2916,7 @@ ALTER TABLE `sms_logs`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `student_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `student_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `student_promotions`
@@ -2451,7 +2928,7 @@ ALTER TABLE `student_promotions`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
 
 --
 -- Constraints for dumped tables
@@ -2485,6 +2962,20 @@ ALTER TABLE `allergies`
   ADD CONSTRAINT `fk_allergy_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `clearance_requests`
+--
+ALTER TABLE `clearance_requests`
+  ADD CONSTRAINT `fk_request_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_request_user` FOREIGN KEY (`requested_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `clearance_violations`
+--
+ALTER TABLE `clearance_violations`
+  ADD CONSTRAINT `fk_violation_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_violation_user` FOREIGN KEY (`scanned_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `clinic_staff`
 --
 ALTER TABLE `clinic_staff`
@@ -2495,6 +2986,12 @@ ALTER TABLE `clinic_staff`
 --
 ALTER TABLE `diagnoses`
   ADD CONSTRAINT `fk_diag_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `medical_clearances`
+--
+ALTER TABLE `medical_clearances`
+  ADD CONSTRAINT `fk_clearance_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `medical_history`

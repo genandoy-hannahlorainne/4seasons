@@ -44,11 +44,21 @@ $startDate = date('Y-m-d', strtotime("-$days days"));
 $endDate = date('Y-m-d');
 
 try {
-    // Get adviser's grade and section from advisers table
+    // Get adviser's assigned section for current school year
     $stmt = $db->prepare("
-        SELECT a.grade_level, a.section 
-        FROM advisers a
-        WHERE a.user_id = :user_id AND a.is_active = 1
+        SELECT 
+            s.id as section_id,
+            s.section_name,
+            gl.level_name,
+            gl.level_number,
+            sy.year_name
+        FROM sections s
+        INNER JOIN grade_levels gl ON s.grade_level_id = gl.id
+        INNER JOIN school_years sy ON s.school_year_id = sy.id
+        WHERE s.adviser_id = :user_id 
+          AND sy.is_current = 1
+          AND s.is_active = 1
+        LIMIT 1
     ");
     $stmt->bindParam(':user_id', $userId);
     $stmt->execute();
@@ -56,23 +66,25 @@ try {
     if ($stmt->rowCount() === 0) {
         echo json_encode([
             'success' => false,
-            'message' => 'Adviser not found'
+            'message' => 'No section assigned for current school year'
         ]);
         exit();
     }
     
-    $adviser = $stmt->fetch(PDO::FETCH_ASSOC);
-    $gradeLevel = $adviser['grade_level'];
-    $section = $adviser['section'];
+    $section = $stmt->fetch(PDO::FETCH_ASSOC);
+    $sectionId = $section['section_id'];
+    $gradeLevel = $section['level_number'];
+    $sectionName = $section['section_name'];
     
     // Get total students in class
     $stmt = $db->prepare("
         SELECT COUNT(*) as total
         FROM students
-        WHERE grade_level = :grade_level AND section = :section
+        WHERE current_section_id = :section_id 
+          AND is_active = 1 
+          AND enrollment_status = 'active'
     ");
-    $stmt->bindParam(':grade_level', $gradeLevel);
-    $stmt->bindParam(':section', $section);
+    $stmt->bindParam(':section_id', $sectionId);
     $stmt->execute();
     $totalStudents = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
@@ -85,14 +97,12 @@ try {
             GROUP_CONCAT(DISTINCT CONCAT(s.first_name, ' ', s.last_name) SEPARATOR ', ') as students
         FROM medical_visits mv
         JOIN students s ON mv.student_id = s.student_id
-        WHERE s.grade_level = :grade_level
-        AND s.section = :section
+        WHERE s.current_section_id = :section_id
         AND DATE(mv.visit_datetime) BETWEEN :start_date AND :end_date
         GROUP BY DATE(mv.visit_datetime), mv.notes
         ORDER BY visit_date DESC, student_count DESC
     ");
-    $stmt->bindParam(':grade_level', $gradeLevel);
-    $stmt->bindParam(':section', $section);
+    $stmt->bindParam(':section_id', $sectionId);
     $stmt->bindParam(':start_date', $startDate);
     $stmt->bindParam(':end_date', $endDate);
     $stmt->execute();
@@ -131,13 +141,11 @@ try {
             COUNT(DISTINCT mv.student_id) as unique_students
         FROM medical_visits mv
         JOIN students s ON mv.student_id = s.student_id
-        WHERE s.grade_level = :grade_level
-        AND s.section = :section
+        WHERE s.current_section_id = :section_id
         AND DATE(mv.visit_datetime) BETWEEN :start_date AND :end_date
         GROUP BY DATE(mv.visit_datetime)
     ");
-    $stmt->bindParam(':grade_level', $gradeLevel);
-    $stmt->bindParam(':section', $section);
+    $stmt->bindParam(':section_id', $sectionId);
     $stmt->bindParam(':start_date', $startDate);
     $stmt->bindParam(':end_date', $endDate);
     $stmt->execute();
@@ -158,15 +166,13 @@ try {
             COUNT(*) as visit_count
         FROM medical_visits mv
         JOIN students s ON mv.student_id = s.student_id
-        WHERE s.grade_level = :grade_level
-        AND s.section = :section
+        WHERE s.current_section_id = :section_id
         AND DATE(mv.visit_datetime) BETWEEN :start_date AND :end_date
         GROUP BY mv.notes
         ORDER BY student_count DESC
         LIMIT 5
     ");
-    $stmt->bindParam(':grade_level', $gradeLevel);
-    $stmt->bindParam(':section', $section);
+    $stmt->bindParam(':section_id', $sectionId);
     $stmt->bindParam(':start_date', $startDate);
     $stmt->bindParam(':end_date', $endDate);
     $stmt->execute();
@@ -193,7 +199,7 @@ try {
     echo json_encode([
         'success' => true,
         'data' => [
-            'advisory_class' => "Grade $gradeLevel - $section",
+            'advisory_class' => $section['level_name'] . ' - ' . $section['section_name'],
             'total_students' => $totalStudents,
             'date_range' => [
                 'start' => $startDate,

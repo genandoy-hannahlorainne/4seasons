@@ -298,15 +298,15 @@ try {
     $lastVisitStmt->execute();
     $lastVisit = $lastVisitStmt->fetch(PDO::FETCH_ASSOC);
     
-    // Get adviser information based on student's grade_level and section
+    // Get adviser information using proper relationships
     $adviserQuery = "SELECT 
                         u.user_id,
                         u.full_name,
                         u.phone,
                         u.email
                      FROM students s
-                     LEFT JOIN advisers a ON s.grade_level = a.grade_level AND s.section = a.section AND a.is_active = 1
-                     LEFT JOIN users u ON a.user_id = u.user_id
+                     LEFT JOIN sections sec ON s.current_section_id = sec.id
+                     LEFT JOIN users u ON sec.adviser_id = u.user_id
                      WHERE s.student_id = :student_id
                      AND s.is_active = 1
                      LIMIT 1";

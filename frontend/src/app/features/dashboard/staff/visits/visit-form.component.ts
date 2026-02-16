@@ -66,6 +66,22 @@ import { QrScannerComponent } from './qr-scanner.component';
             <div class="student-info">
               <span class="student-name">{{ selectedStudent.full_name }}</span>
               <span class="student-details">{{ selectedStudent.student_number }} | {{ selectedStudent.grade_section }}</span>
+              
+              <!-- Medical Clearance Status -->
+              <div class="clearance-status" *ngIf="selectedStudent.clearance">
+                <div class="clearance-badge" [ngClass]="'clearance-' + selectedStudent.clearance.level">
+                  <span class="clearance-icon">
+                    <span *ngIf="selectedStudent.clearance.level === 'green'">✓</span>
+                    <span *ngIf="selectedStudent.clearance.level === 'yellow'">⚠</span>
+                    <span *ngIf="selectedStudent.clearance.level === 'red'">⚠</span>
+                  </span>
+                  <span class="clearance-text">{{ selectedStudent.clearance.message }}</span>
+                </div>
+                <div class="clearance-warnings" *ngIf="selectedStudent.clearance.warnings && selectedStudent.clearance.warnings.length > 0">
+                  <span *ngFor="let warning of selectedStudent.clearance.warnings" class="warning-tag">{{ warning }}</span>
+                </div>
+              </div>
+              
               <div class="student-allergies" *ngIf="selectedStudent.allergies && selectedStudent.allergies.length > 0">
                 <span class="allergy-label">⚠️ Allergies:</span>
                 <span class="allergy-tags">
@@ -74,6 +90,21 @@ import { QrScannerComponent } from './qr-scanner.component';
               </div>
             </div>
             <button type="button" class="btn-clear" (click)="clearStudent()">×</button>
+          </div>
+          
+          <!-- Clearance Alert for Off-Campus Activities -->
+          <div class="clearance-alert" *ngIf="selectedStudent && selectedStudent.clearance && selectedStudent.clearance.level === 'red'">
+            <div class="alert-header">
+              <span class="alert-icon">🚨</span>
+              <span class="alert-title">MEDICAL CLEARANCE REQUIRED</span>
+            </div>
+            <div class="alert-body">
+              <p>{{ selectedStudent.clearance.message }}</p>
+              <p><strong>Action Required:</strong> Student cannot participate in off-campus activities until clearance is obtained.</p>
+              <div class="emergency-contact" *ngIf="selectedStudent.emergency_contact">
+                <strong>Emergency Contact:</strong> {{ selectedStudent.emergency_contact.name }} - {{ selectedStudent.emergency_contact.phone }}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -338,6 +369,90 @@ import { QrScannerComponent } from './qr-scanner.component';
       }
     }
 
+    .clearance-status {
+      margin-top: 0.5rem;
+      
+      .clearance-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        
+        &.clearance-green {
+          background: #d4edda;
+          color: #155724;
+          border: 1px solid #c3e6cb;
+        }
+        
+        &.clearance-yellow {
+          background: #fff3cd;
+          color: #856404;
+          border: 1px solid #ffeaa7;
+        }
+        
+        &.clearance-red {
+          background: #f8d7da;
+          color: #721c24;
+          border: 1px solid #f5c6cb;
+        }
+      }
+      
+      .clearance-warnings {
+        margin-top: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        
+        .warning-tag {
+          background: #fff3cd;
+          color: #856404;
+          padding: 0.2rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          border: 1px solid #ffeaa7;
+        }
+      }
+    }
+
+    .clearance-alert {
+      background: #f8d7da;
+      border: 2px solid #dc3545;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      
+      .alert-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        
+        .alert-icon { font-size: 1.2rem; }
+        .alert-title { 
+          font-weight: 700; 
+          color: #721c24; 
+          font-size: 0.95rem;
+        }
+      }
+      
+      .alert-body {
+        color: #721c24;
+        
+        p { margin: 0 0 0.5rem; font-size: 0.9rem; }
+        
+        .emergency-contact {
+          margin-top: 0.75rem;
+          padding: 0.5rem;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 4px;
+          font-size: 0.85rem;
+        }
+      }
+    }
+
     .checkbox-group {
       .checkbox-label {
         display: flex;
@@ -498,45 +613,57 @@ export class VisitFormComponent implements OnInit {
   onQrScanned(qrData: any): void {
     console.log('QR Data received:', qrData);
     this.closeScanner();
-    
-    // Fetch student info using the QR data
-    if (qrData.student_id) {
+
+    // Extract student_id from QR data
+    if (qrData && qrData.student_id) {
       this.loadStudentById(qrData.student_id);
-    } else if (qrData.student_number) {
+    } else if (qrData && qrData.student_number) {
       this.loadStudentByNumber(qrData.student_number);
+    } else {
+      console.error('Invalid QR data - no student_id or student_number found');
     }
   }
 
   loadStudentById(studentId: number): void {
-    this.http.get<any>(`${environment.apiUrl}/get-student-by-qr.php?student_id=${studentId}`)
+    this.loading = true;
+    this.http.get(`${environment.apiUrl}/get-student-by-qr.php?student_id=${studentId}`)
       .subscribe({
-        next: (response) => {
-          if (response.success) {
+        next: (response: any) => {
+          if (response.success && response.student) {
             this.selectedStudent = response.student;
+            console.log('Student loaded with clearance:', this.selectedStudent);
           } else {
+            console.error('Failed to load student:', response.message);
             alert('Student not found');
           }
+          this.loading = false;
         },
-        error: (err) => {
-          console.error('Error loading student:', err);
+        error: (error) => {
+          console.error('Error loading student:', error);
           alert('Failed to load student information');
+          this.loading = false;
         }
       });
   }
 
   loadStudentByNumber(studentNumber: string): void {
-    this.http.get<any>(`${environment.apiUrl}/get-student-by-qr.php?student_number=${studentNumber}`)
+    this.loading = true;
+    this.http.get(`${environment.apiUrl}/get-student-by-qr.php?student_number=${studentNumber}`)
       .subscribe({
-        next: (response) => {
-          if (response.success) {
+        next: (response: any) => {
+          if (response.success && response.student) {
             this.selectedStudent = response.student;
+            console.log('Student loaded with clearance:', this.selectedStudent);
           } else {
+            console.error('Failed to load student:', response.message);
             alert('Student not found');
           }
+          this.loading = false;
         },
-        error: (err) => {
-          console.error('Error loading student:', err);
+        error: (error) => {
+          console.error('Error loading student:', error);
           alert('Failed to load student information');
+          this.loading = false;
         }
       });
   }
@@ -560,20 +687,16 @@ export class VisitFormComponent implements OnInit {
     // Debounce - wait 300ms before making API call
     this.searchTimeout = setTimeout(() => {
       const searchUrl = `${environment.apiUrl}/search-students.php?q=${encodeURIComponent(this.studentSearch)}`;
-      console.log('Searching:', searchUrl);
       
       this.http.get<any>(searchUrl)
         .subscribe({
           next: (response) => {
-            console.log('Search response:', response);
             this.searchLoading = false;
             this.searchDone = true;
             if (response && response.success && Array.isArray(response.students)) {
               this.searchResults = response.students;
-              console.log('Found students:', this.searchResults.length);
             } else {
               this.searchResults = [];
-              console.log('No students in response');
             }
           },
           error: (err) => {

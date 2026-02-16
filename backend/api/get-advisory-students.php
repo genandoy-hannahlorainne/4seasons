@@ -40,8 +40,7 @@ try {
         exit;
     }
 
-    // Get students assigned to this adviser through student_adviser junction table
-    // Also filter by grade_level and section if adviser has them set
+    // Get students assigned to this adviser through proper section relationships
     $studentsQuery = "SELECT 
                         s.student_id,
                         s.student_number,
@@ -56,33 +55,23 @@ try {
                         s.emergency_contact,
                         s.created_at,
                         u.email,
-                        u.phone
+                        u.phone,
+                        sec.section_name,
+                        gl.level_name,
+                        gl.level_number,
+                        sy.year_name as school_year
                       FROM students s
                       LEFT JOIN users u ON s.user_id = u.user_id
-                      INNER JOIN student_adviser sa ON s.student_id = sa.student_id
-                      WHERE sa.adviser_id = :adviser_id 
-                        AND s.is_active = 1";
-    
-    // Add grade and section filters if adviser has them set
-    if (!empty($adviser['grade_level'])) {
-        $studentsQuery .= " AND s.grade_level = :grade_level";
-    }
-    if (!empty($adviser['section'])) {
-        $studentsQuery .= " AND s.section = :section";
-    }
-    
-    $studentsQuery .= " ORDER BY s.last_name, s.first_name";
+                      LEFT JOIN sections sec ON s.current_section_id = sec.id
+                      LEFT JOIN grade_levels gl ON sec.grade_level_id = gl.id
+                      LEFT JOIN school_years sy ON s.current_school_year_id = sy.id
+                      WHERE s.current_adviser_id = :adviser_user_id 
+                        AND s.is_active = 1
+                        AND s.enrollment_status = 'active'
+                      ORDER BY s.last_name, s.first_name";
     
     $studentsStmt = $db->prepare($studentsQuery);
-    $studentsStmt->bindParam(":adviser_id", $adviser['adviser_id']);
-    
-    // Bind grade and section if they exist
-    if (!empty($adviser['grade_level'])) {
-        $studentsStmt->bindParam(":grade_level", $adviser['grade_level']);
-    }
-    if (!empty($adviser['section'])) {
-        $studentsStmt->bindParam(":section", $adviser['section']);
-    }
+    $studentsStmt->bindParam(":adviser_user_id", $user_id);
     
     $studentsStmt->execute();
     $students = $studentsStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -112,25 +101,30 @@ try {
         // Format full name
         $student['full_name'] = trim($student['first_name'] . ' ' . ($student['middle_name'] ? $student['middle_name'] . ' ' : '') . $student['last_name']);
         
-        // Format grade section display
-        $gradeLabel = 'Grade ' . $student['grade_level'];
-        $sectionLabel = $student['section'];
-        if (in_array($student['grade_level'], ['11', '12'])) {
-            $student['grade_section'] = $gradeLabel . ' - ' . $sectionLabel;
+        // Format grade section display using proper relationships
+        if ($student['level_name'] && $student['section_name']) {
+            $student['grade_section'] = $student['level_name'] . ' - ' . $student['section_name'];
         } else {
-            $student['grade_section'] = $gradeLabel . ' - Section ' . $sectionLabel;
+            // Fallback to legacy fields
+            $gradeLabel = 'Grade ' . $student['grade_level'];
+            $sectionLabel = $student['section'];
+            if (in_array($student['grade_level'], ['11', '12'])) {
+                $student['grade_section'] = $gradeLabel . ' - ' . $sectionLabel;
+            } else {
+                $student['grade_section'] = $gradeLabel . ' - Section ' . $sectionLabel;
+            }
         }
     }
 
     // Get clinic visit count for this month for all students under this adviser
     $visitCountQuery = "SELECT COUNT(*) as count 
                         FROM medical_visits mv
-                        INNER JOIN student_adviser sa ON mv.student_id = sa.student_id
-                        WHERE sa.adviser_id = :adviser_id
+                        INNER JOIN students s ON mv.student_id = s.student_id
+                        WHERE s.current_adviser_id = :adviser_user_id
                           AND MONTH(mv.visit_datetime) = MONTH(CURRENT_DATE())
                           AND YEAR(mv.visit_datetime) = YEAR(CURRENT_DATE())";
     $visitCountStmt = $db->prepare($visitCountQuery);
-    $visitCountStmt->bindParam(":adviser_id", $adviser['adviser_id']);
+    $visitCountStmt->bindParam(":adviser_user_id", $user_id);
     $visitCountStmt->execute();
     $visitCount = $visitCountStmt->fetch(PDO::FETCH_ASSOC)['count'];
 
