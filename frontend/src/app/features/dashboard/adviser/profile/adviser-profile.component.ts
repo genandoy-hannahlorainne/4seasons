@@ -166,12 +166,20 @@ export class AdviserProfileComponent implements OnInit {
       this.profileData.email = currentUser.email || '';
       this.profileData.phone = currentUser.phone || '';
       
-      // Fetch advisory class from API (same as dashboard)
+      // Fetch advisory class and updated phone from API
       if (currentUser.user_id) {
-        this.adviserService.getAdvisoryStudents(currentUser.user_id).subscribe({
+        this.adviserService.getAdviserDashboard(currentUser.user_id).subscribe({
           next: (response: any) => {
-            if (response.success && response.adviser) {
-              this.profileData.advisoryClass = response.adviser.advisory_class || 'Not assigned';
+            if (response.success && response.data && response.data.adviser) {
+              const adviser = response.data.adviser;
+              this.profileData.advisoryClass = `Grade ${adviser.grade_level} - ${adviser.section}` || 'Not assigned';
+              
+              // Update phone number from API response
+              if (adviser.phone) {
+                this.profileData.phone = adviser.phone;
+              } else if (adviser.contact_phone) {
+                this.profileData.phone = adviser.contact_phone;
+              }
             }
           },
           error: () => {
@@ -188,8 +196,47 @@ export class AdviserProfileComponent implements OnInit {
   }
 
   saveProfile(): void {
-    console.log('Saving profile:', this.profileData);
-    this.editMode = false;
+    if (!this.profileData.fullName || !this.profileData.email) {
+      alert('Full name and email are required');
+      return;
+    }
+
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser) {
+      alert('User not found');
+      return;
+    }
+
+    const updates = {
+      full_name: this.profileData.fullName,
+      email: this.profileData.email,
+      phone: this.profileData.phone || null
+    };
+
+    // Call API to update profile
+    this.adviserService.updateAdviserProfile(currentUser.user_id, updates).subscribe({
+      next: (response) => {
+        if (response.success) {
+          alert('Profile updated successfully');
+          this.editMode = false;
+          
+          // Update the auth service with new data (convert null to undefined for User type)
+          const updatedUser = { 
+            ...currentUser, 
+            full_name: updates.full_name,
+            email: updates.email,
+            phone: updates.phone || undefined
+          };
+          this.authService.updateCurrentUser(updatedUser);
+        } else {
+          alert(response.message || 'Failed to update profile');
+        }
+      },
+      error: (err) => {
+        console.error('Profile update error:', err);
+        alert(err.error?.message || 'Error updating profile');
+      }
+    });
   }
 
   cancelEdit(): void {

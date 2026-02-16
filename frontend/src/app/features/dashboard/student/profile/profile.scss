@@ -210,6 +210,14 @@
   font-size: 12px;
 }
 
+.field-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}
+
 .input-with-icon {
   position: relative;
 }

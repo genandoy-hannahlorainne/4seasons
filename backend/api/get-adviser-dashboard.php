@@ -30,7 +30,7 @@ try {
     
     // Get adviser info
     $query = "SELECT a.adviser_id, a.first_name, a.last_name, a.employee_number, 
-                     a.contact_phone, u.username, u.email,
+                     a.contact_phone, u.username, u.email, u.phone,
                      CONCAT(a.first_name, ' ', a.last_name) as full_name
               FROM advisers a
               JOIN users u ON a.user_id = u.user_id

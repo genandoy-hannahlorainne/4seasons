@@ -30,7 +30,7 @@ try {
     
     // Get clinic staff info
     $query = "SELECT cs.clinic_staff_id, cs.staff_code, cs.position, 
-                     u.username, CONCAT(u.username) as full_name
+                     u.username, u.email, u.phone, u.full_name
               FROM clinic_staff cs
               JOIN users u ON cs.user_id = u.user_id
               WHERE cs.user_id = :user_id AND cs.is_active = 1";

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { StaffService } from '../../../../core/services/staff.service';
 
 @Component({
   selector: 'app-staff-profile',
@@ -148,6 +149,7 @@ export class StaffProfileComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
+    private staffService: StaffService,
     private router: Router
   ) {}
 
@@ -160,11 +162,33 @@ export class StaffProfileComponent implements OnInit {
     if (currentUser) {
       this.profileData.fullName = currentUser.full_name || 'Clinic Staff';
       this.profileData.email = currentUser.email || '';
+      this.profileData.phone = currentUser.phone || '';
       
-      const staffInfo = (currentUser as any).staff_info;
-      if (staffInfo) {
-        this.profileData.staffCode = staffInfo.staff_code || '';
-        this.profileData.position = staffInfo.position || 'Clinic Staff';
+      // Fetch updated staff info including phone from API
+      if (currentUser.user_id) {
+        this.staffService.getStaffDashboard(currentUser.user_id).subscribe({
+          next: (response: any) => {
+            if (response.success && response.data && response.data.staff) {
+              const staff = response.data.staff;
+              this.profileData.staffCode = staff.staff_code || '';
+              this.profileData.position = staff.position || 'Clinic Staff';
+              
+              // Update phone number from API response
+              if (staff.phone) {
+                this.profileData.phone = staff.phone;
+              }
+              
+              // Update full name if available
+              if (staff.full_name) {
+                this.profileData.fullName = staff.full_name;
+              }
+            }
+          },
+          error: (err) => {
+            console.error('Error loading staff data:', err);
+            // Keep the data from auth token if API fails
+          }
+        });
       }
     }
   }
@@ -175,8 +199,47 @@ export class StaffProfileComponent implements OnInit {
   }
 
   saveProfile(): void {
-    console.log('Saving profile:', this.profileData);
-    this.editMode = false;
+    if (!this.profileData.fullName || !this.profileData.email) {
+      alert('Full name and email are required');
+      return;
+    }
+
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser) {
+      alert('User not found');
+      return;
+    }
+
+    const updates = {
+      full_name: this.profileData.fullName,
+      email: this.profileData.email,
+      phone: this.profileData.phone || null
+    };
+
+    // Call API to update profile
+    this.staffService.updateStaffProfile(currentUser.user_id, updates).subscribe({
+      next: (response) => {
+        if (response.success) {
+          alert('Profile updated successfully');
+          this.editMode = false;
+          
+          // Update the auth service with new data (convert null to undefined for User type)
+          const updatedUser = { 
+            ...currentUser, 
+            full_name: updates.full_name,
+            email: updates.email,
+            phone: updates.phone || undefined
+          };
+          this.authService.updateCurrentUser(updatedUser);
+        } else {
+          alert(response.message || 'Failed to update profile');
+        }
+      },
+      error: (err) => {
+        console.error('Profile update error:', err);
+        alert(err.error?.message || 'Error updating profile');
+      }
+    });
   }
 
   cancelEdit(): void {

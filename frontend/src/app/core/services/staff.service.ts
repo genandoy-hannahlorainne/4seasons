@@ -39,7 +39,7 @@ export class StaffService {
   constructor(private http: HttpClient) {}
 
   getStaffDashboard(userId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/get-staff-dashboard.php?user_id=${userId}`);
+    return this.http.post<any>(`${environment.apiUrl}/get-staff-dashboard.php`, { user_id: userId });
   }
 
   getStudentProfile(studentId: number): Observable<any> {
@@ -56,5 +56,13 @@ export class StaffService {
       url += `&grade_level=${gradeLevel}`;
     }
     return this.http.get<any>(url);
+  }
+
+  // Profile Management
+  updateStaffProfile(userId: number, profileData: any): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/update-staff-profile.php`, {
+      user_id: userId,
+      ...profileData
+    });
   }
 }

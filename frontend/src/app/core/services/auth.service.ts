@@ -57,4 +57,9 @@ export class AuthService {
       confirm_password: newPassword
     });
   }
+
+  updateCurrentUser(updatedUser: User): void {
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    this.currentUserSubject.next(updatedUser);
+  }
 }
