@@ -160,6 +160,9 @@ interface GradeLevel {
                   <button *ngIf="section.adviser_id" class="btn-remove" (click)="removeAdviser(section)">
                     Remove
                   </button>
+                  <button class="btn-view-students" (click)="viewSectionStudents(section)">
+                    View Students
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -354,6 +357,112 @@ interface GradeLevel {
       <!-- Success/Error Messages -->
       <div *ngIf="message" class="message" [class.success]="messageType === 'success'" [class.error]="messageType === 'error'">
         {{ message }}
+      </div>
+
+      <!-- View Students Modal -->
+      <div *ngIf="showStudentsModal" class="modal-overlay" (click)="closeStudentsModal()">
+        <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Students in {{ selectedSectionForStudents?.level_name }} - {{ selectedSectionForStudents?.section_name }}</h3>
+            <button class="close-btn" (click)="closeStudentsModal()">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="section-info" *ngIf="sectionStudentsData">
+              <div class="info-row">
+                <div class="info-item">
+                  <strong>School Year:</strong> {{ sectionStudentsData.section.school_year }}
+                </div>
+                <div class="info-item">
+                  <strong>Adviser:</strong> {{ sectionStudentsData.section.adviser_name || 'Unassigned' }}
+                </div>
+                <div class="info-item">
+                  <strong>Capacity:</strong> {{ sectionStudentsData.section.current_enrollment }} / {{ sectionStudentsData.section.capacity }}
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="loadingStudents" class="loading-state">
+              <div class="spinner"></div>
+              <p>Loading students...</p>
+            </div>
+
+            <div *ngIf="!loadingStudents && sectionStudentsData" class="students-list">
+              <div class="students-header">
+                <h4>{{ sectionStudentsData.students.length }} Students Enrolled</h4>
+                <div class="stats-row">
+                  <span class="stat-badge">
+                    <i class="fa-solid fa-users"></i>
+                    {{ sectionStudentsData.stats.total_students }} Total
+                  </span>
+                  <span class="stat-badge allergy" *ngIf="sectionStudentsData.stats.students_with_allergies > 0">
+                    <i class="fa-solid fa-exclamation-triangle"></i>
+                    {{ sectionStudentsData.stats.students_with_allergies }} with Allergies
+                  </span>
+                  <span class="stat-badge visit" *ngIf="sectionStudentsData.stats.students_with_visits > 0">
+                    <i class="fa-solid fa-stethoscope"></i>
+                    {{ sectionStudentsData.stats.students_with_visits }} with Clinic Visits
+                  </span>
+                </div>
+              </div>
+
+              <div class="students-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Student Number</th>
+                      <th>Name</th>
+                      <th>Gender</th>
+                      <th>Age</th>
+                      <th>Blood Type</th>
+                      <th>Emergency Contact</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let student of sectionStudentsData.students">
+                      <td>{{ student.student_number }}</td>
+                      <td>
+                        <div class="student-name">
+                          {{ student.full_name }}
+                          <div class="student-allergies" *ngIf="student.allergies && student.allergies.length > 0">
+                            <span *ngFor="let allergy of student.allergies" class="allergy-tag">{{ allergy }}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{{ student.gender }}</td>
+                      <td>{{ student.age || 'N/A' }}</td>
+                      <td>{{ student.blood_type || 'N/A' }}</td>
+                      <td>
+                        <div class="contact-info" *ngIf="student.emergency_contact">
+                          <div>{{ student.emergency_contact }}</div>
+                          <small *ngIf="student.emergency_contact_phone">{{ student.emergency_contact_phone }}</small>
+                        </div>
+                        <span *ngIf="!student.emergency_contact" class="no-contact">No contact</span>
+                      </td>
+                      <td>
+                        <span class="status-badge" [class]="'status-' + student.enrollment_status">
+                          {{ student.enrollment_status | titlecase }}
+                        </span>
+                        <div class="last-visit" *ngIf="student.last_visit">
+                          <small>Last visit: {{ student.last_visit.visit_datetime | date:'MMM d' }}</small>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div *ngIf="sectionStudentsData.students.length === 0" class="no-students">
+                  <div class="empty-icon">👥</div>
+                  <h4>No Students Enrolled</h4>
+                  <p>This section doesn't have any students assigned yet.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeStudentsModal()">Close</button>
+          </div>
+        </div>
       </div>
     </div>
   `,
@@ -690,7 +799,7 @@ interface GradeLevel {
         font-weight: 500;
       }
 
-      .btn-assign, .btn-remove {
+      .btn-assign, .btn-remove, .btn-view-students {
         padding: 0.5rem 1rem;
         border: none;
         border-radius: 6px;
@@ -698,6 +807,7 @@ interface GradeLevel {
         font-weight: 500;
         transition: all 0.2s ease;
         margin-right: 0.5rem;
+        font-size: 0.85rem;
       }
 
       .btn-assign {
@@ -715,6 +825,15 @@ interface GradeLevel {
 
         &:hover {
           background: #c0392b;
+        }
+      }
+
+      .btn-view-students {
+        background: #2ecc71;
+        color: white;
+
+        &:hover {
+          background: #27ae60;
         }
       }
 
@@ -1043,6 +1162,185 @@ interface GradeLevel {
         opacity: 1;
       }
     }
+
+    .large-modal {
+      max-width: 1200px;
+      width: 95%;
+    }
+
+    .students-list {
+      .students-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+
+        h4 {
+          margin: 0;
+          color: #2c3e50;
+          font-size: 1.3rem;
+        }
+
+        .stats-row {
+          display: flex;
+          gap: 1rem;
+
+          .stat-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #f8f9fa;
+            color: #2c3e50;
+
+            &.allergy {
+              background: #fff3cd;
+              color: #856404;
+            }
+
+            &.visit {
+              background: #d4edda;
+              color: #155724;
+            }
+
+            i {
+              font-size: 0.9rem;
+            }
+          }
+        }
+      }
+
+      .students-table {
+        table {
+          width: 100%;
+          border-collapse: collapse;
+
+          thead {
+            background: #f8f9fa;
+
+            th {
+              padding: 1rem;
+              text-align: left;
+              font-weight: 600;
+              color: #2c3e50;
+              border-bottom: 2px solid #e9ecef;
+              font-size: 0.9rem;
+            }
+          }
+
+          tbody {
+            tr {
+              border-bottom: 1px solid #f1f3f4;
+              transition: background 0.2s ease;
+
+              &:hover {
+                background: #f8f9fa;
+              }
+
+              td {
+                padding: 1rem;
+                color: #2c3e50;
+                font-size: 0.9rem;
+                vertical-align: top;
+              }
+            }
+          }
+        }
+
+        .student-name {
+          font-weight: 500;
+
+          .student-allergies {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+
+            .allergy-tag {
+              background: #fff3cd;
+              color: #856404;
+              padding: 0.2rem 0.5rem;
+              border-radius: 12px;
+              font-size: 0.75rem;
+              font-weight: 500;
+            }
+          }
+        }
+
+        .contact-info {
+          div {
+            font-weight: 500;
+          }
+          small {
+            color: #7f8c8d;
+          }
+        }
+
+        .no-contact {
+          color: #7f8c8d;
+          font-style: italic;
+        }
+
+        .status-badge {
+          padding: 0.25rem 0.75rem;
+          border-radius: 12px;
+          font-size: 0.8rem;
+          font-weight: 500;
+
+          &.status-active {
+            background: #d4edda;
+            color: #155724;
+          }
+
+          &.status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+          }
+        }
+
+        .last-visit {
+          margin-top: 0.25rem;
+          small {
+            color: #7f8c8d;
+          }
+        }
+
+        .no-students {
+          text-align: center;
+          padding: 3rem;
+          color: #7f8c8d;
+
+          .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+          }
+
+          h4 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+          }
+        }
+      }
+    }
+
+    .info-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+
+      .info-item {
+        strong {
+          color: #7f8c8d;
+          margin-right: 0.5rem;
+        }
+      }
+    }
   `]
 })
 export class SchoolYearManagementComponent implements OnInit {
@@ -1058,9 +1356,14 @@ export class SchoolYearManagementComponent implements OnInit {
   showAssignModal = false;
   showCreateYearModal = false;
   showCreateSectionModal = false;
+  showStudentsModal = false;
   loading = false;
   saving = false;
   settingCurrent = false;
+  loadingStudents = false;
+  
+  selectedSectionForStudents: Section | null = null;
+  sectionStudentsData: any = null;
   
   newYear = {
     year_name: '',
@@ -1409,5 +1712,36 @@ export class SchoolYearManagementComponent implements OnInit {
     setTimeout(() => {
       this.message = '';
     }, 5000);
+  }
+
+  viewSectionStudents(section: Section): void {
+    this.selectedSectionForStudents = section;
+    this.showStudentsModal = true;
+    this.loadSectionStudents(section.id);
+  }
+
+  closeStudentsModal(): void {
+    this.showStudentsModal = false;
+    this.selectedSectionForStudents = null;
+    this.sectionStudentsData = null;
+  }
+
+  loadSectionStudents(sectionId: number): void {
+    this.loadingStudents = true;
+    this.http.get<any>(`${this.apiUrl}/admin/sections/get-students.php?section_id=${sectionId}`).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.sectionStudentsData = response;
+        } else {
+          this.showMessage('Error loading students: ' + response.message, 'error');
+        }
+        this.loadingStudents = false;
+      },
+      error: (err) => {
+        console.error('Error loading section students:', err);
+        this.showMessage('Error loading students', 'error');
+        this.loadingStudents = false;
+      }
+    });
   }
 }
