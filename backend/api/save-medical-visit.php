@@ -18,6 +18,109 @@ $auth->requireRole('Clinic Staff');
 // Initialize email service
 $emailService = new EmailService($database);
 
+/**
+ * Check for frequent visit patterns and return alert message if pattern detected
+ */
+function checkFrequentVisitPattern($db, $studentId, $currentDiagnosis, $currentVisitId) {
+    try {
+        // Define symptom groups for pattern matching
+        $symptomGroups = [
+            'stomach' => ['stomach ache', 'abdominal pain', 'stomach pain', 'tummy ache', 'gastric pain', 'indigestion'],
+            'headache' => ['headache', 'head pain', 'migraine', 'head ache'],
+            'fever' => ['fever', 'high temperature', 'pyrexia'],
+            'respiratory' => ['cough', 'cold', 'sore throat', 'runny nose', 'congestion'],
+            'injury' => ['bruise', 'cut', 'wound', 'injury', 'sprain', 'strain']
+        ];
+        
+        // Find which symptom group the current diagnosis belongs to
+        $currentGroup = null;
+        $currentDiagnosisLower = strtolower($currentDiagnosis);
+        
+        foreach ($symptomGroups as $group => $symptoms) {
+            foreach ($symptoms as $symptom) {
+                if (strpos($currentDiagnosisLower, $symptom) !== false) {
+                    $currentGroup = $group;
+                    break 2;
+                }
+            }
+        }
+        
+        // If no group found, no pattern detection
+        if (!$currentGroup) {
+            return null;
+        }
+        
+        // Get all symptoms in the same group for SQL matching
+        $groupSymptoms = $symptomGroups[$currentGroup];
+        $symptomConditions = [];
+        foreach ($groupSymptoms as $symptom) {
+            $symptomConditions[] = "LOWER(mv.notes) LIKE '%" . strtolower($symptom) . "%'";
+        }
+        $symptomWhere = '(' . implode(' OR ', $symptomConditions) . ')';
+        
+        // Check for visits in the last 14 days with similar symptoms
+        $query = "SELECT COUNT(*) as visit_count, 
+                         GROUP_CONCAT(DATE(mv.visit_datetime) ORDER BY mv.visit_datetime DESC) as visit_dates
+                  FROM medical_visits mv 
+                  WHERE mv.student_id = :student_id 
+                    AND mv.visit_datetime >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+                    AND mv.visit_id != :current_visit_id
+                    AND {$symptomWhere}";
+        
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':student_id', $studentId);
+        $stmt->bindParam(':current_visit_id', $currentVisitId);
+        $stmt->execute();
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $visitCount = $result['visit_count'] + 1; // +1 for current visit
+        
+        // Trigger alert if 4 or more visits with similar symptoms in 2 weeks
+        if ($visitCount >= 4) {
+            // Check if we already sent a pattern alert for this symptom group recently
+            $alertCheckQuery = "SELECT COUNT(*) as alert_count 
+                               FROM notifications 
+                               WHERE student_id = :student_id 
+                                 AND message LIKE '%visited the clinic % times recently%'
+                                 AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+            
+            $alertStmt = $db->prepare($alertCheckQuery);
+            $alertStmt->bindParam(':student_id', $studentId);
+            $alertStmt->execute();
+            
+            $alertResult = $alertStmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Only send alert if no recent pattern alert was sent
+            if ($alertResult['alert_count'] == 0) {
+                // Get student name for message
+                $studentQuery = "SELECT CONCAT(first_name, ' ', last_name) as full_name FROM students WHERE student_id = :student_id";
+                $studentStmt = $db->prepare($studentQuery);
+                $studentStmt->bindParam(':student_id', $studentId);
+                $studentStmt->execute();
+                $studentData = $studentStmt->fetch(PDO::FETCH_ASSOC);
+                
+                $studentName = $studentData['full_name'];
+                $symptomType = ucfirst($currentGroup) . ' related symptoms';
+                
+                $message = "🚨 PATTERN ALERT: Your child {$studentName} has visited the clinic {$visitCount} times recently for {$symptomType}. We suggest a formal consultation with a specialist. Please contact Four Seasons School Clinic for guidance.";
+                
+                return [
+                    'pattern_detected' => true,
+                    'visit_count' => $visitCount,
+                    'symptom_group' => $currentGroup,
+                    'message' => $message
+                ];
+            }
+        }
+        
+        return null;
+        
+    } catch (Exception $e) {
+        error_log("Pattern detection error: " . $e->getMessage());
+        return null;
+    }
+}
+
 $data = json_decode(file_get_contents("php://input"));
 
 // Validate required fields
@@ -344,30 +447,52 @@ try {
             $studentName = trim($student['first_name'] . ' ' . $student['last_name']);
             $diagnosis = $data->diagnosis;
             
-            // Create SMS message
-            $smsMessage = "Good day! This is from Four Seasons School Clinic. Your child {$studentName} visited the clinic today. Diagnosis: {$diagnosis}. Please contact the clinic for more details.";
+            // Check for frequent visit patterns before sending regular SMS
+            $patternAlert = checkFrequentVisitPattern($db, $data->student_id, $diagnosis, $visitId);
             
-            // Log the SMS (in production, integrate with SMS gateway like Semaphore, Globe Labs, etc.)
-            error_log("SMS to {$parentPhone}: {$smsMessage}");
-            
-            // Insert notification record
-            $notifQuery = "INSERT INTO notifications (student_id, visit_id, channel, message, status, created_at) 
-                          VALUES (:student_id, :visit_id, 'SMS', :message, 'Pending', NOW())";
-            $notifStmt = $db->prepare($notifQuery);
-            $notifStmt->bindParam(':student_id', $data->student_id);
-            $notifStmt->bindParam(':visit_id', $visitId);
-            $notifStmt->bindParam(':message', $smsMessage);
-            $notifStmt->execute();
-            
-            $smsSent = true;
+            if ($patternAlert) {
+                // Send pattern alert SMS instead of regular SMS
+                $smsMessage = $patternAlert['message'];
+                error_log("PATTERN ALERT SMS to {$parentPhone}: {$smsMessage}");
+                
+                // Insert pattern alert notification
+                $notifQuery = "INSERT INTO notifications (student_id, visit_id, channel, message, status, created_at, priority) 
+                              VALUES (:student_id, :visit_id, 'SMS', :message, 'Pending', NOW(), 'urgent')";
+                $notifStmt = $db->prepare($notifQuery);
+                $notifStmt->bindParam(':student_id', $data->student_id);
+                $notifStmt->bindParam(':visit_id', $visitId);
+                $notifStmt->bindParam(':message', $smsMessage);
+                $notifStmt->execute();
+                
+                $smsSent = true;
+                $responseMessage = 'Medical visit saved successfully. Pattern alert SMS queued for parent.';
+            } else {
+                // Send regular SMS
+                $smsMessage = "Good day! This is from Four Seasons School Clinic. Your child {$studentName} visited the clinic today. Diagnosis: {$diagnosis}. Please contact the clinic for more details.";
+                error_log("SMS to {$parentPhone}: {$smsMessage}");
+                
+                // Insert regular notification
+                $notifQuery = "INSERT INTO notifications (student_id, visit_id, channel, message, status, created_at) 
+                              VALUES (:student_id, :visit_id, 'SMS', :message, 'Pending', NOW())";
+                $notifStmt = $db->prepare($notifQuery);
+                $notifStmt->bindParam(':student_id', $data->student_id);
+                $notifStmt->bindParam(':visit_id', $visitId);
+                $notifStmt->bindParam(':message', $smsMessage);
+                $notifStmt->execute();
+                
+                $smsSent = true;
+            }
         }
     }
     
     $db->commit();
     
-    $responseMessage = 'Medical visit saved successfully';
-    if ($smsSent) {
-        $responseMessage .= '. SMS notification queued for parent.';
+    // Set response message (may have been set in pattern alert logic)
+    if (!isset($responseMessage)) {
+        $responseMessage = 'Medical visit saved successfully';
+        if ($smsSent) {
+            $responseMessage .= '. SMS notification queued for parent.';
+        }
     }
     
     echo json_encode([
