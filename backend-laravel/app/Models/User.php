@@ -21,6 +21,27 @@ class User extends Authenticatable
     protected $primaryKey = 'user_id';
 
     /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = true;
+
+    /**
+     * The name of the "created at" column.
+     *
+     * @var string
+     */
+    const CREATED_AT = 'created_at';
+
+    /**
+     * The name of the "updated at" column.
+     *
+     * @var string|null
+     */
+    const UPDATED_AT = null; // No updated_at column in existing schema
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -74,7 +95,7 @@ class User extends Authenticatable
      */
     public function role()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class, 'role_id', 'role_id');
     }
 
     public function student()
