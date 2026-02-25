@@ -59,27 +59,22 @@ class Student extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
 
     public function medicalVisits()
     {
-        return $this->hasMany(MedicalVisit::class);
+        return $this->hasMany(MedicalVisit::class, 'student_id', 'student_id');
     }
 
     public function allergies()
     {
-        return $this->hasMany(Allergy::class);
+        return $this->hasMany(Allergy::class, 'student_id', 'student_id');
     }
 
     public function medicalHistory()
     {
-        return $this->hasOne(MedicalHistory::class);
-    }
-
-    public function medicalClearances()
-    {
-        return $this->hasMany(MedicalClearance::class);
+        return $this->hasOne(MedicalHistory::class, 'student_id', 'student_id');
     }
 
     /**

@@ -130,12 +130,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/refresh', [AuthController::class, 'refresh']);
     Route::get('/me', [AuthController::class, 'me']);
     
+    // Student endpoints
+    Route::apiResource('students', \App\Http\Controllers\Api\StudentController::class);
+    Route::get('/students/{student}/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'getMedicalData']);
+    Route::put('/students/{student}/physical-info', [\App\Http\Controllers\Api\StudentController::class, 'updatePhysicalInfo']);
+    
     // Legacy user endpoint
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
     
     // Future API endpoints will be added here
-    // Route::apiResource('students', StudentController::class);
     // Route::post('medical-visits', [MedicalVisitController::class, 'store']);
 });

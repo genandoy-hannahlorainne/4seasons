@@ -1,223 +1,212 @@
-# Frontend Integration Guide - Laravel Authentication
+# Frontend Integration Guide
 
-## Overview
+## Current Status: ✅ COMMIT 4 COMPLETED
 
-The Laravel authentication endpoint is now ready and fully compatible with your existing Angular frontend. Here's how to integrate it.
+### Authentication Integration
+The frontend has been successfully integrated with Laravel JWT authentication:
 
-## API Endpoints
+- **Login Flow**: Angular → Laravel `/api/login` → JWT token
+- **Token Storage**: Secure localStorage storage
+- **Auto-refresh**: Token refresh mechanism implemented
+- **Dual API Support**: Both Laravel and legacy PHP APIs supported during migration
+
+### API Integration Status
+
+#### ✅ Completed Endpoints
+- **Authentication**: `/api/login`, `/api/logout`, `/api/me`, `/api/refresh`
+- **Students**: `/api/students` (list, show, update, medical-data, physical-info)
+
+#### 🔄 Next Phase (Commit 5)
+- Medical visits endpoints
+- Admin dashboard endpoints  
+- Adviser dashboard endpoints
+- Staff dashboard endpoints
+
+### Testing Results
+- **Laravel API**: All student endpoints working (tested with 3 students)
+- **JWT Authentication**: Bearer tokens properly validated
+- **Frontend Services**: Auth and Student services updated for Laravel API
+- **Interceptors**: Dual API support working correctly
+
+### Usage Examples
+
+#### Login (Angular Service)
+```typescript
+this.authService.login('admin', 'admin123').subscribe(
+  user => {
+    // JWT token automatically stored
+    // User redirected to dashboard
+  }
+);
+```
+
+#### Get Students (Angular Service)  
+```typescript
+this.studentService.getAll({ search: 'John', grade_level: '7' }).subscribe(
+  students => {
+    // Paginated student list with relationships
+    console.log(students.data); // Array of students
+    console.log(students.total); // Total count
+  }
+);
+```
+
+#### Get Student Medical Data
+```typescript
+this.studentService.getMedicalData(21).subscribe(
+  medicalData => {
+    console.log(medicalData.medical_history);
+    console.log(medicalData.allergies);
+    console.log(medicalData.recent_visits);
+  }
+);
+```
+
+### Migration Strategy
+1. **Gradual Migration**: Both APIs run simultaneously
+2. **Feature Flags**: Components can switch between APIs
+3. **Backward Compatibility**: Legacy endpoints maintained
+4. **Testing**: Each endpoint tested before migration
+
+### Next Steps
+1. Update Angular components to use Laravel API
+2. Test complete user flows
+3. Migrate remaining endpoints
+4. Performance optimization
+5. Production deployment
+
+## API Reference
 
 ### Authentication Endpoints
+- `POST /api/login` - Login with username/password
+- `POST /api/logout` - Logout and invalidate token  
+- `GET /api/me` - Get current user info
+- `POST /api/refresh` - Refresh JWT token
 
-| Endpoint | Method | Description | Auth Required |
-|----------|--------|-------------|---------------|
-| `/api/login` | POST | User login with JWT token | No |
-| `/api/logout` | POST | User logout (revoke token) | Yes |
-| `/api/refresh` | POST | Refresh JWT token | Yes |
-| `/api/me` | GET | Get current user info | Yes |
+### Student Endpoints
+- `GET /api/students` - List students (paginated, searchable)
+- `GET /api/students/{id}` - Get student details with relationships
+- `PUT /api/students/{id}` - Update student profile
+- `GET /api/students/{id}/medical-data` - Get comprehensive medical data
+- `PUT /api/students/{id}/physical-info` - Update height, weight, BMI
 
-## Frontend Changes Required
+### Request/Response Examples
 
-### 1. Update Environment Configuration
-
-```typescript
-// frontend/src/environments/environment.ts
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8000/api', // Laravel API
-  legacyApiUrl: 'http://localhost/backend/api' // Keep for gradual migration
-};
-```
-
-### 2. Update Auth Service
-
-```typescript
-// frontend/src/app/core/services/auth.service.ts
-login(username: string, password: string): Observable<User> {
-  return this.http.post<any>(`${environment.apiUrl}/login`, { username, password })
-    .pipe(map(response => {
-      if (response && response.success && response.data) {
-        const userData = response.data.user;
-        const token = response.data.token;
-        
-        localStorage.setItem('currentUser', JSON.stringify(userData));
-        localStorage.setItem('token', token); // Store JWT token
-        this.currentUserSubject.next(userData);
-        
-        return userData;
-      }
-      throw new Error('Invalid response format');
-    }));
-}
-
-logout(): void {
-  const token = localStorage.getItem('token');
-  if (token) {
-    // Call logout endpoint to revoke token
-    this.http.post(`${environment.apiUrl}/logout`, {}).subscribe();
-  }
-  
-  localStorage.removeItem('currentUser');
-  localStorage.removeItem('token');
-  this.currentUserSubject.next(null);
-}
-```
-
-### 3. Update Auth Interceptor
-
-```typescript
-// frontend/src/app/core/interceptors/auth.interceptor.ts
-export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = localStorage.getItem('token');
-  
-  if (token) {
-    req = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}` // Use Bearer token instead of custom header
-      }
-    });
-  }
-  
-  return next(req);
-};
-```
-
-### 4. Response Format Changes
-
-The Laravel API returns a different response format:
-
-**Old PHP Response:**
+#### Login Request
 ```json
+POST /api/login
 {
-  "success": true,
-  "message": "Login successful",
-  "user": { ... }
+  "username": "admin",
+  "password": "admin123"
 }
 ```
 
-**New Laravel Response:**
+#### Login Response
 ```json
 {
   "success": true,
   "message": "Login successful",
   "data": {
-    "user": { ... },
-    "token": "1|abc123...",
+    "user": {
+      "user_id": 32,
+      "username": "admin",
+      "email": "admin@pdmhs.edu.ph",
+      "full_name": "System Administrator",
+      "role_id": 1,
+      "role_name": "Admin"
+    },
+    "token": "8|ERXKfYCESsR7wq2KLziUyp8KaXUCCin3JFxOVtFoa5747138",
     "token_type": "Bearer",
     "expires_in": 86400
   }
 }
 ```
 
-### 5. User Object Structure
-
-The user object now includes role-specific information:
-
-```typescript
-interface User {
-  user_id: number;
-  username: string;
-  email: string;
-  full_name: string;
-  role_id: number;
-  role_name: string;
-  password_must_change: boolean;
-  
-  // Role-specific data (optional)
-  admin_info?: { is_admin: boolean };
-  student_info?: {
-    student_id: number;
-    student_number: string;
-    first_name: string;
-    last_name: string;
-  };
-  adviser_info?: {
-    adviser_id: number;
-    employee_id: string;
-    contact_phone: string;
-  };
-  staff_info?: {
-    clinic_staff_id: number;
-    staff_id: string;
-    position: string;
-  };
-}
-```
-
-## Testing the Integration
-
-### 1. Test Login
-```bash
-# Start Laravel server
-cd backend-laravel
-php artisan serve --port=8000
-
-# Test login endpoint
-curl -X POST http://localhost:8000/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
-```
-
-### 2. Test Protected Endpoint
-```bash
-# Use token from login response
-curl -X GET http://localhost:8000/api/me \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
-```
-
-## Migration Strategy
-
-### Phase 1: Update Auth Service Only
-1. Update `auth.service.ts` to use Laravel endpoint
-2. Keep all other services using legacy PHP endpoints
-3. Test login/logout functionality
-
-### Phase 2: Gradual Endpoint Migration
-1. Update one service at a time to use Laravel endpoints
-2. Test each service thoroughly
-3. Keep fallback to legacy endpoints if needed
-
-### Phase 3: Complete Migration
-1. Remove legacy API URL from environment
-2. Remove old PHP backend
-3. Update all references
-
-## Error Handling
-
-The Laravel API returns consistent error responses:
-
+#### Students List Response
 ```json
 {
-  "success": false,
-  "message": "Error message",
-  "errors": {
-    "field": ["Validation error message"]
+  "success": true,
+  "message": "Students retrieved successfully",
+  "data": {
+    "current_page": 1,
+    "data": [
+      {
+        "student_id": 21,
+        "student_number": "136663100330",
+        "first_name": "Wallance",
+        "last_name": "Delgado",
+        "grade_level": "7",
+        "section": "Mapagmahal",
+        "user": { ... },
+        "medical_history": { ... },
+        "allergies": [ ... ]
+      }
+    ],
+    "total": 3,
+    "per_page": 20
   }
 }
 ```
 
-Update your error handling to match this format.
+## Environment Configuration
 
-## Token Management
+### Frontend (environment.ts)
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:8000/api', // Laravel API
+  legacyApiUrl: 'http://localhost/4seasons/backend/api' // Legacy PHP API
+};
+```
 
-- Tokens expire after 24 hours
-- Use the `/api/refresh` endpoint to get a new token
-- Implement automatic token refresh in your interceptor
-- Handle 401 responses by redirecting to login
+### Backend (.env)
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=4seasons
+DB_USERNAME=root
+DB_PASSWORD=
 
-## Security Improvements
+SANCTUM_STATEFUL_DOMAINS=localhost,localhost:4200,localhost:4201,127.0.0.1,127.0.0.1:8000
+```
 
-The Laravel authentication provides:
-- JWT tokens instead of custom headers
-- Token expiration and refresh
-- Proper CORS handling
-- Rate limiting (can be configured)
-- Activity logging
-- Role-based access control validation
+## Development Servers
 
-## Backward Compatibility
+### Laravel Backend
+```bash
+cd backend-laravel
+php artisan serve --port=8000
+# API available at http://localhost:8000/api
+```
 
-During migration, you can run both systems:
-- Laravel API: `http://localhost:8000/api/`
-- Legacy PHP API: `http://localhost/backend/api/`
+### Angular Frontend  
+```bash
+cd frontend
+npm start
+# or ng serve --port 4201
+# App available at http://localhost:4201
+```
 
-This allows for gradual migration without breaking existing functionality.
+## Testing Checklist
+
+### ✅ Backend API Tests
+- [x] POST /api/login (admin/admin123)
+- [x] GET /api/me (with Bearer token)
+- [x] GET /api/students (returns 3 students)
+- [x] GET /api/students/21 (individual student)
+- [x] GET /api/students/21/medical-data (medical info)
+
+### 🔄 Frontend Integration Tests
+- [ ] Login form with Laravel API
+- [ ] Student list component with Laravel API
+- [ ] Student detail component with Laravel API
+- [ ] Medical data display with Laravel API
+- [ ] Token refresh on expiry
+
+### ⏳ End-to-End Tests
+- [ ] Complete login flow
+- [ ] Student management workflow
+- [ ] Medical record access
+- [ ] Role-based access control
+- [ ] Logout and session cleanup

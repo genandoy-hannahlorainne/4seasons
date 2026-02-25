@@ -46,17 +46,17 @@ class MedicalVisit extends Model
      */
     public function student()
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Student::class, 'student_id', 'student_id');
     }
 
     public function clinicStaff()
     {
-        return $this->belongsTo(ClinicStaff::class);
+        return $this->belongsTo(ClinicStaff::class, 'clinic_staff_id', 'clinic_staff_id');
     }
 
     public function vitals()
     {
-        return $this->hasMany(Vital::class);
+        return $this->hasMany(Vital::class, 'visit_id', 'visit_id');
     }
 
     /**
