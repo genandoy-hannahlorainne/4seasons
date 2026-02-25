@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\DatabaseTestController;
 
 // Health check endpoint
 Route::get('/health', function () {
@@ -12,6 +13,10 @@ Route::get('/health', function () {
         'timestamp' => now()->toISOString()
     ]);
 });
+
+// Database test endpoints (for development)
+Route::get('/test/database', [DatabaseTestController::class, 'testConnection']);
+Route::get('/test/relationships', [DatabaseTestController::class, 'testRelationships']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {

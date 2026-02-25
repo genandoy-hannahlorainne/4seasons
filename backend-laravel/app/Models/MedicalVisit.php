@@ -9,6 +9,8 @@ class MedicalVisit extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'visit_id';
+
     protected $fillable = [
         'student_id',
         'clinic_staff_id',
