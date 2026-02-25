@@ -135,6 +135,47 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/students/{student}/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'getMedicalData']);
     Route::put('/students/{student}/physical-info', [\App\Http\Controllers\Api\StudentController::class, 'updatePhysicalInfo']);
     
+    // Medical visit endpoints
+    Route::apiResource('medical-visits', \App\Http\Controllers\Api\MedicalVisitController::class);
+    Route::get('/students/{student}/visits', [\App\Http\Controllers\Api\MedicalVisitController::class, 'getStudentVisits']);
+    Route::get('/medical-visits/emergency/recent', [\App\Http\Controllers\Api\MedicalVisitController::class, 'getEmergencyVisits']);
+    Route::get('/medical-visits/statistics/summary', [\App\Http\Controllers\Api\MedicalVisitController::class, 'getStatistics']);
+    
+    // Dashboard endpoints
+    Route::get('/dashboard/admin/stats', function(Request $request) {
+        try {
+            $days = $request->get('days', 30);
+            $startDate = now()->subDays($days);
+            
+            $stats = [
+                'total_users' => \App\Models\User::where('is_active', true)->count(),
+                'total_students' => \App\Models\Student::where('is_active', true)->count(),
+                'total_visits' => \App\Models\MedicalVisit::where('visit_datetime', '>=', $startDate)->count(),
+                'emergency_visits' => \App\Models\MedicalVisit::where('visit_datetime', '>=', $startDate)
+                                                            ->where('is_emergency', true)->count(),
+                'visits_today' => \App\Models\MedicalVisit::whereDate('visit_datetime', today())->count(),
+                'students_with_allergies' => \App\Models\Student::whereHas('allergies')->count(),
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Admin dashboard statistics retrieved successfully',
+                'data' => $stats
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve admin statistics',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    });
+    
+    Route::get('/dashboard/test', function() {
+        return response()->json(['success' => true, 'message' => 'Dashboard test working']);
+    });
+    
     // Legacy user endpoint
     Route::get('/user', function (Request $request) {
         return $request->user();

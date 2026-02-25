@@ -88,40 +88,40 @@ export class AdviserService {
   constructor(private http: HttpClient) {}
 
   getAdviserDashboard(userId: number): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/get-adviser-dashboard.php`, { user_id: userId });
+    return this.http.post<any>(`${environment.legacyApiUrl}/get-adviser-dashboard.php`, { user_id: userId });
   }
 
   getAdvisoryStudents(userId: number): Observable<AdvisoryStudentsResponse> {
-    return this.http.get<AdvisoryStudentsResponse>(`${environment.apiUrl}/get-advisory-students.php?user_id=${userId}`);
+    return this.http.get<AdvisoryStudentsResponse>(`${environment.legacyApiUrl}/get-advisory-students.php?user_id=${userId}`);
   }
 
   autoAssignStudents(userId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/auto-assign-students.php?user_id=${userId}`);
+    return this.http.get<any>(`${environment.legacyApiUrl}/auto-assign-students.php?user_id=${userId}`);
   }
 
   getStudentCompleteProfile(studentId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/get-student-complete-profile.php?student_id=${studentId}`);
+    return this.http.get<any>(`${environment.legacyApiUrl}/get-student-complete-profile.php?student_id=${studentId}`);
   }
 
   getAdviserNotifications(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/get-adviser-notifications.php`);
+    return this.http.get<any>(`${environment.legacyApiUrl}/get-adviser-notifications.php`);
   }
 
   // Grade Promotion & Class Management
   getSchoolYears(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/school-years/list.php`);
+    return this.http.get<any>(`${environment.legacyApiUrl}/admin/school-years/list.php`);
   }
 
   getClassRoster(schoolYearId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/adviser/get-class-roster.php?school_year_id=${schoolYearId}`);
+    return this.http.get<any>(`${environment.legacyApiUrl}/adviser/get-class-roster.php?school_year_id=${schoolYearId}`);
   }
 
   promoteStudents(promotionData: any): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/adviser/promote-students.php`, promotionData);
+    return this.http.post<any>(`${environment.legacyApiUrl}/adviser/promote-students.php`, promotionData);
   }
 
   getSections(schoolYearId?: number, gradeLevel?: number): Observable<any> {
-    let url = `${environment.apiUrl}/admin/sections/list.php`;
+    let url = `${environment.legacyApiUrl}/admin/sections/list.php`;
     const params = [];
     
     if (schoolYearId) {
@@ -140,12 +140,12 @@ export class AdviserService {
 
   // Health Monitoring Heat Map
   getHealthHeatmap(days: number = 7): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/adviser/get-health-heatmap.php?days=${days}`);
+    return this.http.get<any>(`${environment.legacyApiUrl}/adviser/get-health-heatmap.php?days=${days}`);
   }
 
   // Profile Management
   updateAdviserProfile(userId: number, profileData: any): Observable<any> {
-    return this.http.put<any>(`${environment.apiUrl}/update-adviser-profile.php`, {
+    return this.http.put<any>(`${environment.legacyApiUrl}/update-adviser-profile.php`, {
       user_id: userId,
       ...profileData
     });
