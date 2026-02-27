@@ -19,7 +19,7 @@ class AdviserController extends BaseController
         try {
             $user = $request->user();
             
-            if (!$user || $user->role_id !== 2) {
+            if (!$user || $user->role_id !== 3) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
@@ -67,7 +67,7 @@ class AdviserController extends BaseController
         try {
             $user = $request->user();
             
-            if (!$user || $user->role_id !== 2) {
+            if (!$user || $user->role_id !== 3) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
@@ -110,7 +110,7 @@ class AdviserController extends BaseController
         try {
             $user = $request->user();
             
-            if (!$user || $user->role_id !== 2) {
+            if (!$user || $user->role_id !== 3) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
