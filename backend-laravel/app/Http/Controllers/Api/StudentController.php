@@ -243,4 +243,111 @@ class StudentController extends BaseController
             ], 500);
         }
     }
+
+    /**
+     * Search students by name or student number
+     */
+    public function search(Request $request)
+    {
+        try {
+            $query = $request->get('q', '');
+            
+            if (strlen($query) < 2) {
+                return $this->sendResponse([], 'Search query too short');
+            }
+            
+            $students = Student::with(['user'])
+                             ->where('is_active', true)
+                             ->whereNull('deleted_at')
+                             ->where(function($q) use ($query) {
+                                 $q->where('student_number', 'LIKE', "%{$query}%")
+                                   ->orWhere('first_name', 'LIKE', "%{$query}%")
+                                   ->orWhere('last_name', 'LIKE', "%{$query}%")
+                                   ->orWhereHas('user', function($userQuery) use ($query) {
+                                       $userQuery->where('full_name', 'LIKE', "%{$query}%");
+                                   });
+                             })
+                             ->limit(10)
+                             ->get();
+            
+            $formattedStudents = $students->map(function($student) {
+                return [
+                    'student_id' => $student->student_id,
+                    'student_number' => $student->student_number,
+                    'full_name' => $student->user->full_name ?? ($student->first_name . ' ' . $student->last_name),
+                    'grade_section' => $student->grade_level . ' - ' . $student->section,
+                    'grade_level' => $student->grade_level,
+                    'section' => $student->section,
+                    'emergency_contact' => $student->emergency_contact,
+                    'emergency_contact_phone' => $student->emergency_contact_phone,
+                    'allergies' => $student->allergies ? $student->allergies->pluck('allergy_text')->toArray() : [],
+                    'avatar' => '/assets/user-' . strtolower($student->gender) . '.png'
+                ];
+            });
+            
+            return $this->sendResponse($formattedStudents, 'Students found successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to search students', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get student by QR code (student_id or student_number)
+     */
+    public function getByQr(Request $request)
+    {
+        try {
+            $studentId = $request->get('student_id');
+            $studentNumber = $request->get('student_number');
+            
+            if (!$studentId && !$studentNumber) {
+                return $this->sendError('Student ID or student number is required', [], 400);
+            }
+            
+            $query = Student::with(['user', 'allergies']);
+            
+            if ($studentId) {
+                $query->where('student_id', $studentId);
+            } else {
+                $query->where('student_number', $studentNumber);
+            }
+            
+            $student = $query->where('is_active', true)
+                           ->whereNull('deleted_at')
+                           ->first();
+            
+            if (!$student) {
+                return $this->sendError('Student not found', [], 404);
+            }
+            
+            $studentData = [
+                'student_id' => $student->student_id,
+                'student_number' => $student->student_number,
+                'full_name' => $student->user->full_name ?? ($student->first_name . ' ' . $student->last_name),
+                'grade_section' => $student->grade_level . ' - ' . $student->section,
+                'grade_level' => $student->grade_level,
+                'section' => $student->section,
+                'emergency_contact' => $student->emergency_contact,
+                'emergency_contact_phone' => $student->emergency_contact_phone,
+                'parentPhone' => $student->emergency_contact_phone,
+                'allergies' => $student->allergies ? $student->allergies->pluck('allergy_text')->toArray() : [],
+                'avatar' => '/assets/user-' . strtolower($student->gender) . '.png',
+                'clearance' => [
+                    'level' => $student->general_clearance_status === 'cleared' ? 'green' : 
+                              ($student->requires_special_clearance ? 'red' : 'yellow'),
+                    'message' => $student->clearance_notes ?? 'Medical clearance status normal'
+                ]
+            ];
+            
+            return $this->sendResponse($studentData, 'Student found successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to get student information', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
