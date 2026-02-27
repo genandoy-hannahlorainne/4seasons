@@ -166,27 +166,22 @@ export class AdviserProfileComponent implements OnInit {
       this.profileData.email = currentUser.email || '';
       this.profileData.phone = currentUser.phone || '';
       
-      // Fetch advisory class and updated phone from API
-      if (currentUser.user_id) {
-        this.adviserService.getAdviserDashboard(currentUser.user_id).subscribe({
-          next: (response: any) => {
-            if (response.success && response.data && response.data.adviser) {
-              const adviser = response.data.adviser;
-              this.profileData.advisoryClass = `Grade ${adviser.grade_level} - ${adviser.section}` || 'Not assigned';
-              
-              // Update phone number from API response
-              if (adviser.phone) {
-                this.profileData.phone = adviser.phone;
-              } else if (adviser.contact_phone) {
-                this.profileData.phone = adviser.contact_phone;
-              }
-            }
-          },
-          error: () => {
-            this.profileData.advisoryClass = 'Not assigned';
+      // Fetch advisory class and updated info from Laravel API
+      this.adviserService.getAdviserProfile().subscribe({
+        next: (response: any) => {
+          if (response.success && response.data) {
+            const profile = response.data;
+            this.profileData.advisoryClass = profile.advisory_class || 'Not assigned';
+            this.profileData.fullName = profile.full_name || this.profileData.fullName;
+            this.profileData.email = profile.email || this.profileData.email;
+            this.profileData.phone = profile.phone || this.profileData.phone;
           }
-        });
-      }
+        },
+        error: (err) => {
+          console.error('Error loading adviser profile:', err);
+          this.profileData.advisoryClass = 'Not assigned';
+        }
+      });
     }
   }
 

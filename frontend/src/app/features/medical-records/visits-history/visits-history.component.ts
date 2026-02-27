@@ -1,7 +1,33 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { MedicalRecordsService, MedicalVisit } from '../medical-records.service';
+import { MedicalVisitService } from '../../../core/services/medical-visit.service';
+import { AuthService } from '../../../core/services/auth.service';
+
+interface VisitHistoryData {
+  statistics: {
+    total_visits: number;
+    this_month_visits: number;
+    emergency_visits: number;
+    routine_visits: number;
+    last_visit: {
+      visit_id: number;
+      visit_datetime: string;
+      visit_type: string;
+      chief_complaint: string;
+      status: string;
+      days_ago: number;
+    } | null;
+  };
+  recent_visits: any[];
+  visits_by_month: any[];
+  visit_types_breakdown: {
+    routine: number;
+    emergency: number;
+    follow_up: number;
+    referral: number;
+  };
+}
 
 @Component({
   selector: 'app-visits-history',
@@ -26,12 +52,12 @@ import { MedicalRecordsService, MedicalVisit } from '../medical-records.service'
         {{ error }}
       </div>
 
-      <div *ngIf="visits && !loading" class="content">
+      <div *ngIf="visitHistory && !loading" class="content">
         <div class="visits-summary">
           <div class="summary-card">
             <div class="summary-icon">📋</div>
             <div class="summary-content">
-              <div class="summary-value">{{ visits.length }}</div>
+              <div class="summary-value">{{ visitHistory.statistics.total_visits }}</div>
               <div class="summary-label">Total Visits</div>
             </div>
           </div>
@@ -39,7 +65,7 @@ import { MedicalRecordsService, MedicalVisit } from '../medical-records.service'
           <div class="summary-card">
             <div class="summary-icon">📅</div>
             <div class="summary-content">
-              <div class="summary-value">{{ getRecentVisitsCount() }}</div>
+              <div class="summary-value">{{ visitHistory.statistics.this_month_visits }}</div>
               <div class="summary-label">This Month</div>
             </div>
           </div>
@@ -47,14 +73,14 @@ import { MedicalRecordsService, MedicalVisit } from '../medical-records.service'
           <div class="summary-card">
             <div class="summary-icon">🩺</div>
             <div class="summary-content">
-              <div class="summary-value">{{ getLastVisitDate() }}</div>
+              <div class="summary-value">{{ getLastVisitText() }}</div>
               <div class="summary-label">Last Visit</div>
             </div>
           </div>
         </div>
 
         <div class="visits-list">
-          <div *ngFor="let visit of visits" class="visit-card" (click)="selectVisit(visit)">
+          <div *ngFor="let visit of visitHistory.recent_visits" class="visit-card" (click)="selectVisit(visit)">
             <div class="visit-header">
               <div class="visit-date">
                 <div class="date-main">{{ formatDate(visit.visit_datetime) }}</div>
@@ -66,8 +92,12 @@ import { MedicalRecordsService, MedicalVisit } from '../medical-records.service'
             </div>
             
             <div class="visit-content">
-              <div class="visit-type">{{ visit.visit_type }}</div>
-              <div class="visit-diagnosis">{{ visit.diagnosis }}</div>
+              <div class="visit-type">
+                <span class="type-badge" [class]="'type-' + visit.visit_type">{{ visit.visit_type }}</span>
+                <span *ngIf="visit.is_emergency" class="emergency-badge">🚨 Emergency</span>
+              </div>
+              <div class="visit-complaint">{{ visit.chief_complaint }}</div>
+              <div *ngIf="visit.diagnosis" class="visit-diagnosis">{{ visit.diagnosis }}</div>
               <div *ngIf="visit.clinic_staff" class="visit-staff">
                 Attended by: {{ visit.clinic_staff.name }} ({{ visit.clinic_staff.position }})
               </div>
@@ -76,7 +106,7 @@ import { MedicalRecordsService, MedicalVisit } from '../medical-records.service'
             <div class="visit-arrow">→</div>
           </div>
 
-          <div *ngIf="visits.length === 0" class="no-visits">
+          <div *ngIf="visitHistory.statistics.total_visits === 0" class="no-visits">
             <div class="no-visits-icon">🏥</div>
             <h3>No Medical Visits</h3>
             <p>You haven't had any medical visits recorded yet.</p>
@@ -139,39 +169,45 @@ import { MedicalRecordsService, MedicalVisit } from '../medical-records.service'
   styleUrls: ['./visits-history.component.scss']
 })
 export class VisitsHistoryComponent implements OnInit {
-  visits: MedicalVisit[] = [];
-  selectedVisit: MedicalVisit | null = null;
+  visitHistory: VisitHistoryData | null = null;
+  selectedVisit: any | null = null;
   loading = true;
   error: string | null = null;
 
-  constructor(private medicalRecordsService: MedicalRecordsService) {}
+  constructor(
+    private medicalVisitService: MedicalVisitService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
-    this.loadVisits();
+    this.loadVisitHistory();
   }
 
-  private loadVisits() {
+  private loadVisitHistory() {
     this.loading = true;
     this.error = null;
 
-    this.medicalRecordsService.getMedicalVisits().subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.visits = response.data;
-        } else {
-          this.error = response.message || 'Failed to load visits history';
-        }
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser?.student_info?.student_id) {
+      this.error = 'Student information not available';
+      this.loading = false;
+      return;
+    }
+
+    this.medicalVisitService.getStudentVisitHistory(currentUser.student_info.student_id).subscribe({
+      next: (data) => {
+        this.visitHistory = data;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading visits:', error);
-        this.error = 'Failed to load visits history. Please try again.';
+        console.error('Error loading visit history:', error);
+        this.error = 'Failed to load visit history. Please try again.';
         this.loading = false;
       }
     });
   }
 
-  selectVisit(visit: MedicalVisit) {
+  selectVisit(visit: any) {
     this.selectedVisit = visit;
   }
 
@@ -196,28 +232,16 @@ export class VisitsHistoryComponent implements OnInit {
     });
   }
 
-  getRecentVisitsCount(): number {
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  getLastVisitText(): string {
+    if (!this.visitHistory?.statistics.last_visit) return 'Never';
     
-    return this.visits.filter(visit => 
-      new Date(visit.visit_datetime) >= oneMonthAgo
-    ).length;
-  }
-
-  getLastVisitDate(): string {
-    if (this.visits.length === 0) return 'Never';
+    const daysAgo = this.visitHistory.statistics.last_visit.days_ago;
     
-    const lastVisit = this.visits[0]; // Already sorted by date desc
-    const date = new Date(lastVisit.visit_datetime);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
-    return `${Math.floor(diffDays / 365)} years ago`;
+    if (daysAgo === 0) return 'Today';
+    if (daysAgo === 1) return 'Yesterday';
+    if (daysAgo < 7) return `${daysAgo} days ago`;
+    if (daysAgo < 30) return `${Math.floor(daysAgo / 7)} weeks ago`;
+    if (daysAgo < 365) return `${Math.floor(daysAgo / 30)} months ago`;
+    return `${Math.floor(daysAgo / 365)} years ago`;
   }
 }

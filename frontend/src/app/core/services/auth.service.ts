@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User } from '../models/user.model';
 
@@ -25,32 +25,111 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<User> {
-    return this.http.post<any>(`${environment.apiUrl}/login.php`, { username, password })
-      .pipe(map(response => {
-        if (response && response.success && response.user) {
-          localStorage.setItem('currentUser', JSON.stringify(response.user));
-          this.currentUserSubject.next(response.user);
-        }
-        return response.user;
-      }));
+    return this.http.post<any>(`${environment.apiUrl}/login`, { username, password })
+      .pipe(
+        map(response => {
+          if (response && response.success && response.data) {
+            const userData = response.data.user;
+            const token = response.data.token;
+            
+            // Store user data and JWT token
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            localStorage.setItem('token', token);
+            
+            this.currentUserSubject.next(userData);
+            return userData;
+          }
+          throw new Error('Invalid response format');
+        }),
+        catchError(error => {
+          console.error('Login error:', error);
+          return throwError(() => error);
+        })
+      );
   }
 
   register(userData: any): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/register.php`, userData);
+    // Keep using legacy endpoint for now
+    return this.http.post<any>(`${environment.legacyApiUrl}/register.php`, userData);
   }
 
-  logout(): void {
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('token');
-    this.currentUserSubject.next(null);
+  logout(): Observable<any> {
+    const token = localStorage.getItem('token');
+    
+    // Call Laravel logout endpoint if token exists
+    const logoutRequest = token ? 
+      this.http.post(`${environment.apiUrl}/logout`, {}) : 
+      new Observable(observer => observer.complete());
+
+    return logoutRequest.pipe(
+      map(() => {
+        // Clear local storage regardless of API response
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
+        this.currentUserSubject.next(null);
+        return { success: true };
+      }),
+      catchError(error => {
+        // Even if logout API fails, clear local storage
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
+        this.currentUserSubject.next(null);
+        console.warn('Logout API failed, but local storage cleared:', error);
+        return new Observable(observer => {
+          observer.next({ success: true });
+          observer.complete();
+        });
+      })
+    );
+  }
+
+  refreshToken(): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/refresh`, {})
+      .pipe(
+        map(response => {
+          if (response && response.success && response.data) {
+            const token = response.data.token;
+            localStorage.setItem('token', token);
+            return response.data;
+          }
+          throw new Error('Token refresh failed');
+        }),
+        catchError(error => {
+          // If refresh fails, logout user
+          this.logout().subscribe();
+          return throwError(() => error);
+        })
+      );
+  }
+
+  getCurrentUser(): Observable<User> {
+    return this.http.get<any>(`${environment.apiUrl}/me`)
+      .pipe(
+        map(response => {
+          if (response && response.success && response.data) {
+            const userData = response.data;
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            this.currentUserSubject.next(userData);
+            return userData;
+          }
+          throw new Error('Failed to get user info');
+        })
+      );
   }
 
   isAuthenticated(): boolean {
-    return !!this.currentUserValue;
+    const token = localStorage.getItem('token');
+    const user = this.currentUserValue;
+    return !!(token && user);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
   }
 
   changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/change-password.php`, {
+    // Keep using legacy endpoint for now
+    return this.http.post<any>(`${environment.legacyApiUrl}/change-password.php`, {
       user_id: userId,
       current_password: currentPassword,
       new_password: newPassword,

@@ -1,48 +1,60 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const router = inject(Router);
   const token = localStorage.getItem('token');
-  const currentUserStr = localStorage.getItem('currentUser');
   
-  console.log('🔐 Auth Interceptor - Current User:', currentUserStr);
+  // Determine if this is a Laravel API request
+  const isLaravelApi = req.url.includes('localhost:8000/api');
+  const isLegacyApi = req.url.includes('/backend/api');
+  
+  // Skip auth for login and register endpoints
+  const isAuthEndpoint = req.url.includes('/login') || req.url.includes('/register');
   
   let headers: any = {};
   
-  if (token) {
+  if (isLaravelApi && token && !isAuthEndpoint) {
+    // Use Bearer token for Laravel API (except auth endpoints)
     headers['Authorization'] = `Bearer ${token}`;
-  }
-  
-  // Add user_id header for API requests that need it
-  // NOTE: PHP converts header names to uppercase with underscores
-  // So 'user_id' becomes 'HTTP_USER_ID' in $_SERVER
-  if (currentUserStr) {
-    try {
-      const user = JSON.parse(currentUserStr);
-      console.log('👤 Parsed user:', user);
-      if (user.user_id) {
-        // Use 'user_id' - Angular/HTTP will convert it to HTTP_USER_ID in PHP
-        headers['user_id'] = user.user_id.toString();
-        console.log('✅ Added user_id header:', user.user_id);
-      } else {
-        console.warn('⚠️ user_id not found in currentUser object');
+    console.log('🔐 Added Bearer token for Laravel API');
+  } else if (isLegacyApi) {
+    // Use legacy user_id header for old PHP API
+    const currentUserStr = localStorage.getItem('currentUser');
+    if (currentUserStr) {
+      try {
+        const user = JSON.parse(currentUserStr);
+        if (user.user_id) {
+          headers['user_id'] = user.user_id.toString();
+          console.log('🔐 Added user_id header for legacy API:', user.user_id);
+        }
+      } catch (e) {
+        console.error('❌ Error parsing current user:', e);
       }
-    } catch (e) {
-      console.error('❌ Error parsing current user:', e);
     }
-  } else {
-    console.warn('⚠️ currentUser not found in localStorage');
   }
   
-  if (Object.keys(headers).length > 0) {
-    console.log('📤 Adding headers to request:', headers);
-    console.log('📤 Full request headers will be:', req.headers);
-    req = req.clone({
-      setHeaders: headers
-    });
-    console.log('📤 After clone, headers:', req.headers);
-  } else {
-    console.warn('⚠️ No headers to add');
-  }
+  // Clone request with headers if needed
+  const authReq = Object.keys(headers).length > 0 ? 
+    req.clone({ setHeaders: headers }) : req;
   
-  return next(req);
+  return next(authReq).pipe(
+    catchError((error: HttpErrorResponse) => {
+      // Handle 401 Unauthorized responses (but not for login attempts)
+      if (error.status === 401 && isLaravelApi && !isAuthEndpoint) {
+        console.warn('🚫 Unauthorized request to Laravel API - redirecting to login');
+        
+        // Clear stored auth data
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
+        
+        // Redirect to login
+        router.navigate(['/login']);
+      }
+      
+      return throwError(() => error);
+    })
+  );
 };

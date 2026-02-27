@@ -626,11 +626,11 @@ export class VisitFormComponent implements OnInit {
 
   loadStudentById(studentId: number): void {
     this.loading = true;
-    this.http.get(`${environment.apiUrl}/get-student-by-qr.php?student_id=${studentId}`)
+    this.http.get(`${environment.apiUrl}/students/qr/lookup?student_id=${studentId}`)
       .subscribe({
         next: (response: any) => {
-          if (response.success && response.student) {
-            this.selectedStudent = response.student;
+          if (response.success && response.data.student) {
+            this.selectedStudent = response.data.student;
             console.log('Student loaded with clearance:', this.selectedStudent);
           } else {
             console.error('Failed to load student:', response.message);
@@ -648,11 +648,11 @@ export class VisitFormComponent implements OnInit {
 
   loadStudentByNumber(studentNumber: string): void {
     this.loading = true;
-    this.http.get(`${environment.apiUrl}/get-student-by-qr.php?student_number=${studentNumber}`)
+    this.http.get(`${environment.apiUrl}/students/qr/lookup?student_number=${studentNumber}`)
       .subscribe({
         next: (response: any) => {
-          if (response.success && response.student) {
-            this.selectedStudent = response.student;
+          if (response.success && response.data.student) {
+            this.selectedStudent = response.data.student;
             console.log('Student loaded with clearance:', this.selectedStudent);
           } else {
             console.error('Failed to load student:', response.message);
@@ -686,15 +686,15 @@ export class VisitFormComponent implements OnInit {
 
     // Debounce - wait 300ms before making API call
     this.searchTimeout = setTimeout(() => {
-      const searchUrl = `${environment.apiUrl}/search-students.php?q=${encodeURIComponent(this.studentSearch)}`;
+      const searchUrl = `${environment.apiUrl}/students/search/query?q=${encodeURIComponent(this.studentSearch)}`;
       
       this.http.get<any>(searchUrl)
         .subscribe({
           next: (response) => {
             this.searchLoading = false;
             this.searchDone = true;
-            if (response && response.success && Array.isArray(response.students)) {
-              this.searchResults = response.students;
+            if (response && response.success && Array.isArray(response.data.students)) {
+              this.searchResults = response.data.students;
             } else {
               this.searchResults = [];
             }

@@ -67,19 +67,18 @@ export class MedicalRecordsService {
 
   getMedicalRecord(): Observable<ApiResponse<MedicalRecord>> {
     const currentUser = this.authService.currentUserValue;
-    if (!currentUser || !currentUser.user_id) {
-      throw new Error('User not authenticated');
+    if (!currentUser || !currentUser.student_info?.student_id) {
+      throw new Error('Student not authenticated or student info not available');
     }
-    return this.http.get<ApiResponse<MedicalRecord>>(`${this.apiUrl}/get-student-medical-data.php?user_id=${currentUser.user_id}`);
+    return this.http.get<ApiResponse<MedicalRecord>>(`${this.apiUrl}/students/${currentUser.student_info.student_id}/medical-data`);
   }
 
   getMedicalVisits(): Observable<ApiResponse<MedicalVisit[]>> {
     const currentUser = this.authService.currentUserValue;
-    if (!currentUser || !currentUser.user_id) {
-      throw new Error('User not authenticated');
+    if (!currentUser || !currentUser.student_info?.student_id) {
+      throw new Error('Student not authenticated or student info not available');
     }
-    // Get student_id from the profile first, then fetch visits
-    return this.http.get<ApiResponse<MedicalVisit[]>>(`${this.apiUrl}/get-medical-visits.php?user_id=${currentUser.user_id}`);
+    return this.http.get<ApiResponse<MedicalVisit[]>>(`${this.apiUrl}/students/${currentUser.student_info.student_id}/visits`);
   }
 
   getVisitDetails(visitId: number): Observable<ApiResponse<MedicalVisit>> {
@@ -87,7 +86,11 @@ export class MedicalRecordsService {
   }
 
   updateMedicalInfo(data: { emergency_contact?: string; address?: string }): Observable<ApiResponse<any>> {
-    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/update-medical-info.php`, data);
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser || !currentUser.student_info?.student_id) {
+      throw new Error('Student not authenticated or student info not available');
+    }
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/students/${currentUser.student_info.student_id}/physical-info`, data);
   }
 
   getAdviserByGradeSection(gradeLevel: string, section: string): Observable<any> {
