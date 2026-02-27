@@ -138,6 +138,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Medical visit endpoints
     Route::apiResource('medical-visits', \App\Http\Controllers\Api\MedicalVisitController::class);
     Route::get('/students/{student}/visits', [\App\Http\Controllers\Api\MedicalVisitController::class, 'getStudentVisits']);
+    Route::get('/students/{student}/visit-history', [\App\Http\Controllers\Api\MedicalVisitController::class, 'getStudentVisitHistory']);
     Route::get('/medical-visits/emergency/recent', [\App\Http\Controllers\Api\MedicalVisitController::class, 'getEmergencyVisits']);
     Route::get('/medical-visits/statistics/summary', [\App\Http\Controllers\Api\MedicalVisitController::class, 'getStatistics']);
     

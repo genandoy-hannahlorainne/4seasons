@@ -11,10 +11,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const isLaravelApi = req.url.includes('localhost:8000/api');
   const isLegacyApi = req.url.includes('/backend/api');
   
+  // Skip auth for login and register endpoints
+  const isAuthEndpoint = req.url.includes('/login') || req.url.includes('/register');
+  
   let headers: any = {};
   
-  if (isLaravelApi && token) {
-    // Use Bearer token for Laravel API
+  if (isLaravelApi && token && !isAuthEndpoint) {
+    // Use Bearer token for Laravel API (except auth endpoints)
     headers['Authorization'] = `Bearer ${token}`;
     console.log('🔐 Added Bearer token for Laravel API');
   } else if (isLegacyApi) {
@@ -39,8 +42,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Handle 401 Unauthorized responses
-      if (error.status === 401 && isLaravelApi) {
+      // Handle 401 Unauthorized responses (but not for login attempts)
+      if (error.status === 401 && isLaravelApi && !isAuthEndpoint) {
         console.warn('🚫 Unauthorized request to Laravel API - redirecting to login');
         
         // Clear stored auth data

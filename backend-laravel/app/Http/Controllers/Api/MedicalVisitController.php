@@ -188,7 +188,7 @@ class MedicalVisitController extends BaseController
     }
 
     /**
-     * Get medical visits for a specific student
+     * Get medical visits for a specific student with statistics
      */
     public function getStudentVisits(Student $student, Request $request)
     {
@@ -197,18 +197,126 @@ class MedicalVisitController extends BaseController
                            ->with(['clinicStaff.user', 'vitals'])
                            ->orderBy('visit_datetime', 'desc');
             
-            // Limit results if requested
-            if ($request->has('limit')) {
-                $limit = min((int)$request->get('limit'), 50); // Max 50 visits
-                $visits = $query->limit($limit)->get();
-            } else {
-                $visits = $query->paginate(10);
-            }
+            // Get statistics
+            $totalVisits = $student->medicalVisits()->count();
+            $thisMonthVisits = $student->medicalVisits()
+                                     ->whereMonth('visit_datetime', now()->month)
+                                     ->whereYear('visit_datetime', now()->year)
+                                     ->count();
             
-            return $this->sendResponse($visits, 'Student medical visits retrieved successfully');
+            $lastVisit = $student->medicalVisits()
+                               ->orderBy('visit_datetime', 'desc')
+                               ->first();
+            
+            // Get paginated visits
+            $visits = $query->paginate(10);
+            
+            $response = [
+                'visits' => $visits,
+                'statistics' => [
+                    'total_visits' => $totalVisits,
+                    'this_month_visits' => $thisMonthVisits,
+                    'last_visit' => $lastVisit ? [
+                        'visit_id' => $lastVisit->visit_id,
+                        'visit_datetime' => $lastVisit->visit_datetime,
+                        'visit_type' => $lastVisit->visit_type,
+                        'chief_complaint' => $lastVisit->chief_complaint,
+                        'status' => $lastVisit->status
+                    ] : null
+                ]
+            ];
+            
+            return $this->sendResponse($response, 'Student medical visits retrieved successfully');
             
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve student visits', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get student visit history with detailed statistics
+     */
+    public function getStudentVisitHistory(Student $student, Request $request)
+    {
+        try {
+            // Get all visits with relationships
+            $allVisits = $student->medicalVisits()
+                               ->with(['clinicStaff.user', 'vitals'])
+                               ->orderBy('visit_datetime', 'desc')
+                               ->get();
+            
+            // Calculate comprehensive statistics
+            $totalVisits = $allVisits->count();
+            $thisMonthVisits = $allVisits->filter(function($visit) {
+                return $visit->visit_datetime->month === now()->month && 
+                       $visit->visit_datetime->year === now()->year;
+            })->count();
+            
+            $emergencyVisits = $allVisits->where('is_emergency', true)->count();
+            $routineVisits = $allVisits->where('visit_type', 'routine')->count();
+            
+            // Get last visit details
+            $lastVisit = $allVisits->first();
+            
+            // Group visits by month for chart data
+            $visitsByMonth = $allVisits->groupBy(function($visit) {
+                return $visit->visit_datetime->format('Y-m');
+            })->map(function($visits, $month) {
+                return [
+                    'month' => $month,
+                    'count' => $visits->count(),
+                    'emergency_count' => $visits->where('is_emergency', true)->count()
+                ];
+            })->values();
+            
+            // Get recent visits (last 5)
+            $recentVisits = $allVisits->take(5)->map(function($visit) {
+                return [
+                    'visit_id' => $visit->visit_id,
+                    'visit_datetime' => $visit->visit_datetime,
+                    'visit_type' => $visit->visit_type,
+                    'chief_complaint' => $visit->chief_complaint,
+                    'diagnosis' => $visit->diagnosis,
+                    'status' => $visit->status,
+                    'is_emergency' => $visit->is_emergency,
+                    'clinic_staff' => $visit->clinicStaff ? [
+                        'name' => $visit->clinicStaff->user->full_name,
+                        'position' => $visit->clinicStaff->position
+                    ] : null
+                ];
+            });
+            
+            $response = [
+                'statistics' => [
+                    'total_visits' => $totalVisits,
+                    'this_month_visits' => $thisMonthVisits,
+                    'emergency_visits' => $emergencyVisits,
+                    'routine_visits' => $routineVisits,
+                    'last_visit' => $lastVisit ? [
+                        'visit_id' => $lastVisit->visit_id,
+                        'visit_datetime' => $lastVisit->visit_datetime,
+                        'visit_type' => $lastVisit->visit_type,
+                        'chief_complaint' => $lastVisit->chief_complaint,
+                        'status' => $lastVisit->status,
+                        'days_ago' => $lastVisit->visit_datetime->diffInDays(now())
+                    ] : null
+                ],
+                'recent_visits' => $recentVisits,
+                'visits_by_month' => $visitsByMonth,
+                'visit_types_breakdown' => [
+                    'routine' => $routineVisits,
+                    'emergency' => $emergencyVisits,
+                    'follow_up' => $allVisits->where('visit_type', 'follow_up')->count(),
+                    'referral' => $allVisits->where('visit_type', 'referral')->count()
+                ]
+            ];
+            
+            return $this->sendResponse($response, 'Student visit history retrieved successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve visit history', [
                 'error' => $e->getMessage()
             ], 500);
         }

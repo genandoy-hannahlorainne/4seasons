@@ -115,13 +115,18 @@ export class MedicalVisitService {
       .pipe(map(response => response.data));
   }
 
-  getStudentVisits(studentId: number, limit?: number): Observable<MedicalVisit[]> {
+  getStudentVisits(studentId: number, limit?: number): Observable<any> {
     let httpParams = new HttpParams();
     if (limit) {
       httpParams = httpParams.set('limit', limit.toString());
     }
     
-    return this.http.get<ApiResponse<MedicalVisit[]>>(`${environment.apiUrl}/students/${studentId}/visits`, { params: httpParams })
+    return this.http.get<ApiResponse<any>>(`${environment.apiUrl}/students/${studentId}/visits`, { params: httpParams })
+      .pipe(map(response => response.data));
+  }
+
+  getStudentVisitHistory(studentId: number): Observable<any> {
+    return this.http.get<ApiResponse<any>>(`${environment.apiUrl}/students/${studentId}/visit-history`)
       .pipe(map(response => response.data));
   }
 
