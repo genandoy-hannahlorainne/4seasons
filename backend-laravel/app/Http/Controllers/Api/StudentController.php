@@ -146,6 +146,7 @@ class StudentController extends BaseController
             $student->load([
                 'medicalHistory',
                 'allergies',
+                'currentAdviser',
                 'medicalVisits' => function($query) {
                     $query->with(['vitals', 'clinicStaff.user'])
                           ->orderBy('visit_datetime', 'desc')
@@ -160,6 +161,24 @@ class StudentController extends BaseController
                     'full_name' => $student->full_name,
                     'birth_date' => $student->birth_date,
                     'blood_type' => $student->blood_type,
+                    'height_cm' => $student->height_cm,
+                    'weight_kg' => $student->weight_kg,
+                    'bmi' => $student->bmi,
+                    'bmi_category' => $student->bmi_category
+                ],
+                'personal_info' => [
+                    'student_id' => $student->student_id,
+                    'student_number' => $student->student_number,
+                    'full_name' => $student->full_name,
+                    'birth_date' => $student->birth_date,
+                    'gender' => $student->gender,
+                    'blood_type' => $student->blood_type,
+                    'address' => $student->address,
+                    'emergency_contact' => $student->emergency_contact,
+                    'grade_level' => $student->grade_level,
+                    'section' => $student->section,
+                    'adviser_name' => $student->currentAdviser ? $student->currentAdviser->full_name : null,
+                    'adviser_contact' => $student->currentAdviser ? $student->currentAdviser->phone : null,
                     'height_cm' => $student->height_cm,
                     'weight_kg' => $student->weight_kg,
                     'bmi' => $student->bmi,
