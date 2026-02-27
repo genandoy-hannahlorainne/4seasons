@@ -123,6 +123,26 @@ Route::post('/test/reset-password', function (Request $request) {
     }
 });
 
+// Fix student section assignments
+Route::post('/test/fix-sections', function () {
+    try {
+        // Update Irish's section assignment
+        $updated = \App\Models\Student::where('student_id', 26)
+                                    ->update(['current_section_id' => 63]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Section assignment fixed',
+            'updated_count' => $updated
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Authentication endpoints (protected)
@@ -136,6 +156,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/students/qr/lookup', [\App\Http\Controllers\Api\StudentController::class, 'getByQr']);
     Route::get('/students/{student}/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'getMedicalData']);
     Route::put('/students/{student}/physical-info', [\App\Http\Controllers\Api\StudentController::class, 'updatePhysicalInfo']);
+    Route::post('/students/fix-section-assignments', [\App\Http\Controllers\Api\StudentController::class, 'fixSectionAssignments']);
     
     // Medical visit endpoints
     Route::apiResource('medical-visits', \App\Http\Controllers\Api\MedicalVisitController::class);

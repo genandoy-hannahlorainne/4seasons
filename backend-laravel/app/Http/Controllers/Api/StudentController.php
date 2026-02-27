@@ -154,18 +154,13 @@ class StudentController extends BaseController
                 }
             ]);
 
+            // Calculate visit statistics
+            $totalVisits = $student->medicalVisits()->count();
+            $recentVisits = $student->medicalVisits()
+                                  ->where('visit_datetime', '>=', now()->subDays(30))
+                                  ->count();
+
             $medicalData = [
-                'student_info' => [
-                    'student_id' => $student->student_id,
-                    'student_number' => $student->student_number,
-                    'full_name' => $student->full_name,
-                    'birth_date' => $student->birth_date,
-                    'blood_type' => $student->blood_type,
-                    'height_cm' => $student->height_cm,
-                    'weight_kg' => $student->weight_kg,
-                    'bmi' => $student->bmi,
-                    'bmi_category' => $student->bmi_category
-                ],
                 'personal_info' => [
                     'student_id' => $student->student_id,
                     'student_number' => $student->student_number,
@@ -184,8 +179,9 @@ class StudentController extends BaseController
                     'bmi' => $student->bmi,
                     'bmi_category' => $student->bmi_category
                 ],
-                'medical_history' => $student->medicalHistory,
                 'allergies' => $student->allergies,
+                'recent_visits_count' => $recentVisits,
+                'total_visits_count' => $totalVisits,
                 'recent_visits' => $student->medicalVisits
             ];
 
@@ -346,6 +342,29 @@ class StudentController extends BaseController
             
         } catch (\Exception $e) {
             return $this->sendError('Failed to get student information', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Fix student section assignments
+     */
+    public function fixSectionAssignments()
+    {
+        try {
+            // Update students who have current_adviser_id = 60 (Heart Igot) 
+            // but don't have current_section_id set
+            $updated = Student::where('current_adviser_id', 60)
+                            ->whereNull('current_section_id')
+                            ->update(['current_section_id' => 63]);
+            
+            return $this->sendResponse([
+                'updated_count' => $updated
+            ], 'Student section assignments fixed successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to fix section assignments', [
                 'error' => $e->getMessage()
             ], 500);
         }
