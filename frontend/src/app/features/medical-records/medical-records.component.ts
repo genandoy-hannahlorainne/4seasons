@@ -58,7 +58,7 @@ import { takeUntil, switchMap } from 'rxjs/operators';
             <div class="card-content">
               <h3>Adviser</h3>
               <div class="card-value" style="font-size: 0.9rem;">
-                {{ medicalRecord.personal_info?.adviser_name || 'Not assigned' }}
+                {{ medicalRecord.personal_info.adviser_name || 'Not assigned' }}
               </div>
             </div>
           </div>
