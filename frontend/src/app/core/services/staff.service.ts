@@ -39,19 +39,19 @@ export class StaffService {
   constructor(private http: HttpClient) {}
 
   getStaffDashboard(userId: number): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/get-staff-dashboard.php`, { user_id: userId });
+    return this.http.post<any>(`${environment.legacyApiUrl}/get-staff-dashboard.php`, { user_id: userId });
   }
 
   getStudentProfile(studentId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/get-student-profile.php?student_id=${studentId}`);
+    return this.http.get<any>(`${environment.legacyApiUrl}/get-student-profile.php?student_id=${studentId}`);
   }
 
   getAllStudents(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/get-all-students.php`);
+    return this.http.get<any>(`${environment.legacyApiUrl}/get-all-students.php`);
   }
 
   getReportsData(startDate: string, endDate: string, gradeLevel?: string): Observable<any> {
-    let url = `${environment.apiUrl}/get-reports-data.php?start_date=${startDate}&end_date=${endDate}`;
+    let url = `${environment.legacyApiUrl}/get-reports-data.php?start_date=${startDate}&end_date=${endDate}`;
     if (gradeLevel) {
       url += `&grade_level=${gradeLevel}`;
     }
@@ -60,7 +60,7 @@ export class StaffService {
 
   // Profile Management
   updateStaffProfile(userId: number, profileData: any): Observable<any> {
-    return this.http.put<any>(`${environment.apiUrl}/update-staff-profile.php`, {
+    return this.http.put<any>(`${environment.legacyApiUrl}/update-staff-profile.php`, {
       user_id: userId,
       ...profileData
     });

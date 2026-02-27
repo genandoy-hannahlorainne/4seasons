@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { StaffService } from '../../../../core/services/staff.service';
 
-interface Student {
+interface StaffStudentRecord {
   id: number;
   studentNumber: string;
   name: string;
@@ -238,8 +238,8 @@ export class StudentListComponent implements OnInit {
   grades = [7, 8, 9, 10, 11, 12];
   sections = ['STEM-1', 'STEM-2', 'ABM-1', 'HUMSS-1', 'TVL-HE-1'];
   
-  students: Student[] = [];
-  filteredStudents: Student[] = [];
+  students: StaffStudentRecord[] = [];
+  filteredStudents: StaffStudentRecord[] = [];
 
   constructor(private staffService: StaffService) {}
 
