@@ -87,8 +87,12 @@ export interface RecentVisit {
 export class AdviserService {
   constructor(private http: HttpClient) {}
 
-  getAdviserDashboard(userId: number): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/get-adviser-dashboard.php`, { user_id: userId });
+  getAdviserDashboard(userId?: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/adviser/dashboard`);
+  }
+
+  getAdviserProfile(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/adviser/profile`);
   }
 
   getAdvisoryStudents(userId: number): Observable<AdvisoryStudentsResponse> {
@@ -145,9 +149,6 @@ export class AdviserService {
 
   // Profile Management
   updateAdviserProfile(userId: number, profileData: any): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/update-adviser-profile.php`, {
-      user_id: userId,
-      ...profileData
-    });
+    return this.http.put<any>(`${environment.apiUrl}/adviser/profile`, profileData);
   }
 }

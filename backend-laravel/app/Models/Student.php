@@ -67,6 +67,21 @@ class Student extends Model
         return $this->belongsTo(User::class, 'current_adviser_id', 'user_id');
     }
 
+    public function currentSection()
+    {
+        return $this->belongsTo(Section::class, 'current_section_id');
+    }
+
+    public function currentSchoolYear()
+    {
+        return $this->belongsTo(SchoolYear::class, 'current_school_year_id');
+    }
+
+    public function currentGradeLevel()
+    {
+        return $this->belongsTo(GradeLevel::class, 'current_grade_level_id');
+    }
+
     public function medicalVisits()
     {
         return $this->hasMany(MedicalVisit::class, 'student_id', 'student_id');

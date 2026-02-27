@@ -205,6 +205,25 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
     
+    // School Year Management endpoints
+    Route::get('/admin/school-years', [\App\Http\Controllers\Api\SchoolYearController::class, 'index']);
+    Route::post('/admin/school-years', [\App\Http\Controllers\Api\SchoolYearController::class, 'store']);
+    Route::get('/admin/school-years/current', [\App\Http\Controllers\Api\SchoolYearController::class, 'getCurrent']);
+    Route::post('/admin/school-years/set-current', [\App\Http\Controllers\Api\SchoolYearController::class, 'setCurrent']);
+    
+    Route::get('/admin/grade-levels', [\App\Http\Controllers\Api\SchoolYearController::class, 'getGradeLevels']);
+    Route::get('/admin/sections', [\App\Http\Controllers\Api\SchoolYearController::class, 'getSections']);
+    Route::post('/admin/sections', [\App\Http\Controllers\Api\SchoolYearController::class, 'createSection']);
+    Route::post('/admin/sections/assign-adviser', [\App\Http\Controllers\Api\SchoolYearController::class, 'assignAdviser']);
+    Route::get('/admin/sections/students', [\App\Http\Controllers\Api\SchoolYearController::class, 'getSectionStudents']);
+    
+    Route::get('/admin/advisers', [\App\Http\Controllers\Api\SchoolYearController::class, 'getAdvisers']);
+    
+    // Adviser endpoints
+    Route::get('/adviser/profile', [\App\Http\Controllers\Api\AdviserController::class, 'getProfile']);
+    Route::put('/adviser/profile', [\App\Http\Controllers\Api\AdviserController::class, 'updateProfile']);
+    Route::get('/adviser/dashboard', [\App\Http\Controllers\Api\AdviserController::class, 'getDashboard']);
+    
     // Future API endpoints will be added here
     // Route::post('medical-visits', [MedicalVisitController::class, 'store']);
 });
