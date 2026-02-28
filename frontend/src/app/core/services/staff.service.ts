@@ -65,4 +65,9 @@ export class StaffService {
       ...profileData
     });
   }
+
+  // Get sections for filtering
+  getSections(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/sections`);
+  }
 }

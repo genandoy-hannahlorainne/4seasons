@@ -221,6 +221,9 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::get('/admin/advisers', [\App\Http\Controllers\Api\SchoolYearController::class, 'getAdvisers']);
     
+    // Get all sections for filtering (clinic staff student records)
+    Route::get('/sections', [\App\Http\Controllers\Api\SchoolYearController::class, 'getAllSections']);
+    
     // Adviser endpoints
     Route::get('/adviser/profile', [\App\Http\Controllers\Api\AdviserController::class, 'getProfile']);
     Route::put('/adviser/profile', [\App\Http\Controllers\Api\AdviserController::class, 'updateProfile']);

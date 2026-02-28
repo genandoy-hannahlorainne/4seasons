@@ -236,7 +236,7 @@ export class StudentListComponent implements OnInit {
   sectionFilter = '';
   loading = true;
   grades = [7, 8, 9, 10, 11, 12];
-  sections = ['STEM-1', 'STEM-2', 'ABM-1', 'HUMSS-1', 'TVL-HE-1'];
+  sections: string[] = [];
   
   students: StaffStudentRecord[] = [];
   filteredStudents: StaffStudentRecord[] = [];
@@ -245,6 +245,7 @@ export class StudentListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadStudents();
+    this.loadSections();
   }
 
   loadStudents(): void {
@@ -261,6 +262,26 @@ export class StudentListComponent implements OnInit {
         error: (err) => {
           console.error('Error loading students:', err);
           this.loading = false;
+        }
+      });
+  }
+
+  loadSections(): void {
+    // Load sections from Laravel API
+    this.staffService.getSections()
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            // Extract unique section names from all grades
+            const allSections = response.data || [];
+            const sectionNames: string[] = allSections.map((section: any) => section.section_name as string);
+            this.sections = [...new Set(sectionNames)].sort();
+          }
+        },
+        error: (err) => {
+          console.error('Error loading sections:', err);
+          // Fallback to default sections if API fails
+          this.sections = ['Mapagmahal', 'Matatag', 'Masigasig', 'STEM 1', 'STEM 2', 'ABM 1', 'ABM 2', 'HUMSS 1', 'HUMSS 2'];
         }
       });
   }
