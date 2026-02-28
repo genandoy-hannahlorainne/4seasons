@@ -292,4 +292,62 @@ class DashboardController extends BaseController
             ], 500);
         }
     }
+
+    /**
+     * Get clinic dashboard overview statistics
+     */
+    public function getClinicOverview(Request $request)
+    {
+        try {
+            $today = now()->startOfDay();
+            
+            // Get overall statistics (not per staff member)
+            $stats = [
+                'total_students' => Student::where('is_active', true)->count(),
+                'today_visits' => MedicalVisit::whereDate('visit_datetime', $today)->count(),
+                'total_visits' => MedicalVisit::count(),
+                'pending_visits' => MedicalVisit::where('status', 'Open')->count(),
+                
+                // Recent visits (last 5)
+                'recent_visits' => MedicalVisit::with(['student'])
+                    ->orderBy('visit_datetime', 'desc')
+                    ->limit(5)
+                    ->get()
+                    ->map(function($visit) {
+                        $student = $visit->student;
+                        return [
+                            'visit_id' => $visit->visit_id,
+                            'student_name' => $student ? trim($student->first_name . ' ' . $student->last_name) : 'Unknown',
+                            'student_id' => $visit->student_id,
+                            'diagnosis' => $visit->chief_complaint ?: $visit->notes ?: 'No complaint recorded',
+                            'status' => strtolower($visit->status),
+                            'visit_datetime' => $visit->visit_datetime,
+                            'date_time' => $visit->visit_datetime->format('M j, g:i A'),
+                            'avatar' => '/assets/user-' . ($student && $student->gender === 'F' ? 'female' : 'male') . '.png'
+                        ];
+                    }),
+                
+                // Students with allergies
+                'students_with_allergies' => Student::with(['allergies'])
+                    ->whereHas('allergies')
+                    ->where('is_active', true)
+                    ->limit(10)
+                    ->get()
+                    ->map(function($student) {
+                        return [
+                            'student_id' => $student->student_id,
+                            'name' => trim($student->first_name . ' ' . $student->last_name),
+                            'allergies' => $student->allergies->pluck('allergy_name')->filter()->toArray()
+                        ];
+                    })
+            ];
+            
+            return $this->sendResponse($stats, 'Clinic dashboard overview retrieved successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve clinic overview', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

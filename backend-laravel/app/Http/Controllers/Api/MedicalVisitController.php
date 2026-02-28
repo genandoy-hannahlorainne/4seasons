@@ -17,8 +17,12 @@ class MedicalVisitController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = MedicalVisit::with(['student.user', 'clinicStaff.user', 'vitals'])
-                                ->orderBy('visit_datetime', 'desc');
+            $query = MedicalVisit::with(['student' => function($query) {
+                    $query->with(['currentSection' => function($query) {
+                        $query->with(['gradeLevel']);
+                    }]);
+                }])
+                ->orderBy('visit_datetime', 'desc');
             
             // Filter by student if provided
             if ($request->has('student_id')) {
@@ -34,9 +38,9 @@ class MedicalVisitController extends BaseController
                 $query->whereDate('visit_datetime', '<=', $request->get('date_to'));
             }
             
-            // Filter by emergency visits
+            // Filter by emergency visits (check visit_type instead of is_emergency)
             if ($request->has('emergency_only') && $request->get('emergency_only') === 'true') {
-                $query->where('is_emergency', true);
+                $query->where('visit_type', 'Emergency');
             }
             
             // Filter by visit type
@@ -45,6 +49,36 @@ class MedicalVisitController extends BaseController
             }
             
             $visits = $query->paginate(20);
+            
+            // Transform the data to include student information
+            $visits->getCollection()->transform(function ($visit) {
+                $student = $visit->student;
+                $section = $student ? $student->currentSection : null;
+                $gradeLevel = $section ? $section->gradeLevel : null;
+                
+                return [
+                    'visit_id' => $visit->visit_id,
+                    'student_id' => $visit->student_id,
+                    'clinic_staff_id' => $visit->clinic_staff_id,
+                    'visit_datetime' => $visit->visit_datetime,
+                    'visit_type' => $visit->visit_type,
+                    'chief_complaint' => $visit->chief_complaint,
+                    'notes' => $visit->notes,
+                    'status' => $visit->status,
+                    'notify_parent' => $visit->notify_parent,
+                    'notification_method' => $visit->notification_method,
+                    'created_at' => $visit->created_at,
+                    'student' => $student ? [
+                        'student_id' => $student->student_id,
+                        'student_number' => $student->student_number,
+                        'first_name' => $student->first_name,
+                        'last_name' => $student->last_name,
+                        'full_name' => trim($student->first_name . ' ' . $student->last_name),
+                        'grade_level' => $gradeLevel ? $gradeLevel->level_name : null,
+                        'section' => $section ? $section->section_name : null,
+                    ] : null
+                ];
+            });
             
             return $this->sendResponse($visits, 'Medical visits retrieved successfully');
             
@@ -90,11 +124,6 @@ class MedicalVisitController extends BaseController
                     'visit_type' => $request->visit_type,
                     'status' => $request->status ?? 'Open',
                     'notification_method' => $request->notification_method ?? 'none'
-                ]);
-                    'adviser_notified' => $request->boolean('adviser_notified', false),
-                    'is_emergency' => $request->boolean('is_emergency', false),
-                    'visit_type' => $request->visit_type,
-                    'status' => $request->get('status', 'active')
                 ]);
 
                 // Add vitals if provided

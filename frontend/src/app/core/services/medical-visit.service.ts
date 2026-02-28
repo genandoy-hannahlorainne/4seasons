@@ -96,8 +96,7 @@ export class MedicalVisitService {
       });
     }
     
-    return this.http.get<ApiResponse<any>>(`${environment.apiUrl}/medical-visits`, { params: httpParams })
-      .pipe(map(response => response.data));
+    return this.http.get<any>(`${environment.apiUrl}/medical-visits`, { params: httpParams });
   }
 
   getById(id: number): Observable<MedicalVisit> {

@@ -200,6 +200,8 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['success' => true, 'message' => 'Dashboard test working']);
     });
     
+    Route::get('/dashboard/clinic/overview', [\App\Http\Controllers\Api\DashboardController::class, 'getClinicOverview']);
+    
     // Legacy user endpoint
     Route::get('/user', function (Request $request) {
         return $request->user();

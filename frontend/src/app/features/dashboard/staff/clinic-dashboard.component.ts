@@ -327,66 +327,41 @@ export class ClinicDashboardComponent implements OnInit {
   }
 
   loadDashboardData(): void {
-    // Load recent visits
-    this.http.get<any>(`${environment.apiUrl}/get-medical-visits.php?limit=5`)
+    // Load all dashboard data from Laravel API
+    this.http.get<any>(`${environment.apiUrl}/dashboard/clinic/overview`)
       .subscribe({
         next: (response) => {
+          if (response.success) {
+            const data = response.data;
+            
+            // Update statistics
+            this.totalStudents = data.total_students;
+            this.todayVisits = data.today_visits;
+            this.totalVisits = data.total_visits;
+            this.pendingVisits = data.pending_visits;
+            
+            // Update recent visits
+            this.recentVisits = data.recent_visits.map((visit: any) => ({
+              studentName: visit.student_name,
+              diagnosis: visit.diagnosis,
+              dateTime: visit.date_time,
+              status: visit.status,
+              avatar: visit.avatar
+            }));
+            
+            // Update students with allergies
+            this.studentsWithAllergies = data.students_with_allergies;
+            
+            this.loadingVisits = false;
+            this.loadingAllergies = false;
+          } else {
+            this.loadingVisits = false;
+            this.loadingAllergies = false;
+          }
+        },
+        error: (err) => {
+          console.error('Error loading dashboard data:', err);
           this.loadingVisits = false;
-          if (response.success) {
-            this.recentVisits = response.visits;
-            this.totalVisits = response.total;
-          }
-        },
-        error: () => {
-          this.loadingVisits = false;
-        }
-      });
-
-    // Load today's visits count
-    const today = new Date().toISOString().split('T')[0];
-    this.http.get<any>(`${environment.apiUrl}/get-medical-visits.php?date=${today}`)
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.todayVisits = response.total;
-          }
-        }
-      });
-
-    // Load pending visits count
-    this.http.get<any>(`${environment.apiUrl}/get-medical-visits.php?status=pending`)
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.pendingVisits = response.total;
-          }
-        }
-      });
-
-    // Load total students count
-    this.http.get<any>(`${environment.apiUrl}/get-dashboard-stats.php`)
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.totalStudents = response.totalStudents || 0;
-          }
-        },
-        error: () => {
-          // Fallback - just set to 0
-          this.totalStudents = 0;
-        }
-      });
-
-    // Load students with allergies
-    this.http.get<any>(`${environment.apiUrl}/get-students-with-allergies.php`)
-      .subscribe({
-        next: (response) => {
-          this.loadingAllergies = false;
-          if (response.success) {
-            this.studentsWithAllergies = response.students;
-          }
-        },
-        error: () => {
           this.loadingAllergies = false;
         }
       });

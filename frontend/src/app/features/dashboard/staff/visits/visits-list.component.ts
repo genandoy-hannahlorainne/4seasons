@@ -557,7 +557,12 @@ export class VisitsListComponent implements OnInit {
     this.medicalVisitService.getAll(params).subscribe({
       next: (response) => {
         this.loading = false;
-        this.allVisits = response.data || [];
+        if (response.success) {
+          this.allVisits = response.data.data || [];
+        } else {
+          this.allVisits = [];
+          this.error = response.message || 'Failed to load visits';
+        }
         this.groupVisitsByStudent();
         this.filterVisits();
       },
