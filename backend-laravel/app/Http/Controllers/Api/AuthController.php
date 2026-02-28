@@ -183,6 +183,57 @@ class AuthController extends BaseController
     }
 
     /**
+     * Force change password for users who must change their password
+     */
+    public function forceChangePassword(Request $request)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'current_password' => 'required|string',
+                'new_password' => 'required|string|min:8|confirmed'
+            ]);
+
+            $user = $request->user();
+            
+            if (!$user) {
+                return $this->sendError('Unauthorized', [], 401);
+            }
+
+            // Verify current password
+            if (!password_verify($request->current_password, $user->password_hash)) {
+                return $this->sendError('Current password is incorrect', [], 400);
+            }
+
+            // Check if new password is different from current
+            if (password_verify($request->new_password, $user->password_hash)) {
+                return $this->sendError('New password must be different from current password', [], 400);
+            }
+
+            // Update password and remove force change flag
+            $user->update([
+                'password_hash' => password_hash($request->new_password, PASSWORD_DEFAULT),
+                'password_must_change' => false,
+                'password_changed_at' => now()
+            ]);
+
+            // Log activity
+            $this->logActivity($user->user_id, 'Password Changed (Forced)', $request->ip());
+
+            return $this->sendResponse([
+                'message' => 'Password changed successfully'
+            ], 'Password updated successfully');
+
+        } catch (ValidationException $e) {
+            return $this->sendValidationError($e->errors());
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to change password', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Validate role-specific profile exists
      */
     private function validateRoleProfile(User $user): array
@@ -292,13 +343,13 @@ class AuthController extends BaseController
     /**
      * Log user activity
      */
-    private function logActivity(int $userId, string $action, string $ipAddress): void
+    private function logActivity(int $userId, string $action, ?string $ipAddress): void
     {
         try {
             DB::table('activity_logs')->insert([
                 'user_id' => $userId,
                 'action' => $action,
-                'ip_address' => $ipAddress,
+                'ip_address' => $ipAddress ?? 'unknown',
                 'created_at' => now()
             ]);
         } catch (\Exception $e) {

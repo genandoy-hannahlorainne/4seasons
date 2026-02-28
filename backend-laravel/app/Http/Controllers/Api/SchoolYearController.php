@@ -353,4 +353,39 @@ class SchoolYearController extends BaseController
             return $this->sendError('Failed to retrieve section students', $e->getMessage());
         }
     }
+
+    /**
+     * Get all sections for current active school year (for filtering)
+     */
+    public function getAllSections()
+    {
+        try {
+            // Get current active school year
+            $currentYear = SchoolYear::where('is_current', true)->first();
+            
+            if (!$currentYear) {
+                return $this->sendError('No current school year set');
+            }
+
+            $sections = Section::with(['gradeLevel'])
+                ->where('school_year_id', $currentYear->id)
+                ->where('is_active', true)
+                ->orderBy('grade_level_id')
+                ->orderBy('section_name')
+                ->get()
+                ->map(function ($section) {
+                    return [
+                        'id' => $section->id,
+                        'section_name' => $section->section_name,
+                        'grade_level_id' => $section->grade_level_id,
+                        'level_name' => $section->gradeLevel->level_name ?? 'Unknown',
+                        'level_number' => $section->gradeLevel->level_number ?? 0
+                    ];
+                });
+
+            return $this->sendResponse($sections, 'All sections retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve sections', $e->getMessage());
+        }
+    }
 }

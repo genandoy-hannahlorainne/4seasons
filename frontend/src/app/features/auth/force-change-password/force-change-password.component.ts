@@ -279,9 +279,10 @@ export class ForceChangePasswordComponent implements OnInit {
 
     const { currentPassword, newPassword } = this.changePasswordForm.value;
 
-    this.http.post<any>(`${environment.apiUrl}/force-change-password.php`, {
+    this.http.post<any>(`${environment.apiUrl}/force-change-password`, {
       current_password: currentPassword,
-      new_password: newPassword
+      new_password: newPassword,
+      new_password_confirmation: newPassword
     }).subscribe({
       next: (response) => {
         this.loading = false;

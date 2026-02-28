@@ -19,6 +19,7 @@ import { RouterModule, RouterOutlet } from '@angular/router';
           <a routerLink="/dashboard/admin/manage-users" class="nav-link" routerLinkActive="active">Users</a>
           <a routerLink="/dashboard/admin/school-year-management" class="nav-link" routerLinkActive="active">School Years</a>
           <a routerLink="/dashboard/admin/grade-promotion" class="nav-link" routerLinkActive="active">Grade Promotion</a>
+          <a routerLink="/dashboard/admin/emergency-drills" class="nav-link" routerLinkActive="active">Emergency Drills</a>
           <a routerLink="/dashboard/admin/settings" class="nav-link" routerLinkActive="active">Settings</a>
           <a routerLink="/dashboard/admin/backup-recovery" class="nav-link" routerLinkActive="active">Backup</a>
           <a routerLink="/dashboard/admin/reports" class="nav-link" routerLinkActive="active">Reports</a>

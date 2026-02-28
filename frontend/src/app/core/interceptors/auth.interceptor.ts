@@ -8,7 +8,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = localStorage.getItem('token');
   
   // Determine if this is a Laravel API request
-  const isLaravelApi = req.url.includes('localhost:8000/api');
+  const isLaravelApi = req.url.includes('/api') && !req.url.includes('/backend/api');
   const isLegacyApi = req.url.includes('/backend/api');
   
   // Skip auth for login and register endpoints

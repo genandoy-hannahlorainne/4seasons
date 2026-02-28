@@ -81,7 +81,7 @@ try {
         
         $query = "SELECT u.user_id, u.username, u.email, u.full_name, u.phone, u.is_active, u.created_at,
                          r.role_name,
-                         a.adviser_id, a.first_name, a.last_name, a.employee_number, a.contact_phone
+                         a.adviser_id, a.employee_id, a.department, a.contact_phone
                   FROM users u
                   INNER JOIN roles r ON u.role_id = r.role_id
                   LEFT JOIN advisers a ON u.user_id = a.user_id
@@ -101,9 +101,8 @@ try {
                 'full_name' => $row['full_name'],
                 'phone' => $row['phone'],
                 'adviser_id' => $row['adviser_id'] ? intval($row['adviser_id']) : null,
-                'first_name' => $row['first_name'],
-                'last_name' => $row['last_name'],
-                'employee_number' => $row['employee_number'],
+                'employee_id' => $row['employee_id'],
+                'department' => $row['department'],
                 'contact_phone' => $row['contact_phone'],
                 'is_active' => intval($row['is_active']),
                 'created_at' => $row['created_at'],
@@ -213,7 +212,7 @@ try {
     // Get ALL advisers (role_id = 3)
     $query = "SELECT u.user_id, u.username, u.email, u.full_name, u.phone, u.is_active, u.created_at,
                      r.role_name,
-                     a.adviser_id, a.first_name, a.last_name, a.employee_number, a.contact_phone
+                     a.adviser_id, a.employee_id, a.department, a.contact_phone
               FROM users u
               INNER JOIN roles r ON u.role_id = r.role_id
               LEFT JOIN advisers a ON u.user_id = a.user_id
@@ -233,9 +232,8 @@ try {
             'full_name' => $row['full_name'],
             'phone' => $row['phone'],
             'adviser_id' => $row['adviser_id'] ? intval($row['adviser_id']) : null,
-            'first_name' => $row['first_name'],
-            'last_name' => $row['last_name'],
-            'employee_number' => $row['employee_number'],
+            'employee_id' => $row['employee_id'],
+            'department' => $row['department'],
             'contact_phone' => $row['contact_phone'],
             'is_active' => intval($row['is_active']),
             'created_at' => $row['created_at'],

@@ -342,27 +342,30 @@
               <label>Grade Level *</label>
               <select [(ngModel)]="newUser.grade_level" (change)="onGradeLevelChange()" class="form-control" required>
                 <option value="">-- Select --</option>
-                <option value="7">Grade 7</option>
-                <option value="8">Grade 8</option>
-                <option value="9">Grade 9</option>
-                <option value="10">Grade 10</option>
-                <option value="11">Grade 11</option>
-                <option value="12">Grade 12</option>
+                <option value="1">Grade 1 (Grade 7)</option>
+                <option value="2">Grade 2 (Grade 8)</option>
+                <option value="3">Grade 3 (Grade 9)</option>
+                <option value="4">Grade 4 (Grade 10)</option>
+                <option value="5">Grade 5 (Grade 11)</option>
+                <option value="6">Grade 6 (Grade 12)</option>
               </select>
+              <small>Admin grade levels map to actual school grades</small>
             </div>
             <div class="form-group">
               <label>Section *</label>
-              <select [(ngModel)]="newUser.section" class="form-control" required [disabled]="!newUser.grade_level">
-                <option value="">{{ newUser.grade_level ? '-- Select Section --' : 'Select Grade Level First' }}</option>
-                <option *ngFor="let section of getAvailableSections()" [value]="section">
-                  {{ section }}
+              <select [(ngModel)]="newUser.section_id" class="form-control" required [disabled]="!newUser.grade_level || loadingSections">
+                <option value="">
+                  {{ loadingSections ? 'Loading sections...' : (newUser.grade_level ? '-- Select Section --' : 'Select Grade Level First') }}
+                </option>
+                <option *ngFor="let section of getAvailableSections()" [value]="section.id">
+                  {{ section.section_name }} ({{ section.current_enrollment || 0 }}/{{ section.capacity }})
                 </option>
               </select>
-              <small *ngIf="newUser.grade_level && parseInt(newUser.grade_level) >= 7 && parseInt(newUser.grade_level) <= 10">
-                Sections 1-3 for Grade {{ newUser.grade_level }}
+              <small *ngIf="newUser.grade_level && availableSections.length > 0">
+                Available sections for selected grade level
               </small>
-              <small *ngIf="newUser.grade_level && (parseInt(newUser.grade_level) === 11 || parseInt(newUser.grade_level) === 12)">
-                Strand-based sections for Grade {{ newUser.grade_level }}
+              <small *ngIf="newUser.grade_level && availableSections.length === 0 && !loadingSections" style="color: #f44336;">
+                No sections available for this grade level
               </small>
             </div>
           </div>
@@ -393,27 +396,26 @@
               <label>Advisory Grade Level</label>
               <select [(ngModel)]="newUser.grade_level" (change)="onGradeLevelChange()" class="form-control">
                 <option value="">-- None --</option>
-                <option value="7">Grade 7</option>
-                <option value="8">Grade 8</option>
-                <option value="9">Grade 9</option>
-                <option value="10">Grade 10</option>
-                <option value="11">Grade 11</option>
-                <option value="12">Grade 12</option>
+                <option value="1">Grade 1 (Grade 7)</option>
+                <option value="2">Grade 2 (Grade 8)</option>
+                <option value="3">Grade 3 (Grade 9)</option>
+                <option value="4">Grade 4 (Grade 10)</option>
+                <option value="5">Grade 5 (Grade 11)</option>
+                <option value="6">Grade 6 (Grade 12)</option>
               </select>
             </div>
             <div class="form-group">
               <label>Advisory Section</label>
-              <select [(ngModel)]="newUser.section" class="form-control" [disabled]="!newUser.grade_level">
-                <option value="">{{ newUser.grade_level ? '-- None --' : 'Select Grade Level First' }}</option>
-                <option *ngFor="let section of getAvailableSections()" [value]="section">
-                  {{ section }}
+              <select [(ngModel)]="newUser.section_id" class="form-control" [disabled]="!newUser.grade_level || loadingSections">
+                <option value="">
+                  {{ loadingSections ? 'Loading sections...' : (newUser.grade_level ? '-- None --' : 'Select Grade Level First') }}
+                </option>
+                <option *ngFor="let section of getAvailableSections()" [value]="section.id">
+                  {{ section.section_name }} ({{ section.current_enrollment || 0 }}/{{ section.capacity }})
                 </option>
               </select>
-              <small *ngIf="newUser.grade_level && parseInt(newUser.grade_level) >= 7 && parseInt(newUser.grade_level) <= 10">
-                Sections 1-3 for Grade {{ newUser.grade_level }}
-              </small>
-              <small *ngIf="newUser.grade_level && (parseInt(newUser.grade_level) === 11 || parseInt(newUser.grade_level) === 12)">
-                Strand-based sections for Grade {{ newUser.grade_level }}
+              <small *ngIf="newUser.grade_level && availableSections.length > 0">
+                Available sections for selected grade level
               </small>
             </div>
           </div>
