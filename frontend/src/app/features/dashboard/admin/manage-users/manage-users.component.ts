@@ -46,13 +46,17 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     gender: '',
     birth_date: '',
     grade_level: '',
-    section: '',
+    section_id: '', // Changed from section to section_id
     // Adviser fields
     employee_number: '',
     // Clinic Staff fields
     staff_code: '',
     position: ''
   };
+
+  // Available sections for selected grade level
+  availableSections: any[] = [];
+  loadingSections = false;
 
   // Debug properties
   userCounts = {
@@ -373,11 +377,12 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       gender: '',
       birth_date: '',
       grade_level: '',
-      section: '',
+      section_id: '', // Changed from section to section_id
       employee_number: '',
       staff_code: '',
       position: ''
     };
+    this.availableSections = [];
   }
 
   onRoleSelect(): void {
@@ -389,43 +394,48 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.newUser.gender = '';
     this.newUser.birth_date = '';
     this.newUser.grade_level = '';
-    this.newUser.section = '';
+    this.newUser.section_id = ''; // Changed from section to section_id
     this.newUser.employee_number = '';
     this.newUser.staff_code = '';
     this.newUser.position = '';
     this.newUser.full_name = '';
+    this.availableSections = [];
   }
 
   onGradeLevelChange(): void {
     // Clear section when grade level changes
-    this.newUser.section = '';
+    this.newUser.section_id = '';
+    this.availableSections = [];
+    
+    // Load sections for the selected grade level (for students and advisers)
+    if ((this.newUser.role === 'student' || this.newUser.role === 'adviser') && this.newUser.grade_level) {
+      this.loadSectionsForGrade(parseInt(this.newUser.grade_level));
+    }
   }
 
-  getAvailableSections(): string[] {
-    const gradeLevel = parseInt(this.newUser.grade_level);
-    
-    // For grades 7-10, show sections 1-3
-    if (gradeLevel >= 7 && gradeLevel <= 10) {
-      return ['1', '2', '3'];
-    }
-    
-    // For grades 11-12, show strand-based sections
-    if (gradeLevel === 11 || gradeLevel === 12) {
-      return [
-        'STEM 1',
-        'STEM 2',
-        'ABM 1',
-        'ABM 2',
-        'HUMSS 1',
-        'HUMSS 2',
-        'TVL-HE 1',
-        'TVL-HE 2',
-        'TVL-EIM 1',
-        'TVL-EIM 2'
-      ];
-    }
-    
-    return [];
+  loadSectionsForGrade(gradeLevel: number): void {
+    this.loadingSections = true;
+    this.adminService.getSectionsForGrade(gradeLevel).subscribe({
+      next: (response) => {
+        this.loadingSections = false;
+        if (response.success && response.data.sections) {
+          this.availableSections = response.data.sections;
+          console.log('✅ Loaded sections for grade', gradeLevel, ':', this.availableSections);
+        } else {
+          this.availableSections = [];
+          console.error('❌ Failed to load sections:', response.message);
+        }
+      },
+      error: (err) => {
+        this.loadingSections = false;
+        this.availableSections = [];
+        console.error('❌ Error loading sections:', err);
+      }
+    });
+  }
+
+  getAvailableSections(): any[] {
+    return this.availableSections;
   }
 
   parseInt(value: string): number {
@@ -447,7 +457,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         this.newUser.gender &&
         this.newUser.birth_date &&
         this.newUser.grade_level &&
-        this.newUser.section
+        this.newUser.section_id // Changed from section to section_id
       );
     } else if (this.newUser.role === 'adviser') {
       return !!(
@@ -481,29 +491,58 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       this.newUser.full_name = `${this.newUser.first_name} ${this.newUser.middle_name || ''} ${this.newUser.last_name}`.trim();
     }
 
-    this.adminService.createUser(this.newUser).subscribe({
-      next: (response) => {
-        this.creatingUser = false;
-        if (response.success) {
-          this.createSuccessMessage = `Account created successfully! Username: ${response.data.username}. An email has been sent with login credentials.`;
-          
-          // Reload users list
-          this.loadUsers();
-          
-          // Close modal after 3 seconds
-          setTimeout(() => {
-            this.closeCreateUserModal();
-          }, 3000);
-        } else {
-          this.createErrorMessage = response.message || 'Failed to create user account';
+    // For students, use Laravel API
+    if (this.newUser.role === 'student') {
+      this.adminService.createUser(this.newUser).subscribe({
+        next: (response) => {
+          this.creatingUser = false;
+          if (response.success) {
+            const studentData = response.data.student;
+            this.createSuccessMessage = `Student account created successfully! Username: ${studentData.username}, Temporary Password: ${studentData.temp_password}`;
+            
+            // Reload users list
+            this.loadUsers();
+            
+            // Close modal after 5 seconds
+            setTimeout(() => {
+              this.closeCreateUserModal();
+            }, 5000);
+          } else {
+            this.createErrorMessage = response.message || 'Failed to create student account';
+          }
+        },
+        error: (err) => {
+          this.creatingUser = false;
+          console.error('Error creating student:', err);
+          this.createErrorMessage = err.error?.message || 'Failed to create student account. Please try again.';
         }
-      },
-      error: (err) => {
-        this.creatingUser = false;
-        console.error('Error creating user:', err);
-        this.createErrorMessage = err.error?.message || 'Failed to create user account. Please try again.';
-      }
-    });
+      });
+    } else {
+      // For other roles, use legacy API
+      this.adminService.createUserLegacy(this.newUser).subscribe({
+        next: (response) => {
+          this.creatingUser = false;
+          if (response.success) {
+            this.createSuccessMessage = `Account created successfully! Username: ${response.data.username}. An email has been sent with login credentials.`;
+            
+            // Reload users list
+            this.loadUsers();
+            
+            // Close modal after 3 seconds
+            setTimeout(() => {
+              this.closeCreateUserModal();
+            }, 3000);
+          } else {
+            this.createErrorMessage = response.message || 'Failed to create user account';
+          }
+        },
+        error: (err) => {
+          this.creatingUser = false;
+          console.error('Error creating user:', err);
+          this.createErrorMessage = err.error?.message || 'Failed to create user account. Please try again.';
+        }
+      });
+    }
   }
 
   // Bulk Import Methods

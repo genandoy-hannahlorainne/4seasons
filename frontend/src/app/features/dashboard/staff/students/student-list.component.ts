@@ -55,7 +55,7 @@ interface StaffStudentRecord {
 
       <!-- Results Count -->
       <div class="results-info" *ngIf="!loading">
-        <span>Showing {{ filteredStudents?.length || 0 }} students</span>
+        <span>Showing {{ filteredStudents.length || 0 }} students</span>
       </div>
 
       <!-- Students Table -->

@@ -58,9 +58,40 @@ export class AdminService {
     return this.http.delete<any>(`${environment.legacyApiUrl}/manage-user.php?action=delete&user_id=${userId}`);
   }
 
-  // Create User
+  // Create User - Laravel API
   createUser(userData: any): Observable<any> {
+    // Map frontend data to Laravel API format
+    const laravelData = {
+      student_number: userData.student_number,
+      first_name: userData.first_name,
+      middle_name: userData.middle_name,
+      last_name: userData.last_name,
+      birth_date: userData.birth_date,
+      gender: userData.gender,
+      grade_level: userData.grade_level, // Admin grade level (1-6)
+      section_id: userData.section_id, // Will be set by getSectionsForGrade
+      email: userData.email,
+      phone: userData.phone,
+      emergency_contact_name: userData.emergency_contact_name,
+      emergency_contact_phone: userData.emergency_contact_phone
+    };
+    
+    return this.http.post<any>(`${environment.apiUrl}/admin/students`, laravelData);
+  }
+
+  // Create User - Legacy API (for non-students)
+  createUserLegacy(userData: any): Observable<any> {
     return this.http.post<any>(`${environment.legacyApiUrl}/admin/create-user.php`, userData);
+  }
+
+  // Get sections for a specific grade level (Laravel API)
+  getSectionsForGrade(gradeLevel: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/sections/grade/${gradeLevel}`);
+  }
+
+  // Get all grade levels with sections (Laravel API)
+  getGradeLevelsWithSections(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/grade-levels/sections`);
   }
 
   // Bulk Import Students

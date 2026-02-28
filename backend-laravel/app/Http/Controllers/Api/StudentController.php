@@ -426,29 +426,6 @@ class StudentController extends BaseController
     }
 
     /**
-     * Fix student section assignments
-     */
-    public function fixSectionAssignments()
-    {
-        try {
-            // Update students who have current_adviser_id = 60 (Heart Igot) 
-            // but don't have current_section_id set
-            $updated = Student::where('current_adviser_id', 60)
-                            ->whereNull('current_section_id')
-                            ->update(['current_section_id' => 63]);
-            
-            return $this->sendResponse([
-                'updated_count' => $updated
-            ], 'Student section assignments fixed successfully');
-            
-        } catch (\Exception $e) {
-            return $this->sendError('Failed to fix section assignments', [
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
      * Get all students for clinic staff with filtering
      */
     public function getAllStudentsForStaff(Request $request)
