@@ -65,17 +65,11 @@ class MedicalVisitController extends BaseController
                 'student_id' => 'required|exists:students,student_id',
                 'clinic_staff_id' => 'required|exists:clinic_staff,clinic_staff_id',
                 'chief_complaint' => 'required|string|max:500',
-                'diagnosis' => 'nullable|string|max:500',
-                'treatment_given' => 'nullable|string|max:1000',
-                'medications_given' => 'nullable|string|max:500',
                 'notes' => 'nullable|string|max:1000',
-                'follow_up_required' => 'boolean',
-                'follow_up_date' => 'nullable|date|after:today',
-                'parent_notified' => 'boolean',
-                'adviser_notified' => 'boolean',
-                'is_emergency' => 'boolean',
-                'visit_type' => 'required|in:routine,emergency,follow_up,referral',
-                'status' => 'in:active,completed,cancelled',
+                'notify_parent' => 'boolean',
+                'visit_type' => 'required|in:Routine,Emergency,Follow-up,Referral',
+                'status' => 'in:Open,Closed,Referred',
+                'notification_method' => 'nullable|in:sms,email,call,none',
                 // Vitals data
                 'vitals' => 'nullable|array',
                 'vitals.*.vital_type' => 'required_with:vitals|in:blood_pressure,heart_rate,temperature,respiratory_rate,oxygen_saturation,height,weight',
@@ -91,13 +85,12 @@ class MedicalVisitController extends BaseController
                     'clinic_staff_id' => $request->clinic_staff_id,
                     'visit_datetime' => now(),
                     'chief_complaint' => $request->chief_complaint,
-                    'diagnosis' => $request->diagnosis,
-                    'treatment_given' => $request->treatment_given,
-                    'medications_given' => $request->medications_given,
                     'notes' => $request->notes,
-                    'follow_up_required' => $request->boolean('follow_up_required', false),
-                    'follow_up_date' => $request->follow_up_date,
-                    'parent_notified' => $request->boolean('parent_notified', false),
+                    'notify_parent' => $request->boolean('notify_parent', false),
+                    'visit_type' => $request->visit_type,
+                    'status' => $request->status ?? 'Open',
+                    'notification_method' => $request->notification_method ?? 'none'
+                ]);
                     'adviser_notified' => $request->boolean('adviser_notified', false),
                     'is_emergency' => $request->boolean('is_emergency', false),
                     'visit_type' => $request->visit_type,
@@ -157,21 +150,16 @@ class MedicalVisitController extends BaseController
     {
         try {
             $request->validate([
-                'diagnosis' => 'nullable|string|max:500',
-                'treatment_given' => 'nullable|string|max:1000',
-                'medications_given' => 'nullable|string|max:500',
+                'chief_complaint' => 'nullable|string|max:500',
                 'notes' => 'nullable|string|max:1000',
-                'follow_up_required' => 'boolean',
-                'follow_up_date' => 'nullable|date|after:today',
-                'parent_notified' => 'boolean',
-                'adviser_notified' => 'boolean',
-                'status' => 'in:active,completed,cancelled'
+                'notify_parent' => 'boolean',
+                'status' => 'in:Open,Closed,Referred',
+                'notification_method' => 'nullable|in:sms,email,call,none'
             ]);
 
             $medicalVisit->update($request->only([
-                'diagnosis', 'treatment_given', 'medications_given', 'notes',
-                'follow_up_required', 'follow_up_date', 'parent_notified',
-                'adviser_notified', 'status'
+                'chief_complaint', 'notes', 'notify_parent',
+                'status', 'notification_method'
             ]));
 
             $medicalVisit->load(['student.user', 'clinicStaff.user', 'vitals']);
@@ -278,7 +266,7 @@ class MedicalVisitController extends BaseController
                     'visit_datetime' => $visit->visit_datetime,
                     'visit_type' => $visit->visit_type,
                     'chief_complaint' => $visit->chief_complaint,
-                    'diagnosis' => $visit->diagnosis,
+                    'diagnosis' => $visit->chief_complaint,
                     'status' => $visit->status,
                     'is_emergency' => $visit->is_emergency,
                     'clinic_staff' => $visit->clinicStaff ? [

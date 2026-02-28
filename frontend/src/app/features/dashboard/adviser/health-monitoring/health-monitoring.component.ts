@@ -620,7 +620,7 @@ export class HealthMonitoringComponent implements OnInit {
   
   advisoryClass = '';
   totalStudents = 0;
-  selectedDays = 7;
+  selectedDays = 30;
   
   visitsByDate: HeatmapDay[] = [];
   trendingSymptoms: any[] = [];

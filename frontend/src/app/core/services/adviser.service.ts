@@ -95,8 +95,8 @@ export class AdviserService {
     return this.http.get<any>(`${environment.apiUrl}/adviser/profile`);
   }
 
-  getAdvisoryStudents(userId: number): Observable<AdvisoryStudentsResponse> {
-    return this.http.get<AdvisoryStudentsResponse>(`${environment.legacyApiUrl}/get-advisory-students.php?user_id=${userId}`);
+  getAdvisoryStudents(): Observable<AdvisoryStudentsResponse> {
+    return this.http.get<AdvisoryStudentsResponse>(`${environment.apiUrl}/adviser/advisory-students`);
   }
 
   autoAssignStudents(userId: number): Observable<any> {
@@ -117,7 +117,7 @@ export class AdviserService {
   }
 
   getClassRoster(schoolYearId: number): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/adviser/get-class-roster.php?school_year_id=${schoolYearId}`);
+    return this.http.get<any>(`${environment.apiUrl}/adviser/class-roster?school_year_id=${schoolYearId}`);
   }
 
   promoteStudents(promotionData: any): Observable<any> {
@@ -144,7 +144,7 @@ export class AdviserService {
 
   // Health Monitoring Heat Map
   getHealthHeatmap(days: number = 7): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/adviser/get-health-heatmap.php?days=${days}`);
+    return this.http.get<any>(`${environment.apiUrl}/adviser/health-heatmap?days=${days}`);
   }
 
   // Profile Management

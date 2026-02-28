@@ -429,7 +429,7 @@ export class AdviserDashboardComponent implements OnInit {
     this.adviserService.autoAssignStudents(currentUser.user_id).subscribe({
       next: () => {
         // Then fetch the advisory students
-        this.adviserService.getAdvisoryStudents(currentUser.user_id).subscribe({
+        this.adviserService.getAdvisoryStudents().subscribe({
           next: (response: any) => {
             if (response.success) {
               this.advisoryClass = response.adviser.advisory_class;
@@ -455,7 +455,7 @@ export class AdviserDashboardComponent implements OnInit {
       error: (err: any) => {
         console.error('Error auto-assigning students:', err);
         // Continue anyway - try to load students even if auto-assign fails
-        this.adviserService.getAdvisoryStudents(currentUser.user_id).subscribe({
+        this.adviserService.getAdvisoryStudents().subscribe({
           next: (response: any) => {
             if (response.success) {
               this.advisoryClass = response.adviser.advisory_class;

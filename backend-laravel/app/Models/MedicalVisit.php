@@ -15,29 +15,21 @@ class MedicalVisit extends Model
         'student_id',
         'clinic_staff_id',
         'visit_datetime',
-        'chief_complaint',
-        'diagnosis',
-        'treatment_given',
-        'medications_given',
-        'notes',
-        'follow_up_required',
-        'follow_up_date',
-        'parent_notified',
-        'adviser_notified',
-        'is_emergency',
         'visit_type',
-        'status'
+        'chief_complaint',
+        'notes',
+        'status',
+        'notify_parent',
+        'parent_notified_at',
+        'notification_method'
     ];
 
     protected function casts(): array
     {
         return [
             'visit_datetime' => 'datetime',
-            'follow_up_date' => 'date',
-            'parent_notified' => 'boolean',
-            'adviser_notified' => 'boolean',
-            'is_emergency' => 'boolean',
-            'follow_up_required' => 'boolean'
+            'parent_notified_at' => 'datetime',
+            'notify_parent' => 'boolean'
         ];
     }
 

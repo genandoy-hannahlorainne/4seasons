@@ -223,6 +223,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/adviser/profile', [\App\Http\Controllers\Api\AdviserController::class, 'getProfile']);
     Route::put('/adviser/profile', [\App\Http\Controllers\Api\AdviserController::class, 'updateProfile']);
     Route::get('/adviser/dashboard', [\App\Http\Controllers\Api\AdviserController::class, 'getDashboard']);
+    Route::get('/adviser/health-heatmap', [\App\Http\Controllers\Api\AdviserController::class, 'getHealthHeatmap']);
+    Route::get('/adviser/class-roster', [\App\Http\Controllers\Api\AdviserController::class, 'getClassRoster']);
+    Route::get('/adviser/advisory-students', [\App\Http\Controllers\Api\AdviserController::class, 'getAdvisoryStudents']);
     
     // Future API endpoints will be added here
     // Route::post('medical-visits', [MedicalVisitController::class, 'store']);
