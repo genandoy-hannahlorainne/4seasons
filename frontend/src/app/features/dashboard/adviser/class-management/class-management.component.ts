@@ -560,18 +560,24 @@ export class ClassManagementComponent implements OnInit {
 
     this.adviserService.getClassRoster(this.selectedSchoolYear).subscribe({
       next: (response: any) => {
-        this.classRoster = response;
+        if (response.success) {
+          this.classRoster = response.data;
+        } else {
+          this.classRoster = null;
+          console.error('Failed to load class roster:', response.message);
+        }
         this.clearSelection();
       },
       error: (error) => {
         console.error('Error loading class roster:', error);
         this.classRoster = null;
+        this.clearSelection();
       }
     });
   }
 
   toggleSelectAll() {
-    if (this.classRoster) {
+    if (this.classRoster && this.classRoster.students) {
       this.classRoster.students.forEach(student => {
         student.selected = this.selectAll;
       });
@@ -580,7 +586,7 @@ export class ClassManagementComponent implements OnInit {
   }
 
   updateSelection() {
-    if (this.classRoster) {
+    if (this.classRoster && this.classRoster.students) {
       this.selectedStudents = this.classRoster.students.filter(s => s.selected);
       this.selectAll = this.selectedStudents.length === this.classRoster.students.length;
     }
@@ -589,7 +595,7 @@ export class ClassManagementComponent implements OnInit {
   clearSelection() {
     this.selectAll = false;
     this.selectedStudents = [];
-    if (this.classRoster) {
+    if (this.classRoster && this.classRoster.students) {
       this.classRoster.students.forEach(student => {
         student.selected = false;
       });
@@ -607,7 +613,7 @@ export class ClassManagementComponent implements OnInit {
     this.promotionSuccess = '';
     
     // Check if current grade is 12
-    if (this.classRoster) {
+    if (this.classRoster && this.classRoster.section) {
       this.isGrade12 = this.classRoster.section.level_number === 12;
       
       if (!this.isGrade12) {

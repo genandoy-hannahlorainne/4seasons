@@ -17,8 +17,12 @@ class MedicalVisitController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = MedicalVisit::with(['student.user', 'clinicStaff.user', 'vitals'])
-                                ->orderBy('visit_datetime', 'desc');
+            $query = MedicalVisit::with(['student' => function($query) {
+                    $query->with(['currentSection' => function($query) {
+                        $query->with(['gradeLevel']);
+                    }]);
+                }])
+                ->orderBy('visit_datetime', 'desc');
             
             // Filter by student if provided
             if ($request->has('student_id')) {
@@ -34,9 +38,9 @@ class MedicalVisitController extends BaseController
                 $query->whereDate('visit_datetime', '<=', $request->get('date_to'));
             }
             
-            // Filter by emergency visits
+            // Filter by emergency visits (check visit_type instead of is_emergency)
             if ($request->has('emergency_only') && $request->get('emergency_only') === 'true') {
-                $query->where('is_emergency', true);
+                $query->where('visit_type', 'Emergency');
             }
             
             // Filter by visit type
@@ -45,6 +49,36 @@ class MedicalVisitController extends BaseController
             }
             
             $visits = $query->paginate(20);
+            
+            // Transform the data to include student information
+            $visits->getCollection()->transform(function ($visit) {
+                $student = $visit->student;
+                $section = $student ? $student->currentSection : null;
+                $gradeLevel = $section ? $section->gradeLevel : null;
+                
+                return [
+                    'visit_id' => $visit->visit_id,
+                    'student_id' => $visit->student_id,
+                    'clinic_staff_id' => $visit->clinic_staff_id,
+                    'visit_datetime' => $visit->visit_datetime,
+                    'visit_type' => $visit->visit_type,
+                    'chief_complaint' => $visit->chief_complaint,
+                    'notes' => $visit->notes,
+                    'status' => $visit->status,
+                    'notify_parent' => $visit->notify_parent,
+                    'notification_method' => $visit->notification_method,
+                    'created_at' => $visit->created_at,
+                    'student' => $student ? [
+                        'student_id' => $student->student_id,
+                        'student_number' => $student->student_number,
+                        'first_name' => $student->first_name,
+                        'last_name' => $student->last_name,
+                        'full_name' => trim($student->first_name . ' ' . $student->last_name),
+                        'grade_level' => $gradeLevel ? $gradeLevel->level_name : null,
+                        'section' => $section ? $section->section_name : null,
+                    ] : null
+                ];
+            });
             
             return $this->sendResponse($visits, 'Medical visits retrieved successfully');
             
@@ -65,17 +99,11 @@ class MedicalVisitController extends BaseController
                 'student_id' => 'required|exists:students,student_id',
                 'clinic_staff_id' => 'required|exists:clinic_staff,clinic_staff_id',
                 'chief_complaint' => 'required|string|max:500',
-                'diagnosis' => 'nullable|string|max:500',
-                'treatment_given' => 'nullable|string|max:1000',
-                'medications_given' => 'nullable|string|max:500',
                 'notes' => 'nullable|string|max:1000',
-                'follow_up_required' => 'boolean',
-                'follow_up_date' => 'nullable|date|after:today',
-                'parent_notified' => 'boolean',
-                'adviser_notified' => 'boolean',
-                'is_emergency' => 'boolean',
-                'visit_type' => 'required|in:routine,emergency,follow_up,referral',
-                'status' => 'in:active,completed,cancelled',
+                'notify_parent' => 'boolean',
+                'visit_type' => 'required|in:Routine,Emergency',
+                'status' => 'in:Open,Closed,Referred',
+                'notification_method' => 'nullable|in:sms,email,call,none',
                 // Vitals data
                 'vitals' => 'nullable|array',
                 'vitals.*.vital_type' => 'required_with:vitals|in:blood_pressure,heart_rate,temperature,respiratory_rate,oxygen_saturation,height,weight',
@@ -91,17 +119,11 @@ class MedicalVisitController extends BaseController
                     'clinic_staff_id' => $request->clinic_staff_id,
                     'visit_datetime' => now(),
                     'chief_complaint' => $request->chief_complaint,
-                    'diagnosis' => $request->diagnosis,
-                    'treatment_given' => $request->treatment_given,
-                    'medications_given' => $request->medications_given,
                     'notes' => $request->notes,
-                    'follow_up_required' => $request->boolean('follow_up_required', false),
-                    'follow_up_date' => $request->follow_up_date,
-                    'parent_notified' => $request->boolean('parent_notified', false),
-                    'adviser_notified' => $request->boolean('adviser_notified', false),
-                    'is_emergency' => $request->boolean('is_emergency', false),
+                    'notify_parent' => $request->boolean('notify_parent', false),
                     'visit_type' => $request->visit_type,
-                    'status' => $request->get('status', 'active')
+                    'status' => $request->status ?? 'Open',
+                    'notification_method' => $request->notification_method ?? 'none'
                 ]);
 
                 // Add vitals if provided
@@ -157,21 +179,16 @@ class MedicalVisitController extends BaseController
     {
         try {
             $request->validate([
-                'diagnosis' => 'nullable|string|max:500',
-                'treatment_given' => 'nullable|string|max:1000',
-                'medications_given' => 'nullable|string|max:500',
+                'chief_complaint' => 'nullable|string|max:500',
                 'notes' => 'nullable|string|max:1000',
-                'follow_up_required' => 'boolean',
-                'follow_up_date' => 'nullable|date|after:today',
-                'parent_notified' => 'boolean',
-                'adviser_notified' => 'boolean',
-                'status' => 'in:active,completed,cancelled'
+                'notify_parent' => 'boolean',
+                'status' => 'in:Open,Closed,Referred',
+                'notification_method' => 'nullable|in:sms,email,call,none'
             ]);
 
             $medicalVisit->update($request->only([
-                'diagnosis', 'treatment_given', 'medications_given', 'notes',
-                'follow_up_required', 'follow_up_date', 'parent_notified',
-                'adviser_notified', 'status'
+                'chief_complaint', 'notes', 'notify_parent',
+                'status', 'notification_method'
             ]));
 
             $medicalVisit->load(['student.user', 'clinicStaff.user', 'vitals']);
@@ -254,8 +271,8 @@ class MedicalVisitController extends BaseController
                        $visit->visit_datetime->year === now()->year;
             })->count();
             
-            $emergencyVisits = $allVisits->where('is_emergency', true)->count();
-            $routineVisits = $allVisits->where('visit_type', 'routine')->count();
+            $emergencyVisits = $allVisits->where('visit_type', 'Emergency')->count();
+            $routineVisits = $allVisits->where('visit_type', 'Routine')->count();
             
             // Get last visit details
             $lastVisit = $allVisits->first();
@@ -267,7 +284,7 @@ class MedicalVisitController extends BaseController
                 return [
                     'month' => $month,
                     'count' => $visits->count(),
-                    'emergency_count' => $visits->where('is_emergency', true)->count()
+                    'emergency_count' => $visits->where('visit_type', 'Emergency')->count()
                 ];
             })->values();
             
@@ -278,9 +295,9 @@ class MedicalVisitController extends BaseController
                     'visit_datetime' => $visit->visit_datetime,
                     'visit_type' => $visit->visit_type,
                     'chief_complaint' => $visit->chief_complaint,
-                    'diagnosis' => $visit->diagnosis,
+                    'diagnosis' => $visit->chief_complaint,
                     'status' => $visit->status,
-                    'is_emergency' => $visit->is_emergency,
+                    'is_emergency' => $visit->visit_type === 'Emergency',
                     'clinic_staff' => $visit->clinicStaff ? [
                         'name' => $visit->clinicStaff->user->full_name,
                         'position' => $visit->clinicStaff->position
@@ -307,9 +324,7 @@ class MedicalVisitController extends BaseController
                 'visits_by_month' => $visitsByMonth,
                 'visit_types_breakdown' => [
                     'routine' => $routineVisits,
-                    'emergency' => $emergencyVisits,
-                    'follow_up' => $allVisits->where('visit_type', 'follow_up')->count(),
-                    'referral' => $allVisits->where('visit_type', 'referral')->count()
+                    'emergency' => $emergencyVisits
                 ]
             ];
             
@@ -331,7 +346,7 @@ class MedicalVisitController extends BaseController
             $days = $request->get('days', 7); // Default to last 7 days
             
             $visits = MedicalVisit::with(['student.user', 'clinicStaff.user'])
-                                ->where('is_emergency', true)
+                                ->where('visit_type', 'Emergency')
                                 ->where('visit_datetime', '>=', now()->subDays($days))
                                 ->orderBy('visit_datetime', 'desc')
                                 ->limit(20)
@@ -357,10 +372,12 @@ class MedicalVisitController extends BaseController
             
             $stats = [
                 'total_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)->count(),
+                // Note: is_emergency and follow_up_required columns don't exist in actual database
+                // Using visit_type = 'Emergency' instead of is_emergency
                 'emergency_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)
-                                                ->where('is_emergency', true)->count(),
-                'follow_up_required' => MedicalVisit::where('visit_datetime', '>=', $startDate)
-                                                  ->where('follow_up_required', true)->count(),
+                                                ->where('visit_type', 'Emergency')->count(),
+                'pending_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)
+                                                  ->where('status', 'Open')->count(),
                 'visits_by_type' => MedicalVisit::where('visit_datetime', '>=', $startDate)
                                                 ->groupBy('visit_type')
                                                 ->selectRaw('visit_type, count(*) as count')

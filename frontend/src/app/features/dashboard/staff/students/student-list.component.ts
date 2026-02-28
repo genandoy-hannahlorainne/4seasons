@@ -55,12 +55,12 @@ interface StaffStudentRecord {
 
       <!-- Results Count -->
       <div class="results-info" *ngIf="!loading">
-        <span>Showing {{ filteredStudents.length }} of {{ students.length }} students</span>
+        <span>Showing {{ filteredStudents.length || 0 }} students</span>
       </div>
 
       <!-- Students Table -->
       <div class="card" *ngIf="!loading">
-        <table class="students-table" *ngIf="filteredStudents.length > 0">
+        <table class="students-table" *ngIf="filteredStudents && filteredStudents.length > 0">
           <thead>
             <tr>
               <th>Student</th>
@@ -99,7 +99,7 @@ interface StaffStudentRecord {
         </table>
 
         <!-- Empty State -->
-        <div class="empty-state" *ngIf="filteredStudents.length === 0">
+        <div class="empty-state" *ngIf="!filteredStudents || filteredStudents.length === 0">
           <div class="empty-title">No Students Found</div>
           <div class="empty-text">Try adjusting your search or filter criteria</div>
         </div>
@@ -236,7 +236,7 @@ export class StudentListComponent implements OnInit {
   sectionFilter = '';
   loading = true;
   grades = [7, 8, 9, 10, 11, 12];
-  sections = ['STEM-1', 'STEM-2', 'ABM-1', 'HUMSS-1', 'TVL-HE-1'];
+  sections: string[] = [];
   
   students: StaffStudentRecord[] = [];
   filteredStudents: StaffStudentRecord[] = [];
@@ -245,34 +245,64 @@ export class StudentListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadStudents();
+    this.loadSections();
   }
 
   loadStudents(): void {
     this.loading = true;
-    this.staffService.getAllStudents()
+    
+    const filters: any = {};
+    if (this.gradeFilter) filters.grade = parseInt(this.gradeFilter);
+    if (this.sectionFilter) filters.section = this.sectionFilter;
+    if (this.searchTerm) filters.search = this.searchTerm;
+    
+    this.staffService.getAllStudents(filters)
       .subscribe({
         next: (response) => {
           this.loading = false;
           if (response.success) {
-            this.students = response.students;
-            this.filterStudents();
+            this.students = response.data?.students || [];
+            this.filteredStudents = this.students;
+          } else {
+            this.students = [];
+            this.filteredStudents = [];
           }
         },
         error: (err) => {
           console.error('Error loading students:', err);
           this.loading = false;
+          this.students = [];
+          this.filteredStudents = [];
+        }
+      });
+  }
+
+  loadSections(): void {
+    // Load sections from Laravel API
+    this.staffService.getSections()
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            // Extract unique section names from all grades
+            const allSections = response.data || [];
+            const sectionNames: string[] = allSections.map((section: any) => section.section_name as string);
+            this.sections = [...new Set(sectionNames)].sort();
+          } else {
+            // Fallback to default sections if API fails
+            this.sections = ['Mapagmahal', 'Matatag', 'Masigasig', 'STEM 1', 'STEM 2', 'ABM 1', 'ABM 2', 'HUMSS 1', 'HUMSS 2'];
+          }
+        },
+        error: (err) => {
+          console.error('Error loading sections:', err);
+          // Fallback to default sections if API fails
+          this.sections = ['Mapagmahal', 'Matatag', 'Masigasig', 'STEM 1', 'STEM 2', 'ABM 1', 'ABM 2', 'HUMSS 1', 'HUMSS 2'];
         }
       });
   }
 
   filterStudents(): void {
-    this.filteredStudents = this.students.filter(student => {
-      const matchesSearch = !this.searchTerm || 
-        student.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        student.studentNumber.toLowerCase().includes(this.searchTerm.toLowerCase());
-      const matchesGrade = !this.gradeFilter || student.gradeSection.includes(`Grade ${this.gradeFilter}`);
-      const matchesSection = !this.sectionFilter || student.gradeSection.includes(this.sectionFilter);
-      return matchesSearch && matchesGrade && matchesSection;
-    });
+    // Server-side filtering is now handled by the API
+    // Just reload the students with current filters
+    this.loadStudents();
   }
 }

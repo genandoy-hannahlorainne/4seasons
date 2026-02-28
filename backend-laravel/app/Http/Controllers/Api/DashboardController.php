@@ -34,7 +34,7 @@ class DashboardController extends BaseController
                 // Medical visit statistics
                 'total_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)->count(),
                 'emergency_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)
-                                                ->where('is_emergency', true)->count(),
+                                                ->where('visit_type', 'Emergency')->count(),
                 'visits_today' => MedicalVisit::whereDate('visit_datetime', today())->count(),
                 'visits_this_week' => MedicalVisit::where('visit_datetime', '>=', now()->startOfWeek())->count(),
                 
@@ -123,16 +123,16 @@ class DashboardController extends BaseController
                                              ->count(),
                 'emergency_visits' => MedicalVisit::whereIn('student_id', $studentIds)
                                                 ->where('visit_datetime', '>=', $startDate)
-                                                ->where('is_emergency', true)
+                                                ->where('visit_type', 'Emergency')
                                                 ->count(),
+                // Note: is_emergency and follow_up_required columns don't exist in actual database
+                // Using visit_type = 'Emergency' for emergency detection
                 'students_needing_attention' => $students->filter(function($student) {
-                    // Students with recent emergency visits or follow-ups
+                    // Students with recent emergency visits
                     return $student->medicalVisits()
                                  ->where('visit_datetime', '>=', now()->subDays(7))
-                                 ->where(function($q) {
-                                     $q->where('is_emergency', true)
-                                       ->orWhere('follow_up_required', true);
-                                 })->exists();
+                                 ->where('visit_type', 'Emergency')
+                                 ->exists();
                 })->count(),
                 'grade_sections' => $students->groupBy(['grade_level', 'section'])
                                            ->map(function($gradeStudents, $grade) {
@@ -183,12 +183,11 @@ class DashboardController extends BaseController
                                              ->count(),
                 'emergency_visits_handled' => MedicalVisit::where('clinic_staff_id', $clinicStaff->clinic_staff_id)
                                                         ->where('visit_datetime', '>=', $startDate)
-                                                        ->where('is_emergency', true)
+                                                        ->where('visit_type', 'Emergency')
                                                         ->count(),
-                'follow_ups_required' => MedicalVisit::where('clinic_staff_id', $clinicStaff->clinic_staff_id)
-                                                   ->where('follow_up_required', true)
-                                                   ->where('status', 'active')
-                                                   ->count(),
+                // Note: follow_up_required column doesn't exist in actual database
+                // Using Open status visits as pending visits instead
+                'pending_visits' => MedicalVisit::where('status', 'Open')->count(),
                 
                 // Recent activity
                 'recent_visits' => MedicalVisit::with(['student.user'])
@@ -268,19 +267,14 @@ class DashboardController extends BaseController
                                              ->get(),
                     'allergies' => $student->allergies,
                     'medical_history' => $student->medicalHistory,
-                    'upcoming_follow_ups' => $student->medicalVisits()
-                                                   ->where('follow_up_required', true)
-                                                   ->where('follow_up_date', '>=', today())
-                                                   ->orderBy('follow_up_date')
-                                                   ->get()
+                    // Note: follow_up_required and follow_up_date columns don't exist in actual database
+                    'upcoming_follow_ups' => []
                 ],
                 'health_alerts' => [
                     'has_allergies' => $student->allergies()->exists(),
                     'has_conditions' => $student->medicalHistory && $student->medicalHistory->hasConditions(),
-                    'needs_follow_up' => $student->medicalVisits()
-                                               ->where('follow_up_required', true)
-                                               ->where('follow_up_date', '>=', today())
-                                               ->exists()
+                    // Note: follow_up_required column doesn't exist in actual database
+                    'needs_follow_up' => false
                 ]
             ];
             
@@ -288,6 +282,64 @@ class DashboardController extends BaseController
             
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve student information', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get clinic dashboard overview statistics
+     */
+    public function getClinicOverview(Request $request)
+    {
+        try {
+            $today = now()->startOfDay();
+            
+            // Get overall statistics (not per staff member)
+            $stats = [
+                'total_students' => Student::where('is_active', true)->count(),
+                'today_visits' => MedicalVisit::whereDate('visit_datetime', $today)->count(),
+                'total_visits' => MedicalVisit::count(),
+                'pending_visits' => MedicalVisit::where('status', 'Open')->count(),
+                
+                // Recent visits (last 5)
+                'recent_visits' => MedicalVisit::with(['student'])
+                    ->orderBy('visit_datetime', 'desc')
+                    ->limit(5)
+                    ->get()
+                    ->map(function($visit) {
+                        $student = $visit->student;
+                        return [
+                            'visit_id' => $visit->visit_id,
+                            'student_name' => $student ? trim($student->first_name . ' ' . $student->last_name) : 'Unknown',
+                            'student_id' => $visit->student_id,
+                            'diagnosis' => $visit->chief_complaint ?: $visit->notes ?: 'No complaint recorded',
+                            'status' => strtolower($visit->status),
+                            'visit_datetime' => $visit->visit_datetime,
+                            'date_time' => $visit->visit_datetime->format('M j, g:i A'),
+                            'avatar' => '/assets/user-' . ($student && $student->gender === 'F' ? 'female' : 'male') . '.png'
+                        ];
+                    }),
+                
+                // Students with allergies
+                'students_with_allergies' => Student::with(['allergies'])
+                    ->whereHas('allergies')
+                    ->where('is_active', true)
+                    ->limit(10)
+                    ->get()
+                    ->map(function($student) {
+                        return [
+                            'student_id' => $student->student_id,
+                            'name' => trim($student->first_name . ' ' . $student->last_name),
+                            'allergies' => $student->allergies->pluck('allergy_name')->filter()->toArray()
+                        ];
+                    })
+            ];
+            
+            return $this->sendResponse($stats, 'Clinic dashboard overview retrieved successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve clinic overview', [
                 'error' => $e->getMessage()
             ], 500);
         }
