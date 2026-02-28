@@ -419,39 +419,53 @@ class AdviserController extends BaseController
             }
 
             // Get students with medical data
-            $students = Student::with(['allergies', 'medicalVisits' => function($query) {
+            $studentsQuery = Student::with(['allergies', 'medicalVisits' => function($query) {
                     $query->orderBy('visit_datetime', 'desc')->limit(5);
                 }])
                 ->where('current_section_id', $section->id)
-                ->where('is_active', true)
-                ->get()
-                ->map(function($student) {
-                    return [
-                        'student_id' => $student->student_id,
-                        'student_number' => $student->student_number,
-                        'first_name' => $student->first_name,
-                        'middle_name' => $student->middle_name,
-                        'last_name' => $student->last_name,
-                        'full_name' => trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name),
-                        'birth_date' => $student->birth_date,
-                        'gender' => $student->gender,
-                        'grade_level' => $section->gradeLevel->level_name,
-                        'section' => $section->section_name,
-                        'grade_section' => $section->gradeLevel->level_name . ' - ' . $section->section_name,
-                        'blood_type' => $student->blood_type,
-                        'emergency_contact' => $student->emergency_contact_name,
-                        'email' => $student->email,
-                        'phone' => $student->phone,
-                        'allergies' => $student->allergies->pluck('allergy_name')->toArray(),
-                        'last_visit' => $student->medicalVisits->first() ? [
-                            'visit_id' => $student->medicalVisits->first()->visit_id,
-                            'visit_date' => $student->medicalVisits->first()->visit_datetime->format('Y-m-d'),
-                            'reason' => $student->medicalVisits->first()->chief_complaint ?? 'N/A',
-                            'diagnosis' => $student->medicalVisits->first()->chief_complaint,
-                            'status' => $student->medicalVisits->first()->status
-                        ] : null
-                    ];
-                });
+                ->where('is_active', true);
+            
+            $studentsCollection = $studentsQuery->get();
+            
+            // Calculate statistics before mapping
+            $totalStudents = $studentsCollection->count();
+            $clinicVisitsThisMonth = $studentsCollection->sum(function($student) {
+                return $student->medicalVisits()
+                    ->where('visit_datetime', '>=', now()->startOfMonth())
+                    ->count();
+            });
+            $studentsWithAllergies = $studentsCollection->filter(function($student) {
+                return $student->allergies->count() > 0;
+            })->count();
+
+            // Map students to response format
+            $students = $studentsCollection->map(function($student) use ($section) {
+                return [
+                    'student_id' => $student->student_id,
+                    'student_number' => $student->student_number,
+                    'first_name' => $student->first_name,
+                    'middle_name' => $student->middle_name,
+                    'last_name' => $student->last_name,
+                    'full_name' => trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name),
+                    'birth_date' => $student->birth_date,
+                    'gender' => $student->gender,
+                    'grade_level' => $section->gradeLevel->level_name,
+                    'section' => $section->section_name,
+                    'grade_section' => $section->gradeLevel->level_name . ' - ' . $section->section_name,
+                    'blood_type' => $student->blood_type,
+                    'emergency_contact' => $student->emergency_contact_name,
+                    'email' => $student->email,
+                    'phone' => $student->phone,
+                    'allergies' => $student->allergies->pluck('allergy_name')->toArray(),
+                    'last_visit' => $student->medicalVisits->first() ? [
+                        'visit_id' => $student->medicalVisits->first()->visit_id,
+                        'visit_date' => $student->medicalVisits->first()->visit_datetime->format('Y-m-d'),
+                        'reason' => $student->medicalVisits->first()->chief_complaint ?? 'N/A',
+                        'diagnosis' => $student->medicalVisits->first()->chief_complaint,
+                        'status' => $student->medicalVisits->first()->status
+                    ] : null
+                ];
+            });
 
             $advisoryData = [
                 'adviser' => [
@@ -463,15 +477,9 @@ class AdviserController extends BaseController
                 ],
                 'students' => $students,
                 'stats' => [
-                    'total_students' => $students->count(),
-                    'clinic_visits_this_month' => $students->sum(function($student) {
-                        return \App\Models\MedicalVisit::where('student_id', $student['student_id'])
-                            ->where('visit_datetime', '>=', now()->startOfMonth())
-                            ->count();
-                    }),
-                    'students_with_allergies' => $students->filter(function($student) {
-                        return count($student['allergies']) > 0;
-                    })->count()
+                    'total_students' => $totalStudents,
+                    'clinic_visits_this_month' => $clinicVisitsThisMonth,
+                    'students_with_allergies' => $studentsWithAllergies
                 ]
             ];
 

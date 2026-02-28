@@ -432,11 +432,11 @@ export class AdviserDashboardComponent implements OnInit {
         this.adviserService.getAdvisoryStudents().subscribe({
           next: (response: any) => {
             if (response.success) {
-              this.advisoryClass = response.adviser.advisory_class;
-              this.advisoryStudents = response.students;
-              this.totalStudents = response.stats.total_students;
-              this.clinicVisitsThisMonth = response.stats.clinic_visits_this_month;
-              this.studentsWithAllergies = response.stats.students_with_allergies;
+              this.advisoryClass = response.data.adviser.advisory_class;
+              this.advisoryStudents = response.data.students;
+              this.totalStudents = response.data.stats.total_students;
+              this.clinicVisitsThisMonth = response.data.stats.clinic_visits_this_month;
+              this.studentsWithAllergies = response.data.stats.students_with_allergies;
               
               // Generate recent activity from student visits
               this.generateRecentActivity();
@@ -458,11 +458,11 @@ export class AdviserDashboardComponent implements OnInit {
         this.adviserService.getAdvisoryStudents().subscribe({
           next: (response: any) => {
             if (response.success) {
-              this.advisoryClass = response.adviser.advisory_class;
-              this.advisoryStudents = response.students;
-              this.totalStudents = response.stats.total_students;
-              this.clinicVisitsThisMonth = response.stats.clinic_visits_this_month;
-              this.studentsWithAllergies = response.stats.students_with_allergies;
+              this.advisoryClass = response.data.adviser.advisory_class;
+              this.advisoryStudents = response.data.students;
+              this.totalStudents = response.data.stats.total_students;
+              this.clinicVisitsThisMonth = response.data.stats.clinic_visits_this_month;
+              this.studentsWithAllergies = response.data.stats.students_with_allergies;
               
               // Generate recent activity from student visits
               this.generateRecentActivity();

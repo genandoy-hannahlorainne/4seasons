@@ -408,8 +408,8 @@ export class AdviserHealthStatusComponent implements OnInit {
     this.adviserService.getAdvisoryStudents().subscribe({
       next: (response: any) => {
         if (response.success) {
-          this.studentsHealth = response.students;
-          this.advisoryClass = response.adviser?.advisory_class || '';
+          this.studentsHealth = response.data.students;
+          this.advisoryClass = response.data.adviser?.advisory_class || '';
         } else {
           this.error = 'Failed to load students';
         }
