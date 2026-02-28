@@ -10,6 +10,7 @@ class Student extends Model
     use HasFactory;
 
     protected $primaryKey = 'student_id';
+    public $timestamps = false; // Disable timestamps since table doesn't have created_at/updated_at
 
     protected $fillable = [
         'current_grade_level_id',

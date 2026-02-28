@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -46,8 +46,20 @@ export class StaffService {
     return this.http.get<any>(`${environment.legacyApiUrl}/get-student-profile.php?student_id=${studentId}`);
   }
 
-  getAllStudents(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-all-students.php`);
+  getAllStudents(filters?: { grade?: number; section?: string; search?: string }): Observable<any> {
+    let params = new HttpParams();
+    
+    if (filters?.grade) {
+      params = params.set('grade', filters.grade.toString());
+    }
+    if (filters?.section) {
+      params = params.set('section', filters.section);
+    }
+    if (filters?.search) {
+      params = params.set('search', filters.search);
+    }
+    
+    return this.http.get<any>(`${environment.apiUrl}/staff/students`, { params });
   }
 
   getReportsData(startDate: string, endDate: string, gradeLevel?: string): Observable<any> {

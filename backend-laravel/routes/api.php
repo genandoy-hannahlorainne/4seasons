@@ -18,6 +18,9 @@ Route::get('/health', function () {
 // Authentication endpoints (public)
 Route::post('/login', [AuthController::class, 'login']);
 
+// Force change password endpoint (requires authentication)
+Route::post('/force-change-password', [AuthController::class, 'forceChangePassword'])->middleware('auth:sanctum');
+
 // Simple test login endpoint
 Route::post('/test/simple-login', function (Request $request) {
     try {
@@ -157,6 +160,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/students/{student}/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'getMedicalData']);
     Route::put('/students/{student}/physical-info', [\App\Http\Controllers\Api\StudentController::class, 'updatePhysicalInfo']);
     Route::post('/students/fix-section-assignments', [\App\Http\Controllers\Api\StudentController::class, 'fixSectionAssignments']);
+    
+    // Get all students for clinic staff with filtering
+    Route::get('/staff/students', [\App\Http\Controllers\Api\StudentController::class, 'getAllStudentsForStaff']);
     
     // Medical visit endpoints
     Route::apiResource('medical-visits', \App\Http\Controllers\Api\MedicalVisitController::class);

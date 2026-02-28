@@ -447,4 +447,82 @@ class StudentController extends BaseController
             ], 500);
         }
     }
+
+    /**
+     * Get all students for clinic staff with filtering
+     */
+    public function getAllStudentsForStaff(Request $request)
+    {
+        try {
+            $query = Student::with([
+                'currentSection.gradeLevel', 
+                'allergies',
+                'medicalVisits' => function($q) {
+                    $q->orderBy('visit_datetime', 'desc')->limit(1);
+                }
+            ])
+            ->where('is_active', true)
+            ->whereNull('deleted_at');
+            
+            // Filter by grade level
+            if ($request->has('grade') && $request->grade !== '') {
+                $query->whereHas('currentSection.gradeLevel', function($q) use ($request) {
+                    $q->where('level_number', $request->grade);
+                });
+            }
+            
+            // Filter by section name
+            if ($request->has('section') && $request->section !== '') {
+                $query->whereHas('currentSection', function($q) use ($request) {
+                    $q->where('section_name', $request->section);
+                });
+            }
+            
+            // Search by name or student number
+            if ($request->has('search') && $request->search !== '') {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('student_number', 'LIKE', "%{$search}%")
+                      ->orWhere('first_name', 'LIKE', "%{$search}%")
+                      ->orWhere('last_name', 'LIKE', "%{$search}%")
+                      ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
+                });
+            }
+            
+            $students = $query->orderBy('first_name')
+                            ->orderBy('last_name')
+                            ->get();
+            
+            $formattedStudents = $students->map(function($student) {
+                $gradeSection = 'Unknown';
+                if ($student->currentSection && $student->currentSection->gradeLevel) {
+                    $gradeSection = $student->currentSection->gradeLevel->level_name . ' - ' . $student->currentSection->section_name;
+                }
+                
+                $lastVisit = $student->medicalVisits->first();
+                
+                return [
+                    'id' => $student->student_id,
+                    'studentNumber' => $student->student_number,
+                    'name' => trim($student->first_name . ' ' . $student->last_name),
+                    'gradeSection' => $gradeSection,
+                    'gender' => $student->gender,
+                    'lastVisit' => $lastVisit ? $lastVisit->visit_datetime->format('Y-m-d') : null,
+                    'hasAllergies' => $student->allergies && $student->allergies->count() > 0,
+                    'avatar' => $student->gender === 'Female' ? 'assets/user-female.png' : 'assets/user-male.png'
+                ];
+            });
+            
+            return $this->sendResponse([
+                'success' => true,
+                'students' => $formattedStudents,
+                'total' => $formattedStudents->count()
+            ], 'Students retrieved successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve students', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
