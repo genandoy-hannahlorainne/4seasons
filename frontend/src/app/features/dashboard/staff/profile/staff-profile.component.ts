@@ -34,7 +34,7 @@ import { StaffService } from '../../../../core/services/staff.service';
               </div>
 
               <div class="profile-item">
-                <div class="profile-label">Staff Code</div>
+                <div class="profile-label">Staff ID</div>
                 <div class="profile-value">{{ profileData.staffCode }}</div>
               </div>
             </div>
