@@ -10,7 +10,7 @@ class DrillParticipant extends Model
 {
     protected $fillable = [
         'drill_id',
-        'student_id',
+        'user_id',
         'role',
         'status',
         'injury_simulation',
@@ -35,9 +35,14 @@ class DrillParticipant extends Model
         return $this->belongsTo(EmergencyDrill::class, 'drill_id');
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
+    }
+
     public function student(): BelongsTo
     {
-        return $this->belongsTo(Student::class, 'student_id', 'student_id');
+        return $this->belongsTo(Student::class, 'user_id', 'user_id');
     }
 
     public function rescuer(): BelongsTo

@@ -122,15 +122,48 @@ import { DrillDashboard, EmergencyDrill } from '../../../../core/models/emergenc
       <div class="modal" *ngIf="showScanModal" (click)="closeScanModal($event)">
         <div class="modal-content" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h3>Manual Student Scan</h3>
+            <h3>Manual Scan</h3>
             <button class="close-btn" (click)="showScanModal = false">&times;</button>
           </div>
           
           <div class="modal-body">
             <div class="form-group">
-              <label>Student ID *</label>
-              <input type="number" [(ngModel)]="scanData.student_id" 
-                     class="form-control" placeholder="Enter student ID">
+              <label>User ID or Student Number *</label>
+              <div class="search-container">
+                <input type="text" [(ngModel)]="scanData.user_id" 
+                       class="form-control" 
+                       placeholder="Enter User ID or Student Number"
+                       (input)="onSearchInput($event)"
+                       (focus)="onSearchFocus()"
+                       (blur)="onSearchBlur()">
+                
+                <!-- Search Results Dropdown -->
+                <div class="search-results" *ngIf="showSearchResults && searchResults.length > 0">
+                  <div class="search-result-item" 
+                       *ngFor="let result of searchResults"
+                       (click)="selectSearchResult(result)"
+                       [class.is-participant]="result.is_participant">
+                    <div class="result-main">
+                      <span class="result-name">{{ result.display_text }}</span>
+                      <span class="result-role">{{ result.role }}</span>
+                    </div>
+                    <div class="result-status" *ngIf="result.is_participant">
+                      <i class="fas fa-check-circle"></i> Participant
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Loading indicator -->
+                <div class="search-loading" *ngIf="searchLoading">
+                  <i class="fas fa-spinner fa-spin"></i> Searching...
+                </div>
+                
+                <!-- No results -->
+                <div class="search-no-results" *ngIf="showSearchResults && searchResults.length === 0 && !searchLoading && scanData.user_id && scanData.user_id.toString().length >= 2">
+                  No users found matching "{{ scanData.user_id }}"
+                </div>
+              </div>
+              <small class="form-text">Enter either a User ID (short number) or Student Number (long number)</small>
             </div>
             
             <div class="form-group">
@@ -144,9 +177,9 @@ import { DrillDashboard, EmergencyDrill } from '../../../../core/models/emergenc
                 Cancel
               </button>
               <button type="button" class="btn btn-primary" 
-                      (click)="performManualScan()" [disabled]="!scanData.student_id || scanning">
+                      (click)="performManualScan()" [disabled]="!scanData.user_id || scanning">
                 <i class="fas fa-spinner fa-spin" *ngIf="scanning"></i>
-                {{ scanning ? 'Scanning...' : 'Scan Student' }}
+                {{ scanning ? 'Scanning...' : 'Scan User' }}
               </button>
             </div>
           </div>
@@ -420,6 +453,117 @@ import { DrillDashboard, EmergencyDrill } from '../../../../core/models/emergenc
       font-size: 14px;
     }
 
+    .form-text {
+      color: #666;
+      font-size: 12px;
+      margin-top: 5px;
+      display: block;
+    }
+
+    .search-container {
+      position: relative;
+    }
+
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1001;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .search-result-item {
+      padding: 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.2s;
+    }
+
+    .search-result-item:hover {
+      background: #f8f9fa;
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-result-item.is-participant {
+      background: #e8f5e8;
+    }
+
+    .search-result-item.is-participant:hover {
+      background: #d4edda;
+    }
+
+    .result-main {
+      flex: 1;
+    }
+
+    .result-name {
+      display: block;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .result-role {
+      font-size: 12px;
+      color: #666;
+      text-transform: capitalize;
+    }
+
+    .result-status {
+      color: #28a745;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .result-status i {
+      margin-right: 4px;
+    }
+
+    .search-loading {
+      padding: 12px;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 1001;
+    }
+
+    .search-no-results {
+      padding: 12px;
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 1001;
+    }
+
     .modal-actions {
       display: flex;
       gap: 10px;
@@ -458,9 +602,12 @@ export class DrillDashboardComponent implements OnInit, OnDestroy {
   loading = false;
   showScanModal = false;
   scanning = false;
+  searchResults: any[] = [];
+  showSearchResults = false;
+  searchLoading = false;
   
   scanData = {
-    student_id: null as number | null,
+    user_id: null as number | string | null,
     scan_type: 'manual',
     notes: ''
   };
@@ -549,41 +696,107 @@ export class DrillDashboardComponent implements OnInit, OnDestroy {
   openScanModal() {
     this.showScanModal = true;
     this.scanData = {
-      student_id: null,
+      user_id: null,
       scan_type: 'manual',
       notes: ''
     };
+    this.searchResults = [];
+    this.showSearchResults = false;
   }
 
   closeScanModal(event: Event) {
     if (event.target === event.currentTarget) {
       this.showScanModal = false;
+      this.searchResults = [];
+      this.showSearchResults = false;
     }
   }
 
+  onSearchInput(event: any) {
+    const query = event.target.value;
+    
+    if (query && query.length >= 2) {
+      this.searchLoading = true;
+      this.showSearchResults = true;
+      
+      this.drillService.searchUsers(this.drillId, query).subscribe({
+        next: (response) => {
+          this.searchResults = response.data;
+          this.searchLoading = false;
+        },
+        error: (error) => {
+          console.error('Error searching users:', error);
+          this.searchResults = [];
+          this.searchLoading = false;
+        }
+      });
+    } else {
+      this.searchResults = [];
+      this.showSearchResults = false;
+      this.searchLoading = false;
+    }
+  }
+
+  onSearchFocus() {
+    if (this.scanData.user_id && this.scanData.user_id.toString().length >= 2) {
+      this.showSearchResults = true;
+    }
+  }
+
+  onSearchBlur() {
+    // Delay hiding results to allow clicking on them
+    setTimeout(() => {
+      this.showSearchResults = false;
+    }, 200);
+  }
+
+  selectSearchResult(result: any) {
+    // Use user_id for short numbers, student_number for long numbers
+    if (result.student_number && result.student_number.length > 6) {
+      this.scanData.user_id = result.student_number;
+    } else {
+      this.scanData.user_id = result.user_id;
+    }
+    
+    this.searchResults = [];
+    this.showSearchResults = false;
+  }
+
   performManualScan() {
-    if (!this.scanData.student_id) return;
+    if (!this.scanData.user_id) return;
 
     this.scanning = true;
-    const scanRequest = {
-      student_id: this.scanData.student_id,
+    
+    // Check if the input looks like a student number (long number) or user ID (short number)
+    const inputValue = this.scanData.user_id;
+    let scanRequest: any = {
       scan_type: this.scanData.scan_type,
       notes: this.scanData.notes
     };
+    
+    // If it's a long number (like 136883100330), treat it as student_number
+    // If it's a short number (like 76), treat it as user_id
+    if (inputValue.toString().length > 6) {
+      scanRequest.student_number = inputValue.toString();
+    } else {
+      scanRequest.user_id = parseInt(inputValue.toString());
+    }
     
     this.drillService.scanParticipant(this.drillId, scanRequest).subscribe({
       next: (response) => {
         this.showScanModal = false;
         this.scanning = false;
+        this.searchResults = [];
+        this.showSearchResults = false;
         this.loadDashboardData();
         
         // Show success message
-        alert(`Student scanned successfully! Response time: ${response.data.response_time} seconds`);
+        alert(`User scanned successfully! Response time: ${response.data.response_time} seconds`);
       },
       error: (error) => {
         console.error('Error scanning student:', error);
         this.scanning = false;
-        alert('Error scanning student: ' + (error.error?.message || 'Unknown error'));
+        alert('Error scanning user: ' + (error.error?.message || 'Unknown error'));
       }
     });
   }

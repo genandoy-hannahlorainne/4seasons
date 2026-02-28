@@ -35,13 +35,45 @@ import { EmergencyDrillService } from '../../../../core/services/emergency-drill
 
       <!-- Manual Input -->
       <div class="manual-input-section">
-        <h3>Manual Student ID Entry</h3>
+        <h3>Manual Entry</h3>
+        <p class="input-help">Enter either a User ID (short number) or Student Number (long number)</p>
         <div class="input-group">
-          <input type="number" 
-                 [(ngModel)]="manualStudentId" 
-                 class="form-control" 
-                 placeholder="Enter Student ID"
-                 (keyup.enter)="scanManualId()">
+          <div class="search-container">
+            <input type="text" 
+                   [(ngModel)]="manualStudentId" 
+                   class="form-control" 
+                   placeholder="Enter User ID or Student Number"
+                   (input)="onSearchInput($event)"
+                   (focus)="onSearchFocus()"
+                   (blur)="onSearchBlur()"
+                   (keyup.enter)="scanManualId()">
+            
+            <!-- Search Results Dropdown -->
+            <div class="search-results" *ngIf="showSearchResults && searchResults.length > 0">
+              <div class="search-result-item" 
+                   *ngFor="let result of searchResults"
+                   (click)="selectSearchResult(result)"
+                   [class.is-participant]="result.is_participant">
+                <div class="result-main">
+                  <span class="result-name">{{ result.display_text }}</span>
+                  <span class="result-role">{{ result.role }}</span>
+                </div>
+                <div class="result-status" *ngIf="result.is_participant">
+                  <i class="fas fa-check-circle"></i> Participant
+                </div>
+              </div>
+            </div>
+            
+            <!-- Loading indicator -->
+            <div class="search-loading" *ngIf="searchLoading">
+              <i class="fas fa-spinner fa-spin"></i> Searching...
+            </div>
+            
+            <!-- No results -->
+            <div class="search-no-results" *ngIf="showSearchResults && searchResults.length === 0 && !searchLoading && manualStudentId && manualStudentId.toString().length >= 2">
+              No users found matching "{{ manualStudentId }}"
+            </div>
+          </div>
           <button class="btn btn-secondary" (click)="scanManualId()" [disabled]="!manualStudentId">
             <i class="fas fa-user-check"></i> Scan
           </button>
@@ -153,8 +185,15 @@ import { EmergencyDrillService } from '../../../../core/services/emergency-drill
     }
 
     .manual-input-section h3 {
-      margin: 0 0 15px 0;
+      margin: 0 0 10px 0;
       color: #333;
+    }
+
+    .input-help {
+      margin: 0 0 15px 0;
+      color: #666;
+      font-size: 14px;
+      font-style: italic;
     }
 
     .input-group {
@@ -164,6 +203,111 @@ import { EmergencyDrillService } from '../../../../core/services/emergency-drill
 
     .input-group input {
       flex: 1;
+    }
+
+    .search-container {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1001;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .search-result-item {
+      padding: 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.2s;
+    }
+
+    .search-result-item:hover {
+      background: #f8f9fa;
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-result-item.is-participant {
+      background: #e8f5e8;
+    }
+
+    .search-result-item.is-participant:hover {
+      background: #d4edda;
+    }
+
+    .result-main {
+      flex: 1;
+    }
+
+    .result-name {
+      display: block;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .result-role {
+      font-size: 12px;
+      color: #666;
+      text-transform: capitalize;
+    }
+
+    .result-status {
+      color: #28a745;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .result-status i {
+      margin-right: 4px;
+    }
+
+    .search-loading {
+      padding: 12px;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 1001;
+    }
+
+    .search-no-results {
+      padding: 12px;
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 1001;
     }
 
     .recent-scans {
@@ -320,7 +464,10 @@ export class QrScannerComponent implements OnInit, OnDestroy {
   drillName = '';
   scannerActive = false;
   scannedCount = 0;
-  manualStudentId: number | null = null;
+  manualStudentId: number | string | null = null;
+  searchResults: any[] = [];
+  showSearchResults = false;
+  searchLoading = false;
   
   recentScans: any[] = [];
   successMessage = '';
@@ -394,43 +541,103 @@ export class QrScannerComponent implements OnInit, OnDestroy {
   }
 
   onScanSuccess(decodedText: string) {
-    // Extract student ID from QR code
-    // Assuming QR code contains student ID or student data
-    let studentId: number;
+    // Extract user ID from QR code
+    // Assuming QR code contains user ID or user data
+    let userId: number;
     
     try {
-      // Try to parse as JSON first (if QR contains student data)
-      const studentData = JSON.parse(decodedText);
-      studentId = studentData.student_id || studentData.id;
+      // Try to parse as JSON first (if QR contains user data)
+      const userData = JSON.parse(decodedText);
+      userId = userData.user_id || userData.id;
     } catch {
-      // If not JSON, assume it's just the student ID
-      studentId = parseInt(decodedText);
+      // If not JSON, assume it's just the user ID
+      userId = parseInt(decodedText);
     }
 
-    if (isNaN(studentId)) {
-      this.showError('Invalid QR code - could not extract student ID');
+    if (isNaN(userId)) {
+      this.showError('Invalid QR code - could not extract user ID');
       return;
     }
 
-    this.scanStudent(studentId);
+    this.scanUser(userId);
   }
 
   scanManualId() {
     if (!this.manualStudentId) {
-      this.showError('Please enter a student ID');
+      this.showError('Please enter a user ID');
       return;
     }
 
-    this.scanStudent(this.manualStudentId);
+    this.scanUser(this.manualStudentId);
     this.manualStudentId = null;
+    this.searchResults = [];
+    this.showSearchResults = false;
   }
 
-  scanStudent(studentId: number) {
-    const scanData = {
-      student_id: studentId,
+  onSearchInput(event: any) {
+    const query = event.target.value;
+    
+    if (query && query.length >= 2) {
+      this.searchLoading = true;
+      this.showSearchResults = true;
+      
+      this.drillService.searchUsers(this.drillId, query).subscribe({
+        next: (response) => {
+          this.searchResults = response.data;
+          this.searchLoading = false;
+        },
+        error: (error) => {
+          console.error('Error searching users:', error);
+          this.searchResults = [];
+          this.searchLoading = false;
+        }
+      });
+    } else {
+      this.searchResults = [];
+      this.showSearchResults = false;
+      this.searchLoading = false;
+    }
+  }
+
+  onSearchFocus() {
+    if (this.manualStudentId && this.manualStudentId.toString().length >= 2) {
+      this.showSearchResults = true;
+    }
+  }
+
+  onSearchBlur() {
+    // Delay hiding results to allow clicking on them
+    setTimeout(() => {
+      this.showSearchResults = false;
+    }, 200);
+  }
+
+  selectSearchResult(result: any) {
+    // Use user_id for short numbers, student_number for long numbers
+    if (result.student_number && result.student_number.length > 6) {
+      this.manualStudentId = result.student_number;
+    } else {
+      this.manualStudentId = result.user_id;
+    }
+    
+    this.searchResults = [];
+    this.showSearchResults = false;
+  }
+
+  scanUser(userId: number | string) {
+    // Check if the input looks like a student number (long number) or user ID (short number)
+    let scanData: any = {
       scan_type: this.scannerActive ? 'qr' : 'manual',
       notes: `Scanned via ${this.scannerActive ? 'QR scanner' : 'manual entry'}`
     };
+    
+    // If it's a long number (like 136883100330), treat it as student_number
+    // If it's a short number (like 76), treat it as user_id
+    if (userId.toString().length > 6) {
+      scanData.student_number = userId.toString();
+    } else {
+      scanData.user_id = parseInt(userId.toString());
+    }
 
     this.drillService.scanParticipant(this.drillId, scanData).subscribe({
       next: (response) => {
@@ -438,11 +645,11 @@ export class QrScannerComponent implements OnInit, OnDestroy {
         const participant = response.data.participant;
         const responseTime = response.data.response_time;
 
-        this.showSuccess(`Student ${participant.student?.full_name || (participant.student?.first_name + ' ' + (participant.student?.last_name || '')) || 'Unknown'} scanned successfully! Response time: ${responseTime}s`);
+        this.showSuccess(`User ${participant.user?.full_name || (participant.student?.first_name + ' ' + (participant.student?.last_name || '')) || 'Unknown'} scanned successfully! Response time: ${responseTime}s`);
         
         // Add to recent scans
         this.recentScans.unshift({
-          student_name: participant.student?.full_name || (participant.student?.first_name + ' ' + (participant.student?.last_name || '')) || 'Unknown Student',
+          student_name: participant.user?.full_name || (participant.student?.first_name + ' ' + (participant.student?.last_name || '')) || 'Unknown User',
           scan_time: new Date(),
           response_time: responseTime
         });
@@ -455,8 +662,8 @@ export class QrScannerComponent implements OnInit, OnDestroy {
         this.scannedCount++;
       },
       error: (error) => {
-        console.error('Error scanning student:', error);
-        this.showError(error.error?.message || 'Failed to scan student');
+        console.error('Error scanning user:', error);
+        this.showError(error.error?.message || 'Failed to scan user');
       }
     });
   }

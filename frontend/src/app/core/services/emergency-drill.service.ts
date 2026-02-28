@@ -66,4 +66,11 @@ export class EmergencyDrillService {
   getDrillDashboard(id: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}/dashboard`);
   }
+
+  // Search users for scanning
+  searchUsers(id: number, query: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${id}/search-users`, { 
+      params: { q: query } 
+    });
+  }
 }

@@ -7,5 +7,14 @@
     "pathRewrite": {
       "^/api": "/api"
     }
+  },
+  "/backend": {
+    "target": "http://localhost",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/backend": "/4seasons/backend"
+    }
   }
 }

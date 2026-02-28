@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { EmergencyDrillService } from '../../../../core/services/emergency-drill.service';
 import { StudentService } from '../../../../core/services/student.service';
 import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emergency-drill.model';
@@ -89,11 +90,12 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
                [class.rescued]="participant.status === 'rescued'">
             
             <div class="participant-info">
-              <div class="student-name">{{ participant.student?.full_name || (participant.student?.first_name + ' ' + (participant.student?.last_name || '')) || 'Unknown Student' }}</div>
+              <div class="student-name">{{ participant.user?.full_name || (participant.student?.first_name + ' ' + (participant.student?.last_name || '')) || 'Unknown User' }}</div>
               <div class="student-details">
-                <span>ID: {{ participant.student?.student_number }}</span>
-                <span>Grade: {{ participant.student?.current_section?.grade_level?.grade_name || participant.student?.grade_level }}</span>
-                <span>Section: {{ participant.student?.current_section?.section_name || participant.student?.section }}</span>
+                <span>Role: {{ participant.user?.role_name || 'Unknown' }}</span>
+                <span *ngIf="participant.student">ID: {{ participant.student?.student_number }}</span>
+                <span *ngIf="participant.student">Grade: {{ participant.student?.current_section?.grade_level?.grade_name || participant.student?.grade_level }}</span>
+                <span *ngIf="participant.student">Section: {{ participant.student?.current_section?.section_name || participant.student?.section }}</span>
               </div>
             </div>
 
@@ -180,8 +182,14 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
               <input type="text" 
                      [(ngModel)]="searchTerm" 
                      (input)="searchStudents()"
+                     (keyup)="searchStudents()"
                      class="form-control" 
-                     placeholder="Search students by name or ID...">
+                     placeholder="Search users by name, ID, or username..."
+                     [disabled]="searchLoading">
+              <small class="search-help">Search for students, advisers, clinic staff, or admin users</small>
+              <div class="search-loading" *ngIf="searchLoading">
+                <i class="fas fa-spinner fa-spin"></i> Searching...
+              </div>
             </div>
 
             <!-- Available Students -->
@@ -189,31 +197,33 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
               <div class="student-item" 
                    *ngFor="let student of availableStudents"
                    (click)="selectStudent(student)"
-                   [class.selected]="isStudentSelected(student.student_id)">
+                   [class.selected]="isStudentSelected(student.user_id)">
                 
                 <div class="student-info">
                   <div class="student-name">{{ student.full_name || (student.first_name + ' ' + (student.last_name || '')) }}</div>
                   <div class="student-details">
-                    ID: {{ student.student_number }} | 
-                    Grade: {{ student.current_section?.grade_level?.grade_name || student.grade_level }} | 
-                    Section: {{ student.current_section?.section_name || student.section }}
+                    Role: {{ student.role_name }} | 
+                    <span *ngIf="student.student_number">ID: {{ student.student_number }} | </span>
+                    <span *ngIf="student.grade_level">Grade: {{ student.current_section?.grade_level?.grade_name || student.grade_level }} | </span>
+                    <span *ngIf="student.section">Section: {{ student.current_section?.section_name || student.section }}</span>
+                    <span *ngIf="student.username && !student.student_number">Username: {{ student.username }}</span>
                   </div>
                 </div>
                 
-                <div class="student-actions" *ngIf="isStudentSelected(student.student_id)">
-                  <select [(ngModel)]="getSelectedStudent(student.student_id).role" class="form-control">
+                <div class="student-actions" *ngIf="isStudentSelected(student.user_id)">
+                  <select [(ngModel)]="getSelectedStudent(student.user_id).role" class="form-control">
                     <option value="injured">Injured</option>
                     <option value="rescuer">Rescuer</option>
                     <option value="evacuee">Evacuee</option>
                     <option value="observer">Observer</option>
                   </select>
                   
-                  <div *ngIf="getSelectedStudent(student.student_id).role === 'injured'" class="injury-details">
+                  <div *ngIf="getSelectedStudent(student.user_id).role === 'injured'" class="injury-details">
                     <input type="text" 
-                           [(ngModel)]="getSelectedStudent(student.student_id).injury_simulation"
+                           [(ngModel)]="getSelectedStudent(student.user_id).injury_simulation"
                            class="form-control" 
                            placeholder="Injury simulation">
-                    <select [(ngModel)]="getSelectedStudent(student.student_id).severity" class="form-control">
+                    <select [(ngModel)]="getSelectedStudent(student.user_id).severity" class="form-control">
                       <option value="minor">Minor</option>
                       <option value="moderate">Moderate</option>
                       <option value="severe">Severe</option>
@@ -222,6 +232,18 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
                   </div>
                 </div>
               </div>
+            </div>
+
+            <!-- No Results -->
+            <div class="no-results" *ngIf="searchTerm.length >= 2 && availableStudents.length === 0">
+              <p>No users found matching "{{ searchTerm }}"</p>
+              <p><small>Try searching by name, username, email, or student number</small></p>
+            </div>
+
+            <!-- Search Instructions -->
+            <div class="search-instructions" *ngIf="searchTerm.length < 2">
+              <p>Type at least 2 characters to search for users...</p>
+              <p><small>You can search for students, advisers, clinic staff, or admin users</small></p>
             </div>
 
             <div class="modal-actions">
@@ -506,11 +528,41 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
       margin-bottom: 20px;
     }
 
+    .search-help {
+      display: block;
+      margin-top: 5px;
+      color: #666;
+      font-size: 12px;
+    }
+
+    .search-loading {
+      margin-top: 10px;
+      color: #007bff;
+      font-size: 14px;
+    }
+
     .students-list {
       max-height: 400px;
       overflow-y: auto;
       border: 1px solid #ddd;
       border-radius: 4px;
+    }
+
+    .no-results, .search-instructions {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      background: #f9f9f9;
+    }
+
+    .no-results p, .search-instructions p {
+      margin: 5px 0;
+    }
+
+    .no-results small, .search-instructions small {
+      color: #999;
     }
 
     .student-item {
@@ -593,6 +645,7 @@ export class DrillDetailComponent implements OnInit {
   loading = false;
   showAddParticipants = false;
   adding = false;
+  searchLoading = false;
   
   searchTerm = '';
   availableStudents: any[] = [];
@@ -603,6 +656,7 @@ export class DrillDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private http: HttpClient,
     private drillService: EmergencyDrillService,
     private studentService: StudentService
   ) {}
@@ -662,28 +716,67 @@ export class DrillDetailComponent implements OnInit {
   }
 
   searchStudents() {
+    console.log('🔍 Searching for:', this.searchTerm);
+    
     if (this.searchTerm.length >= 2) {
-      this.studentService.getAll({ search: this.searchTerm }).subscribe({
+      this.searchLoading = true;
+      
+      // Search all users (students, advisers, staff, admin)
+      this.http.get<any>('/backend/api/get-all-users.php').subscribe({
         next: (response: any) => {
-          this.availableStudents = response || [];
+          console.log('📡 API Response:', response);
+          this.searchLoading = false;
+          
+          if (response.success) {
+            // Flatten all user types into a single array
+            const allUsers = [
+              ...(response.users.student || []),
+              ...(response.users.adviser || []),
+              ...(response.users.clinic_staff || []),
+              ...(response.users.admin || [])
+            ];
+            
+            console.log('👥 All users found:', allUsers.length);
+            
+            // Filter by search term
+            this.availableStudents = allUsers.filter((user: any) => {
+              const searchLower = this.searchTerm.toLowerCase();
+              return (
+                user.full_name?.toLowerCase().includes(searchLower) ||
+                user.username?.toLowerCase().includes(searchLower) ||
+                user.email?.toLowerCase().includes(searchLower) ||
+                user.student_number?.includes(this.searchTerm) ||
+                (user.first_name + ' ' + (user.last_name || '')).toLowerCase().includes(searchLower)
+              );
+            });
+            
+            console.log('🎯 Filtered users:', this.availableStudents.length);
+          } else {
+            console.error('❌ API returned error:', response);
+            this.availableStudents = [];
+          }
         },
         error: (error: any) => {
-          console.error('Error searching students:', error);
+          console.error('❌ Error searching users:', error);
+          this.searchLoading = false;
+          this.availableStudents = [];
         }
       });
     } else {
       this.availableStudents = [];
+      this.searchLoading = false;
+      console.log('⏳ Search term too short, cleared results');
     }
   }
 
   selectStudent(student: any) {
-    const existingIndex = this.selectedStudents.findIndex(s => s.student_id === student.student_id);
+    const existingIndex = this.selectedStudents.findIndex(s => s.user_id === student.user_id);
     
     if (existingIndex >= 0) {
       this.selectedStudents.splice(existingIndex, 1);
     } else {
       this.selectedStudents.push({
-        student_id: student.student_id,
+        user_id: student.user_id,
         role: 'evacuee',
         injury_simulation: '',
         severity: 'minor'
@@ -691,12 +784,12 @@ export class DrillDetailComponent implements OnInit {
     }
   }
 
-  isStudentSelected(studentId: number): boolean {
-    return this.selectedStudents.some(s => s.student_id === studentId);
+  isStudentSelected(userId: number): boolean {
+    return this.selectedStudents.some(s => s.user_id === userId);
   }
 
-  getSelectedStudent(studentId: number): any {
-    return this.selectedStudents.find(s => s.student_id === studentId) || {};
+  getSelectedStudent(userId: number): any {
+    return this.selectedStudents.find(s => s.user_id === userId) || {};
   }
 
   addSelectedParticipants() {

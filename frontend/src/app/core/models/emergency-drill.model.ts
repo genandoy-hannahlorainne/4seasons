@@ -21,7 +21,7 @@ export interface EmergencyDrill {
 export interface DrillParticipant {
   id: number;
   drill_id: number;
-  student_id: number;
+  user_id: number;
   role: 'injured' | 'rescuer' | 'observer' | 'evacuee';
   status: 'assigned' | 'scanned' | 'rescued';
   injury_simulation?: string;
@@ -32,6 +32,7 @@ export interface DrillParticipant {
   response_time_seconds?: number;
   rescuer_id?: number;
   scan_history?: any[];
+  user?: any;
   student?: any;
   rescuer?: any;
 }
@@ -87,7 +88,7 @@ export interface CreateDrillRequest {
 
 export interface AddParticipantsRequest {
   participants: {
-    student_id: number;
+    user_id: number;
     role: string;
     injury_simulation?: string;
     severity?: string;
@@ -95,7 +96,8 @@ export interface AddParticipantsRequest {
 }
 
 export interface ScanParticipantRequest {
-  student_id: number;
+  user_id?: number;
+  student_number?: string;
   scan_type?: string;
   location?: any;
   notes?: string;

@@ -83,9 +83,11 @@ class EmergencyDrillController extends BaseController
         try {
             $drill = EmergencyDrill::with([
                 'creator',
+                'participants.user.role',
                 'participants.student.currentSection.gradeLevel',
                 'participants.rescuer',
                 'scans.scanner',
+                'scans.participant.user',
                 'scans.participant.student'
             ])->findOrFail($id);
 
@@ -182,7 +184,7 @@ class EmergencyDrillController extends BaseController
         try {
             $validator = Validator::make($request->all(), [
                 'participants' => 'required|array',
-                'participants.*.student_id' => 'required|exists:students,student_id',
+                'participants.*.user_id' => 'required|exists:users,user_id',
                 'participants.*.role' => 'required|in:injured,rescuer,observer,evacuee',
                 'participants.*.injury_simulation' => 'nullable|string',
                 'participants.*.severity' => 'nullable|in:minor,moderate,severe,critical'
@@ -206,7 +208,7 @@ class EmergencyDrillController extends BaseController
                 $participant = DrillParticipant::updateOrCreate(
                     [
                         'drill_id' => $drill->id,
-                        'student_id' => $participantData['student_id']
+                        'user_id' => $participantData['user_id']
                     ],
                     [
                         'role' => $participantData['role'],
@@ -216,7 +218,7 @@ class EmergencyDrillController extends BaseController
                     ]
                 );
 
-                $addedParticipants[] = $participant->load('student');
+                $addedParticipants[] = $participant->load(['user', 'student']);
             }
 
             DB::commit();
@@ -236,7 +238,8 @@ class EmergencyDrillController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'student_id' => 'required|exists:students,student_id',
+                'user_id' => 'nullable|integer',
+                'student_number' => 'nullable|string',
                 'scan_type' => 'nullable|string|in:qr,manual,nfc',
                 'location' => 'nullable|array',
                 'notes' => 'nullable|string'
@@ -246,19 +249,37 @@ class EmergencyDrillController extends BaseController
                 return $this->sendError('Validation Error', $validator->errors()->first());
             }
 
+            // Must provide either user_id or student_number
+            if (!$request->user_id && !$request->student_number) {
+                return $this->sendError('Validation Error', 'Either user_id or student_number is required');
+            }
+
             $drill = EmergencyDrill::findOrFail($id);
 
             if (!$drill->isActive()) {
                 return $this->sendError('Cannot scan', 'Drill is not active');
             }
 
-            // Find the participant
-            $participant = DrillParticipant::where('drill_id', $drill->id)
-                ->where('student_id', $request->student_id)
-                ->first();
+            // Find the participant by user_id or student_number
+            $participant = null;
+            
+            if ($request->user_id) {
+                // Search by user_id directly
+                $participant = DrillParticipant::where('drill_id', $drill->id)
+                    ->where('user_id', $request->user_id)
+                    ->first();
+            } elseif ($request->student_number) {
+                // Search by student_number - need to find user_id first
+                $student = \App\Models\Student::where('student_number', $request->student_number)->first();
+                if ($student) {
+                    $participant = DrillParticipant::where('drill_id', $drill->id)
+                        ->where('user_id', $student->user_id)
+                        ->first();
+                }
+            }
 
             if (!$participant) {
-                return $this->sendError('Participant not found', 'Student is not part of this drill');
+                return $this->sendError('Participant not found', 'User is not part of this drill or student number not found');
             }
 
             DB::beginTransaction();
@@ -296,8 +317,8 @@ class EmergencyDrillController extends BaseController
             $this->sendSimulatedNotification($participant, $scan);
 
             return $this->sendResponse([
-                'scan' => $scan->load(['participant.student', 'scanner']),
-                'participant' => $participant->fresh()->load('student'),
+                'scan' => $scan->load(['participant.user', 'participant.student', 'scanner']),
+                'participant' => $participant->fresh()->load(['user', 'student']),
                 'response_time' => $secondsFromStart
             ], 'Participant scanned successfully');
 
@@ -314,7 +335,9 @@ class EmergencyDrillController extends BaseController
     {
         try {
             $drill = EmergencyDrill::with([
+                'participants.user',
                 'participants.student',
+                'scans.participant.user',
                 'scans.participant.student'
             ])->findOrFail($id);
 
@@ -367,6 +390,60 @@ class EmergencyDrillController extends BaseController
         ];
 
         return $statistics;
+    }
+
+    /**
+     * Search users for scanning (autocomplete)
+     */
+    public function searchUsers(Request $request, $id)
+    {
+        try {
+            $query = $request->get('q', '');
+            
+            if (strlen($query) < 2) {
+                return $this->sendResponse([], 'Query too short');
+            }
+
+            $drill = EmergencyDrill::findOrFail($id);
+
+            // Search in users and students tables
+            $users = User::with(['student', 'role'])
+                ->where(function($q) use ($query) {
+                    $q->where('full_name', 'LIKE', "%{$query}%")
+                      ->orWhere('user_id', 'LIKE', "%{$query}%");
+                })
+                ->orWhereHas('student', function($q) use ($query) {
+                    $q->where('student_number', 'LIKE', "%{$query}%")
+                      ->orWhere('first_name', 'LIKE', "%{$query}%")
+                      ->orWhere('last_name', 'LIKE', "%{$query}%");
+                })
+                ->limit(10)
+                ->get();
+
+            $results = $users->map(function($user) use ($drill) {
+                $student = $user->student;
+                $isParticipant = DrillParticipant::where('drill_id', $drill->id)
+                    ->where('user_id', $user->user_id)
+                    ->exists();
+
+                return [
+                    'user_id' => $user->user_id,
+                    'full_name' => $user->full_name,
+                    'student_number' => $student ? $student->student_number : null,
+                    'student_name' => $student ? "{$student->first_name} {$student->last_name}" : null,
+                    'role' => $user->role->role_name ?? 'Unknown',
+                    'is_participant' => $isParticipant,
+                    'display_text' => $student 
+                        ? "{$student->first_name} {$student->last_name} ({$student->student_number})"
+                        : "{$user->full_name} (ID: {$user->user_id})"
+                ];
+            });
+
+            return $this->sendResponse($results, 'Users found');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to search users', $e->getMessage());
+        }
     }
 
     /**

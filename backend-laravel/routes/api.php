@@ -114,4 +114,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/emergency-drills/{id}/participants', [\App\Http\Controllers\Api\EmergencyDrillController::class, 'addParticipants']);
     Route::post('/emergency-drills/{id}/scan', [\App\Http\Controllers\Api\EmergencyDrillController::class, 'scanParticipant']);
     Route::get('/emergency-drills/{id}/dashboard', [\App\Http\Controllers\Api\EmergencyDrillController::class, 'dashboard']);
+    Route::get('/emergency-drills/{id}/search-users', [\App\Http\Controllers\Api\EmergencyDrillController::class, 'searchUsers']);
 });
