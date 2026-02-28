@@ -29,7 +29,6 @@ export class StudentMedicalProfileComponent implements OnInit {
 
   vitalsHistory: any[] = [];
   diagnoses: any[] = [];
-  immunizations: any[] = [];
   allergies: any[] = [];
 
   constructor(
@@ -76,7 +75,6 @@ export class StudentMedicalProfileComponent implements OnInit {
           
           this.vitalsHistory = response.vitals || [];
           this.diagnoses = response.diagnoses || [];
-          this.immunizations = response.immunizations || [];
           this.allergies = response.allergies || [];
           
           console.log('Processed student:', this.student);
@@ -87,7 +85,6 @@ export class StudentMedicalProfileComponent implements OnInit {
           this.hasMedicalRecord = 
             this.vitalsHistory.length > 0 ||
             this.diagnoses.length > 0 ||
-            this.immunizations.length > 0 ||
             this.allergies.length > 0;
             
           console.log('Has medical record:', this.hasMedicalRecord);

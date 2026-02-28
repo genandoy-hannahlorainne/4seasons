@@ -171,36 +171,6 @@ try {
     error_log("Treatments found: " . count($treatments));
     error_log("Medications found: " . count($medications));
     
-    // Get immunizations (if table exists)
-    $immunizations = [];
-    try {
-        $immunizationQuery = "SELECT i.immunization_id, i.vaccine_name, i.date_administered, 
-                                     i.administered_by
-                              FROM immunizations i
-                              WHERE i.student_id = :student_id
-                              ORDER BY i.date_administered DESC
-                              LIMIT 20";
-        
-        $immunizationStmt = $db->prepare($immunizationQuery);
-        $immunizationStmt->bindParam(':student_id', $student_id, PDO::PARAM_INT);
-        $immunizationStmt->execute();
-        
-        while ($row = $immunizationStmt->fetch(PDO::FETCH_ASSOC)) {
-            $immunizations[] = [
-                'immunization_id' => intval($row['immunization_id']),
-                'vaccine' => $row['vaccine_name'],
-                'date' => date('M d, Y', strtotime($row['date_administered'])),
-                'dose' => '',
-                'administeredBy' => $row['administered_by']
-            ];
-        }
-        
-        error_log("Immunizations found: " . count($immunizations));
-    } catch (PDOException $e) {
-        error_log("Immunizations table not found or error: " . $e->getMessage());
-        $immunizations = [];
-    }
-    
     // Get allergies
     $allergyQuery = "SELECT a.allergy_id, a.allergy_text, a.severity
                      FROM allergies a
@@ -229,7 +199,6 @@ try {
         'diagnoses_count' => count($diagnoses),
         'treatments_count' => count($treatments),
         'medications_count' => count($medications),
-        'immunizations_count' => count($immunizations),
         'allergies_count' => count($allergies)
     ]));
     
@@ -242,7 +211,6 @@ try {
         'diagnoses' => $diagnoses,
         'treatments' => $treatments,
         'medications' => $medications,
-        'immunizations' => $immunizations,
         'allergies' => $allergies
     ]);
 

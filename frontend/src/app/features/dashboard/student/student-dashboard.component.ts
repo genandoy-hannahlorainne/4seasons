@@ -211,15 +211,6 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   }
 
-  getImmunizationStatus(dateString: string): string {
-    if (!dateString) return 'Unknown';
-    const date = new Date(dateString);
-    const now = new Date();
-    const yearsDiff = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24 * 365);
-    
-    return yearsDiff > 2 ? 'Outdated' : 'Updated';
-  }
-
   getActivityTypeClass(type: string): string {
     switch (type.toLowerCase()) {
       case 'emergency': return 'activity-emergency';

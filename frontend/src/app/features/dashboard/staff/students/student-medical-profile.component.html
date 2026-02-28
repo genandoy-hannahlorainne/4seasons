@@ -57,7 +57,7 @@
   <div class="profile-tabs" *ngIf="!loading && !error">
     <button class="tab" [class.active]="activeTab === 'vitals'" (click)="activeTab = 'vitals'">Vitals History</button>
     <button class="tab" [class.active]="activeTab === 'diagnoses'" (click)="activeTab = 'diagnoses'">Diagnoses</button>
-    <button class="tab" [class.active]="activeTab === 'immunizations'" (click)="activeTab = 'immunizations'">Immunizations</button>
+    <button class="tab" [class.active]="activeTab === 'allergies'" (click)="activeTab = 'allergies'">Allergies</button>
   </div>
 
   <!-- Tab Content -->
@@ -114,32 +114,20 @@
       </div>
     </div>
 
-    <!-- Immunizations -->
-    <div *ngIf="activeTab === 'immunizations'" class="content-section">
+    <!-- Allergies -->
+    <div *ngIf="activeTab === 'allergies'" class="content-section">
       <div class="section-header">
-        <h3>Immunizations</h3>
+        <h3>Allergies</h3>
       </div>
-      <div class="empty-state" *ngIf="immunizations.length === 0">
-        <p>No immunization records yet</p>
+      <div class="empty-state" *ngIf="allergies.length === 0">
+        <p>No known allergies</p>
       </div>
-      <table class="data-table" *ngIf="immunizations.length > 0">
-        <thead>
-          <tr>
-            <th>Vaccine</th>
-            <th>Date Administered</th>
-            <th>Dose</th>
-            <th>Administered By</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let imm of immunizations">
-            <td>{{ imm.vaccine }}</td>
-            <td>{{ imm.date }}</td>
-            <td>{{ imm.dose }}</td>
-            <td>{{ imm.administeredBy }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="allergies-list" *ngIf="allergies.length > 0">
+        <div *ngFor="let allergy of allergies" class="allergy-item">
+          <span class="allergy-name">{{ allergy.allergy_name }}</span>
+          <span class="allergy-severity" [class]="'severity-' + allergy.severity">{{ allergy.severity }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>

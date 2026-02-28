@@ -187,29 +187,6 @@ try {
     $recentVisitsStmt->execute();
     $recentVisits = $recentVisitsStmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Get immunizations from the immunizations table (keeping for compatibility)
-    $immunizationsQuery = "SELECT 
-                              immunization_id,
-                              vaccine_name,
-                              date_administered,
-                              administered_by,
-                              notes
-                           FROM immunizations
-                           WHERE student_id = :student_id
-                           ORDER BY date_administered DESC";
-    
-    $immunizationsStmt = $db->prepare($immunizationsQuery);
-    $immunizationsStmt->bindParam(":student_id", $student_id);
-    
-    try {
-        $immunizationsStmt->execute();
-        $immunizations = $immunizationsStmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        // Table might not exist, use empty array
-        error_log("Immunizations table error: " . $e->getMessage());
-        $immunizations = [];
-    }
-    
     // Get medical history
     $medicalHistoryQuery = "SELECT 
                               allergy_medicine,
@@ -357,15 +334,6 @@ try {
                     'status' => $visit['status']
                 ];
             }, $recentVisits),
-            'immunizations' => array_map(function($imm) {
-                return [
-                    'immunization_id' => (int)$imm['immunization_id'],
-                    'vaccine_name' => $imm['vaccine_name'],
-                    'date_administered' => $imm['date_administered'],
-                    'administered_by' => $imm['administered_by'],
-                    'notes' => $imm['notes']
-                ];
-            }, $immunizations),
             'medical_history' => $medicalHistory,
             'last_visit' => $lastVisit ? [
                 'visit_datetime' => $lastVisit['visit_datetime'],

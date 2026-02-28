@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 16, 2026 at 05:48 PM
+-- Generation Time: Feb 28, 2026 at 08:16 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -1648,7 +1648,105 @@ INSERT INTO `activity_logs` (`log_id`, `user_id`, `action`, `details`, `ip_addre
 (2025, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-16 16:46:20'),
 (2026, 32, 'Login', NULL, '::1', '2026-02-16 16:46:38'),
 (2027, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:46:38'),
-(2028, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:46:38');
+(2028, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-16 16:46:38'),
+(2029, 32, 'Login', NULL, '127.0.0.1', '2026-02-27 05:38:16'),
+(2030, 32, 'Login', NULL, '127.0.0.1', '2026-02-27 05:40:23'),
+(2031, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 13:40:25'),
+(2032, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 13:40:25'),
+(2033, 32, 'Login', NULL, '127.0.0.1', '2026-02-27 05:46:15'),
+(2034, 60, 'Login', NULL, '127.0.0.1', '2026-02-27 05:46:16'),
+(2035, 63, 'Login', NULL, '127.0.0.1', '2026-02-27 05:46:17'),
+(2036, 61, 'Login', NULL, '127.0.0.1', '2026-02-27 05:46:18'),
+(2037, 32, 'Login', NULL, '127.0.0.1', '2026-02-27 05:49:30'),
+(2038, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 13:49:31'),
+(2039, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 13:49:31'),
+(2040, 62, 'Login', NULL, '127.0.0.1', '2026-02-27 05:49:54'),
+(2041, 61, 'Login', NULL, '127.0.0.1', '2026-02-27 05:53:41'),
+(2042, 61, 'Login', NULL, '127.0.0.1', '2026-02-27 06:00:43'),
+(2043, 66, 'Login', NULL, '127.0.0.1', '2026-02-27 06:00:58'),
+(2044, 62, 'Login', NULL, '127.0.0.1', '2026-02-27 06:01:27'),
+(2045, 61, 'Login', NULL, '127.0.0.1', '2026-02-27 06:07:27'),
+(2046, 61, 'Login', NULL, '127.0.0.1', '2026-02-27 06:23:26'),
+(2047, 62, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-27 14:26:07'),
+(2048, 62, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-02-27 14:26:25'),
+(2049, 63, 'Login', NULL, '127.0.0.1', '2026-02-27 06:26:49'),
+(2050, 63, 'Login', NULL, '127.0.0.1', '2026-02-27 06:45:29'),
+(2051, 63, 'Login', NULL, '127.0.0.1', '2026-02-27 06:45:57'),
+(2052, 62, 'Login', NULL, '127.0.0.1', '2026-02-27 07:12:32'),
+(2053, 32, 'Login', NULL, '127.0.0.1', '2026-02-27 07:17:27'),
+(2054, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 15:17:30'),
+(2055, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 15:17:30'),
+(2056, 62, 'Login', NULL, '127.0.0.1', '2026-02-27 07:28:29'),
+(2057, 66, 'Login', NULL, '127.0.0.1', '2026-02-27 07:29:14'),
+(2058, 60, 'Login', NULL, '127.0.0.1', '2026-02-27 07:29:45'),
+(2059, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:29:53'),
+(2060, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:29:53'),
+(2061, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:31:18'),
+(2062, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:31:18'),
+(2063, 60, 'Login', NULL, '127.0.0.1', '2026-02-27 07:31:31'),
+(2064, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:31:35'),
+(2065, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:31:35'),
+(2066, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:31:38'),
+(2067, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:31:38'),
+(2068, 63, 'Login', NULL, '127.0.0.1', '2026-02-27 07:32:03'),
+(2069, 60, 'Login', NULL, '127.0.0.1', '2026-02-27 07:33:54'),
+(2070, 66, 'Login', NULL, '127.0.0.1', '2026-02-27 07:34:11'),
+(2071, 32, 'Login', NULL, '127.0.0.1', '2026-02-27 07:39:59'),
+(2072, 60, 'Login', NULL, '127.0.0.1', '2026-02-27 07:47:13'),
+(2073, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:47:20'),
+(2074, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:47:20'),
+(2075, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:47:50'),
+(2076, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:50:59'),
+(2077, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:52:10'),
+(2078, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 15:52:10'),
+(2079, 66, 'Login', NULL, '127.0.0.1', '2026-02-27 07:55:25'),
+(2080, 66, 'Login', NULL, '127.0.0.1', '2026-02-27 08:04:01'),
+(2081, 60, 'Login', NULL, '127.0.0.1', '2026-02-27 08:04:17'),
+(2082, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 16:04:23'),
+(2083, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 16:04:23'),
+(2084, 32, 'Login', NULL, '127.0.0.1', '2026-02-27 08:10:32'),
+(2085, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 16:10:33'),
+(2086, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 16:10:33'),
+(2087, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 16:10:50'),
+(2088, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 16:10:50'),
+(2089, 62, 'Login', NULL, '127.0.0.1', '2026-02-27 08:27:28'),
+(2090, 60, 'Login', NULL, '127.0.0.1', '2026-02-27 08:27:47'),
+(2091, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 16:27:55'),
+(2092, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 16:27:56'),
+(2093, 63, 'Login', NULL, '127.0.0.1', '2026-02-27 08:36:25'),
+(2094, 60, 'Login', NULL, '127.0.0.1', '2026-02-27 08:47:55'),
+(2095, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 16:47:59'),
+(2096, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-27 16:47:59'),
+(2097, 32, 'Login', NULL, '127.0.0.1', '2026-02-27 09:01:54'),
+(2098, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 17:01:54'),
+(2099, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 17:01:54'),
+(2100, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 17:01:56'),
+(2101, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-27 17:01:56'),
+(2102, 62, 'Login', NULL, '127.0.0.1', '2026-02-27 20:09:47'),
+(2103, 60, 'Login', NULL, '127.0.0.1', '2026-02-27 20:10:37'),
+(2104, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 04:10:40'),
+(2105, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 04:10:40'),
+(2106, 63, 'Login', NULL, '127.0.0.1', '2026-02-27 20:11:00'),
+(2107, 32, 'Login', NULL, '127.0.0.1', '2026-02-27 20:12:04'),
+(2108, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-28 04:12:04'),
+(2109, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-28 04:12:04'),
+(2110, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-28 04:12:10'),
+(2111, 32, 'View Users', 'Viewed all users - 6 total', '::1', '2026-02-28 04:12:10'),
+(2112, 62, 'Login', NULL, '127.0.0.1', '2026-02-27 20:48:28'),
+(2113, 60, 'Login', NULL, '127.0.0.1', '2026-02-27 20:50:06'),
+(2114, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 04:50:20'),
+(2115, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 04:50:20'),
+(2116, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 04:57:05'),
+(2117, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 04:57:05'),
+(2118, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 05:23:05'),
+(2119, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 05:23:05'),
+(2120, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 05:27:40'),
+(2121, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 05:27:40'),
+(2122, 60, 'Login', NULL, '127.0.0.1', '2026-02-27 21:38:20'),
+(2123, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 05:43:07'),
+(2124, 60, 'View Notifications', 'Viewed adviser notifications - 2 notifications', '::1', '2026-02-28 05:43:07'),
+(2125, 66, 'Login', NULL, '127.0.0.1', '2026-02-27 21:43:23'),
+(2126, 63, 'Login', NULL, '127.0.0.1', '2026-02-27 21:43:56');
 
 -- --------------------------------------------------------
 
@@ -1718,6 +1816,30 @@ CREATE TABLE `allergies` (
 INSERT INTO `allergies` (`allergy_id`, `student_id`, `allergy_text`, `severity`, `recorded_at`) VALUES
 (15, 22, 'Seafood ', 'Moderate', '2026-02-05'),
 (16, 26, 'Peanuts', 'Mild', '2026-02-16');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cache`
+--
+
+CREATE TABLE `cache` (
+  `key` varchar(255) NOT NULL,
+  `value` mediumtext NOT NULL,
+  `expiration` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cache_locks`
+--
+
+CREATE TABLE `cache_locks` (
+  `key` varchar(255) NOT NULL,
+  `owner` varchar(255) NOT NULL,
+  `expiration` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1839,6 +1961,22 @@ INSERT INTO `email_logs` (`log_id`, `recipient`, `subject`, `priority`, `status`
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `failed_jobs`
+--
+
+CREATE TABLE `failed_jobs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `uuid` varchar(255) NOT NULL,
+  `connection` text NOT NULL,
+  `queue` text NOT NULL,
+  `payload` longtext NOT NULL,
+  `exception` longtext NOT NULL,
+  `failed_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `grade_levels`
 --
 
@@ -1861,6 +1999,41 @@ INSERT INTO `grade_levels` (`id`, `level_number`, `level_name`, `description`, `
 (4, 10, 'Grade 10', 'Fourth Year - Junior High School', '2026-01-15 08:03:58'),
 (5, 11, 'Grade 11', 'First Year - Senior High School', '2026-01-15 08:03:58'),
 (6, 12, 'Grade 12', 'Second Year - Senior High School', '2026-01-15 08:03:58');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `jobs`
+--
+
+CREATE TABLE `jobs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `queue` varchar(255) NOT NULL,
+  `payload` longtext NOT NULL,
+  `attempts` tinyint(3) UNSIGNED NOT NULL,
+  `reserved_at` int(10) UNSIGNED DEFAULT NULL,
+  `available_at` int(10) UNSIGNED NOT NULL,
+  `created_at` int(10) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_batches`
+--
+
+CREATE TABLE `job_batches` (
+  `id` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `total_jobs` int(11) NOT NULL,
+  `pending_jobs` int(11) NOT NULL,
+  `failed_jobs` int(11) NOT NULL,
+  `failed_job_ids` longtext NOT NULL,
+  `options` mediumtext DEFAULT NULL,
+  `cancelled_at` int(11) DEFAULT NULL,
+  `created_at` int(11) NOT NULL,
+  `finished_at` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1970,7 +2143,41 @@ CREATE TABLE `medical_visits` (
 
 INSERT INTO `medical_visits` (`visit_id`, `student_id`, `clinic_staff_id`, `visit_datetime`, `visit_type`, `chief_complaint`, `notes`, `status`, `notify_parent`, `parent_notified_at`, `notification_method`, `created_at`) VALUES
 (17, 22, 3, '2026-02-05 11:31:00', 'Routine', 'Fever', 'Fever', 'Closed', 0, NULL, 'none', '2026-02-05 11:32:26'),
-(18, 21, 3, '2026-02-14 10:21:00', 'Emergency', NULL, 'Fever', 'Closed', 0, NULL, 'none', '2026-02-14 10:21:54');
+(18, 21, 3, '2026-02-14 10:21:00', 'Emergency', NULL, 'Fever', 'Closed', 0, NULL, 'none', '2026-02-14 10:21:54'),
+(19, 21, 3, '2026-02-28 07:05:10', 'Routine', 'Headache - routine checkup', NULL, 'Open', 0, NULL, 'none', '2026-02-27 23:05:10'),
+(20, 21, 3, '2026-02-28 05:05:10', 'Emergency', 'Severe allergic reaction', NULL, 'Referred', 1, NULL, 'sms', '2026-02-27 23:05:10');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `migrations`
+--
+
+CREATE TABLE `migrations` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `migrations`
+--
+
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
+(1, '0000_01_01_000000_create_roles_table', 1),
+(2, '0001_01_01_000000_create_users_table', 1),
+(3, '0001_01_01_000001_create_cache_table', 1),
+(4, '0001_01_01_000002_create_jobs_table', 1),
+(5, '2026_02_25_113255_create_personal_access_tokens_table', 1),
+(6, '2026_02_25_115005_create_students_table', 1),
+(7, '2026_02_25_115032_create_medical_visits_table', 1),
+(8, '2026_02_25_115049_create_medical_history_table', 1),
+(9, '2026_02_25_115323_create_allergies_table', 1),
+(10, '2026_02_25_115338_create_vitals_table', 1),
+(11, '2026_02_25_115403_create_clinic_staff_table', 1),
+(12, '2026_02_25_115436_create_advisers_table', 1),
+(13, '0001_01_01_000001_create_cache_table', 1),
+(14, '0001_01_01_000002_create_jobs_table', 1);
 
 -- --------------------------------------------------------
 
@@ -2021,6 +2228,77 @@ INSERT INTO `parents` (`parent_id`, `user_id`, `first_name`, `last_name`, `relat
 (1, NULL, 'Carina', 'Delgado', 'Mother', '09021204851', NULL, 'Taguig City', '2026-02-05 11:53:03', 1, NULL),
 (2, NULL, 'Ilene', '', 'Aunt', '09932012942', NULL, 'Taguig City', '2026-02-14 11:53:34', 1, NULL),
 (3, NULL, 'Ryan', 'Gallaza', 'Father', '09493202295', NULL, 'Taguig City', '2026-02-16 16:44:30', 1, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `personal_access_tokens`
+--
+
+CREATE TABLE `personal_access_tokens` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `tokenable_type` varchar(255) NOT NULL,
+  `tokenable_id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `abilities` text DEFAULT NULL,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `personal_access_tokens`
+--
+
+INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `name`, `token`, `abilities`, `last_used_at`, `expires_at`, `created_at`, `updated_at`) VALUES
+(1, 'App\\Models\\User', 32, 'auth-token', '1db88836301d7914f8a9c6871021846c8b2ec0e4ef491916326038771db05452', '[\"*\"]', NULL, '2026-02-28 05:38:16', '2026-02-27 05:38:16', '2026-02-27 05:38:16'),
+(2, 'App\\Models\\User', 32, 'auth-token', '3a6c767013a435159d2a4e162844c722e2dd9952077118488b73482289001a44', '[\"*\"]', NULL, '2026-02-28 05:40:23', '2026-02-27 05:40:23', '2026-02-27 05:40:23'),
+(3, 'App\\Models\\User', 32, 'auth-token', '73bef501b072f443f503c74ee071ff3eeca0d74a23bdeb94fad7e06eeef5f9b1', '[\"*\"]', NULL, '2026-02-28 05:46:14', '2026-02-27 05:46:14', '2026-02-27 05:46:14'),
+(4, 'App\\Models\\User', 60, 'auth-token', '09bb742d2052790eccefde43e4552ebe7f1fc1d08f8137250327fd95ab16b926', '[\"*\"]', NULL, '2026-02-28 05:46:16', '2026-02-27 05:46:16', '2026-02-27 05:46:16'),
+(5, 'App\\Models\\User', 63, 'auth-token', 'c36bad82ec793081d35487ccf79b993037f9fa067e5f86e3b2a88d5ac0733b35', '[\"*\"]', NULL, '2026-02-28 05:46:17', '2026-02-27 05:46:17', '2026-02-27 05:46:17'),
+(6, 'App\\Models\\User', 61, 'auth-token', 'c868ba2ecfb83b361dff3ca620fd2913aabe4f61ad08c60b8155e88af83b8a93', '[\"*\"]', NULL, '2026-02-28 05:46:18', '2026-02-27 05:46:18', '2026-02-27 05:46:18'),
+(7, 'App\\Models\\User', 32, 'auth-token', 'cf763d4b15d2745b3bd781d5e6189a3097fabf9d935d60b98a9f839fc2907742', '[\"*\"]', NULL, '2026-02-28 05:49:30', '2026-02-27 05:49:30', '2026-02-27 05:49:30'),
+(8, 'App\\Models\\User', 62, 'auth-token', 'fe2196d88ba19c660c959acd6a36e8137a1fe95a5f5600926c7cec45cf9d7b01', '[\"*\"]', '2026-02-27 06:00:21', '2026-02-28 05:49:54', '2026-02-27 05:49:54', '2026-02-27 06:00:21'),
+(9, 'App\\Models\\User', 61, 'auth-token', '96b3eaf0af7e7e75d5ab9763d05562d3a3fb6505a1f62b79881175322ef181dd', '[\"*\"]', '2026-02-27 05:53:42', '2026-02-28 05:53:41', '2026-02-27 05:53:41', '2026-02-27 05:53:42'),
+(10, 'App\\Models\\User', 61, 'auth-token', '4b9f99bc463d35f8854171d748b9afa3092463dc2eb91c567e95284ccf6dc9c6', '[\"*\"]', NULL, '2026-02-28 06:00:43', '2026-02-27 06:00:43', '2026-02-27 06:00:43'),
+(11, 'App\\Models\\User', 66, 'auth-token', '11cb93cedf99ef729d4b49509d52f4503d64e2785d26e30ea19acecc7ea87667', '[\"*\"]', '2026-02-27 06:01:12', '2026-02-28 06:00:58', '2026-02-27 06:00:58', '2026-02-27 06:01:12'),
+(12, 'App\\Models\\User', 62, 'auth-token', '101d4db9fc093b971f13e4de1e35f5ec58d4209bfcaeb7927c6f29be47e5bdc3', '[\"*\"]', '2026-02-27 06:26:32', '2026-02-28 06:01:27', '2026-02-27 06:01:27', '2026-02-27 06:26:32'),
+(13, 'App\\Models\\User', 61, 'auth-token', '88df0e331733a670167823242ce37c2a0a8d0f728c4bc08a1eb10725ab291e6c', '[\"*\"]', '2026-02-27 06:07:30', '2026-02-28 06:07:27', '2026-02-27 06:07:27', '2026-02-27 06:07:30'),
+(14, 'App\\Models\\User', 61, 'auth-token', 'fcbbb6d59cafa746bc623fdd9887a7d196a8b25aac47be6f5397c18eaeb1307a', '[\"*\"]', '2026-02-27 06:23:28', '2026-02-28 06:23:26', '2026-02-27 06:23:26', '2026-02-27 06:23:28'),
+(15, 'App\\Models\\User', 63, 'auth-token', '026f380a3dd3434853fc02846168b1f9fa4cd5fc43ed5397c9e17ef85f999b1e', '[\"*\"]', '2026-02-27 06:58:17', '2026-02-28 06:26:49', '2026-02-27 06:26:49', '2026-02-27 06:58:17'),
+(16, 'App\\Models\\User', 63, 'auth-token', '22cc5afbb5bb0b9eecd34b7b53a4f4a666c5ba0d0106e5ed48274939efca5c3c', '[\"*\"]', NULL, '2026-02-28 06:45:29', '2026-02-27 06:45:29', '2026-02-27 06:45:29'),
+(17, 'App\\Models\\User', 63, 'auth-token', 'a80b715bdf7b906b0a30748aae0c1f7066c1cd951be36f8e321fdc53c4ffa4e8', '[\"*\"]', '2026-02-27 06:52:07', '2026-02-28 06:45:57', '2026-02-27 06:45:57', '2026-02-27 06:52:07'),
+(18, 'App\\Models\\User', 62, 'auth-token', '4a71ff437afee69317e9e446d4c5cb754d3da565d44a92aa036895675f15947f', '[\"*\"]', NULL, '2026-02-28 07:12:32', '2026-02-27 07:12:32', '2026-02-27 07:12:32'),
+(19, 'App\\Models\\User', 32, 'auth-token', '98c5c8c40cd3ff69a417699c2ed7b9dd638a4bfa132b79ff20e926402c8e40b8', '[\"*\"]', NULL, '2026-02-28 07:17:27', '2026-02-27 07:17:27', '2026-02-27 07:17:27'),
+(20, 'App\\Models\\User', 62, 'auth-token', 'c20c448fbc4a6920ad54120fc164b72128479e9aa06508ae143537e04ed44174', '[\"*\"]', '2026-02-27 07:28:45', '2026-02-28 07:28:29', '2026-02-27 07:28:29', '2026-02-27 07:28:45'),
+(21, 'App\\Models\\User', 66, 'auth-token', 'a3224be782b922239848144a9d80c5b19c31f145c06e1d0dceea93c7a6669eed', '[\"*\"]', '2026-02-27 07:29:30', '2026-02-28 07:29:14', '2026-02-27 07:29:14', '2026-02-27 07:29:30'),
+(22, 'App\\Models\\User', 60, 'auth-token', '2f55478ed455a3eddf41101d871594217fb4e3f0e602c09903658e07f70bf925', '[\"*\"]', NULL, '2026-02-28 07:29:45', '2026-02-27 07:29:45', '2026-02-27 07:29:45'),
+(23, 'App\\Models\\User', 60, 'auth-token', 'ee9eb0210a90f53a23e5d6447aeeae70b1b7b30976406ba9af9a8bb99becfaf2', '[\"*\"]', NULL, '2026-02-28 07:31:31', '2026-02-27 07:31:31', '2026-02-27 07:31:31'),
+(24, 'App\\Models\\User', 63, 'auth-token', '6ca87c81f8dc079e182b9797a14c75d07660cc31a14408a2e19e384f0f9657ef', '[\"*\"]', '2026-02-27 07:32:09', '2026-02-28 07:32:03', '2026-02-27 07:32:03', '2026-02-27 07:32:09'),
+(25, 'App\\Models\\User', 60, 'auth-token', '6e934b1bbe632b918479bee35d4c01ae0ccde74d59edec6593a922974e0e69a8', '[\"*\"]', NULL, '2026-02-28 07:33:54', '2026-02-27 07:33:54', '2026-02-27 07:33:54'),
+(26, 'App\\Models\\User', 66, 'auth-token', 'b8ecd27ad43020a63e7041c6d380b03da84ba4e56be077f13f5e5e096cafab53', '[\"*\"]', '2026-02-27 07:47:00', '2026-02-28 07:34:11', '2026-02-27 07:34:11', '2026-02-27 07:47:00'),
+(27, 'App\\Models\\User', 32, 'auth-token', '5ed66e58ee8aa7acbdc338562fe66237ef9df151caeb121a4e5d81859c0d6219', '[\"*\"]', '2026-02-27 08:03:01', '2026-02-28 07:39:59', '2026-02-27 07:39:59', '2026-02-27 08:03:01'),
+(28, 'App\\Models\\User', 60, 'auth-token', 'fad5f11ddce34e6ea977087e55154d3d9650c84e26033c175aba36ad19a67d94', '[\"*\"]', NULL, '2026-02-28 07:47:13', '2026-02-27 07:47:13', '2026-02-27 07:47:13'),
+(29, 'App\\Models\\User', 66, 'auth-token', 'f3c3e998a4ef97e926cd405eda3407523f843dc41d7bd13aa2802a0b32b5f623', '[\"*\"]', NULL, '2026-02-28 07:55:25', '2026-02-27 07:55:25', '2026-02-27 07:55:25'),
+(30, 'App\\Models\\User', 66, 'auth-token', 'bc80b37e33a7abf4c19470cb2893f6fdb8a3676d135823cf7b08beb2e805c1af', '[\"*\"]', NULL, '2026-02-28 08:04:01', '2026-02-27 08:04:01', '2026-02-27 08:04:01'),
+(31, 'App\\Models\\User', 60, 'auth-token', 'bd683092d06f3340fa6f2e3d6afafd257f6d9a21f9397bfd98fd569e43514a32', '[\"*\"]', NULL, '2026-02-28 08:04:17', '2026-02-27 08:04:17', '2026-02-27 08:04:17'),
+(32, 'App\\Models\\User', 32, 'auth-token', 'df8395b0ca64f02b56cf74ef21cefcfe4ee20e596f65a6c5e8fc5d95c83acebd', '[\"*\"]', '2026-02-27 08:20:40', '2026-02-28 08:10:32', '2026-02-27 08:10:32', '2026-02-27 08:20:40'),
+(33, 'App\\Models\\User', 62, 'auth-token', 'c0fc6287a4415784cd3e28c41d62b57250c4583ab94c3abfb8e6a7ecb54c03c3', '[\"*\"]', NULL, '2026-02-28 08:27:28', '2026-02-27 08:27:28', '2026-02-27 08:27:28'),
+(34, 'App\\Models\\User', 60, 'auth-token', '4d070038e496bb8d948b9e28426f5f10373c184d6ec5a3dcc0805c58994e3e4f', '[\"*\"]', '2026-02-27 08:36:14', '2026-02-28 08:27:47', '2026-02-27 08:27:47', '2026-02-27 08:36:14'),
+(35, 'App\\Models\\User', 63, 'auth-token', 'a0aa734cd10357b6f43e208b95883a7f7b527d1ca1ca68458e72fbf7fccf2806', '[\"*\"]', '2026-02-27 08:47:29', '2026-02-28 08:36:25', '2026-02-27 08:36:25', '2026-02-27 08:47:29'),
+(36, 'App\\Models\\User', 60, 'auth-token', 'c526e445b0c9af97ab914c13a62d26b82b234de89f230ef14aa478f1876f7b32', '[\"*\"]', '2026-02-27 09:01:36', '2026-02-28 08:47:55', '2026-02-27 08:47:55', '2026-02-27 09:01:36'),
+(37, 'App\\Models\\User', 32, 'auth-token', 'ecfb8c95dc08f4ba28f441c4c2ec9dd830808a4754a6bc83b1c1f16ac02e4941', '[\"*\"]', '2026-02-27 09:02:08', '2026-02-28 09:01:54', '2026-02-27 09:01:54', '2026-02-27 09:02:08'),
+(38, 'App\\Models\\User', 62, 'auth-token', 'f250c38dd99fbbc043025dadbc29ffdbc696820d5f77cd46f0424635b5922e2d', '[\"*\"]', NULL, '2026-02-28 20:09:46', '2026-02-27 20:09:46', '2026-02-27 20:09:46'),
+(39, 'App\\Models\\User', 60, 'auth-token', '09114ef4cb90c8e48d06287dcbde7b0a3eb8b730857146a8aeb2671d1d412619', '[\"*\"]', '2026-02-27 20:10:46', '2026-02-28 20:10:37', '2026-02-27 20:10:37', '2026-02-27 20:10:46'),
+(40, 'App\\Models\\User', 63, 'auth-token', 'd95deb74a47f51fea11e44f8cb33db055b79080b31a9b0fe312974c0fbb62958', '[\"*\"]', '2026-02-27 20:11:25', '2026-02-28 20:11:00', '2026-02-27 20:11:00', '2026-02-27 20:11:25'),
+(41, 'App\\Models\\User', 32, 'auth-token', 'f1c33d54b673c067ef29a16b1b8e067669f507940c83c69f57884e25f38b8380', '[\"*\"]', '2026-02-27 20:12:17', '2026-02-28 20:12:04', '2026-02-27 20:12:04', '2026-02-27 20:12:17'),
+(42, 'App\\Models\\User', 62, 'auth-token', 'fccb44fd54ad0f21bef8c8ffba9e561a52d499c6b25490aa2a5026edd230edba', '[\"*\"]', '2026-02-27 20:48:40', '2026-02-28 20:48:28', '2026-02-27 20:48:28', '2026-02-27 20:48:40'),
+(43, 'App\\Models\\User', 60, 'auth-token', '36b32e3dec54f80c34d45045de52539bbb34f93b2a4a3493bbbf9fb36a752bfc', '[\"*\"]', '2026-02-27 21:38:06', '2026-02-28 20:50:06', '2026-02-27 20:50:06', '2026-02-27 21:38:06'),
+(44, 'App\\Models\\User', 60, 'auth-token', '65783121da9c8d196c79de34d78658acb97901b7a9354efe024d3ec9c5cf9f2d', '[\"*\"]', '2026-02-27 21:43:13', '2026-02-28 21:38:20', '2026-02-27 21:38:20', '2026-02-27 21:43:13'),
+(45, 'App\\Models\\User', 66, 'auth-token', 'de68db96734c5b4d198146bbc23244dd78df8196c9efb89820e9d41acb5f60f3', '[\"*\"]', '2026-02-27 21:43:28', '2026-02-28 21:43:23', '2026-02-27 21:43:23', '2026-02-27 21:43:28'),
+(46, 'App\\Models\\User', 63, 'auth-token', '2f86f838872856502a1af764e9454e3345fa169497dca8cc17c0a12f9b28935b', '[\"*\"]', '2026-02-27 22:55:48', '2026-02-28 21:43:56', '2026-02-27 21:43:56', '2026-02-27 22:55:48');
 
 -- --------------------------------------------------------
 
@@ -2220,6 +2498,21 @@ INSERT INTO `sections` (`id`, `section_name`, `grade_level_id`, `school_year_id`
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `sessions`
+--
+
+CREATE TABLE `sessions` (
+  `id` varchar(255) NOT NULL,
+  `user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `payload` longtext NOT NULL,
+  `last_activity` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sms_logs`
 --
 
@@ -2286,9 +2579,9 @@ CREATE TABLE `students` (
 --
 
 INSERT INTO `students` (`student_id`, `current_grade_level_id`, `current_section_id`, `current_adviser_id`, `current_school_year_id`, `enrollment_status`, `promotion_date`, `last_promotion_date`, `student_number`, `user_id`, `first_name`, `middle_name`, `last_name`, `birth_date`, `gender`, `grade_level`, `section`, `address`, `blood_type`, `emergency_contact`, `emergency_contact_relation`, `emergency_contact_phone`, `created_at`, `is_active`, `deleted_at`, `height_cm`, `weight_kg`, `bmi`, `bmi_category`, `general_clearance_status`, `clearance_expiry_date`, `requires_special_clearance`, `clearance_notes`, `last_physical_update`) VALUES
-(21, NULL, 63, NULL, 11, 'active', NULL, NULL, '136663100330', 61, 'Wallance', NULL, 'Delgado', '2005-04-07', 'M', '7', '1', 'Taguig City', NULL, 'Carina Delgado', 'Mother', '09021204851', '2026-02-05 08:22:46', 1, NULL, 190.00, 67.00, 18.56, 'Normal weight', 'not_required', NULL, 0, NULL, '2026-02-05 11:07:34'),
-(22, NULL, 63, NULL, 11, 'active', NULL, NULL, '136883100330', 62, 'Hannah', '', 'Lorainne', '2005-04-03', 'F', '7', '1', 'GK Taguig City', 'A+', 'Airen Genandoy', 'Mother', '09501296187', '2026-02-05 11:26:05', 1, NULL, 157.00, 57.00, 23.12, 'Normal weight', 'not_required', NULL, 0, NULL, '2026-02-05 11:29:14'),
-(26, NULL, NULL, NULL, 11, 'active', NULL, NULL, '136883100331', 66, 'Irish', 'Grande', 'Gallaza', '2005-02-23', 'F', '7', '1', 'Taguig City', 'O+', 'Ryan Gallaza', 'Father', '09493202295', '2026-02-16 16:42:37', 1, NULL, 150.00, 48.00, 21.33, 'Normal weight', 'not_required', NULL, 0, NULL, '2026-02-16 16:45:52');
+(21, NULL, 63, 60, 11, 'active', NULL, NULL, '136663100330', 61, 'Wallance', NULL, 'Delgado', '2005-04-07', 'M', '7', '1', 'Taguig City', NULL, 'Carina Delgado', 'Mother', '09021204851', '2026-02-05 08:22:46', 1, NULL, 190.00, 67.00, 18.56, 'Normal weight', 'not_required', NULL, 0, NULL, '2026-02-05 11:07:34'),
+(22, NULL, 63, 60, 11, 'active', NULL, NULL, '136883100330', 62, 'Hannah', '', 'Lorainne', '2005-04-03', 'F', '7', '1', 'GK Taguig City', 'A-', 'Airen Genandoy', 'Mother', '09501296187', '2026-02-05 11:26:05', 1, NULL, 160.00, 57.00, 22.27, 'Normal weight', 'not_required', NULL, 0, NULL, '2026-02-27 14:26:25'),
+(26, NULL, 63, 60, 11, 'active', NULL, NULL, '136883100331', 66, 'Irish', 'Grande', 'Gallaza', '2005-02-23', 'F', '7', '1', 'Taguig City', 'O+', 'Ryan Gallaza', 'Father', '09493202295', '2026-02-16 16:42:37', 1, NULL, 150.00, 48.00, 21.33, 'Normal weight', 'not_required', NULL, 0, NULL, '2026-02-16 16:45:52');
 
 -- --------------------------------------------------------
 
@@ -2384,12 +2677,12 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `role_id`, `username`, `password_hash`, `password_must_change`, `password_changed_at`, `created_by_admin_id`, `temp_password`, `email`, `phone`, `full_name`, `created_at`, `is_active`, `deleted_at`) VALUES
-(32, 1, 'admin', '$2y$10$VRKSez9gbIAB7fyx695fPeaHPg8Qo.VmabPGUBrRWquZYLV5Epd6W', 0, NULL, NULL, NULL, 'admin@pdmhs.edu.ph', '09171234567', 'System Administrator', '2026-02-01 11:46:49', 1, NULL),
-(60, 3, '2026-01', '$2y$10$skFaVbGjh5qnOttJel3Ep.H4199W8nhpAtdmJC5SJx7EHMDZSOOtu', 0, '2026-02-05 16:21:43', 32, NULL, 'h.igot@gmail.com', '09123456789', 'Heart   Igot', '2026-02-05 08:20:38', 1, NULL),
-(61, 2, '136663100330', '$2y$10$Fp1gdjZi415fqhtatwRn..Zda38iIqLtbYgfbGLRkti8tVYjzMT/C', 0, '2026-02-05 16:23:46', 32, NULL, 'wallance@gmail.com', '', 'Wallance Delgado', '2026-02-05 08:22:46', 1, NULL),
-(62, 2, '136883100330', '$2y$10$oyMwFBXkS4W3erRWaucLMeMt9xrfBEC4p2YeHkpccuKbBgsJrmbb6', 0, '2026-02-05 19:26:41', 32, NULL, 'hannah@gmail.com', '', 'Hannah Lorainne', '2026-02-05 11:26:05', 1, NULL),
-(63, 4, 'STAFF-01', '$2y$10$.F12YbZRlhRwfJWHy2bG3ueOPEpR3pcteiXxjRv3E.iIrde26U7hC', 0, '2026-02-05 19:31:37', 32, NULL, 'lulubelle@gmail.com', '09849212853', 'Lulubelle Gabasa', '2026-02-05 11:30:45', 1, NULL),
-(66, 2, '136883100331', '$2y$10$mQ5adrtetleDLKrc.jXueezmVZrE84VTVw7Fk2gCP2o2cvqQiM4/.', 0, '2026-02-17 00:43:15', 32, NULL, 'irish@gmail.com', '', 'Irish Grande Gallaza', '2026-02-16 16:42:37', 1, NULL);
+(32, 1, 'admin', '$2y$10$sazkAihoww8U0TElhFKuMuNzhbdOL9tL80KeUAA1JSk4NtfW14ILq', 0, NULL, NULL, NULL, 'admin@pdmhs.edu.ph', '09171234567', 'System Administrator', '2026-02-01 11:46:49', 1, NULL),
+(60, 3, '2026-01', '$2y$10$N6.HXr0el2dIYjCTqUOjeepJZUYcfhV1HdnMalvwGXSt0.tLEzXfm', 0, '2026-02-05 16:21:43', 32, NULL, 'h.igot@gmail.com', '09123456789', 'Heart   Igot', '2026-02-05 08:20:38', 1, NULL),
+(61, 2, '136663100330', '$2y$10$N6.HXr0el2dIYjCTqUOjeepJZUYcfhV1HdnMalvwGXSt0.tLEzXfm', 0, '2026-02-05 16:23:46', 32, NULL, 'wallance@gmail.com', '', 'Wallance Delgado', '2026-02-05 08:22:46', 1, NULL),
+(62, 2, '136883100330', '$2y$10$N6.HXr0el2dIYjCTqUOjeepJZUYcfhV1HdnMalvwGXSt0.tLEzXfm', 0, '2026-02-05 19:26:41', 32, NULL, 'hannah@gmail.com', '', 'Hannah Lorainne', '2026-02-05 11:26:05', 1, NULL),
+(63, 4, 'STAFF-01', '$2y$10$N6.HXr0el2dIYjCTqUOjeepJZUYcfhV1HdnMalvwGXSt0.tLEzXfm', 0, '2026-02-05 19:31:37', 32, NULL, 'lulubelle@gmail.com', '09849212853', 'Lulubelle Gabasa', '2026-02-05 11:30:45', 1, NULL),
+(66, 2, '136883100331', '$2y$10$N6.HXr0el2dIYjCTqUOjeepJZUYcfhV1HdnMalvwGXSt0.tLEzXfm', 0, '2026-02-17 00:43:15', 32, NULL, 'irish@gmail.com', '', 'Irish Grande Gallaza', '2026-02-16 16:42:37', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -2561,6 +2854,18 @@ ALTER TABLE `allergies`
   ADD KEY `fk_allergy_student` (`student_id`);
 
 --
+-- Indexes for table `cache`
+--
+ALTER TABLE `cache`
+  ADD PRIMARY KEY (`key`);
+
+--
+-- Indexes for table `cache_locks`
+--
+ALTER TABLE `cache_locks`
+  ADD PRIMARY KEY (`key`);
+
+--
 -- Indexes for table `clearance_requests`
 --
 ALTER TABLE `clearance_requests`
@@ -2604,12 +2909,32 @@ ALTER TABLE `email_logs`
   ADD KEY `idx_created_at` (`created_at`);
 
 --
+-- Indexes for table `failed_jobs`
+--
+ALTER TABLE `failed_jobs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`);
+
+--
 -- Indexes for table `grade_levels`
 --
 ALTER TABLE `grade_levels`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `level_number` (`level_number`),
   ADD KEY `idx_level_number` (`level_number`);
+
+--
+-- Indexes for table `jobs`
+--
+ALTER TABLE `jobs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `jobs_queue_index` (`queue`);
+
+--
+-- Indexes for table `job_batches`
+--
+ALTER TABLE `job_batches`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `medical_clearances`
@@ -2637,6 +2962,12 @@ ALTER TABLE `medical_visits`
   ADD KEY `idx_visit_student_datetime` (`student_id`,`visit_datetime`);
 
 --
+-- Indexes for table `migrations`
+--
+ALTER TABLE `migrations`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `notifications`
 --
 ALTER TABLE `notifications`
@@ -2653,6 +2984,14 @@ ALTER TABLE `notifications`
 ALTER TABLE `parents`
   ADD PRIMARY KEY (`parent_id`),
   ADD KEY `fk_parents_user` (`user_id`);
+
+--
+-- Indexes for table `personal_access_tokens`
+--
+ALTER TABLE `personal_access_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
+  ADD KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`);
 
 --
 -- Indexes for table `promotion_batch_logs`
@@ -2712,6 +3051,14 @@ ALTER TABLE `sections`
   ADD KEY `idx_adviser` (`adviser_id`),
   ADD KEY `idx_is_active` (`is_active`),
   ADD KEY `created_by` (`created_by`);
+
+--
+-- Indexes for table `sessions`
+--
+ALTER TABLE `sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sessions_user_id_index` (`user_id`),
+  ADD KEY `sessions_last_activity_index` (`last_activity`);
 
 --
 -- Indexes for table `sms_logs`
@@ -2784,7 +3131,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2029;
+  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2127;
 
 --
 -- AUTO_INCREMENT for table `advisers`
@@ -2835,10 +3182,22 @@ ALTER TABLE `email_logs`
   MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
+-- AUTO_INCREMENT for table `failed_jobs`
+--
+ALTER TABLE `failed_jobs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `grade_levels`
 --
 ALTER TABLE `grade_levels`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `jobs`
+--
+ALTER TABLE `jobs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `medical_clearances`
@@ -2856,7 +3215,13 @@ ALTER TABLE `medical_history`
 -- AUTO_INCREMENT for table `medical_visits`
 --
 ALTER TABLE `medical_visits`
-  MODIFY `visit_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `visit_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+
+--
+-- AUTO_INCREMENT for table `migrations`
+--
+ALTER TABLE `migrations`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `notifications`
@@ -2869,6 +3234,12 @@ ALTER TABLE `notifications`
 --
 ALTER TABLE `parents`
   MODIFY `parent_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `personal_access_tokens`
+--
+ALTER TABLE `personal_access_tokens`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT for table `promotion_batch_logs`
@@ -2935,12 +3306,6 @@ ALTER TABLE `users`
 --
 
 --
--- Constraints for table `activity_logs`
---
-ALTER TABLE `activity_logs`
-  ADD CONSTRAINT `fk_log_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
-
---
 -- Constraints for table `advisers`
 --
 ALTER TABLE `advisers`
@@ -2986,18 +3351,6 @@ ALTER TABLE `clinic_staff`
 --
 ALTER TABLE `diagnoses`
   ADD CONSTRAINT `fk_diag_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `medical_clearances`
---
-ALTER TABLE `medical_clearances`
-  ADD CONSTRAINT `fk_clearance_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `medical_history`
---
-ALTER TABLE `medical_history`
-  ADD CONSTRAINT `fk_medical_history_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `medical_visits`
@@ -3051,15 +3404,6 @@ ALTER TABLE `school_years`
   ADD CONSTRAINT `school_years_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `sections`
---
-ALTER TABLE `sections`
-  ADD CONSTRAINT `sections_ibfk_1` FOREIGN KEY (`grade_level_id`) REFERENCES `grade_levels` (`id`),
-  ADD CONSTRAINT `sections_ibfk_2` FOREIGN KEY (`school_year_id`) REFERENCES `school_years` (`id`),
-  ADD CONSTRAINT `sections_ibfk_3` FOREIGN KEY (`adviser_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `sections_ibfk_4` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
-
---
 -- Constraints for table `sms_logs`
 --
 ALTER TABLE `sms_logs`
@@ -3075,20 +3419,6 @@ ALTER TABLE `students`
   ADD CONSTRAINT `fk_students_school_year` FOREIGN KEY (`current_school_year_id`) REFERENCES `school_years` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_students_section` FOREIGN KEY (`current_section_id`) REFERENCES `sections` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_students_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
-
---
--- Constraints for table `student_adviser`
---
-ALTER TABLE `student_adviser`
-  ADD CONSTRAINT `fk_sa_adviser` FOREIGN KEY (`adviser_id`) REFERENCES `advisers` (`adviser_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_sa_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `student_parent`
---
-ALTER TABLE `student_parent`
-  ADD CONSTRAINT `fk_sp_parent` FOREIGN KEY (`parent_id`) REFERENCES `parents` (`parent_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_sp_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `student_promotions`

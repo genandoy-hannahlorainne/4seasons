@@ -34,7 +34,7 @@ interface ClassRoster {
 
       <div *ngIf="classRoster" class="roster-section">
         <div class="section-header">
-          <h3>{{ classRoster.section?.level_name }}, Section {{ classRoster.section?.section_name }}</h3>
+          <h3>{{ classRoster.section.level_name }}, Section {{ classRoster.section.section_name }}</h3>
           <p class="total-students">Total Students: {{ classRoster.total_students }}</p>
           
           <div class="action-buttons" *ngIf="selectedStudents.length > 0">
