@@ -106,4 +106,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/adviser/health-heatmap', [\App\Http\Controllers\Api\AdviserController::class, 'getHealthHeatmap']);
     Route::get('/adviser/class-roster', [\App\Http\Controllers\Api\AdviserController::class, 'getClassRoster']);
     Route::get('/adviser/advisory-students', [\App\Http\Controllers\Api\AdviserController::class, 'getAdvisoryStudents']);
+    
+    // Emergency Drill Management endpoints
+    Route::apiResource('emergency-drills', \App\Http\Controllers\Api\EmergencyDrillController::class);
+    Route::post('/emergency-drills/{id}/start', [\App\Http\Controllers\Api\EmergencyDrillController::class, 'start']);
+    Route::post('/emergency-drills/{id}/end', [\App\Http\Controllers\Api\EmergencyDrillController::class, 'end']);
+    Route::post('/emergency-drills/{id}/participants', [\App\Http\Controllers\Api\EmergencyDrillController::class, 'addParticipants']);
+    Route::post('/emergency-drills/{id}/scan', [\App\Http\Controllers\Api\EmergencyDrillController::class, 'scanParticipant']);
+    Route::get('/emergency-drills/{id}/dashboard', [\App\Http\Controllers\Api\EmergencyDrillController::class, 'dashboard']);
 });
