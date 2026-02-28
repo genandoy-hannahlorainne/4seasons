@@ -10,6 +10,9 @@ class MedicalVisit extends Model
     use HasFactory;
 
     protected $primaryKey = 'visit_id';
+    
+    // The table only has created_at, not updated_at
+    const UPDATED_AT = null;
 
     protected $fillable = [
         'student_id',
@@ -56,7 +59,7 @@ class MedicalVisit extends Model
      */
     public function scopeEmergency($query)
     {
-        return $query->where('is_emergency', true);
+        return $query->where('visit_type', 'Emergency');
     }
 
     public function scopeRecent($query, $days = 30)

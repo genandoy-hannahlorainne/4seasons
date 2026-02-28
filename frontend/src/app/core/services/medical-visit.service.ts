@@ -11,17 +11,12 @@ export interface MedicalVisit {
   clinic_staff_id: number;
   visit_datetime: string;
   chief_complaint: string;
-  diagnosis?: string;
-  treatment_given?: string;
-  medications_given?: string;
   notes?: string;
-  follow_up_required: boolean;
-  follow_up_date?: string;
-  parent_notified: boolean;
-  adviser_notified: boolean;
-  is_emergency: boolean;
-  visit_type: 'routine' | 'emergency' | 'follow_up' | 'referral';
-  status: 'active' | 'completed' | 'cancelled';
+  visit_type: 'Routine' | 'Emergency' | 'Follow-up' | 'Referral';
+  status: 'Open' | 'Closed' | 'Referred';
+  notify_parent: boolean;
+  parent_notified_at?: string;
+  notification_method: 'sms' | 'email' | 'call' | 'none';
   created_at?: string;
   updated_at?: string;
   // Relationships
@@ -44,17 +39,11 @@ export interface CreateMedicalVisitRequest {
   student_id: number;
   clinic_staff_id: number;
   chief_complaint: string;
-  diagnosis?: string;
-  treatment_given?: string;
-  medications_given?: string;
   notes?: string;
-  follow_up_required?: boolean;
-  follow_up_date?: string;
-  parent_notified?: boolean;
-  adviser_notified?: boolean;
-  is_emergency?: boolean;
-  visit_type: 'routine' | 'emergency' | 'follow_up' | 'referral';
-  status?: 'active' | 'completed' | 'cancelled';
+  notify_parent?: boolean;
+  visit_type: 'Routine' | 'Emergency' | 'Follow-up' | 'Referral';
+  status?: 'Open' | 'Closed' | 'Referred';
+  notification_method?: 'sms' | 'email' | 'call' | 'none';
   vitals?: {
     vital_type: string;
     value: string;
@@ -66,7 +55,7 @@ export interface CreateMedicalVisitRequest {
 export interface VisitStatistics {
   total_visits: number;
   emergency_visits: number;
-  follow_up_required: number;
+  pending_visits: number;
   visits_by_type: { [key: string]: number };
   daily_visits: { date: string; count: number }[];
 }

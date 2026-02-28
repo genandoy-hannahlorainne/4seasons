@@ -34,7 +34,7 @@ class DashboardController extends BaseController
                 // Medical visit statistics
                 'total_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)->count(),
                 'emergency_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)
-                                                ->where('is_emergency', true)->count(),
+                                                ->where('visit_type', 'Emergency')->count(),
                 'visits_today' => MedicalVisit::whereDate('visit_datetime', today())->count(),
                 'visits_this_week' => MedicalVisit::where('visit_datetime', '>=', now()->startOfWeek())->count(),
                 
@@ -123,16 +123,16 @@ class DashboardController extends BaseController
                                              ->count(),
                 'emergency_visits' => MedicalVisit::whereIn('student_id', $studentIds)
                                                 ->where('visit_datetime', '>=', $startDate)
-                                                ->where('is_emergency', true)
+                                                ->where('visit_type', 'Emergency')
                                                 ->count(),
+                // Note: is_emergency and follow_up_required columns don't exist in actual database
+                // Using visit_type = 'Emergency' for emergency detection
                 'students_needing_attention' => $students->filter(function($student) {
-                    // Students with recent emergency visits or follow-ups
+                    // Students with recent emergency visits
                     return $student->medicalVisits()
                                  ->where('visit_datetime', '>=', now()->subDays(7))
-                                 ->where(function($q) {
-                                     $q->where('is_emergency', true)
-                                       ->orWhere('follow_up_required', true);
-                                 })->exists();
+                                 ->where('visit_type', 'Emergency')
+                                 ->exists();
                 })->count(),
                 'grade_sections' => $students->groupBy(['grade_level', 'section'])
                                            ->map(function($gradeStudents, $grade) {
@@ -183,12 +183,11 @@ class DashboardController extends BaseController
                                              ->count(),
                 'emergency_visits_handled' => MedicalVisit::where('clinic_staff_id', $clinicStaff->clinic_staff_id)
                                                         ->where('visit_datetime', '>=', $startDate)
-                                                        ->where('is_emergency', true)
+                                                        ->where('visit_type', 'Emergency')
                                                         ->count(),
-                'follow_ups_required' => MedicalVisit::where('clinic_staff_id', $clinicStaff->clinic_staff_id)
-                                                   ->where('follow_up_required', true)
-                                                   ->where('status', 'active')
-                                                   ->count(),
+                // Note: follow_up_required column doesn't exist in actual database
+                // Using Open status visits as pending visits instead
+                'pending_visits' => MedicalVisit::where('status', 'Open')->count(),
                 
                 // Recent activity
                 'recent_visits' => MedicalVisit::with(['student.user'])
@@ -268,19 +267,14 @@ class DashboardController extends BaseController
                                              ->get(),
                     'allergies' => $student->allergies,
                     'medical_history' => $student->medicalHistory,
-                    'upcoming_follow_ups' => $student->medicalVisits()
-                                                   ->where('follow_up_required', true)
-                                                   ->where('follow_up_date', '>=', today())
-                                                   ->orderBy('follow_up_date')
-                                                   ->get()
+                    // Note: follow_up_required and follow_up_date columns don't exist in actual database
+                    'upcoming_follow_ups' => []
                 ],
                 'health_alerts' => [
                     'has_allergies' => $student->allergies()->exists(),
                     'has_conditions' => $student->medicalHistory && $student->medicalHistory->hasConditions(),
-                    'needs_follow_up' => $student->medicalVisits()
-                                               ->where('follow_up_required', true)
-                                               ->where('follow_up_date', '>=', today())
-                                               ->exists()
+                    // Note: follow_up_required column doesn't exist in actual database
+                    'needs_follow_up' => false
                 ]
             ];
             

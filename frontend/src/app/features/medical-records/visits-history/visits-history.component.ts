@@ -24,8 +24,6 @@ interface VisitHistoryData {
   visit_types_breakdown: {
     routine: number;
     emergency: number;
-    follow_up: number;
-    referral: number;
   };
 }
 
@@ -94,7 +92,7 @@ interface VisitHistoryData {
             <div class="visit-content">
               <div class="visit-type">
                 <span class="type-badge" [class]="'type-' + visit.visit_type">{{ visit.visit_type }}</span>
-                <span *ngIf="visit.is_emergency" class="emergency-badge">🚨 Emergency</span>
+                <span *ngIf="visit.visit_type === 'Emergency'" class="emergency-badge">🚨 Emergency</span>
               </div>
               <div class="visit-complaint">{{ visit.chief_complaint }}</div>
               <div *ngIf="visit.diagnosis" class="visit-diagnosis">{{ visit.diagnosis }}</div>

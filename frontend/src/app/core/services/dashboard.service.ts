@@ -37,7 +37,7 @@ export interface StaffDashboardStats {
   total_visits_handled: number;
   visits_today: number;
   emergency_visits_handled: number;
-  follow_ups_required: number;
+  pending_visits: number;
   recent_visits: any[];
   frequent_visitors: any[];
   visits_by_type: { [key: string]: number };
@@ -62,12 +62,10 @@ export interface StudentDashboardStats {
     recent_visits: any[];
     allergies: any[];
     medical_history: any;
-    upcoming_follow_ups: any[];
   };
   health_alerts: {
     has_allergies: boolean;
     has_conditions: boolean;
-    needs_follow_up: boolean;
   };
 }
 

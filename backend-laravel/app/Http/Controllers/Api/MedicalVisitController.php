@@ -101,7 +101,7 @@ class MedicalVisitController extends BaseController
                 'chief_complaint' => 'required|string|max:500',
                 'notes' => 'nullable|string|max:1000',
                 'notify_parent' => 'boolean',
-                'visit_type' => 'required|in:Routine,Emergency,Follow-up,Referral',
+                'visit_type' => 'required|in:Routine,Emergency',
                 'status' => 'in:Open,Closed,Referred',
                 'notification_method' => 'nullable|in:sms,email,call,none',
                 // Vitals data
@@ -271,8 +271,8 @@ class MedicalVisitController extends BaseController
                        $visit->visit_datetime->year === now()->year;
             })->count();
             
-            $emergencyVisits = $allVisits->where('is_emergency', true)->count();
-            $routineVisits = $allVisits->where('visit_type', 'routine')->count();
+            $emergencyVisits = $allVisits->where('visit_type', 'Emergency')->count();
+            $routineVisits = $allVisits->where('visit_type', 'Routine')->count();
             
             // Get last visit details
             $lastVisit = $allVisits->first();
@@ -284,7 +284,7 @@ class MedicalVisitController extends BaseController
                 return [
                     'month' => $month,
                     'count' => $visits->count(),
-                    'emergency_count' => $visits->where('is_emergency', true)->count()
+                    'emergency_count' => $visits->where('visit_type', 'Emergency')->count()
                 ];
             })->values();
             
@@ -297,7 +297,7 @@ class MedicalVisitController extends BaseController
                     'chief_complaint' => $visit->chief_complaint,
                     'diagnosis' => $visit->chief_complaint,
                     'status' => $visit->status,
-                    'is_emergency' => $visit->is_emergency,
+                    'is_emergency' => $visit->visit_type === 'Emergency',
                     'clinic_staff' => $visit->clinicStaff ? [
                         'name' => $visit->clinicStaff->user->full_name,
                         'position' => $visit->clinicStaff->position
@@ -324,9 +324,7 @@ class MedicalVisitController extends BaseController
                 'visits_by_month' => $visitsByMonth,
                 'visit_types_breakdown' => [
                     'routine' => $routineVisits,
-                    'emergency' => $emergencyVisits,
-                    'follow_up' => $allVisits->where('visit_type', 'follow_up')->count(),
-                    'referral' => $allVisits->where('visit_type', 'referral')->count()
+                    'emergency' => $emergencyVisits
                 ]
             ];
             
@@ -348,7 +346,7 @@ class MedicalVisitController extends BaseController
             $days = $request->get('days', 7); // Default to last 7 days
             
             $visits = MedicalVisit::with(['student.user', 'clinicStaff.user'])
-                                ->where('is_emergency', true)
+                                ->where('visit_type', 'Emergency')
                                 ->where('visit_datetime', '>=', now()->subDays($days))
                                 ->orderBy('visit_datetime', 'desc')
                                 ->limit(20)
@@ -374,10 +372,12 @@ class MedicalVisitController extends BaseController
             
             $stats = [
                 'total_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)->count(),
+                // Note: is_emergency and follow_up_required columns don't exist in actual database
+                // Using visit_type = 'Emergency' instead of is_emergency
                 'emergency_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)
-                                                ->where('is_emergency', true)->count(),
-                'follow_up_required' => MedicalVisit::where('visit_datetime', '>=', $startDate)
-                                                  ->where('follow_up_required', true)->count(),
+                                                ->where('visit_type', 'Emergency')->count(),
+                'pending_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)
+                                                  ->where('status', 'Open')->count(),
                 'visits_by_type' => MedicalVisit::where('visit_datetime', '>=', $startDate)
                                                 ->groupBy('visit_type')
                                                 ->selectRaw('visit_type, count(*) as count')

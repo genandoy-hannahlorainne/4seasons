@@ -176,7 +176,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 'total_students' => \App\Models\Student::where('is_active', true)->count(),
                 'total_visits' => \App\Models\MedicalVisit::where('visit_datetime', '>=', $startDate)->count(),
                 'emergency_visits' => \App\Models\MedicalVisit::where('visit_datetime', '>=', $startDate)
-                                                            ->where('is_emergency', true)->count(),
+                                                            ->where('visit_type', 'Emergency')->count(),
                 'visits_today' => \App\Models\MedicalVisit::whereDate('visit_datetime', today())->count(),
                 'students_with_allergies' => \App\Models\Student::whereHas('allergies')->count(),
             ];

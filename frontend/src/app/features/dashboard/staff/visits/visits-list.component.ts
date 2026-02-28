@@ -66,16 +66,14 @@ interface StudentVisitSummary {
           <input type="date" [(ngModel)]="dateFilter" (ngModelChange)="loadVisits()" class="filter-input">
           <select [(ngModel)]="statusFilter" (ngModelChange)="filterVisits()" class="filter-select">
             <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="Open">Open</option>
+            <option value="Closed">Closed</option>
+            <option value="Referred">Referred</option>
           </select>
           <select [(ngModel)]="typeFilter" (ngModelChange)="filterVisits()" class="filter-select">
             <option value="">All Types</option>
-            <option value="routine">Routine</option>
-            <option value="emergency">Emergency</option>
-            <option value="follow_up">Follow-up</option>
-            <option value="referral">Referral</option>
+            <option value="Routine">Routine</option>
+            <option value="Emergency">Emergency</option>
           </select>
         </div>
       </div>
@@ -412,8 +410,6 @@ interface StudentVisitSummary {
 
       &.type-routine { background: #e3f2fd; color: #1976d2; }
       &.type-emergency { background: #ffebee; color: #d32f2f; }
-      &.type-follow_up { background: #f3e5f5; color: #7b1fa2; }
-      &.type-referral { background: #e8f5e8; color: #388e3c; }
     }
 
     .emergency-badge {
@@ -431,10 +427,9 @@ interface StudentVisitSummary {
       font-size: 0.8rem;
       font-weight: 500;
 
-      &.status-active { background: #fff3cd; color: #856404; }
-      &.status-completed { background: #d4edda; color: #155724; }
+      &.status-open { background: #fff3cd; color: #856404; }
       &.status-closed { background: #d4edda; color: #155724; }
-      &.status-cancelled { background: #f8d7da; color: #721c24; }
+      &.status-referred { background: #f8d7da; color: #721c24; }
     }
 
     .student-actions { 
@@ -494,8 +489,6 @@ interface StudentVisitSummary {
           
           &.type-routine { background: #e3f2fd; color: #1976d2; }
           &.type-emergency { background: #ffebee; color: #d32f2f; }
-          &.type-follow_up { background: #f3e5f5; color: #7b1fa2; }
-          &.type-referral { background: #e8f5e8; color: #388e3c; }
         }
         .visit-complaint { color: #495057; }
         .visit-status { 
@@ -504,10 +497,9 @@ interface StudentVisitSummary {
           border-radius: 8px;
           text-align: center;
           
-          &.status-active { background: #fff3cd; color: #856404; }
-          &.status-completed { background: #d4edda; color: #155724; }
+          &.status-open { background: #fff3cd; color: #856404; }
           &.status-closed { background: #d4edda; color: #155724; }
-          &.status-cancelled { background: #f8d7da; color: #721c24; }
+          &.status-referred { background: #f8d7da; color: #721c24; }
         }
       }
     }
@@ -606,7 +598,7 @@ export class VisitsListComponent implements OnInit {
           chief_complaint: visit.chief_complaint || visit.notes || 'No complaint recorded',
           diagnosis: visit.diagnosis,
           status: visit.status,
-          is_emergency: visit.visit_type?.toLowerCase() === 'emergency'
+          is_emergency: visit.visit_type === 'Emergency'
         };
       }
     });
