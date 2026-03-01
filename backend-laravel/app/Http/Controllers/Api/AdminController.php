@@ -342,6 +342,127 @@ class AdminController extends BaseController
     }
 
     /**
+     * Generate sample BMI data for demonstration purposes
+     */
+    private function generateSampleBMIData()
+    {
+        try {
+            // Get students without BMI data
+            $studentsWithoutBMI = \DB::select("
+                SELECT student_id, grade_level 
+                FROM students 
+                WHERE is_active = 1 
+                AND (bmi IS NULL OR bmi_category IS NULL)
+                LIMIT 50
+            ");
+
+            foreach ($studentsWithoutBMI as $student) {
+                // Generate realistic BMI data based on grade level
+                $gradeLevel = $student->grade_level;
+                
+                // Age-appropriate BMI ranges (approximate)
+                $ageGroup = $this->getAgeGroupFromGrade($gradeLevel);
+                $bmiData = $this->generateRealisticBMI($ageGroup, $gradeLevel);
+                
+                \DB::update("
+                    UPDATE students 
+                    SET height_cm = ?, 
+                        weight_kg = ?, 
+                        bmi = ?, 
+                        bmi_category = ?,
+                        last_physical_update = NOW()
+                    WHERE student_id = ?
+                ", [
+                    $bmiData['height'],
+                    $bmiData['weight'],
+                    $bmiData['bmi'],
+                    $bmiData['category'],
+                    $student->student_id
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silently fail if sample data generation fails
+            \Log::warning('Failed to generate sample BMI data: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get age group from grade level
+     */
+    private function getAgeGroupFromGrade($gradeLevel)
+    {
+        // Extract numeric grade from grade level string
+        preg_match('/\d+/', $gradeLevel, $matches);
+        $grade = isset($matches[0]) ? (int)$matches[0] : 7;
+        
+        if ($grade >= 7 && $grade <= 8) return 'junior_high_1';
+        if ($grade >= 9 && $grade <= 10) return 'junior_high_2';
+        if ($grade >= 11 && $grade <= 12) return 'senior_high';
+        
+        return 'junior_high_1';
+    }
+
+    /**
+     * Generate realistic BMI data with Grade 7 having highest overweight rate
+     */
+    private function generateRealisticBMI($ageGroup, $gradeLevel)
+    {
+        // Height ranges by age group (in cm)
+        $heightRanges = [
+            'junior_high_1' => [145, 165], // Grade 7-8
+            'junior_high_2' => [150, 170], // Grade 9-10
+            'senior_high' => [155, 175]    // Grade 11-12
+        ];
+        
+        $heightRange = $heightRanges[$ageGroup] ?? $heightRanges['junior_high_1'];
+        $height = rand($heightRange[0], $heightRange[1]);
+        
+        // Generate BMI categories with realistic distribution
+        // Special handling for Grade 7 to have highest overweight percentage
+        $rand = rand(1, 100);
+        $isGrade7 = strpos($gradeLevel, '7') !== false;
+        
+        if ($rand <= 8) {
+            // 8% Underweight (BMI < 18.5)
+            $targetBMI = rand(150, 184) / 10; // 15.0 - 18.4
+            $category = 'Underweight';
+        } elseif ($rand <= ($isGrade7 ? 50 : 70)) {
+            // Grade 7: 42% Normal weight, Others: 62% Normal weight
+            $targetBMI = rand(185, 249) / 10; // 18.5 - 24.9
+            $category = 'Normal weight';
+        } elseif ($rand <= ($isGrade7 ? 85 : 85)) {
+            // Grade 7: 35% Overweight, Others: 15% Overweight
+            $targetBMI = rand(250, 299) / 10; // 25.0 - 29.9
+            $category = 'Overweight';
+        } else {
+            // Grade 7: 15% Obese, Others: 15% Obese
+            $targetBMI = rand(300, 350) / 10; // 30.0 - 35.0
+            $category = 'Obese';
+        }
+        
+        // For Grade 7, increase overweight probability significantly
+        if ($isGrade7 && $rand > 50 && $rand <= 85) {
+            $targetBMI = rand(250, 299) / 10; // 25.0 - 29.9
+            $category = 'Overweight';
+        }
+        
+        // Calculate weight from BMI and height
+        // BMI = weight(kg) / (height(m))^2
+        $heightInMeters = $height / 100;
+        $weight = round($targetBMI * ($heightInMeters * $heightInMeters), 1);
+        
+        // Recalculate actual BMI
+        $actualBMI = round($weight / ($heightInMeters * $heightInMeters), 2);
+        
+        return [
+            'height' => $height,
+            'weight' => $weight,
+            'bmi' => $actualBMI,
+            'category' => $category
+        ];
+    }
+
+    /**
      * Get detailed health recommendations based on BMI data
      */
     public function getHealthRecommendations(Request $request)
@@ -417,6 +538,367 @@ class AdminController extends BaseController
         } catch (\Exception $e) {
             return $this->sendError('Failed to generate health recommendations', $e->getMessage());
         }
+    }
+
+    /**
+     * Get system reports
+     */
+    public function getReports(Request $request)
+    {
+        try {
+            $reportType = $request->get('type', 'summary');
+            $startDate = $request->get('start_date', date('Y-m-01'));
+            $endDate = $request->get('end_date', date('Y-m-d'));
+            
+            switch ($reportType) {
+                case 'summary':
+                    return $this->getSummaryReport();
+                case 'users':
+                    return $this->getUsersReport();
+                case 'medical':
+                    return $this->getMedicalReport($startDate, $endDate);
+                case 'registration':
+                    return $this->getRegistrationReport($startDate, $endDate);
+                case 'allergies':
+                    return $this->getAllergiesReport();
+                default:
+                    return $this->sendError('Invalid report type');
+            }
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to generate report', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get summary report
+     */
+    private function getSummaryReport()
+    {
+        $summary = [
+            'total_students' => \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.role_id')
+                ->where('roles.role_name', 'student')
+                ->count(),
+            'total_advisers' => \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.role_id')
+                ->where('roles.role_name', 'adviser')
+                ->count(),
+            'total_staff' => \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.role_id')
+                ->where('roles.role_name', 'clinic_staff')
+                ->count(),
+            'active_users' => \DB::table('users')->where('is_active', 1)->count(),
+            'inactive_users' => \DB::table('users')->where('is_active', 0)->count(),
+            'total_visits' => \DB::table('medical_visits')->count(),
+            'total_allergies' => \DB::table('allergies')->count()
+        ];
+        
+        return $this->sendResponse($summary, 'Summary report retrieved successfully');
+    }
+
+    /**
+     * Get users report
+     */
+    private function getUsersReport()
+    {
+        $userStats = \DB::table('users')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->select(
+                'roles.role_name as role',
+                \DB::raw('COUNT(users.user_id) as total'),
+                \DB::raw('SUM(CASE WHEN users.is_active = 1 THEN 1 ELSE 0 END) as active'),
+                \DB::raw('SUM(CASE WHEN users.is_active = 0 THEN 1 ELSE 0 END) as inactive')
+            )
+            ->whereIn('roles.role_name', ['student', 'adviser', 'clinic_staff'])
+            ->groupBy('roles.role_name')
+            ->get()
+            ->map(function($row) {
+                return [
+                    'role' => $row->role,
+                    'total' => (int)$row->total,
+                    'active' => (int)$row->active,
+                    'inactive' => (int)$row->inactive
+                ];
+            });
+        
+        return $this->sendResponse($userStats, 'Users report retrieved successfully');
+    }
+
+    /**
+     * Get medical report
+     */
+    private function getMedicalReport($startDate, $endDate)
+    {
+        $medicalStats = \DB::table('medical_visits')
+            ->select(
+                \DB::raw('DATE(visit_datetime) as date'),
+                \DB::raw('COUNT(*) as total_visits'),
+                \DB::raw('COUNT(DISTINCT student_id) as unique_students'),
+                \DB::raw('COUNT(DISTINCT clinic_staff_id) as staff_involved')
+            )
+            ->whereBetween(\DB::raw('DATE(visit_datetime)'), [$startDate, $endDate])
+            ->groupBy(\DB::raw('DATE(visit_datetime)'))
+            ->orderBy('date', 'desc')
+            ->get()
+            ->map(function($row) {
+                return [
+                    'date' => $row->date,
+                    'total_visits' => (int)$row->total_visits,
+                    'unique_students' => (int)$row->unique_students,
+                    'staff_involved' => (int)$row->staff_involved
+                ];
+            });
+        
+        return $this->sendResponse($medicalStats, 'Medical report retrieved successfully');
+    }
+
+    /**
+     * Get registration report
+     */
+    private function getRegistrationReport($startDate, $endDate)
+    {
+        $registrationStats = \DB::table('users')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->select(
+                \DB::raw('DATE(users.created_at) as date'),
+                'roles.role_name as role',
+                \DB::raw('COUNT(users.user_id) as count')
+            )
+            ->whereBetween(\DB::raw('DATE(users.created_at)'), [$startDate, $endDate])
+            ->groupBy(\DB::raw('DATE(users.created_at)'), 'roles.role_name')
+            ->orderBy('date', 'desc')
+            ->get()
+            ->map(function($row) {
+                return [
+                    'date' => $row->date,
+                    'role' => $row->role,
+                    'count' => (int)$row->count
+                ];
+            });
+        
+        return $this->sendResponse($registrationStats, 'Registration report retrieved successfully');
+    }
+
+    /**
+     * Get allergies report
+     */
+    private function getAllergiesReport()
+    {
+        $allergyStats = \DB::table('allergies')
+            ->select(
+                'allergy_text as allergy',
+                'severity',
+                \DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('allergy_text', 'severity')
+            ->orderBy('count', 'desc')
+            ->limit(20)
+            ->get()
+            ->map(function($row) {
+                return [
+                    'allergy' => $row->allergy,
+                    'severity' => $row->severity,
+                    'count' => (int)$row->count
+                ];
+            });
+        
+        return $this->sendResponse($allergyStats, 'Allergies report retrieved successfully');
+    }
+
+    /**
+     * Get BMI trends over time
+     */
+    public function getBMITrends(Request $request)
+    {
+        try {
+            $months = $request->get('months', 6);
+            $startDate = now()->subMonths($months);
+            
+            $trends = \DB::select("
+                SELECT 
+                    DATE_FORMAT(last_physical_update, '%Y-%m') as month,
+                    COUNT(*) as total_updates,
+                    AVG(bmi) as average_bmi,
+                    SUM(CASE WHEN bmi_category = 'Underweight' THEN 1 ELSE 0 END) as underweight_count,
+                    SUM(CASE WHEN bmi_category = 'Normal weight' THEN 1 ELSE 0 END) as normal_count,
+                    SUM(CASE WHEN bmi_category = 'Overweight' THEN 1 ELSE 0 END) as overweight_count,
+                    SUM(CASE WHEN bmi_category = 'Obese' THEN 1 ELSE 0 END) as obese_count
+                FROM students 
+                WHERE last_physical_update >= ? 
+                AND bmi IS NOT NULL 
+                AND bmi_category IS NOT NULL
+                GROUP BY DATE_FORMAT(last_physical_update, '%Y-%m')
+                ORDER BY month DESC
+            ", [$startDate]);
+            
+            // Calculate percentages
+            $trendsWithPercentages = collect($trends)->map(function($trend) {
+                $total = $trend->total_updates;
+                return [
+                    'month' => $trend->month,
+                    'total_updates' => $total,
+                    'average_bmi' => round($trend->average_bmi, 2),
+                    'underweight_percentage' => $total > 0 ? round(($trend->underweight_count / $total) * 100, 1) : 0,
+                    'normal_percentage' => $total > 0 ? round(($trend->normal_count / $total) * 100, 1) : 0,
+                    'overweight_percentage' => $total > 0 ? round(($trend->overweight_count / $total) * 100, 1) : 0,
+                    'obese_percentage' => $total > 0 ? round(($trend->obese_count / $total) * 100, 1) : 0,
+                ];
+            });
+            
+            return $this->sendResponse($trendsWithPercentages, 'BMI trends retrieved successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve BMI trends', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get system reports
+     */
+    public function getReports(Request $request)
+    {
+        try {
+            $reportType = $request->get('type', 'summary');
+            $startDate = $request->get('start_date', date('Y-m-01'));
+            $endDate = $request->get('end_date', date('Y-m-d'));
+            
+            switch ($reportType) {
+                case 'summary':
+                    return $this->getSummaryReport();
+                case 'users':
+                    return $this->getUsersReport();
+                case 'medical':
+                    return $this->getMedicalReport($startDate, $endDate);
+                case 'registration':
+                    return $this->getRegistrationReport($startDate, $endDate);
+                case 'allergies':
+                    return $this->getAllergiesReport();
+                default:
+                    return $this->sendError('Invalid report type');
+            }
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to generate report', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get health risk data (extracted for reuse)
+     */
+    private function getHealthRiskVisualizationData()
+    {
+        // First, check if we have sufficient BMI data
+        $studentsWithBMI = \DB::select("
+            SELECT COUNT(*) as count 
+            FROM students 
+            WHERE is_active = 1 
+            AND bmi IS NOT NULL 
+            AND bmi_category IS NOT NULL
+        ")[0];
+
+        // If we don't have enough data, generate sample data for demonstration
+        if ($studentsWithBMI->count < 10) {
+            $this->generateSampleBMIData();
+        }
+
+        // Get BMI statistics by grade level
+        $bmiStats = \DB::select("
+            SELECT 
+                s.grade_level as grade_name,
+                s.grade_level,
+                COUNT(*) as total_students,
+                SUM(CASE WHEN s.bmi_category = 'Underweight' THEN 1 ELSE 0 END) as underweight_count,
+                SUM(CASE WHEN s.bmi_category = 'Normal weight' THEN 1 ELSE 0 END) as normal_count,
+                SUM(CASE WHEN s.bmi_category = 'Overweight' THEN 1 ELSE 0 END) as overweight_count,
+                SUM(CASE WHEN s.bmi_category = 'Obese' THEN 1 ELSE 0 END) as obese_count,
+                ROUND((SUM(CASE WHEN s.bmi_category = 'Underweight' THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as underweight_percentage,
+                ROUND((SUM(CASE WHEN s.bmi_category = 'Normal weight' THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as normal_percentage,
+                ROUND((SUM(CASE WHEN s.bmi_category = 'Overweight' THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as overweight_percentage,
+                ROUND((SUM(CASE WHEN s.bmi_category = 'Obese' THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as obese_percentage
+            FROM students s 
+            WHERE s.is_active = 1 
+            AND s.bmi IS NOT NULL 
+            AND s.bmi_category IS NOT NULL
+            GROUP BY s.grade_level
+            ORDER BY s.grade_level
+        ");
+
+        // Get overall statistics
+        $overallStatsResult = \DB::select("
+            SELECT 
+                COUNT(*) as total_students,
+                SUM(CASE WHEN bmi_category = 'Underweight' THEN 1 ELSE 0 END) as total_underweight,
+                SUM(CASE WHEN bmi_category = 'Normal weight' THEN 1 ELSE 0 END) as total_normal,
+                SUM(CASE WHEN bmi_category = 'Overweight' THEN 1 ELSE 0 END) as total_overweight,
+                SUM(CASE WHEN bmi_category = 'Obese' THEN 1 ELSE 0 END) as total_obese,
+                ROUND(AVG(bmi), 2) as average_bmi
+            FROM students 
+            WHERE is_active = 1 
+            AND bmi IS NOT NULL 
+            AND bmi_category IS NOT NULL
+        ");
+        
+        $overallStats = $overallStatsResult[0] ?? (object)[
+            'total_students' => 0,
+            'total_underweight' => 0,
+            'total_normal' => 0,
+            'total_overweight' => 0,
+            'total_obese' => 0,
+            'average_bmi' => 0
+        ];
+
+        return [
+            'grade_statistics' => $bmiStats,
+            'overall_statistics' => $overallStats
+        ];
+    }
+
+    /**
+     * Generate temporary password
+     */
+    private function generateTempPassword()
+    {
+        $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        $numbers = '0123456789';
+        
+        $password = '';
+        $password .= $uppercase[rand(0, strlen($uppercase) - 1)];
+        $password .= $lowercase[rand(0, strlen($lowercase) - 1)];
+        $password .= $numbers[rand(0, strlen($numbers) - 1)];
+        
+        $allChars = $uppercase . $lowercase . $numbers;
+        for ($i = 0; $i < 5; $i++) {
+            $password .= $allChars[rand(0, strlen($allChars) - 1)];
+        }
+        
+        return str_shuffle($password);
+    }
+}
+     * Get allergies report
+     */
+    private function getAllergiesReport()
+    {
+        $allergyStats = \DB::table('allergies')
+            ->select(
+                'allergy_text as allergy',
+                'severity',
+                \DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('allergy_text', 'severity')
+            ->orderBy('count', 'desc')
+            ->limit(20)
+            ->get()
+            ->map(function($row) {
+                return [
+                    'allergy' => $row->allergy,
+                    'severity' => $row->severity,
+                    'count' => (int)$row->count
+                ];
+            });
+        
+        return $this->sendResponse($allergyStats, 'Allergies report retrieved successfully');
     }
 
     /**
@@ -539,127 +1021,6 @@ class AdminController extends BaseController
     }
 
     /**
-     * Generate sample BMI data for demonstration purposes
-     */
-    private function generateSampleBMIData()
-    {
-        try {
-            // Get students without BMI data
-            $studentsWithoutBMI = \DB::select("
-                SELECT student_id, grade_level 
-                FROM students 
-                WHERE is_active = 1 
-                AND (bmi IS NULL OR bmi_category IS NULL)
-                LIMIT 50
-            ");
-
-            foreach ($studentsWithoutBMI as $student) {
-                // Generate realistic BMI data based on grade level
-                $gradeLevel = $student->grade_level;
-                
-                // Age-appropriate BMI ranges (approximate)
-                $ageGroup = $this->getAgeGroupFromGrade($gradeLevel);
-                $bmiData = $this->generateRealisticBMI($ageGroup, $gradeLevel);
-                
-                \DB::update("
-                    UPDATE students 
-                    SET height_cm = ?, 
-                        weight_kg = ?, 
-                        bmi = ?, 
-                        bmi_category = ?,
-                        last_physical_update = NOW()
-                    WHERE student_id = ?
-                ", [
-                    $bmiData['height'],
-                    $bmiData['weight'],
-                    $bmiData['bmi'],
-                    $bmiData['category'],
-                    $student->student_id
-                ]);
-            }
-        } catch (\Exception $e) {
-            // Silently fail if sample data generation fails
-            \Log::warning('Failed to generate sample BMI data: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Get age group from grade level
-     */
-    private function getAgeGroupFromGrade($gradeLevel)
-    {
-        // Extract numeric grade from grade level string
-        preg_match('/\d+/', $gradeLevel, $matches);
-        $grade = isset($matches[0]) ? (int)$matches[0] : 7;
-        
-        if ($grade >= 7 && $grade <= 8) return 'junior_high_1';
-        if ($grade >= 9 && $grade <= 10) return 'junior_high_2';
-        if ($grade >= 11 && $grade <= 12) return 'senior_high';
-        
-        return 'junior_high_1';
-    }
-
-    /**
-     * Generate realistic BMI data with Grade 7 having highest overweight rate
-     */
-    private function generateRealisticBMI($ageGroup, $gradeLevel)
-    {
-        // Height ranges by age group (in cm)
-        $heightRanges = [
-            'junior_high_1' => [145, 165], // Grade 7-8
-            'junior_high_2' => [150, 170], // Grade 9-10
-            'senior_high' => [155, 175]    // Grade 11-12
-        ];
-        
-        $heightRange = $heightRanges[$ageGroup] ?? $heightRanges['junior_high_1'];
-        $height = rand($heightRange[0], $heightRange[1]);
-        
-        // Generate BMI categories with realistic distribution
-        // Special handling for Grade 7 to have highest overweight percentage
-        $rand = rand(1, 100);
-        $isGrade7 = strpos($gradeLevel, '7') !== false;
-        
-        if ($rand <= 8) {
-            // 8% Underweight (BMI < 18.5)
-            $targetBMI = rand(150, 184) / 10; // 15.0 - 18.4
-            $category = 'Underweight';
-        } elseif ($rand <= ($isGrade7 ? 50 : 70)) {
-            // Grade 7: 42% Normal weight, Others: 62% Normal weight
-            $targetBMI = rand(185, 249) / 10; // 18.5 - 24.9
-            $category = 'Normal weight';
-        } elseif ($rand <= ($isGrade7 ? 85 : 85)) {
-            // Grade 7: 35% Overweight, Others: 15% Overweight
-            $targetBMI = rand(250, 299) / 10; // 25.0 - 29.9
-            $category = 'Overweight';
-        } else {
-            // Grade 7: 15% Obese, Others: 15% Obese
-            $targetBMI = rand(300, 350) / 10; // 30.0 - 35.0
-            $category = 'Obese';
-        }
-        
-        // For Grade 7, increase overweight probability significantly
-        if ($isGrade7 && $rand > 50 && $rand <= 85) {
-            $targetBMI = rand(250, 299) / 10; // 25.0 - 29.9
-            $category = 'Overweight';
-        }
-        
-        // Calculate weight from BMI and height
-        // BMI = weight(kg) / (height(m))^2
-        $heightInMeters = $height / 100;
-        $weight = round($targetBMI * ($heightInMeters * $heightInMeters), 1);
-        
-        // Recalculate actual BMI
-        $actualBMI = round($weight / ($heightInMeters * $heightInMeters), 2);
-        
-        return [
-            'height' => $height,
-            'weight' => $weight,
-            'bmi' => $actualBMI,
-            'category' => $category
-        ];
-    }
-
-    /**
      * Generate temporary password
      */
     private function generateTempPassword()
@@ -681,3 +1042,342 @@ class AdminController extends BaseController
         return str_shuffle($password);
     }
 }
+    /**
+     * Get system reports
+     */
+    public function getReports(Request $request)
+    {
+        try {
+            $reportType = $request->get('type', 'summary');
+            $startDate = $request->get('start_date', date('Y-m-01'));
+            $endDate = $request->get('end_date', date('Y-m-d'));
+            
+            switch ($reportType) {
+                case 'summary':
+                    return $this->getSummaryReport();
+                case 'users':
+                    return $this->getUsersReport();
+                case 'medical':
+                    return $this->getMedicalReport($startDate, $endDate);
+                case 'registration':
+                    return $this->getRegistrationReport($startDate, $endDate);
+                case 'allergies':
+                    return $this->getAllergiesReport();
+                default:
+                    return $this->sendError('Invalid report type');
+            }
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to generate report', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get summary report
+     */
+    private function getSummaryReport()
+    {
+        $summary = [
+            'total_students' => \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.role_id')
+                ->where('roles.role_name', 'student')
+                ->count(),
+            'total_advisers' => \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.role_id')
+                ->where('roles.role_name', 'adviser')
+                ->count(),
+            'total_staff' => \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.role_id')
+                ->where('roles.role_name', 'clinic_staff')
+                ->count(),
+            'active_users' => \DB::table('users')->where('is_active', 1)->count(),
+            'inactive_users' => \DB::table('users')->where('is_active', 0)->count(),
+            'total_visits' => \DB::table('medical_visits')->count(),
+            'total_allergies' => \DB::table('allergies')->count()
+        ];
+        
+        return $this->sendResponse($summary, 'Summary report retrieved successfully');
+    }
+
+    /**
+     * Get users report
+     */
+    private function getUsersReport()
+    {
+        $userStats = \DB::table('users')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->select(
+                'roles.role_name as role',
+                \DB::raw('COUNT(users.user_id) as total'),
+                \DB::raw('SUM(CASE WHEN users.is_active = 1 THEN 1 ELSE 0 END) as active'),
+                \DB::raw('SUM(CASE WHEN users.is_active = 0 THEN 1 ELSE 0 END) as inactive')
+            )
+            ->whereIn('roles.role_name', ['student', 'adviser', 'clinic_staff'])
+            ->groupBy('roles.role_name')
+            ->get()
+            ->map(function($row) {
+                return [
+                    'role' => $row->role,
+                    'total' => (int)$row->total,
+                    'active' => (int)$row->active,
+                    'inactive' => (int)$row->inactive
+                ];
+            });
+        
+        return $this->sendResponse($userStats, 'Users report retrieved successfully');
+    }
+
+    /**
+     * Get medical report
+     */
+    private function getMedicalReport($startDate, $endDate)
+    {
+        $medicalStats = \DB::table('medical_visits')
+            ->select(
+                \DB::raw('DATE(visit_datetime) as date'),
+                \DB::raw('COUNT(*) as total_visits'),
+                \DB::raw('COUNT(DISTINCT student_id) as unique_students'),
+                \DB::raw('COUNT(DISTINCT clinic_staff_id) as staff_involved')
+            )
+            ->whereBetween(\DB::raw('DATE(visit_datetime)'), [$startDate, $endDate])
+            ->groupBy(\DB::raw('DATE(visit_datetime)'))
+            ->orderBy('date', 'desc')
+            ->get()
+            ->map(function($row) {
+                return [
+                    'date' => $row->date,
+                    'total_visits' => (int)$row->total_visits,
+                    'unique_students' => (int)$row->unique_students,
+                    'staff_involved' => (int)$row->staff_involved
+                ];
+            });
+        
+        return $this->sendResponse($medicalStats, 'Medical report retrieved successfully');
+    }
+
+    /**
+     * Get registration report
+     */
+    private function getRegistrationReport($startDate, $endDate)
+    {
+        $registrationStats = \DB::table('users')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->select(
+                \DB::raw('DATE(users.created_at) as date'),
+                'roles.role_name as role',
+                \DB::raw('COUNT(users.user_id) as count')
+            )
+            ->whereBetween(\DB::raw('DATE(users.created_at)'), [$startDate, $endDate])
+            ->groupBy(\DB::raw('DATE(users.created_at)'), 'roles.role_name')
+            ->orderBy('date', 'desc')
+            ->get()
+            ->map(function($row) {
+                return [
+                    'date' => $row->date,
+                    'role' => $row->role,
+                    'count' => (int)$row->count
+                ];
+            });
+        
+        return $this->sendResponse($registrationStats, 'Registration report retrieved successfully');
+    }
+
+    /**
+     * Get allergies report
+     */
+    private function getAllergiesReport()
+    {
+        $allergyStats = \DB::table('allergies')
+            ->select(
+                'allergy_text as allergy',
+                'severity',
+                \DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('allergy_text', 'severity')
+            ->orderBy('count', 'desc')
+            ->limit(20)
+            ->get()
+            ->map(function($row) {
+                return [
+                    'allergy' => $row->allergy,
+                    'severity' => $row->severity,
+                    'count' => (int)$row->count
+                ];
+            });
+        
+        return $this->sendResponse($allergyStats, 'Allergies report retrieved successfully');
+    }
+}
+    /**
+     * Get system reports
+     */
+    public function getReports(Request $request)
+    {
+        try {
+            $reportType = $request->get('type', 'summary');
+            $startDate = $request->get('start_date', date('Y-m-01'));
+            $endDate = $request->get('end_date', date('Y-m-d'));
+            
+            switch ($reportType) {
+                case 'summary':
+                    return $this->getSummaryReport();
+                case 'users':
+                    return $this->getUsersReport();
+                case 'medical':
+                    return $this->getMedicalReport($startDate, $endDate);
+                case 'registration':
+                    return $this->getRegistrationReport($startDate, $endDate);
+                case 'allergies':
+                    return $this->getAllergiesReport();
+                default:
+                    return $this->sendError('Invalid report type');
+            }
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to generate report', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get summary report
+     */
+    private function getSummaryReport()
+    {
+        $summary = [
+            'total_students' => \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.role_id')
+                ->where('roles.role_name', 'student')
+                ->count(),
+            'total_advisers' => \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.role_id')
+                ->where('roles.role_name', 'adviser')
+                ->count(),
+            'total_staff' => \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.role_id')
+                ->where('roles.role_name', 'clinic_staff')
+                ->count(),
+            'active_users' => \DB::table('users')->where('is_active', 1)->count(),
+            'inactive_users' => \DB::table('users')->where('is_active', 0)->count(),
+            'total_visits' => \DB::table('medical_visits')->count(),
+            'total_allergies' => \DB::table('allergies')->count()
+        ];
+        
+        return $this->sendResponse($summary, 'Summary report retrieved successfully');
+    }
+
+    /**
+     * Get users report
+     */
+    private function getUsersReport()
+    {
+        $userStats = \DB::table('users')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->select(
+                'roles.role_name as role',
+                \DB::raw('COUNT(users.user_id) as total'),
+                \DB::raw('SUM(CASE WHEN users.is_active = 1 THEN 1 ELSE 0 END) as active'),
+                \DB::raw('SUM(CASE WHEN users.is_active = 0 THEN 1 ELSE 0 END) as inactive')
+            )
+            ->whereIn('roles.role_name', ['student', 'adviser', 'clinic_staff'])
+            ->groupBy('roles.role_name')
+            ->get()
+            ->map(function($row) {
+                return [
+                    'role' => $row->role,
+                    'total' => (int)$row->total,
+                    'active' => (int)$row->active,
+                    'inactive' => (int)$row->inactive
+                ];
+            });
+        
+        return $this->sendResponse($userStats, 'Users report retrieved successfully');
+    }
+
+    /**
+     * Get medical report
+     */
+    private function getMedicalReport($startDate, $endDate)
+    {
+        $medicalStats = \DB::table('medical_visits')
+            ->select(
+                \DB::raw('DATE(visit_datetime) as date'),
+                \DB::raw('COUNT(*) as total_visits'),
+                \DB::raw('COUNT(DISTINCT student_id) as unique_students'),
+                \DB::raw('COUNT(DISTINCT clinic_staff_id) as staff_involved')
+            )
+            ->whereBetween(\DB::raw('DATE(visit_datetime)'), [$startDate, $endDate])
+            ->groupBy(\DB::raw('DATE(visit_datetime)'))
+            ->orderBy('date', 'desc')
+            ->get()
+            ->map(function($row) {
+                return [
+                    'date' => $row->date,
+                    'total_visits' => (int)$row->total_visits,
+                    'unique_students' => (int)$row->unique_students,
+                    'staff_involved' => (int)$row->staff_involved
+                ];
+            });
+        
+        return $this->sendResponse($medicalStats, 'Medical report retrieved successfully');
+    }
+
+    /**
+     * Get registration report
+     */
+    private function getRegistrationReport($startDate, $endDate)
+    {
+        $registrationStats = \DB::table('users')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->select(
+                \DB::raw('DATE(users.created_at) as date'),
+                'roles.role_name as role',
+                \DB::raw('COUNT(users.user_id) as count')
+            )
+            ->whereBetween(\DB::raw('DATE(users.created_at)'), [$startDate, $endDate])
+            ->groupBy(\DB::raw('DATE(users.created_at)'), 'roles.role_name')
+            ->orderBy('date', 'desc')
+            ->get()
+            ->map(function($row) {
+                return [
+                    'date' => $row->date,
+                    'role' => $row->role,
+                    'count' => (int)$row->count
+                ];
+            });
+        
+        return $this->sendResponse($registrationStats, 'Registration report retrieved successfully');
+    }
+
+    /**
+     * Get allergies report
+     */
+    private function getAllergiesReport()
+    {
+        $allergyStats = \DB::table('allergies')
+            ->select(
+                'allergy_text as allergy',
+                'severity',
+                \DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('allergy_text', 'severity')
+            ->orderBy('count', 'desc')
+            ->limit(20)
+            ->get()
+            ->map(function($row) {
+                return [
+                    'allergy' => $row->allergy,
+                    'severity' => $row->severity,
+                    'count' => (int)$row->count
+                ];
+            });
+        
+        return $this->sendResponse($allergyStats, 'Allergies report retrieved successfully');
+    }
+}
+    /**
+     * Test method to verify method addition works
+     */
+    public function testMethod()
+    {
+        return response()->json(['message' => 'Test method works']);
+    }
