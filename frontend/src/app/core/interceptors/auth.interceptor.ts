@@ -34,6 +34,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         console.error('❌ Error parsing current user:', e);
       }
     }
+  } else if (isLaravelApi && !token && !isAuthEndpoint) {
+    // Laravel API request without token - this will likely fail
+    console.warn('⚠️ Laravel API request without token:', req.url);
   }
   
   // Clone request with headers if needed

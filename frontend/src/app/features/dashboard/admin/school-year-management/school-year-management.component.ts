@@ -1382,8 +1382,6 @@ export class SchoolYearManagementComponent implements OnInit {
   message = '';
   messageType: 'success' | 'error' = 'success';
 
-  private apiUrl = environment.apiUrl;
-
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
@@ -1393,7 +1391,7 @@ export class SchoolYearManagementComponent implements OnInit {
   }
 
   loadSchoolYears(): void {
-    this.http.get<any>(`${this.apiUrl}/admin/school-years`).subscribe({
+    this.http.get<any>(`${environment.legacyApiUrl}/admin/school-years/list.php`).subscribe({
       next: (response) => {
         if (response.success) {
           this.schoolYears = response.data;
@@ -1416,7 +1414,7 @@ export class SchoolYearManagementComponent implements OnInit {
     if (!this.selectedSchoolYearId) return;
     
     this.loading = true;
-    this.http.get<any>(`${this.apiUrl}/admin/sections?school_year_id=${this.selectedSchoolYearId}`).subscribe({
+    this.http.get<any>(`${environment.legacyApiUrl}/admin/sections/list.php?school_year_id=${this.selectedSchoolYearId}`).subscribe({
       next: (response) => {
         if (response.success) {
           this.sections = response.data;
@@ -1432,7 +1430,7 @@ export class SchoolYearManagementComponent implements OnInit {
   }
 
   loadAdvisers(): void {
-    this.http.get<any>(`${this.apiUrl}/admin/advisers`).subscribe({
+    this.http.get<any>(`${environment.legacyApiUrl}/admin/advisers/list.php`).subscribe({
       next: (response) => {
         if (response.success) {
           this.advisers = response.data;
@@ -1496,10 +1494,11 @@ export class SchoolYearManagementComponent implements OnInit {
       adviser_user_id: this.selectedAdviserId
     };
 
-    this.http.post<any>(`${this.apiUrl}/admin/sections/assign-adviser`, data).subscribe({
+    this.http.post<any>(`${environment.legacyApiUrl}/admin/sections/assign-adviser.php`, data).subscribe({
       next: (response) => {
         if (response.success) {
-          this.showMessage(`Adviser assigned successfully! ${response.data.students_updated} students updated.`, 'success');
+          const studentsUpdated = response.students_updated || 0;
+          this.showMessage(`Adviser assigned successfully! ${studentsUpdated} students updated.`, 'success');
           this.loadSections();
           this.closeAssignModal();
         } else {
@@ -1523,7 +1522,7 @@ export class SchoolYearManagementComponent implements OnInit {
       adviser_user_id: null
     };
 
-    this.http.post<any>(`${this.apiUrl}/admin/sections/assign-adviser`, data).subscribe({
+    this.http.post<any>(`${environment.legacyApiUrl}/admin/sections/assign-adviser.php`, data).subscribe({
       next: (response) => {
         if (response.success) {
           this.showMessage('Adviser removed successfully', 'success');
@@ -1566,7 +1565,7 @@ export class SchoolYearManagementComponent implements OnInit {
     this.settingCurrent = true;
     const data = { school_year_id: this.selectedSchoolYearId };
 
-    this.http.post<any>(`${this.apiUrl}/admin/school-years/set-current`, data).subscribe({
+    this.http.post<any>(`${environment.legacyApiUrl}/admin/school-years/set-current.php`, data).subscribe({
       next: (response) => {
         if (response.success) {
           this.showMessage(`Current school year set to ${year.year_name}`, 'success');
@@ -1627,7 +1626,7 @@ export class SchoolYearManagementComponent implements OnInit {
     if (!this.isYearFormValid()) return;
 
     this.saving = true;
-    this.http.post<any>(`${this.apiUrl}/admin/school-years`, this.newYear).subscribe({
+    this.http.post<any>(`${environment.legacyApiUrl}/admin/school-years/create.php`, this.newYear).subscribe({
       next: (response) => {
         if (response.success) {
           this.showMessage(`School year "${this.newYear.year_name}" created successfully!`, 'success');
@@ -1635,7 +1634,7 @@ export class SchoolYearManagementComponent implements OnInit {
           this.closeCreateYearModal();
           // Auto-select the newly created school year
           setTimeout(() => {
-            this.selectedSchoolYearId = response.data.school_year_id;
+            this.selectedSchoolYearId = response.school_year_id;
             this.loadSections();
           }, 500);
         } else {
@@ -1688,7 +1687,7 @@ export class SchoolYearManagementComponent implements OnInit {
       capacity: this.newSection.capacity
     };
 
-    this.http.post<any>(`${this.apiUrl}/admin/sections`, data).subscribe({
+    this.http.post<any>(`${environment.legacyApiUrl}/admin/sections/create.php`, data).subscribe({
       next: (response) => {
         if (response.success) {
           this.showMessage(`Section "${this.newSection.section_name}" created successfully!`, 'success');
@@ -1729,10 +1728,10 @@ export class SchoolYearManagementComponent implements OnInit {
 
   loadSectionStudents(sectionId: number): void {
     this.loadingStudents = true;
-    this.http.get<any>(`${this.apiUrl}/admin/sections/students?section_id=${sectionId}`).subscribe({
+    this.http.get<any>(`${environment.legacyApiUrl}/admin/sections/get-students.php?section_id=${sectionId}`).subscribe({
       next: (response) => {
         if (response.success) {
-          this.sectionStudentsData = response.data;
+          this.sectionStudentsData = response;
         } else {
           this.showMessage('Error loading students: ' + response.message, 'error');
         }

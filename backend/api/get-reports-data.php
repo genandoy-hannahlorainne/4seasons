@@ -65,7 +65,7 @@ function getSummaryReport($pdo) {
         SELECT COUNT(*) as count 
         FROM users u 
         JOIN roles r ON u.role_id = r.role_id 
-        WHERE r.role_name = 'student'
+        WHERE r.role_name = 'Student'
     ");
     $stmt->execute();
     $totalStudents = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
@@ -75,17 +75,17 @@ function getSummaryReport($pdo) {
         SELECT COUNT(*) as count 
         FROM users u 
         JOIN roles r ON u.role_id = r.role_id 
-        WHERE r.role_name = 'adviser'
+        WHERE r.role_name = 'Adviser'
     ");
     $stmt->execute();
     $totalAdvisers = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
-    // Get total staff
+    // Get total staff (clinic staff only)
     $stmt = $pdo->prepare("
         SELECT COUNT(*) as count 
         FROM users u 
         JOIN roles r ON u.role_id = r.role_id 
-        WHERE r.role_name = 'clinic_staff'
+        WHERE r.role_name = 'Clinic Staff'
     ");
     $stmt->execute();
     $totalStaff = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
@@ -133,7 +133,7 @@ function getUsersReport($pdo) {
             SUM(CASE WHEN u.is_active = 0 THEN 1 ELSE 0 END) as inactive
         FROM users u
         JOIN roles r ON u.role_id = r.role_id
-        WHERE r.role_name IN ('student', 'adviser', 'clinic_staff')
+        WHERE r.role_name IN ('Student', 'Adviser', 'Clinic Staff', 'Admin')
         GROUP BY r.role_name
         ORDER BY r.role_name
     ";

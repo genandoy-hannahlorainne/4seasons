@@ -21,6 +21,7 @@ ob_start();
 require_once '../../config/database.php';
 require_once '../../middleware/auth.php';
 require_once '../../services/EmailService.php';
+require_once '../../services/StudentAssignmentService.php';
 
 error_log("=== CREATE USER API CALLED ===");
 
@@ -107,6 +108,15 @@ try {
         $currentSchoolYear = $currentSchoolYearStmt->fetch(PDO::FETCH_ASSOC);
         $currentSchoolYearId = $currentSchoolYear ? $currentSchoolYear['id'] : null;
         
+        // If no current school year is set, use the most recent active school year
+        if (!$currentSchoolYearId) {
+            $fallbackQuery = "SELECT id FROM school_years WHERE is_active = 1 ORDER BY id DESC LIMIT 1";
+            $fallbackStmt = $db->query($fallbackQuery);
+            $fallbackYear = $fallbackStmt->fetch(PDO::FETCH_ASSOC);
+            $currentSchoolYearId = $fallbackYear ? $fallbackYear['id'] : null;
+            error_log("⚠️ No current school year set, using fallback: " . ($currentSchoolYearId ?? 'NONE'));
+        }
+        
         $studentQuery = "INSERT INTO students (
                           user_id, student_number, first_name, middle_name, last_name,
                           birth_date, gender, grade_level, section, 
@@ -125,8 +135,26 @@ try {
         $studentStmt->bindParam(':last_name', $data->last_name);
         $studentStmt->bindParam(':birth_date', $data->birth_date);
         $studentStmt->bindParam(':gender', $data->gender);
-        $studentStmt->bindParam(':grade_level', $data->grade_level);
-        $studentStmt->bindParam(':section', $data->section);
+        
+        // For section, we need to get the section name and actual grade level from section_id
+        $sectionName = null;
+        $actualGradeLevel = null;
+        if (!empty($data->section_id)) {
+            $getSectionInfoQuery = "SELECT s.section_name, gl.level_number 
+                                   FROM sections s 
+                                   LEFT JOIN grade_levels gl ON s.grade_level_id = gl.id
+                                   WHERE s.id = :section_id";
+            $getSectionInfoStmt = $db->prepare($getSectionInfoQuery);
+            $getSectionInfoStmt->bindParam(':section_id', $data->section_id);
+            $getSectionInfoStmt->execute();
+            if ($getSectionInfoStmt->rowCount() > 0) {
+                $sectionInfo = $getSectionInfoStmt->fetch(PDO::FETCH_ASSOC);
+                $sectionName = $sectionInfo['section_name'];
+                $actualGradeLevel = $sectionInfo['level_number']; // This will be 7, 8, 9, etc.
+            }
+        }
+        $studentStmt->bindParam(':section', $sectionName);
+        $studentStmt->bindParam(':grade_level', $actualGradeLevel); // Store actual grade level (7-12)
         $studentStmt->bindParam(':current_school_year_id', $currentSchoolYearId);
         $studentStmt->execute();
         
@@ -134,42 +162,18 @@ try {
         
         error_log("✅ Student created with current_school_year_id: " . ($currentSchoolYearId ?? 'NULL'));
         
-        // Link student to section if grade_level and section are provided
-        if (!empty($data->grade_level) && !empty($data->section) && $currentSchoolYearId) {
-            // Find matching section
-            $findSectionQuery = "SELECT s.id, s.section_name, gl.level_number 
-                                FROM sections s
-                                LEFT JOIN grade_levels gl ON s.grade_level_id = gl.id
-                                WHERE gl.level_number = :grade_level 
-                                AND s.section_name = :section_name
-                                AND s.school_year_id = :school_year_id
-                                AND s.is_active = 1
-                                LIMIT 1";
-            $findSectionStmt = $db->prepare($findSectionQuery);
-            $findSectionStmt->bindParam(':grade_level', $data->grade_level);
-            $findSectionStmt->bindParam(':section_name', $data->section);
-            $findSectionStmt->bindParam(':school_year_id', $currentSchoolYearId);
-            $findSectionStmt->execute();
-            $matchingSection = $findSectionStmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($matchingSection) {
-                // Update student's current_section_id
-                $updateSectionLinkQuery = "UPDATE students SET current_section_id = :section_id WHERE student_id = :student_id";
-                $updateSectionLinkStmt = $db->prepare($updateSectionLinkQuery);
-                $updateSectionLinkStmt->bindParam(':section_id', $matchingSection['id']);
-                $updateSectionLinkStmt->bindParam(':student_id', $roleSpecificId);
-                $updateSectionLinkStmt->execute();
-                
-                // Update section enrollment count
-                $updateEnrollmentQuery = "UPDATE sections SET current_enrollment = current_enrollment + 1 WHERE id = :section_id";
-                $updateEnrollmentStmt = $db->prepare($updateEnrollmentQuery);
-                $updateEnrollmentStmt->bindParam(':section_id', $matchingSection['id']);
-                $updateEnrollmentStmt->execute();
-                
-                error_log("✅ Student linked to section ID: " . $matchingSection['id'] . " (" . $matchingSection['section_name'] . ")");
-            } else {
-                error_log("⚠️ No matching section found for Grade {$data->grade_level} - {$data->section}");
-            }
+        // Use StudentAssignmentService for robust assignment
+        $assignmentService = new StudentAssignmentService($database);
+        $assignmentResult = $assignmentService->autoAssignStudent(
+            $roleSpecificId, 
+            $actualGradeLevel, 
+            !empty($data->section_id) ? $data->section_id : null
+        );
+        
+        if ($assignmentResult['success']) {
+            error_log("✅ " . $assignmentResult['message']);
+        } else {
+            error_log("⚠️ Assignment warning: " . $assignmentResult['message']);
         }
         
         // Generate QR code for student
@@ -186,10 +190,10 @@ try {
         
     } elseif (strtolower($data->role) === 'adviser') {
         $adviserQuery = "INSERT INTO advisers (
-                          user_id, first_name, last_name, employee_number,
+                          user_id, first_name, last_name, employee_number, employee_id,
                           contact_phone, grade_level, section, is_active
                         ) VALUES (
-                          :user_id, :first_name, :last_name, :employee_number,
+                          :user_id, :first_name, :last_name, :employee_number, :employee_id,
                           :contact_phone, :grade_level, :section, 1
                         )";
         
@@ -198,62 +202,45 @@ try {
         $adviserStmt->bindParam(':first_name', $data->first_name);
         $adviserStmt->bindParam(':last_name', $data->last_name);
         $adviserStmt->bindParam(':employee_number', $data->employee_number);
+        $adviserStmt->bindParam(':employee_id', $data->employee_number); // Use employee_number for employee_id too
         $adviserStmt->bindParam(':contact_phone', $data->phone);
-        $adviserStmt->bindParam(':grade_level', $data->grade_level);
-        $adviserStmt->bindParam(':section', $data->section);
+        
+        // Handle optional grade_level and section
+        $gradeLevel = !empty($data->grade_level) ? $data->grade_level : null;
+        $section = null;
+        
+        // If section_id is provided, get the section name
+        if (!empty($data->section_id)) {
+            $sectionQuery = "SELECT section_name FROM sections WHERE id = :section_id";
+            $sectionStmt = $db->prepare($sectionQuery);
+            $sectionStmt->bindParam(':section_id', $data->section_id);
+            $sectionStmt->execute();
+            if ($sectionStmt->rowCount() > 0) {
+                $sectionData = $sectionStmt->fetch(PDO::FETCH_ASSOC);
+                $section = $sectionData['section_name'];
+            }
+        }
+        
+        $adviserStmt->bindParam(':grade_level', $gradeLevel);
+        $adviserStmt->bindParam(':section', $section);
         $adviserStmt->execute();
         
         $roleSpecificId = $db->lastInsertId();
         
-        // If grade_level and section are provided, assign adviser to that section
-        if (!empty($data->grade_level) && !empty($data->section)) {
-            error_log("Assigning adviser to section: Grade {$data->grade_level}, Section {$data->section}");
+        // If section_id is provided, assign adviser to that section
+        if (!empty($data->section_id)) {
+            error_log("Assigning adviser to section ID: {$data->section_id}");
             
-            // Get current school year
-            $currentSchoolYearQuery = "SELECT id FROM school_years WHERE is_current = 1 LIMIT 1";
-            $currentSchoolYearStmt = $db->query($currentSchoolYearQuery);
+            // Assign adviser to section (use user_id, not adviser_id)
+            $assignSectionQuery = "UPDATE sections SET adviser_id = :user_id WHERE id = :section_id";
+            $assignSectionStmt = $db->prepare($assignSectionQuery);
+            $assignSectionStmt->bindParam(':user_id', $userId);
+            $assignSectionStmt->bindParam(':section_id', $data->section_id);
+            $assignSectionStmt->execute();
             
-            if ($currentSchoolYearStmt->rowCount() > 0) {
-                $currentSchoolYear = $currentSchoolYearStmt->fetch(PDO::FETCH_ASSOC);
-                $schoolYearId = $currentSchoolYear['id'];
-                
-                error_log("Using current school year ID: $schoolYearId");
-                
-                // Find the section
-                $findSectionQuery = "SELECT sec.id 
-                                    FROM sections sec
-                                    JOIN grade_levels gl ON sec.grade_level_id = gl.id
-                                    WHERE gl.level_number = :grade_level
-                                    AND sec.section_name = :section_name
-                                    AND sec.school_year_id = :school_year_id
-                                    AND sec.is_active = 1
-                                    LIMIT 1";
-                $findSectionStmt = $db->prepare($findSectionQuery);
-                $findSectionStmt->bindParam(':grade_level', $data->grade_level);
-                $findSectionStmt->bindParam(':section_name', $data->section);
-                $findSectionStmt->bindParam(':school_year_id', $schoolYearId);
-                $findSectionStmt->execute();
-                
-                if ($findSectionStmt->rowCount() > 0) {
-                    $section = $findSectionStmt->fetch(PDO::FETCH_ASSOC);
-                    $sectionId = $section['id'];
-                    
-                    // Assign adviser to section (use user_id, not adviser_id)
-                    $assignSectionQuery = "UPDATE sections SET adviser_id = :user_id WHERE id = :section_id";
-                    $assignSectionStmt = $db->prepare($assignSectionQuery);
-                    $assignSectionStmt->bindParam(':user_id', $userId);
-                    $assignSectionStmt->bindParam(':section_id', $sectionId);
-                    $assignSectionStmt->execute();
-                    
-                    error_log("✓ Assigned adviser (user_id: $userId) to section (id: $sectionId) for current school year");
-                } else {
-                    error_log("⚠️ Section not found: Grade {$data->grade_level}, Section {$data->section}, School Year {$schoolYearId}");
-                }
-            } else {
-                error_log("⚠️ No current school year set. Please set a current school year first.");
-            }
+            error_log("✓ Assigned adviser (user_id: $userId) to section (id: {$data->section_id})");
         } else {
-            error_log("⚠️ No active school year found, cannot assign adviser to section");
+            error_log("⚠️ No section_id provided for adviser");
         }
         
     } elseif (strtolower($data->role) === 'clinic_staff') {

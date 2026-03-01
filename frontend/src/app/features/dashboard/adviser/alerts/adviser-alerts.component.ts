@@ -508,12 +508,22 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
     this.adviserService.getAdviserNotifications().subscribe({
       next: (response) => {
         console.log('✅ Notifications response:', response);
-        if (response?.success && Array.isArray(response.notifications)) {
-          this.alerts = response.notifications;
-          console.log('✅ Loaded', this.alerts.length, 'notifications');
-        } else {
-          console.error('❌ Invalid response structure:', response);
+        
+        // Handle both Laravel API format (response.data.notifications) and legacy format (response.notifications)
+        let notifications = [];
+        if (response?.success && response.data?.notifications) {
+          // Laravel API format
+          notifications = response.data.notifications;
+        } else if (response?.success && Array.isArray(response.notifications)) {
+          // Legacy API format
+          notifications = response.notifications;
+        } else if (Array.isArray(response.notifications)) {
+          // Direct notifications array (legacy fallback)
+          notifications = response.notifications;
         }
+        
+        this.alerts = notifications;
+        console.log('✅ Loaded', this.alerts.length, 'notifications');
         this.loading = false;
       },
       error: (err) => {

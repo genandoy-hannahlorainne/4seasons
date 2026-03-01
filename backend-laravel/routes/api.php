@@ -110,6 +110,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/adviser/health-heatmap', [\App\Http\Controllers\Api\AdviserController::class, 'getHealthHeatmap']);
     Route::get('/adviser/class-roster', [\App\Http\Controllers\Api\AdviserController::class, 'getClassRoster']);
     Route::get('/adviser/advisory-students', [\App\Http\Controllers\Api\AdviserController::class, 'getAdvisoryStudents']);
+    Route::get('/adviser/notifications', [\App\Http\Controllers\Api\AdviserController::class, 'getNotifications']);
     
     // Emergency Drill Management endpoints
     Route::apiResource('emergency-drills', \App\Http\Controllers\Api\EmergencyDrillController::class);

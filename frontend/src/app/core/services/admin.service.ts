@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -58,25 +59,10 @@ export class AdminService {
     return this.http.delete<any>(`${environment.legacyApiUrl}/manage-user.php?action=delete&user_id=${userId}`);
   }
 
-  // Create User - Laravel API
+  // Create User - Legacy API (for students)
   createUser(userData: any): Observable<any> {
-    // Map frontend data to Laravel API format
-    const laravelData = {
-      student_number: userData.student_number,
-      first_name: userData.first_name,
-      middle_name: userData.middle_name,
-      last_name: userData.last_name,
-      birth_date: userData.birth_date,
-      gender: userData.gender,
-      grade_level: userData.grade_level, // Admin grade level (1-6)
-      section_id: userData.section_id, // Will be set by getSectionsForGrade
-      email: userData.email,
-      phone: userData.phone,
-      emergency_contact_name: userData.emergency_contact_name,
-      emergency_contact_phone: userData.emergency_contact_phone
-    };
-    
-    return this.http.post<any>(`${environment.apiUrl}/admin/students`, laravelData);
+    // Use legacy API for student creation
+    return this.http.post<any>(`${environment.legacyApiUrl}/admin/create-user.php`, userData);
   }
 
   // Create User - Legacy API (for non-students)
@@ -84,14 +70,27 @@ export class AdminService {
     return this.http.post<any>(`${environment.legacyApiUrl}/admin/create-user.php`, userData);
   }
 
-  // Get sections for a specific grade level (Laravel API)
+  // Get sections for a specific grade level (Legacy API)
   getSectionsForGrade(gradeLevel: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/sections/grade/${gradeLevel}`);
+    return this.http.get<any>(`${environment.legacyApiUrl}/admin/sections/list.php?grade_level=${gradeLevel}`)
+      .pipe(
+        map(response => {
+          if (response.success) {
+            return {
+              success: true,
+              data: {
+                sections: response.data || []
+              }
+            };
+          }
+          return response;
+        })
+      );
   }
 
-  // Get all grade levels with sections (Laravel API)
+  // Get all grade levels with sections (Legacy API)
   getGradeLevelsWithSections(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/grade-levels/sections`);
+    return this.http.get<any>(`${environment.legacyApiUrl}/get-grade-levels.php`);
   }
 
   // Bulk Import Students
@@ -274,16 +273,24 @@ export class AdminService {
 
   // Health Risk Visualization
   getHealthRiskVisualization(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/health-risk-visualization`);
+    return this.http.get<any>(`${environment.legacyApiUrl}/get-health-risk-data.php`);
   }
 
-  // Health Recommendations
+  // Health Recommendations (Legacy API)
   getHealthRecommendations(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/health-recommendations`);
+    // For now, return empty recommendations since we don't have this endpoint in legacy API
+    return new Observable(observer => {
+      observer.next({ success: true, data: [] });
+      observer.complete();
+    });
   }
 
-  // BMI Trends
+  // BMI Trends (Legacy API)
   getBMITrends(months: number = 6): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/bmi-trends?months=${months}`);
+    // For now, return empty trends since we don't have this endpoint in legacy API
+    return new Observable(observer => {
+      observer.next({ success: true, data: [] });
+      observer.complete();
+    });
   }
 }
