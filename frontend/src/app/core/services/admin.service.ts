@@ -115,7 +115,8 @@ export class AdminService {
 
   // Reports
   getReport(reportType: string, startDate?: string, endDate?: string): Observable<any> {
-    let url = `${environment.legacyApiUrl}/admin-reports.php?type=${reportType}`;
+    // Use legacy API for all reports until Laravel implementation is fixed
+    let url = `${environment.legacyApiUrl}/get-reports-data.php?type=${reportType}`;
     if (startDate) url += `&start_date=${startDate}`;
     if (endDate) url += `&end_date=${endDate}`;
     return this.http.get<any>(url);

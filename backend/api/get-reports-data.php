@@ -1,156 +1,276 @@
 <?php
-// Include CORS handler first
-require_once '../cors.php';
+/**
+ * Get reports data - Legacy API endpoint for all reports
+ */
 
-header("Content-Type: application/json; charset=UTF-8");
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, user_id');
 
-require_once '../config/database.php';
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
 
+require_once __DIR__ . '/../config/database.php';
+
+// Create database connection
 $database = new Database();
-$db = $database->getConnection();
+$pdo = $database->getConnection();
 
-// Get parameters
-$startDate = $_GET['start_date'] ?? null;
-$endDate = $_GET['end_date'] ?? null;
-$gradeLevel = $_GET['grade_level'] ?? null;
-
-// Validate dates
-if (!$startDate || !$endDate) {
-    http_response_code(400);
+if (!$pdo) {
     echo json_encode([
         'success' => false,
-        'message' => 'Start date and end date are required'
+        'message' => 'Database connection failed'
     ]);
     exit;
 }
 
+/**
+ * Get medical report data
+ */
+function getMedicalReport($pdo, $startDate, $endDate) {
+    $sql = "
+        SELECT 
+            DATE(visit_datetime) as date,
+            COUNT(*) as total_visits,
+            COUNT(DISTINCT student_id) as unique_students,
+            COUNT(DISTINCT clinic_staff_id) as staff_involved
+        FROM medical_visits 
+        WHERE DATE(visit_datetime) BETWEEN ? AND ?
+        GROUP BY DATE(visit_datetime)
+        ORDER BY date DESC
+    ";
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$startDate, $endDate]);
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    return array_map(function($row) {
+        return [
+            'date' => $row['date'],
+            'total_visits' => (int)$row['total_visits'],
+            'unique_students' => (int)$row['unique_students'],
+            'staff_involved' => (int)$row['staff_involved']
+        ];
+    }, $results);
+}
+
+/**
+ * Get summary report data
+ */
+function getSummaryReport($pdo) {
+    // Get total students
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) as count 
+        FROM users u 
+        JOIN roles r ON u.role_id = r.role_id 
+        WHERE r.role_name = 'student'
+    ");
+    $stmt->execute();
+    $totalStudents = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+    
+    // Get total advisers
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) as count 
+        FROM users u 
+        JOIN roles r ON u.role_id = r.role_id 
+        WHERE r.role_name = 'adviser'
+    ");
+    $stmt->execute();
+    $totalAdvisers = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+    
+    // Get total staff
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) as count 
+        FROM users u 
+        JOIN roles r ON u.role_id = r.role_id 
+        WHERE r.role_name = 'clinic_staff'
+    ");
+    $stmt->execute();
+    $totalStaff = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+    
+    // Get active users
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM users WHERE is_active = 1");
+    $stmt->execute();
+    $activeUsers = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+    
+    // Get inactive users
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM users WHERE is_active = 0");
+    $stmt->execute();
+    $inactiveUsers = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+    
+    // Get total medical visits
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM medical_visits");
+    $stmt->execute();
+    $totalVisits = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+    
+    // Get total allergies
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM allergies");
+    $stmt->execute();
+    $totalAllergies = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+    
+    return [
+        'total_students' => (int)$totalStudents,
+        'total_advisers' => (int)$totalAdvisers,
+        'total_staff' => (int)$totalStaff,
+        'active_users' => (int)$activeUsers,
+        'inactive_users' => (int)$inactiveUsers,
+        'total_visits' => (int)$totalVisits,
+        'total_allergies' => (int)$totalAllergies
+    ];
+}
+
+/**
+ * Get users report data
+ */
+function getUsersReport($pdo) {
+    $sql = "
+        SELECT 
+            r.role_name as role,
+            COUNT(u.user_id) as total,
+            SUM(CASE WHEN u.is_active = 1 THEN 1 ELSE 0 END) as active,
+            SUM(CASE WHEN u.is_active = 0 THEN 1 ELSE 0 END) as inactive
+        FROM users u
+        JOIN roles r ON u.role_id = r.role_id
+        WHERE r.role_name IN ('student', 'adviser', 'clinic_staff')
+        GROUP BY r.role_name
+        ORDER BY r.role_name
+    ";
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    return array_map(function($row) {
+        return [
+            'role' => $row['role'],
+            'total' => (int)$row['total'],
+            'active' => (int)$row['active'],
+            'inactive' => (int)$row['inactive']
+        ];
+    }, $results);
+}
+
+/**
+ * Get registration report data
+ */
+function getRegistrationReport($pdo, $startDate, $endDate) {
+    $sql = "
+        SELECT 
+            DATE(u.created_at) as date,
+            r.role_name as role,
+            COUNT(u.user_id) as count
+        FROM users u
+        JOIN roles r ON u.role_id = r.role_id
+        WHERE DATE(u.created_at) BETWEEN ? AND ?
+        GROUP BY DATE(u.created_at), r.role_name
+        ORDER BY date DESC, r.role_name
+    ";
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$startDate, $endDate]);
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    return array_map(function($row) {
+        return [
+            'date' => $row['date'],
+            'role' => $row['role'],
+            'count' => (int)$row['count']
+        ];
+    }, $results);
+}
+
+/**
+ * Get allergies report data
+ */
+function getAllergiesReport($pdo) {
+    $sql = "
+        SELECT 
+            allergy_text as allergy,
+            severity,
+            COUNT(*) as count
+        FROM allergies
+        GROUP BY allergy_text, severity
+        ORDER BY count DESC
+        LIMIT 20
+    ";
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    return array_map(function($row) {
+        return [
+            'allergy' => $row['allergy'],
+            'severity' => $row['severity'],
+            'count' => (int)$row['count']
+        ];
+    }, $results);
+}
+
 try {
-    // Build base query conditions
-    $dateCondition = "AND mv.visit_datetime BETWEEN :start_date AND DATE_ADD(:end_date, INTERVAL 1 DAY)";
-    $gradeCondition = "";
+    $reportType = $_GET['type'] ?? 'summary';
+    $startDate = $_GET['start_date'] ?? date('Y-m-01');
+    $endDate = $_GET['end_date'] ?? date('Y-m-d');
     
-    if (!empty($gradeLevel)) {
-        $gradeCondition = "AND s.grade_level = :grade_level";
-    }
-
-    // 1. Total visits count
-    $totalVisitsQuery = "SELECT COUNT(*) as count 
-                         FROM medical_visits mv
-                         INNER JOIN students s ON mv.student_id = s.student_id
-                         WHERE 1=1 $dateCondition $gradeCondition";
-    
-    $totalVisitsStmt = $db->prepare($totalVisitsQuery);
-    $totalVisitsStmt->bindParam(':start_date', $startDate);
-    $totalVisitsStmt->bindParam(':end_date', $endDate);
-    if (!empty($gradeLevel)) {
-        $totalVisitsStmt->bindParam(':grade_level', $gradeLevel);
-    }
-    $totalVisitsStmt->execute();
-    $totalVisits = (int)$totalVisitsStmt->fetch(PDO::FETCH_ASSOC)['count'];
-
-    // 2. Unique students count
-    $uniqueStudentsQuery = "SELECT COUNT(DISTINCT mv.student_id) as count 
-                            FROM medical_visits mv
-                            INNER JOIN students s ON mv.student_id = s.student_id
-                            WHERE 1=1 $dateCondition $gradeCondition";
-    
-    $uniqueStudentsStmt = $db->prepare($uniqueStudentsQuery);
-    $uniqueStudentsStmt->bindParam(':start_date', $startDate);
-    $uniqueStudentsStmt->bindParam(':end_date', $endDate);
-    if (!empty($gradeLevel)) {
-        $uniqueStudentsStmt->bindParam(':grade_level', $gradeLevel);
-    }
-    $uniqueStudentsStmt->execute();
-    $uniqueStudents = (int)$uniqueStudentsStmt->fetch(PDO::FETCH_ASSOC)['count'];
-
-    // 3. Emergency cases count
-    $emergencyCasesQuery = "SELECT COUNT(*) as count 
-                            FROM medical_visits mv
-                            INNER JOIN students s ON mv.student_id = s.student_id
-                            WHERE mv.visit_type = 'Emergency' $dateCondition $gradeCondition";
-    
-    $emergencyCasesStmt = $db->prepare($emergencyCasesQuery);
-    $emergencyCasesStmt->bindParam(':start_date', $startDate);
-    $emergencyCasesStmt->bindParam(':end_date', $endDate);
-    if (!empty($gradeLevel)) {
-        $emergencyCasesStmt->bindParam(':grade_level', $gradeLevel);
-    }
-    $emergencyCasesStmt->execute();
-    $emergencyCases = (int)$emergencyCasesStmt->fetch(PDO::FETCH_ASSOC)['count'];
-
-    // 4. Hospital referrals count
-    $referralsQuery = "SELECT COUNT(*) as count 
-                       FROM medical_visits mv
-                       INNER JOIN students s ON mv.student_id = s.student_id
-                       WHERE mv.status = 'Referred' $dateCondition $gradeCondition";
-    
-    $referralsStmt = $db->prepare($referralsQuery);
-    $referralsStmt->bindParam(':start_date', $startDate);
-    $referralsStmt->bindParam(':end_date', $endDate);
-    if (!empty($gradeLevel)) {
-        $referralsStmt->bindParam(':grade_level', $gradeLevel);
-    }
-    $referralsStmt->execute();
-    $referrals = (int)$referralsStmt->fetch(PDO::FETCH_ASSOC)['count'];
-
-    // 5. Cases by illness/diagnosis
-    $casesByIllnessQuery = "SELECT d.diagnosis_text as illness, COUNT(*) as count
-                            FROM diagnoses d
-                            INNER JOIN medical_visits mv ON d.visit_id = mv.visit_id
-                            INNER JOIN students s ON mv.student_id = s.student_id
-                            WHERE d.diagnosis_text IS NOT NULL AND d.diagnosis_text != '' $dateCondition $gradeCondition
-                            GROUP BY d.diagnosis_text
-                            ORDER BY count DESC
-                            LIMIT 10";
-    
-    $casesByIllnessStmt = $db->prepare($casesByIllnessQuery);
-    $casesByIllnessStmt->bindParam(':start_date', $startDate);
-    $casesByIllnessStmt->bindParam(':end_date', $endDate);
-    if (!empty($gradeLevel)) {
-        $casesByIllnessStmt->bindParam(':grade_level', $gradeLevel);
-    }
-    $casesByIllnessStmt->execute();
-    $casesByIllness = $casesByIllnessStmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // 6. Cases by grade level
-    $casesByGradeQuery = "SELECT s.grade_level as grade, COUNT(*) as count
-                          FROM medical_visits mv
-                          INNER JOIN students s ON mv.student_id = s.student_id
-                          WHERE 1=1 $dateCondition";
-    
-    if (!empty($gradeLevel)) {
-        $casesByGradeQuery .= " AND s.grade_level = :grade_level";
+    switch ($reportType) {
+        case 'medical':
+            $medicalStats = getMedicalReport($pdo, $startDate, $endDate);
+            echo json_encode([
+                'success' => true,
+                'data' => $medicalStats,
+                'message' => 'Medical report retrieved successfully'
+            ]);
+            break;
+            
+        case 'summary':
+            $summary = getSummaryReport($pdo);
+            echo json_encode([
+                'success' => true,
+                'data' => $summary,
+                'message' => 'Summary report retrieved successfully'
+            ]);
+            break;
+            
+        case 'users':
+            $users = getUsersReport($pdo);
+            echo json_encode([
+                'success' => true,
+                'data' => $users,
+                'message' => 'Users report retrieved successfully'
+            ]);
+            break;
+            
+        case 'registration':
+            $registration = getRegistrationReport($pdo, $startDate, $endDate);
+            echo json_encode([
+                'success' => true,
+                'data' => $registration,
+                'message' => 'Registration report retrieved successfully'
+            ]);
+            break;
+            
+        case 'allergies':
+            $allergies = getAllergiesReport($pdo);
+            echo json_encode([
+                'success' => true,
+                'data' => $allergies,
+                'message' => 'Allergies report retrieved successfully'
+            ]);
+            break;
+            
+        default:
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid report type'
+            ]);
     }
     
-    $casesByGradeQuery .= " GROUP BY s.grade_level
-                           ORDER BY s.grade_level ASC";
-    
-    $casesByGradeStmt = $db->prepare($casesByGradeQuery);
-    $casesByGradeStmt->bindParam(':start_date', $startDate);
-    $casesByGradeStmt->bindParam(':end_date', $endDate);
-    if (!empty($gradeLevel)) {
-        $casesByGradeStmt->bindParam(':grade_level', $gradeLevel);
-    }
-    $casesByGradeStmt->execute();
-    $casesByGrade = $casesByGradeStmt->fetchAll(PDO::FETCH_ASSOC);
-
-    echo json_encode([
-        'success' => true,
-        'data' => [
-            'totalVisits' => $totalVisits,
-            'uniqueStudents' => $uniqueStudents,
-            'emergencyCases' => $emergencyCases,
-            'referrals' => $referrals,
-            'casesByIllness' => $casesByIllness,
-            'casesByGrade' => $casesByGrade
-        ]
-    ]);
-
-} catch (PDOException $e) {
-    http_response_code(500);
+} catch (Exception $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
+        'message' => 'Failed to generate report: ' . $e->getMessage()
     ]);
 }
 ?>

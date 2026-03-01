@@ -1445,7 +1445,8 @@ export class SchoolYearManagementComponent implements OnInit {
   }
 
   loadGradeLevels(): void {
-    this.http.get<any>(`${this.apiUrl}/admin/grade-levels`).subscribe({
+    // Use legacy API for grade levels
+    this.http.get<any>(`${environment.legacyApiUrl}/get-grade-levels.php`).subscribe({
       next: (response) => {
         if (response.success) {
           this.gradeLevels = response.data;
