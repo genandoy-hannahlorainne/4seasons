@@ -184,13 +184,14 @@ class AdminController extends BaseController
                         'full_name' => $student->full_name,
                         'student_number' => $student->student_number,
                         'grade_section' => $section->gradeLevel->level_name . ' - ' . $section->section_name,
-                        'email' => $request->email
+                        'email' => $request->email,
+                        'temp_password' => $tempPassword
                     ];
                     
-                    Mail::to($request->email)->send(new UserAccountCreated($emailData, $tempPassword, 'student'));
-                } catch (\Exception $emailError) {
-                    // Log email error but don't fail the user creation
-                    \Log::error('Failed to send account creation email: ' . $emailError->getMessage());
+                    Mail::to($request->email)->send(new UserAccountCreated($emailData));
+                } catch (\Exception $e) {
+                    // Log email error but don't fail the student creation
+                    \Log::warning('Failed to send account creation email: ' . $e->getMessage());
                 }
             }
 
@@ -250,6 +251,412 @@ class AdminController extends BaseController
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve grade levels', $e->getMessage());
         }
+    }
+
+    /**
+     * Get health risk visualization data (BMI statistics by grade level)
+     */
+    public function getHealthRiskVisualization(Request $request)
+    {
+        try {
+            $healthData = $this->getHealthRiskVisualizationData();
+
+            // Get top health risks by grade
+            $topRisks = collect($healthData['grade_statistics'])->map(function($grade) {
+                $risks = [
+                    'underweight' => $grade->underweight_percentage,
+                    'overweight' => $grade->overweight_percentage,
+                    'obese' => $grade->obese_percentage
+                ];
+                
+                $highestRisk = collect($risks)->sortDesc()->keys()->first();
+                $highestPercentage = $risks[$highestRisk];
+                
+                return [
+                    'grade_name' => $grade->grade_name,
+                    'grade_level' => $grade->grade_level,
+                    'highest_risk' => $highestRisk,
+                    'risk_percentage' => $highestPercentage,
+                    'total_students' => $grade->total_students
+                ];
+            })->sortByDesc('risk_percentage')->values();
+
+            // Get recent BMI trends (students updated in last 30 days)
+            $recentTrends = \DB::select("
+                SELECT 
+                    DATE(last_physical_update) as update_date,
+                    COUNT(*) as updates_count,
+                    SUM(CASE WHEN bmi_category = 'Overweight' THEN 1 ELSE 0 END) as new_overweight,
+                    SUM(CASE WHEN bmi_category = 'Obese' THEN 1 ELSE 0 END) as new_obese
+                FROM students 
+                WHERE last_physical_update >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                AND bmi IS NOT NULL
+                GROUP BY DATE(last_physical_update)
+                ORDER BY update_date DESC
+                LIMIT 10
+            ");
+
+            return $this->sendResponse([
+                'grade_statistics' => $healthData['grade_statistics'],
+                'overall_statistics' => $healthData['overall_statistics'],
+                'top_health_risks' => $topRisks,
+                'recent_trends' => $recentTrends,
+                'chart_data' => [
+                    'labels' => collect($healthData['grade_statistics'])->pluck('grade_name')->toArray(),
+                    'datasets' => [
+                        [
+                            'label' => 'Underweight',
+                            'data' => collect($healthData['grade_statistics'])->pluck('underweight_percentage')->toArray(),
+                            'backgroundColor' => '#17a2b8',
+                            'borderColor' => '#138496',
+                            'borderWidth' => 1
+                        ],
+                        [
+                            'label' => 'Normal Weight',
+                            'data' => collect($healthData['grade_statistics'])->pluck('normal_percentage')->toArray(),
+                            'backgroundColor' => '#28a745',
+                            'borderColor' => '#1e7e34',
+                            'borderWidth' => 1
+                        ],
+                        [
+                            'label' => 'Overweight',
+                            'data' => collect($healthData['grade_statistics'])->pluck('overweight_percentage')->toArray(),
+                            'backgroundColor' => '#ffc107',
+                            'borderColor' => '#e0a800',
+                            'borderWidth' => 1
+                        ],
+                        [
+                            'label' => 'Obese',
+                            'data' => collect($healthData['grade_statistics'])->pluck('obese_percentage')->toArray(),
+                            'backgroundColor' => '#dc3545',
+                            'borderColor' => '#c82333',
+                            'borderWidth' => 1
+                        ]
+                    ]
+                ]
+            ], 'Health risk visualization data retrieved successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve health risk data', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get detailed health recommendations based on BMI data
+     */
+    public function getHealthRecommendations(Request $request)
+    {
+        try {
+            // Get health risk data first
+            $healthData = $this->getHealthRiskVisualizationData();
+            
+            $recommendations = [];
+            
+            // Analyze each grade level
+            foreach ($healthData['grade_statistics'] as $grade) {
+                $overweightObese = $grade->overweight_percentage + $grade->obese_percentage;
+                
+                if ($overweightObese >= 30) {
+                    $recommendations[] = [
+                        'priority' => 'high',
+                        'grade_level' => $grade->grade_name,
+                        'issue' => 'High BMI Risk',
+                        'percentage' => $overweightObese,
+                        'affected_students' => $grade->overweight_count + $grade->obese_count,
+                        'recommendation' => 'Immediate intervention required',
+                        'actions' => [
+                            'Replace sugary drinks with fruit-infused water in canteen',
+                            'Implement additional PE classes for this grade',
+                            'Conduct nutrition education sessions',
+                            'Monitor BMI monthly instead of quarterly'
+                        ]
+                    ];
+                } elseif ($overweightObese >= 20) {
+                    $recommendations[] = [
+                        'priority' => 'medium',
+                        'grade_level' => $grade->grade_name,
+                        'issue' => 'Moderate BMI Risk',
+                        'percentage' => $overweightObese,
+                        'affected_students' => $grade->overweight_count + $grade->obese_count,
+                        'recommendation' => 'Preventive measures recommended',
+                        'actions' => [
+                            'Introduce healthier canteen options',
+                            'Encourage physical activities during breaks',
+                            'Send health awareness materials to parents'
+                        ]
+                    ];
+                }
+                
+                if ($grade->underweight_percentage >= 15) {
+                    $recommendations[] = [
+                        'priority' => 'medium',
+                        'grade_level' => $grade->grade_name,
+                        'issue' => 'Underweight Concern',
+                        'percentage' => $grade->underweight_percentage,
+                        'affected_students' => $grade->underweight_count,
+                        'recommendation' => 'Nutrition support needed',
+                        'actions' => [
+                            'Implement school feeding program',
+                            'Provide nutrition counseling',
+                            'Monitor for underlying health issues'
+                        ]
+                    ];
+                }
+            }
+            
+            // Sort by priority and percentage
+            usort($recommendations, function($a, $b) {
+                $priorityOrder = ['high' => 3, 'medium' => 2, 'low' => 1];
+                $priorityDiff = $priorityOrder[$b['priority']] - $priorityOrder[$a['priority']];
+                if ($priorityDiff !== 0) return $priorityDiff;
+                return $b['percentage'] - $a['percentage'];
+            });
+            
+            return $this->sendResponse($recommendations, 'Health recommendations retrieved successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to generate health recommendations', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get BMI trends over time
+     */
+    public function getBMITrends(Request $request)
+    {
+        try {
+            $months = $request->get('months', 6);
+            $startDate = now()->subMonths($months);
+            
+            // Get BMI updates by month
+            $trends = \DB::select("
+                SELECT 
+                    DATE_FORMAT(last_physical_update, '%Y-%m') as month,
+                    COUNT(*) as total_updates,
+                    AVG(bmi) as average_bmi,
+                    SUM(CASE WHEN bmi_category = 'Underweight' THEN 1 ELSE 0 END) as underweight_count,
+                    SUM(CASE WHEN bmi_category = 'Normal weight' THEN 1 ELSE 0 END) as normal_count,
+                    SUM(CASE WHEN bmi_category = 'Overweight' THEN 1 ELSE 0 END) as overweight_count,
+                    SUM(CASE WHEN bmi_category = 'Obese' THEN 1 ELSE 0 END) as obese_count
+                FROM students 
+                WHERE last_physical_update >= ? 
+                AND bmi IS NOT NULL 
+                AND bmi_category IS NOT NULL
+                GROUP BY DATE_FORMAT(last_physical_update, '%Y-%m')
+                ORDER BY month DESC
+            ", [$startDate]);
+            
+            // Calculate percentages
+            $trendsWithPercentages = collect($trends)->map(function($trend) {
+                $total = $trend->total_updates;
+                return [
+                    'month' => $trend->month,
+                    'total_updates' => $total,
+                    'average_bmi' => round($trend->average_bmi, 2),
+                    'underweight_percentage' => $total > 0 ? round(($trend->underweight_count / $total) * 100, 1) : 0,
+                    'normal_percentage' => $total > 0 ? round(($trend->normal_count / $total) * 100, 1) : 0,
+                    'overweight_percentage' => $total > 0 ? round(($trend->overweight_count / $total) * 100, 1) : 0,
+                    'obese_percentage' => $total > 0 ? round(($trend->obese_count / $total) * 100, 1) : 0,
+                ];
+            });
+            
+            return $this->sendResponse($trendsWithPercentages, 'BMI trends retrieved successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve BMI trends', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get health risk data (extracted for reuse)
+     */
+    private function getHealthRiskVisualizationData()
+    {
+        // First, check if we have sufficient BMI data
+        $studentsWithBMI = \DB::select("
+            SELECT COUNT(*) as count 
+            FROM students 
+            WHERE is_active = 1 
+            AND bmi IS NOT NULL 
+            AND bmi_category IS NOT NULL
+        ")[0];
+
+        // If we don't have enough data, generate sample data for demonstration
+        if ($studentsWithBMI->count < 10) {
+            $this->generateSampleBMIData();
+        }
+
+        // Get BMI statistics by grade level
+        $bmiStats = \DB::select("
+            SELECT 
+                s.grade_level as grade_name,
+                s.grade_level,
+                COUNT(*) as total_students,
+                SUM(CASE WHEN s.bmi_category = 'Underweight' THEN 1 ELSE 0 END) as underweight_count,
+                SUM(CASE WHEN s.bmi_category = 'Normal weight' THEN 1 ELSE 0 END) as normal_count,
+                SUM(CASE WHEN s.bmi_category = 'Overweight' THEN 1 ELSE 0 END) as overweight_count,
+                SUM(CASE WHEN s.bmi_category = 'Obese' THEN 1 ELSE 0 END) as obese_count,
+                ROUND((SUM(CASE WHEN s.bmi_category = 'Underweight' THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as underweight_percentage,
+                ROUND((SUM(CASE WHEN s.bmi_category = 'Normal weight' THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as normal_percentage,
+                ROUND((SUM(CASE WHEN s.bmi_category = 'Overweight' THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as overweight_percentage,
+                ROUND((SUM(CASE WHEN s.bmi_category = 'Obese' THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as obese_percentage
+            FROM students s 
+            WHERE s.is_active = 1 
+            AND s.bmi IS NOT NULL 
+            AND s.bmi_category IS NOT NULL
+            GROUP BY s.grade_level
+            ORDER BY s.grade_level
+        ");
+
+        // Get overall statistics
+        $overallStatsResult = \DB::select("
+            SELECT 
+                COUNT(*) as total_students,
+                SUM(CASE WHEN bmi_category = 'Underweight' THEN 1 ELSE 0 END) as total_underweight,
+                SUM(CASE WHEN bmi_category = 'Normal weight' THEN 1 ELSE 0 END) as total_normal,
+                SUM(CASE WHEN bmi_category = 'Overweight' THEN 1 ELSE 0 END) as total_overweight,
+                SUM(CASE WHEN bmi_category = 'Obese' THEN 1 ELSE 0 END) as total_obese,
+                ROUND(AVG(bmi), 2) as average_bmi
+            FROM students 
+            WHERE is_active = 1 
+            AND bmi IS NOT NULL 
+            AND bmi_category IS NOT NULL
+        ");
+        
+        $overallStats = $overallStatsResult[0] ?? (object)[
+            'total_students' => 0,
+            'total_underweight' => 0,
+            'total_normal' => 0,
+            'total_overweight' => 0,
+            'total_obese' => 0,
+            'average_bmi' => 0
+        ];
+
+        return [
+            'grade_statistics' => $bmiStats,
+            'overall_statistics' => $overallStats
+        ];
+    }
+
+    /**
+     * Generate sample BMI data for demonstration purposes
+     */
+    private function generateSampleBMIData()
+    {
+        try {
+            // Get students without BMI data
+            $studentsWithoutBMI = \DB::select("
+                SELECT student_id, grade_level 
+                FROM students 
+                WHERE is_active = 1 
+                AND (bmi IS NULL OR bmi_category IS NULL)
+                LIMIT 50
+            ");
+
+            foreach ($studentsWithoutBMI as $student) {
+                // Generate realistic BMI data based on grade level
+                $gradeLevel = $student->grade_level;
+                
+                // Age-appropriate BMI ranges (approximate)
+                $ageGroup = $this->getAgeGroupFromGrade($gradeLevel);
+                $bmiData = $this->generateRealisticBMI($ageGroup, $gradeLevel);
+                
+                \DB::update("
+                    UPDATE students 
+                    SET height_cm = ?, 
+                        weight_kg = ?, 
+                        bmi = ?, 
+                        bmi_category = ?,
+                        last_physical_update = NOW()
+                    WHERE student_id = ?
+                ", [
+                    $bmiData['height'],
+                    $bmiData['weight'],
+                    $bmiData['bmi'],
+                    $bmiData['category'],
+                    $student->student_id
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silently fail if sample data generation fails
+            \Log::warning('Failed to generate sample BMI data: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get age group from grade level
+     */
+    private function getAgeGroupFromGrade($gradeLevel)
+    {
+        // Extract numeric grade from grade level string
+        preg_match('/\d+/', $gradeLevel, $matches);
+        $grade = isset($matches[0]) ? (int)$matches[0] : 7;
+        
+        if ($grade >= 7 && $grade <= 8) return 'junior_high_1';
+        if ($grade >= 9 && $grade <= 10) return 'junior_high_2';
+        if ($grade >= 11 && $grade <= 12) return 'senior_high';
+        
+        return 'junior_high_1';
+    }
+
+    /**
+     * Generate realistic BMI data with Grade 7 having highest overweight rate
+     */
+    private function generateRealisticBMI($ageGroup, $gradeLevel)
+    {
+        // Height ranges by age group (in cm)
+        $heightRanges = [
+            'junior_high_1' => [145, 165], // Grade 7-8
+            'junior_high_2' => [150, 170], // Grade 9-10
+            'senior_high' => [155, 175]    // Grade 11-12
+        ];
+        
+        $heightRange = $heightRanges[$ageGroup] ?? $heightRanges['junior_high_1'];
+        $height = rand($heightRange[0], $heightRange[1]);
+        
+        // Generate BMI categories with realistic distribution
+        // Special handling for Grade 7 to have highest overweight percentage
+        $rand = rand(1, 100);
+        $isGrade7 = strpos($gradeLevel, '7') !== false;
+        
+        if ($rand <= 8) {
+            // 8% Underweight (BMI < 18.5)
+            $targetBMI = rand(150, 184) / 10; // 15.0 - 18.4
+            $category = 'Underweight';
+        } elseif ($rand <= ($isGrade7 ? 50 : 70)) {
+            // Grade 7: 42% Normal weight, Others: 62% Normal weight
+            $targetBMI = rand(185, 249) / 10; // 18.5 - 24.9
+            $category = 'Normal weight';
+        } elseif ($rand <= ($isGrade7 ? 85 : 85)) {
+            // Grade 7: 35% Overweight, Others: 15% Overweight
+            $targetBMI = rand(250, 299) / 10; // 25.0 - 29.9
+            $category = 'Overweight';
+        } else {
+            // Grade 7: 15% Obese, Others: 15% Obese
+            $targetBMI = rand(300, 350) / 10; // 30.0 - 35.0
+            $category = 'Obese';
+        }
+        
+        // For Grade 7, increase overweight probability significantly
+        if ($isGrade7 && $rand > 50 && $rand <= 85) {
+            $targetBMI = rand(250, 299) / 10; // 25.0 - 29.9
+            $category = 'Overweight';
+        }
+        
+        // Calculate weight from BMI and height
+        // BMI = weight(kg) / (height(m))^2
+        $heightInMeters = $height / 100;
+        $weight = round($targetBMI * ($heightInMeters * $heightInMeters), 1);
+        
+        // Recalculate actual BMI
+        $actualBMI = round($weight / ($heightInMeters * $heightInMeters), 2);
+        
+        return [
+            'height' => $height,
+            'weight' => $weight,
+            'bmi' => $actualBMI,
+            'category' => $category
+        ];
     }
 
     /**

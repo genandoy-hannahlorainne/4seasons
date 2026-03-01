@@ -95,6 +95,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/grade-levels/sections', [\App\Http\Controllers\Api\AdminController::class, 'getGradeLevelsWithSections']);
     Route::get('/admin/sections/grade/{grade_level}', [\App\Http\Controllers\Api\AdminController::class, 'getSectionsForGrade']);
     Route::post('/admin/students', [\App\Http\Controllers\Api\AdminController::class, 'createStudent']);
+    Route::get('/admin/health-risk-visualization', [\App\Http\Controllers\Api\AdminController::class, 'getHealthRiskVisualization']);
+    Route::get('/admin/health-recommendations', [\App\Http\Controllers\Api\AdminController::class, 'getHealthRecommendations']);
+    Route::get('/admin/bmi-trends', [\App\Http\Controllers\Api\AdminController::class, 'getBMITrends']);
     
     // Get all sections for filtering (clinic staff student records)
     Route::get('/sections', [\App\Http\Controllers\Api\SchoolYearController::class, 'getAllSections']);

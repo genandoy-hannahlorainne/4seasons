@@ -270,4 +270,19 @@ export class AdminService {
       visit_id: visitId
     });
   }
+
+  // Health Risk Visualization
+  getHealthRiskVisualization(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/health-risk-visualization`);
+  }
+
+  // Health Recommendations
+  getHealthRecommendations(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/health-recommendations`);
+  }
+
+  // BMI Trends
+  getBMITrends(months: number = 6): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/bmi-trends?months=${months}`);
+  }
 }
