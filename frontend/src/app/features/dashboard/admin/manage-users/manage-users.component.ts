@@ -58,6 +58,10 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   availableSections: any[] = [];
   loadingSections = false;
 
+  // Available grade levels
+  gradeLevels: any[] = [];
+  loadingGradeLevels = false;
+
   // Debug properties
   userCounts = {
     students: 0,
@@ -77,6 +81,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadUsers();
+    this.loadGradeLevels();
     
     // Auto-refresh users every 30 seconds
     interval(this.refreshInterval)
@@ -409,18 +414,22 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     
     // Load sections for the selected grade level (for students and advisers)
     if ((this.newUser.role === 'student' || this.newUser.role === 'adviser') && this.newUser.grade_level) {
-      this.loadSectionsForGrade(parseInt(this.newUser.grade_level));
+      const gradeLevelId = parseInt(this.newUser.grade_level);
+      
+      console.log(`🎓 Loading sections for grade level ID: ${gradeLevelId}`);
+      
+      this.loadSectionsForGrade(gradeLevelId);
     }
   }
 
-  loadSectionsForGrade(gradeLevel: number): void {
+  loadSectionsForGrade(gradeLevelId: number): void {
     this.loadingSections = true;
-    this.adminService.getSectionsForGrade(gradeLevel).subscribe({
+    this.adminService.getSectionsForGrade(gradeLevelId).subscribe({
       next: (response) => {
         this.loadingSections = false;
         if (response.success && response.data.sections) {
           this.availableSections = response.data.sections;
-          console.log('✅ Loaded sections for grade', gradeLevel, ':', this.availableSections);
+          console.log('✅ Loaded sections for grade level ID', gradeLevelId, ':', this.availableSections);
         } else {
           this.availableSections = [];
           console.error('❌ Failed to load sections:', response.message);
@@ -430,6 +439,27 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         this.loadingSections = false;
         this.availableSections = [];
         console.error('❌ Error loading sections:', err);
+      }
+    });
+  }
+
+  loadGradeLevels(): void {
+    this.loadingGradeLevels = true;
+    this.adminService.getGradeLevelsWithSections().subscribe({
+      next: (response) => {
+        this.loadingGradeLevels = false;
+        if (response.success && response.data) {
+          this.gradeLevels = response.data;
+          console.log('✅ Loaded grade levels:', this.gradeLevels);
+        } else {
+          this.gradeLevels = [];
+          console.error('❌ Failed to load grade levels:', response.message);
+        }
+      },
+      error: (err) => {
+        this.loadingGradeLevels = false;
+        this.gradeLevels = [];
+        console.error('❌ Error loading grade levels:', err);
       }
     });
   }
@@ -496,9 +526,9 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       this.adminService.createUser(this.newUser).subscribe({
         next: (response) => {
           this.creatingUser = false;
-          if (response.success) {
-            const studentData = response.data.student;
-            this.createSuccessMessage = `Student account created successfully! Username: ${studentData.username}, Temporary Password: ${studentData.temp_password}`;
+          if (response.success && response.data) {
+            const userData = response.data;
+            this.createSuccessMessage = `Student account created successfully! Username: ${userData.username || 'N/A'}. An email has been sent with login credentials.`;
             
             // Reload users list
             this.loadUsers();
@@ -522,8 +552,8 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       this.adminService.createUserLegacy(this.newUser).subscribe({
         next: (response) => {
           this.creatingUser = false;
-          if (response.success) {
-            this.createSuccessMessage = `Account created successfully! Username: ${response.data.username}. An email has been sent with login credentials.`;
+          if (response.success && response.data) {
+            this.createSuccessMessage = `Account created successfully! Username: ${response.data.username || 'N/A'}. An email has been sent with login credentials.`;
             
             // Reload users list
             this.loadUsers();

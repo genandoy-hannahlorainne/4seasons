@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { Subject, interval, BehaviorSubject } from 'rxjs';
 import { takeUntil, switchMap, startWith, tap } from 'rxjs/operators';
+import { HealthRiskVisualizationComponent } from './health-risk-visualization/health-risk-visualization.component';
 
 interface User {
   user_id: number;
@@ -37,7 +38,7 @@ interface UsersResponse {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HealthRiskVisualizationComponent],
   template: `
     <div class="admin-dashboard">
       <div class="dashboard-header">
@@ -151,6 +152,9 @@ interface UsersResponse {
             </div>
           </div>
         </div>
+
+        <!-- Health Risk Visualization -->
+        <app-health-risk-visualization></app-health-risk-visualization>
 
         <!-- Main Content Grid -->
         <div class="content-grid">

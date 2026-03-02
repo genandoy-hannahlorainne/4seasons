@@ -397,8 +397,29 @@ class AdviserController extends BaseController
     }
 
     /**
-     * Get advisory students (current active students)
+     * Get adviser notifications
      */
+    public function getNotifications(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if (!$user || $user->role_id !== 3) {
+                return $this->sendError('Unauthorized', 'User is not an adviser');
+            }
+
+            // For now, return empty notifications to prevent the 500 error
+            // This can be enhanced later with actual notification logic
+            $notifications = [
+                'notifications' => [],
+                'total' => 0
+            ];
+
+            return $this->sendResponse($notifications, 'Adviser notifications retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve notifications', $e->getMessage());
+        }
+    }
     public function getAdvisoryStudents(Request $request)
     {
         try {

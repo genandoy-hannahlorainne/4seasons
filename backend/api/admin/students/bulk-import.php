@@ -214,6 +214,25 @@ try {
                         $updateSectionLinkStmt->bindParam(':student_id', $studentId);
                         $updateSectionLinkStmt->execute();
                         
+                        // Check if this section has an assigned adviser
+                        $findAdviserQuery = "SELECT s.adviser_id, CONCAT(a.first_name, ' ', a.last_name) as adviser_name
+                                            FROM sections s
+                                            LEFT JOIN advisers a ON s.adviser_id = a.user_id
+                                            WHERE s.id = :section_id AND s.adviser_id IS NOT NULL AND a.is_active = 1";
+                        $findAdviserStmt = $db->prepare($findAdviserQuery);
+                        $findAdviserStmt->bindParam(':section_id', $matchingSection['id']);
+                        $findAdviserStmt->execute();
+                        $sectionAdviser = $findAdviserStmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($sectionAdviser) {
+                            // Assign student to the section's adviser
+                            $assignAdviserQuery = "UPDATE students SET current_adviser_id = :adviser_id WHERE student_id = :student_id";
+                            $assignAdviserStmt = $db->prepare($assignAdviserQuery);
+                            $assignAdviserStmt->bindParam(':adviser_id', $sectionAdviser['adviser_id']);
+                            $assignAdviserStmt->bindParam(':student_id', $studentId);
+                            $assignAdviserStmt->execute();
+                        }
+                        
                         // Update section enrollment count
                         $updateEnrollmentQuery = "UPDATE sections SET current_enrollment = current_enrollment + 1 WHERE id = :section_id";
                         $updateEnrollmentStmt = $db->prepare($updateEnrollmentQuery);

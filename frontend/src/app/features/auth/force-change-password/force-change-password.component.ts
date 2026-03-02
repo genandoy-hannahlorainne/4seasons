@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -233,7 +234,8 @@ export class ForceChangePasswordComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.changePasswordForm = this.fb.group({
       currentPassword: ['', Validators.required],
@@ -279,7 +281,7 @@ export class ForceChangePasswordComponent implements OnInit {
 
     const { currentPassword, newPassword } = this.changePasswordForm.value;
 
-    this.http.post<any>(`${environment.apiUrl}/force-change-password`, {
+    this.http.post<any>(`${environment.legacyApiUrl}/force-change-password.php`, {
       current_password: currentPassword,
       new_password: newPassword,
       new_password_confirmation: newPassword
@@ -289,9 +291,17 @@ export class ForceChangePasswordComponent implements OnInit {
         if (response.success) {
           this.success = 'Password changed successfully! Redirecting...';
           
+          // Update user data in localStorage to clear password_must_change flag
           const currentUser = localStorage.getItem('currentUser');
           if (currentUser) {
             const user = JSON.parse(currentUser);
+            user.password_must_change = false; // Clear the flag
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            // Also update the auth service's current user subject
+            // This ensures any components listening to currentUser observable get the update
+            this.authService.updateCurrentUser(user);
+            
             const roleRoutes: { [key: string]: string } = {
               'Student': '/dashboard/student',
               'Adviser': '/dashboard/adviser',

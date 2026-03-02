@@ -344,14 +344,14 @@ export class ReportsComponent implements OnInit {
           this.emergencyCases = data.emergencyCases;
           this.referrals = data.referrals;
           
-          // Map illness data
-          this.casesByIllness = data.casesByIllness.map((item: any) => ({
+          // Map illness data with null check
+          this.casesByIllness = (data.casesByIllness || []).map((item: any) => ({
             illness: item.illness || 'Unknown',
             count: parseInt(item.count)
           }));
 
-          // Map grade data
-          this.casesByGrade = data.casesByGrade.map((item: any) => ({
+          // Map grade data with null check
+          this.casesByGrade = (data.casesByGrade || []).map((item: any) => ({
             grade: parseInt(item.grade),
             count: parseInt(item.count)
           }));
