@@ -7,10 +7,103 @@ use App\Models\User;
 use App\Models\Section;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class AdviserController extends BaseController
 {
+    private function isAdviserUser($user): bool
+    {
+        return $user && intval($user->role_id) === 3;
+    }
+
+    private function resolveAdviserSection(int $userId, ?int $schoolYearId = null): ?Section
+    {
+        $sectionQuery = Section::with(['gradeLevel', 'schoolYear'])
+            ->where('adviser_id', $userId)
+            ->where('is_active', true);
+
+        if ($schoolYearId) {
+            $sectionQuery->where('school_year_id', $schoolYearId);
+        }
+
+        $section = $sectionQuery->first();
+        if ($section) {
+            return $section;
+        }
+
+        $fallbackStudentQuery = Student::query()
+            ->where('current_adviser_id', $userId)
+            ->where('is_active', true)
+            ->whereNotNull('current_section_id');
+
+        if ($schoolYearId) {
+            $fallbackStudentQuery->where('current_school_year_id', $schoolYearId);
+        }
+
+        $fallbackStudent = $fallbackStudentQuery->orderByDesc('student_id')->first();
+        if ($fallbackStudent && $fallbackStudent->current_section_id) {
+            return Section::with(['gradeLevel', 'schoolYear'])
+                ->where('id', $fallbackStudent->current_section_id)
+                ->first();
+        }
+
+        return null;
+    }
+
+    private function getSectionGradeCandidates(?Section $section): array
+    {
+        if (!$section || !$section->gradeLevel) {
+            return [];
+        }
+
+        $candidates = [];
+        $levelName = trim((string) ($section->gradeLevel->level_name ?? ''));
+        $levelNumber = trim((string) ($section->gradeLevel->level_number ?? ''));
+
+        if ($levelName !== '') {
+            $candidates[] = $levelName;
+            $digits = preg_replace('/[^0-9]/', '', $levelName);
+            if (!empty($digits)) {
+                $candidates[] = $digits;
+            }
+        }
+
+        if ($levelNumber !== '') {
+            $candidates[] = $levelNumber;
+            $candidates[] = 'Grade ' . $levelNumber;
+        }
+
+        return array_values(array_unique(array_filter($candidates, fn ($value) => $value !== '')));
+    }
+
+    private function applyAdviserStudentScope($query, int $userId, ?Section $section)
+    {
+        $gradeCandidates = $this->getSectionGradeCandidates($section);
+
+        return $query->where(function ($outer) use ($userId, $section, $gradeCandidates) {
+            if ($section) {
+                $outer->where('current_section_id', $section->id)
+                    ->orWhere('current_adviser_id', $userId)
+                    ->orWhere(function ($textMatch) use ($section, $gradeCandidates) {
+                        $textMatch->where('section', $section->section_name);
+                        if (!empty($gradeCandidates)) {
+                            $textMatch->whereIn('grade_level', $gradeCandidates);
+                        }
+                    });
+            } else {
+                $outer->where('current_adviser_id', $userId);
+            }
+
+            $outer->orWhereExists(function ($pivot) use ($userId) {
+                $pivot->select(DB::raw(1))
+                    ->from('student_adviser as sa')
+                    ->whereColumn('sa.student_id', 'students.student_id')
+                    ->where('sa.adviser_id', $userId);
+            });
+        });
+    }
+
     /**
      * Get adviser profile information including advisory class
      */
@@ -19,23 +112,24 @@ class AdviserController extends BaseController
         try {
             $user = $request->user();
             
-            if (!$user || $user->role_id !== 3) {
+            if (!$this->isAdviserUser($user)) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
             // Get adviser's assigned section
-            $section = Section::with(['gradeLevel', 'schoolYear'])
-                ->where('adviser_id', $user->user_id)
-                ->where('is_active', true)
-                ->first();
+            $section = $this->resolveAdviserSection(intval($user->user_id));
 
             $advisoryClass = 'Not assigned';
             $studentCount = 0;
 
             if ($section) {
-                $advisoryClass = $section->gradeLevel->level_name . ' - ' . $section->section_name;
-                $studentCount = Student::where('current_section_id', $section->id)
-                    ->where('is_active', true)
+                $gradeLevelName = $section->gradeLevel ? $section->gradeLevel->level_name : ($section->level_name ?? 'Grade');
+                $advisoryClass = $gradeLevelName . ' - ' . $section->section_name;
+                $studentCount = $this->applyAdviserStudentScope(
+                    Student::query()->where('is_active', true),
+                    intval($user->user_id),
+                    $section
+                    )
                     ->count();
             }
 
@@ -110,17 +204,22 @@ class AdviserController extends BaseController
         try {
             $user = $request->user();
             
-            if (!$user || $user->role_id !== 3) {
+            if (!$this->isAdviserUser($user)) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
-            // Get adviser's assigned section with students
-            $section = Section::with(['gradeLevel', 'schoolYear', 'students' => function($query) {
-                    $query->where('is_active', true);
-                }])
-                ->where('adviser_id', $user->user_id)
-                ->where('is_active', true)
-                ->first();
+            $section = $this->resolveAdviserSection(intval($user->user_id));
+
+            $studentsQuery = Student::with(['allergies'])
+                ->where('is_active', true);
+
+            $studentsQuery = $this->applyAdviserStudentScope(
+                $studentsQuery,
+                intval($user->user_id),
+                $section
+            );
+
+            $students = $studentsQuery->get();
 
             $dashboardData = [
                 'adviser' => [
@@ -140,8 +239,6 @@ class AdviserController extends BaseController
             ];
 
             if ($section) {
-                $students = $section->students;
-                
                 $dashboardData['section'] = [
                     'id' => $section->id,
                     'section_name' => $section->section_name,
@@ -158,7 +255,7 @@ class AdviserController extends BaseController
                         'full_name' => trim($student->first_name . ' ' . $student->last_name),
                         'gender' => $student->gender,
                         'blood_type' => $student->blood_type,
-                        'emergency_contact' => $student->emergency_contact_name,
+                        'emergency_contact' => $student->emergency_contact,
                         'has_allergies' => $student->allergies()->count() > 0
                     ];
                 });
@@ -177,6 +274,28 @@ class AdviserController extends BaseController
                 $dashboardData['adviser']['grade_level'] = $section->gradeLevel->level_name ?? 'Unknown';
                 $dashboardData['adviser']['section'] = $section->section_name;
                 $dashboardData['adviser']['advisory_class'] = $section->gradeLevel->level_name . ' - ' . $section->section_name;
+            } else {
+                $dashboardData['students'] = $students->map(function($student) {
+                    return [
+                        'student_id' => $student->student_id,
+                        'student_number' => $student->student_number,
+                        'full_name' => trim($student->first_name . ' ' . $student->last_name),
+                        'gender' => $student->gender,
+                        'blood_type' => $student->blood_type,
+                        'emergency_contact' => $student->emergency_contact,
+                        'has_allergies' => $student->allergies()->count() > 0
+                    ];
+                });
+
+                $dashboardData['stats'] = [
+                    'total_students' => $students->count(),
+                    'students_with_allergies' => $students->filter(function($student) {
+                        return $student->allergies()->count() > 0;
+                    })->count(),
+                    'recent_visits' => $students->sum(function($student) {
+                        return $student->medicalVisits()->where('visit_datetime', '>=', now()->subDays(7))->count();
+                    })
+                ];
             }
 
             return $this->sendResponse($dashboardData, 'Adviser dashboard data retrieved successfully');
@@ -193,7 +312,7 @@ class AdviserController extends BaseController
         try {
             $user = $request->user();
             
-            if (!$user || $user->role_id !== 3) {
+            if (!$this->isAdviserUser($user)) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
@@ -201,10 +320,7 @@ class AdviserController extends BaseController
             $startDate = now()->subDays($days);
 
             // Get adviser's section
-            $section = Section::with(['gradeLevel', 'schoolYear'])
-                ->where('adviser_id', $user->user_id)
-                ->where('is_active', true)
-                ->first();
+            $section = $this->resolveAdviserSection(intval($user->user_id));
 
             if (!$section) {
                 return $this->sendError('No section assigned to this adviser');
@@ -324,7 +440,7 @@ class AdviserController extends BaseController
         try {
             $user = $request->user();
             
-            if (!$user || $user->role_id !== 3) {
+            if (!$this->isAdviserUser($user)) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
@@ -334,27 +450,26 @@ class AdviserController extends BaseController
             }
 
             // Get adviser's section for the specified school year
-            $section = Section::with(['gradeLevel', 'schoolYear'])
-                ->where('adviser_id', $user->user_id)
-                ->where('school_year_id', $schoolYearId)
-                ->where('is_active', true)
-                ->first();
+            $section = $this->resolveAdviserSection(intval($user->user_id), intval($schoolYearId));
 
-            if (!$section) {
-                return $this->sendError('No section assigned for this school year');
-            }
-
-            // Get students in the section
-            $students = Student::with(['allergies', 'medicalVisits' => function($query) {
+            // Get students in the section (fallback to adviser assignment when section link is missing)
+            $studentsQuery = Student::with(['user', 'allergies', 'medicalVisits' => function($query) {
                     $query->orderBy('visit_datetime', 'desc')->limit(1);
                 }])
-                ->where('current_section_id', $section->id)
-                ->where('is_active', true)
-                ->orderBy('last_name')
+                ->where('is_active', true);
+
+            $studentsQuery = $this->applyAdviserStudentScope(
+                $studentsQuery,
+                intval($user->user_id),
+                $section
+            );
+
+            $students = $studentsQuery->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get()
                 ->map(function($student) {
                     $lastVisit = $student->medicalVisits->first();
+                    $totalMedicalVisits = $student->medicalVisits()->count();
                     return [
                         'student_id' => $student->student_id,
                         'student_number' => $student->student_number,
@@ -364,9 +479,15 @@ class AdviserController extends BaseController
                         'gender' => $student->gender,
                         'birth_date' => $student->birth_date,
                         'blood_type' => $student->blood_type,
-                        'emergency_contact' => $student->emergency_contact_name,
+                        'emergency_contact' => $student->emergency_contact,
                         'emergency_contact_phone' => $student->emergency_contact_phone,
-                        'allergies' => $student->allergies->pluck('allergy_name')->toArray(),
+                        'allergies' => $student->allergies->map(function($allergy) {
+                            return $allergy->allergy_name ?? $allergy->allergy_text;
+                        })->filter()->values()->toArray(),
+                        'email' => $student->user ? $student->user->email : null,
+                        'phone' => $student->user ? $student->user->phone : null,
+                        'total_medical_visits' => $totalMedicalVisits,
+                        'last_visit_date' => $lastVisit ? $lastVisit->visit_datetime->format('Y-m-d') : null,
                         'last_visit' => $lastVisit ? [
                             'visit_id' => $lastVisit->visit_id,
                             'visit_date' => $lastVisit->visit_datetime->format('Y-m-d'),
@@ -377,14 +498,18 @@ class AdviserController extends BaseController
                     ];
                 });
 
+            $firstStudent = $students->first();
+            $fallbackSectionName = is_array($firstStudent) ? ($firstStudent['section'] ?? 'Unassigned') : 'Unassigned';
+            $fallbackGradeLevelName = is_array($firstStudent) ? ($firstStudent['grade_level'] ?? 'Unassigned') : 'Unassigned';
+
             $rosterData = [
                 'section' => [
-                    'id' => $section->id,
-                    'section_name' => $section->section_name,
-                    'level_name' => $section->gradeLevel->level_name,
-                    'level_number' => $section->gradeLevel->level_number,
-                    'school_year' => $section->schoolYear->year_name,
-                    'capacity' => $section->capacity
+                    'id' => $section ? $section->id : null,
+                    'section_name' => $section ? $section->section_name : $fallbackSectionName,
+                    'level_name' => $section && $section->gradeLevel ? $section->gradeLevel->level_name : $fallbackGradeLevelName,
+                    'level_number' => $section && $section->gradeLevel ? $section->gradeLevel->level_number : null,
+                    'school_year' => $section && $section->schoolYear ? $section->schoolYear->year_name : null,
+                    'capacity' => $section ? $section->capacity : null
                 ],
                 'students' => $students,
                 'total_students' => $students->count()
@@ -404,7 +529,7 @@ class AdviserController extends BaseController
         try {
             $user = $request->user();
             
-            if (!$user || $user->role_id !== 3) {
+            if (!$this->isAdviserUser($user)) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
@@ -425,26 +550,23 @@ class AdviserController extends BaseController
         try {
             $user = $request->user();
             
-            if (!$user || $user->role_id !== 3) {
+            if (!$this->isAdviserUser($user)) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
-            // Get adviser's current section
-            $section = Section::with(['gradeLevel', 'schoolYear'])
-                ->where('adviser_id', $user->user_id)
-                ->where('is_active', true)
-                ->first();
-
-            if (!$section) {
-                return $this->sendError('No active section assigned to this adviser');
-            }
+            $section = $this->resolveAdviserSection(intval($user->user_id));
 
             // Get students with medical data
-            $studentsQuery = Student::with(['allergies', 'medicalVisits' => function($query) {
+            $studentsQuery = Student::with(['user', 'allergies', 'medicalVisits' => function($query) {
                     $query->orderBy('visit_datetime', 'desc')->limit(5);
                 }])
-                ->where('current_section_id', $section->id)
                 ->where('is_active', true);
+
+            $studentsQuery = $this->applyAdviserStudentScope(
+                $studentsQuery,
+                intval($user->user_id),
+                $section
+            );
             
             $studentsCollection = $studentsQuery->get();
             
@@ -461,6 +583,15 @@ class AdviserController extends BaseController
 
             // Map students to response format
             $students = $studentsCollection->map(function($student) use ($section) {
+                $allergyList = $student->allergies->map(function($allergy) {
+                    return $allergy->allergy_name ?? $allergy->allergy_text;
+                })->filter()->values()->toArray();
+
+                $gradeLevelName = $section && $section->gradeLevel
+                    ? $section->gradeLevel->level_name
+                    : ($student->grade_level ?: 'Unknown');
+                $sectionName = $section ? $section->section_name : ($student->section ?: 'Unknown');
+
                 return [
                     'student_id' => $student->student_id,
                     'student_number' => $student->student_number,
@@ -470,14 +601,14 @@ class AdviserController extends BaseController
                     'full_name' => trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name),
                     'birth_date' => $student->birth_date,
                     'gender' => $student->gender,
-                    'grade_level' => $section->gradeLevel->level_name,
-                    'section' => $section->section_name,
-                    'grade_section' => $section->gradeLevel->level_name . ' - ' . $section->section_name,
+                    'grade_level' => $gradeLevelName,
+                    'section' => $sectionName,
+                    'grade_section' => $gradeLevelName . ' - ' . $sectionName,
                     'blood_type' => $student->blood_type,
-                    'emergency_contact' => $student->emergency_contact_name,
-                    'email' => $student->email,
-                    'phone' => $student->phone,
-                    'allergies' => $student->allergies->pluck('allergy_name')->toArray(),
+                    'emergency_contact' => $student->emergency_contact,
+                    'email' => $student->user ? $student->user->email : null,
+                    'phone' => $student->user ? $student->user->phone : null,
+                    'allergies' => $allergyList,
                     'last_visit' => $student->medicalVisits->first() ? [
                         'visit_id' => $student->medicalVisits->first()->visit_id,
                         'visit_date' => $student->medicalVisits->first()->visit_datetime->format('Y-m-d'),
@@ -492,9 +623,11 @@ class AdviserController extends BaseController
                 'adviser' => [
                     'adviser_id' => $user->user_id,
                     'name' => $user->full_name,
-                    'grade_level' => $section->gradeLevel->level_name,
-                    'section' => $section->section_name,
-                    'advisory_class' => $section->gradeLevel->level_name . ' - ' . $section->section_name
+                    'grade_level' => $section && $section->gradeLevel ? $section->gradeLevel->level_name : null,
+                    'section' => $section ? $section->section_name : null,
+                    'advisory_class' => $section && $section->gradeLevel
+                        ? $section->gradeLevel->level_name . ' - ' . $section->section_name
+                        : 'Not assigned'
                 ],
                 'students' => $students,
                 'stats' => [
