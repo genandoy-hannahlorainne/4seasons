@@ -423,10 +423,12 @@ class StudentController extends BaseController
                              ->get();
             
             $formattedStudents = $students->map(function($student) {
-                $gradeSection = 'Unknown';
-                if ($student->currentSection && $student->currentSection->gradeLevel) {
-                    $gradeSection = $student->currentSection->gradeLevel->level_name . ' - ' . $student->currentSection->section_name;
-                }
+                $gradeData = $this->resolveGradeSectionData($student);
+                $allergyList = $student->allergies
+                    ? $student->allergies->map(function($allergy) {
+                        return $allergy->allergy_name ?? $allergy->allergy_text;
+                    })->filter()->values()->toArray()
+                    : [];
                 
                 return [
                     'student_id' => $student->student_id,
@@ -434,14 +436,12 @@ class StudentController extends BaseController
                     'first_name' => $student->first_name,
                     'last_name' => $student->last_name,
                     'full_name' => trim($student->first_name . ' ' . $student->last_name),
-                    'grade_section' => $gradeSection,
-                    'grade_level' => $student->currentSection && $student->currentSection->gradeLevel 
-                        ? $student->currentSection->gradeLevel->level_name 
-                        : 'Unknown',
-                    'section' => $student->currentSection ? $student->currentSection->section_name : 'Unknown',
-                    'emergency_contact' => $student->emergency_contact_name,
+                    'grade_section' => $gradeData['grade_section'],
+                    'grade_level' => $gradeData['grade_level'],
+                    'section' => $gradeData['section'],
+                    'emergency_contact' => $student->emergency_contact,
                     'emergency_contact_phone' => $student->emergency_contact_phone,
-                    'allergies' => $student->allergies ? $student->allergies->pluck('allergy_name')->toArray() : [],
+                    'allergies' => $allergyList,
                     'avatar' => $student->gender === 'Female' ? 'assets/user-female.png' : 'assets/user-male.png'
                 ];
             });
@@ -494,10 +494,12 @@ class StudentController extends BaseController
             // Calculate clearance status
             $clearanceStatus = $this->calculateClearanceStatus($student);
             
-            $gradeSection = 'Unknown';
-            if ($student->currentSection && $student->currentSection->gradeLevel) {
-                $gradeSection = $student->currentSection->gradeLevel->level_name . ' - ' . $student->currentSection->section_name;
-            }
+            $gradeData = $this->resolveGradeSectionData($student);
+            $allergyList = $student->allergies
+                ? $student->allergies->map(function($allergy) {
+                    return $allergy->allergy_name ?? $allergy->allergy_text;
+                })->filter()->values()->toArray()
+                : [];
             
             $studentData = [
                 'student_id' => $student->student_id,
@@ -505,19 +507,17 @@ class StudentController extends BaseController
                 'first_name' => $student->first_name,
                 'last_name' => $student->last_name,
                 'full_name' => trim($student->first_name . ' ' . $student->last_name),
-                'grade_section' => $gradeSection,
-                'grade_level' => $student->currentSection && $student->currentSection->gradeLevel 
-                    ? $student->currentSection->gradeLevel->level_name 
-                    : 'Unknown',
-                'section' => $student->currentSection ? $student->currentSection->section_name : 'Unknown',
-                'emergency_contact' => $student->emergency_contact_name,
+                'grade_section' => $gradeData['grade_section'],
+                'grade_level' => $gradeData['grade_level'],
+                'section' => $gradeData['section'],
+                'emergency_contact' => $student->emergency_contact,
                 'emergency_contact_phone' => $student->emergency_contact_phone,
                 'parentPhone' => $student->emergency_contact_phone,
-                'allergies' => $student->allergies ? $student->allergies->pluck('allergy_name')->toArray() : [],
+                'allergies' => $allergyList,
                 'avatar' => $student->gender === 'Female' ? 'assets/user-female.png' : 'assets/user-male.png',
                 'clearance' => $clearanceStatus,
                 'emergency_contact' => [
-                    'name' => $student->emergency_contact_name,
+                    'name' => $student->emergency_contact,
                     'phone' => $student->emergency_contact_phone
                 ]
             ];
@@ -599,15 +599,23 @@ class StudentController extends BaseController
             
             // Filter by grade level
             if ($request->has('grade') && $request->grade !== '') {
-                $query->whereHas('currentSection.gradeLevel', function($q) use ($request) {
-                    $q->where('level_number', $request->grade);
+                $gradeParam = (string)$request->grade;
+                $query->where(function($q) use ($gradeParam) {
+                    $q->whereHas('currentSection.gradeLevel', function($gradeQuery) use ($gradeParam) {
+                        $gradeQuery->where('level_number', $gradeParam)
+                            ->orWhere('level_name', 'LIKE', "%{$gradeParam}%");
+                    })->orWhere('grade_level', $gradeParam)
+                      ->orWhere('grade_level', 'LIKE', "Grade {$gradeParam}%");
                 });
             }
             
             // Filter by section name
             if ($request->has('section') && $request->section !== '') {
-                $query->whereHas('currentSection', function($q) use ($request) {
-                    $q->where('section_name', $request->section);
+                $sectionParam = $request->section;
+                $query->where(function($q) use ($sectionParam) {
+                    $q->whereHas('currentSection', function($sectionQuery) use ($sectionParam) {
+                        $sectionQuery->where('section_name', $sectionParam);
+                    })->orWhere('section', $sectionParam);
                 });
             }
             
@@ -627,10 +635,7 @@ class StudentController extends BaseController
                             ->get();
             
             $formattedStudents = $students->map(function($student) {
-                $gradeSection = 'Unknown';
-                if ($student->currentSection && $student->currentSection->gradeLevel) {
-                    $gradeSection = $student->currentSection->gradeLevel->level_name . ' - ' . $student->currentSection->section_name;
-                }
+                $gradeData = $this->resolveGradeSectionData($student);
                 
                 $lastVisit = $student->medicalVisits->first();
                 
@@ -638,7 +643,7 @@ class StudentController extends BaseController
                     'id' => $student->student_id,
                     'studentNumber' => $student->student_number,
                     'name' => trim($student->first_name . ' ' . $student->last_name),
-                    'gradeSection' => $gradeSection,
+                    'gradeSection' => $gradeData['grade_section'],
                     'gender' => $student->gender,
                     'lastVisit' => $lastVisit ? $lastVisit->visit_datetime->format('Y-m-d') : null,
                     'hasAllergies' => $student->allergies && $student->allergies->count() > 0,
@@ -739,6 +744,58 @@ class StudentController extends BaseController
             ],
             'medical_history' => $student->medicalHistory,
             'allergies' => $student->allergies,
+        ];
+    }
+
+    private function resolveGradeSectionData(Student $student): array
+    {
+        $gradeLevel = null;
+        $section = null;
+
+        if ($student->currentSection) {
+            $section = $student->currentSection->section_name ?? null;
+            if ($student->currentSection->gradeLevel) {
+                $gradeLevel = $student->currentSection->gradeLevel->level_name ?? null;
+            }
+        }
+
+        if (!$gradeLevel) {
+            $rawGrade = trim((string)($student->grade_level ?? ''));
+            if ($rawGrade !== '') {
+                if (is_numeric($rawGrade)) {
+                    $gradeLevel = 'Grade ' . $rawGrade;
+                } elseif (stripos($rawGrade, 'grade') === false && preg_match('/^\d+$/', $rawGrade)) {
+                    $gradeLevel = 'Grade ' . $rawGrade;
+                } else {
+                    $gradeLevel = $rawGrade;
+                }
+            }
+        }
+
+        if (!$section) {
+            $rawSection = trim((string)($student->section ?? ''));
+            if ($rawSection !== '') {
+                $section = $rawSection;
+            }
+        }
+
+        $gradeLevel = $gradeLevel ?: 'Unknown';
+        $section = $section ?: 'Unknown';
+
+        if ($gradeLevel !== 'Unknown' && $section !== 'Unknown') {
+            $gradeSection = $gradeLevel . ' - ' . $section;
+        } elseif ($gradeLevel !== 'Unknown') {
+            $gradeSection = $gradeLevel;
+        } elseif ($section !== 'Unknown') {
+            $gradeSection = $section;
+        } else {
+            $gradeSection = 'Unknown';
+        }
+
+        return [
+            'grade_level' => $gradeLevel,
+            'section' => $section,
+            'grade_section' => $gradeSection,
         ];
     }
 }
