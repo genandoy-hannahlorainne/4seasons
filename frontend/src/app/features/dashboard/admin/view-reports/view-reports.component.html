@@ -186,6 +186,72 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Principal Health Trends Report -->
+    <div *ngIf="activeReport === 'principal-health-trends'" class="report-data">
+      <div class="stats-grid" *ngIf="reportData.summary">
+        <div class="stat-box">
+          <div class="stat-label">Total Visits</div>
+          <div class="stat-value">{{ reportData.summary.totalVisits || 0 }}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Unique Students</div>
+          <div class="stat-value">{{ reportData.summary.uniqueStudents || 0 }}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Emergency Visits</div>
+          <div class="stat-value">{{ reportData.summary.emergencyVisits || 0 }}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Hospital Referrals</div>
+          <div class="stat-value">{{ reportData.summary.hospitalReferrals || 0 }}</div>
+        </div>
+      </div>
+
+      <div class="report-table" style="margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+        <p><strong>Period:</strong> {{ reportData.reportMeta?.periodStart }} to {{ reportData.reportMeta?.periodEnd }}</p>
+        <p><strong>Peak Slot:</strong>
+          <span *ngIf="reportData.peakSlot">{{ reportData.peakSlot.day }} {{ reportData.peakSlot.timeRange }} ({{ reportData.peakSlot.visits }} visits)</span>
+          <span *ngIf="!reportData.peakSlot">No peak data available</span>
+        </p>
+        <p><strong>Recommendation:</strong> {{ reportData.recommendation?.title }}</p>
+        <p>{{ reportData.recommendation?.details }}</p>
+      </div>
+
+      <h3 style="margin-top: 1.5rem;">Top Visit Reasons</h3>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Reason</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of reportData.topReasons">
+            <td>{{ row.reason }}</td>
+            <td>{{ row.count }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin-top: 1.5rem;">Visits by Day and Hour</h3>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Time Slot</th>
+            <th>Visits</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of reportData.visitsByDayHour">
+            <td>{{ row.day }}</td>
+            <td>{{ row.timeRange }}</td>
+            <td>{{ row.visits }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- No Data State -->

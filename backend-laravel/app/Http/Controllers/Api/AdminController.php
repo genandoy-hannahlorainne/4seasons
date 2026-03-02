@@ -9,6 +9,7 @@ use App\Models\Section;
 use App\Models\GradeLevel;
 use App\Models\SchoolYear;
 use App\Mail\UserAccountCreated;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -450,6 +451,183 @@ class AdminController extends BaseController
             
         } catch (\Exception $e) {
             return $this->sendError('Failed to generate report', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get principal-ready health trend report dataset for printable PDF generation
+     */
+    public function getPrincipalHealthTrendReport(Request $request)
+    {
+        try {
+            $validated = Validator::make($request->all(), [
+                'year' => 'nullable|integer|min:2020|max:2100',
+                'quarter' => 'nullable|integer|min:1|max:4',
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date',
+                'grade_level' => 'nullable|string|max:20',
+            ]);
+
+            if ($validated->fails()) {
+                return $this->sendError('Validation Error', $validated->errors()->first(), 422);
+            }
+
+            $currentYear = (int)date('Y');
+            $year = (int)$request->get('year', $currentYear);
+            $quarter = (int)$request->get('quarter', (int)ceil((int)date('n') / 3));
+
+            if ($request->filled('start_date') && $request->filled('end_date')) {
+                $startDate = Carbon::parse($request->get('start_date'))->startOfDay();
+                $endDate = Carbon::parse($request->get('end_date'))->endOfDay();
+            } else {
+                $quarterStartMonth = (($quarter - 1) * 3) + 1;
+                $startDate = Carbon::create($year, $quarterStartMonth, 1)->startOfDay();
+                $endDate = (clone $startDate)->addMonths(3)->subDay()->endOfDay();
+            }
+
+            if ($endDate->lt($startDate)) {
+                return $this->sendError('Validation Error', 'End date must be after start date', 422);
+            }
+
+            $baseQuery = DB::table('medical_visits as mv')
+                ->leftJoin('students as s', 'mv.student_id', '=', 's.student_id')
+                ->whereBetween('mv.visit_datetime', [$startDate->toDateTimeString(), $endDate->toDateTimeString()]);
+
+            $gradeFilter = $request->get('grade_level');
+            if (!empty($gradeFilter)) {
+                $baseQuery->where(function ($query) use ($gradeFilter) {
+                    $query->where('s.grade_level', $gradeFilter)
+                        ->orWhere('s.grade_level', 'Grade ' . $gradeFilter);
+                });
+            }
+
+            $totalVisits = (clone $baseQuery)->count();
+            $uniqueStudents = (clone $baseQuery)->distinct('mv.student_id')->count('mv.student_id');
+            $emergencyVisits = (clone $baseQuery)
+                ->whereRaw('LOWER(COALESCE(mv.visit_type, "")) = ?', ['emergency'])
+                ->count();
+            $hospitalReferrals = (clone $baseQuery)
+                ->whereRaw('LOWER(COALESCE(mv.status, "")) = ?', ['referred'])
+                ->count();
+
+            $visitsByDayHour = (clone $baseQuery)
+                ->selectRaw('DAYNAME(mv.visit_datetime) as day_name, DAYOFWEEK(mv.visit_datetime) as day_number, HOUR(mv.visit_datetime) as hour_slot, COUNT(*) as visits')
+                ->groupByRaw('DAYNAME(mv.visit_datetime), DAYOFWEEK(mv.visit_datetime), HOUR(mv.visit_datetime)')
+                ->orderBy('day_number')
+                ->orderBy('hour_slot')
+                ->get()
+                ->map(function ($row) {
+                    $hour = (int)$row->hour_slot;
+                    return [
+                        'day' => $row->day_name,
+                        'dayNumber' => (int)$row->day_number,
+                        'hour' => $hour,
+                        'timeRange' => sprintf('%02d:00-%02d:00', $hour, ($hour + 1) % 24),
+                        'visits' => (int)$row->visits,
+                    ];
+                })
+                ->values();
+
+            $peakSlot = (clone $baseQuery)
+                ->selectRaw('DAYNAME(mv.visit_datetime) as day_name, HOUR(mv.visit_datetime) as hour_slot, COUNT(*) as visits')
+                ->groupByRaw('DAYNAME(mv.visit_datetime), HOUR(mv.visit_datetime)')
+                ->orderByDesc('visits')
+                ->first();
+
+            $topReasons = (clone $baseQuery)
+                ->selectRaw('COALESCE(NULLIF(TRIM(mv.chief_complaint), ""), NULLIF(TRIM(mv.notes), ""), "Unspecified") as reason, COUNT(*) as count')
+                ->groupBy('reason')
+                ->orderByDesc('count')
+                ->limit(10)
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'reason' => $row->reason,
+                        'count' => (int)$row->count,
+                    ];
+                })
+                ->values();
+
+            $dailyTrend = (clone $baseQuery)
+                ->selectRaw('DATE(mv.visit_datetime) as date, COUNT(*) as visits')
+                ->groupByRaw('DATE(mv.visit_datetime)')
+                ->orderBy('date')
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'date' => $row->date,
+                        'visits' => (int)$row->visits,
+                    ];
+                })
+                ->values();
+
+            $gradeBreakdown = (clone $baseQuery)
+                ->selectRaw('COALESCE(NULLIF(TRIM(s.grade_level), ""), "Unknown") as grade_level, COUNT(*) as visits')
+                ->groupBy('grade_level')
+                ->orderBy('grade_level')
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'gradeLevel' => $row->grade_level,
+                        'visits' => (int)$row->visits,
+                    ];
+                })
+                ->values();
+
+            $recommendation = [
+                'title' => 'Maintain current clinic staffing schedule',
+                'details' => 'Visit volume is currently manageable across available slots. Continue weekly monitoring.',
+                'priority' => 'normal',
+            ];
+
+            if ($peakSlot && (int)$peakSlot->visits >= 8) {
+                $startHour = (int)$peakSlot->hour_slot;
+                $endHour = ($startHour + 1) % 24;
+                $recommendation = [
+                    'title' => 'Assign additional volunteer nurse on peak hours',
+                    'details' => sprintf(
+                        'Peak clinic demand occurs on %s between %02d:00-%02d:00 (%d visits). Recommend adding 1 volunteer nurse during this slot.',
+                        $peakSlot->day_name,
+                        $startHour,
+                        $endHour,
+                        (int)$peakSlot->visits
+                    ),
+                    'priority' => 'high',
+                ];
+            }
+
+            $preparedBy = $request->user();
+
+            return $this->sendResponse([
+                'reportMeta' => [
+                    'title' => 'Quarterly School Clinic Health Trend Report',
+                    'periodStart' => $startDate->toDateString(),
+                    'periodEnd' => $endDate->toDateString(),
+                    'quarter' => $quarter,
+                    'year' => $year,
+                    'generatedAt' => now()->toISOString(),
+                    'preparedBy' => $preparedBy?->full_name ?? $preparedBy?->username ?? 'System',
+                ],
+                'summary' => [
+                    'totalVisits' => (int)$totalVisits,
+                    'uniqueStudents' => (int)$uniqueStudents,
+                    'emergencyVisits' => (int)$emergencyVisits,
+                    'hospitalReferrals' => (int)$hospitalReferrals,
+                ],
+                'peakSlot' => $peakSlot ? [
+                    'day' => $peakSlot->day_name,
+                    'hour' => (int)$peakSlot->hour_slot,
+                    'timeRange' => sprintf('%02d:00-%02d:00', (int)$peakSlot->hour_slot, (((int)$peakSlot->hour_slot + 1) % 24)),
+                    'visits' => (int)$peakSlot->visits,
+                ] : null,
+                'recommendation' => $recommendation,
+                'topReasons' => $topReasons,
+                'dailyTrend' => $dailyTrend,
+                'visitsByDayHour' => $visitsByDayHour,
+                'gradeBreakdown' => $gradeBreakdown,
+            ], 'Principal health trend report retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve principal health trend report', $e->getMessage(), 500);
         }
     }
 
