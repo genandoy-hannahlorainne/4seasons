@@ -14,7 +14,23 @@ class AdviserController extends BaseController
 {
     private function isAdviserUser($user): bool
     {
-        return $user && intval($user->role_id) === 3;
+        if (!$user) {
+            return false;
+        }
+
+        if (intval($user->role_id) === 3) {
+            return true;
+        }
+
+        $roleName = '';
+        if (isset($user->role_name)) {
+            $roleName = strtolower(trim((string) $user->role_name));
+        } elseif (method_exists($user, 'role')) {
+            $role = $user->role()->first();
+            $roleName = strtolower(trim((string) ($role->role_name ?? '')));
+        }
+
+        return str_contains($roleName, 'adviser');
     }
 
     private function resolveAdviserSection(int $userId, ?int $schoolYearId = null): ?Section
@@ -322,14 +338,13 @@ class AdviserController extends BaseController
             // Get adviser's section
             $section = $this->resolveAdviserSection(intval($user->user_id));
 
-            if (!$section) {
-                return $this->sendError('No section assigned to this adviser');
-            }
-
-            // Get students in the section
-            $students = Student::where('current_section_id', $section->id)
-                ->where('is_active', true)
-                ->get();
+            // Get students in adviser's advisory scope (with fallbacks)
+            $studentsQuery = Student::query()->where('is_active', true);
+            $students = $this->applyAdviserStudentScope(
+                $studentsQuery,
+                intval($user->user_id),
+                $section
+            )->get();
 
             $totalStudents = $students->count();
 
@@ -417,8 +432,18 @@ class AdviserController extends BaseController
                 ];
             }
 
+            $fallbackStudent = $students->first();
+            $advisoryClass = 'Not assigned';
+            if ($section && $section->gradeLevel) {
+                $advisoryClass = $section->gradeLevel->level_name . ' - ' . $section->section_name;
+            } elseif ($fallbackStudent) {
+                $fallbackGrade = $fallbackStudent->grade_level ?: 'Unknown';
+                $fallbackSection = $fallbackStudent->section ?: 'Unknown';
+                $advisoryClass = $fallbackGrade . ' - ' . $fallbackSection;
+            }
+
             $heatmapData = [
-                'advisory_class' => $section->gradeLevel->level_name . ' - ' . $section->section_name,
+                'advisory_class' => $advisoryClass,
                 'total_students' => $totalStudents,
                 'visits_by_date' => array_reverse($visitsByDate), // Most recent first
                 'trending_symptoms' => array_slice($trendingSymptoms, 0, 10), // Top 10

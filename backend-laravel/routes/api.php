@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Get all students for clinic staff with filtering
     Route::get('/staff/students', [\App\Http\Controllers\Api\StudentController::class, 'getAllStudentsForStaff']);
+    Route::get('/staff/sections', [\App\Http\Controllers\Api\SchoolYearController::class, 'getAllSections']);
     
     // Medical visit endpoints
     Route::apiResource('medical-visits', \App\Http\Controllers\Api\MedicalVisitController::class);
