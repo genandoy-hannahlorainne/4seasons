@@ -18,7 +18,7 @@
   </div>
 
   <!-- Date Range Filter (for date-based reports) -->
-  <div *ngIf="activeReport !== 'summary' && activeReport !== 'users' && activeReport !== 'allergies'" class="date-filter">
+  <div *ngIf="activeReport !== 'summary' && activeReport !== 'users' && activeReport !== 'allergies' && activeReport !== 'principal-health-trends'" class="date-filter">
     <div class="filter-group">
       <label>Start Date:</label>
       <input type="date" [(ngModel)]="startDate" class="form-control">
@@ -28,6 +28,25 @@
       <input type="date" [(ngModel)]="endDate" class="form-control">
     </div>
     <button class="btn btn-primary" (click)="refreshReport()">Apply Filter</button>
+  </div>
+
+  <!-- Quarter/Year Filter (for principal health trends) -->
+  <div *ngIf="activeReport === 'principal-health-trends'" class="date-filter">
+    <div class="filter-group">
+      <label>Quarter:</label>
+      <select [(ngModel)]="selectedQuarter" class="form-control">
+        <option *ngFor="let quarter of quarterOptions" [ngValue]="quarter.value">{{ quarter.label }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Year:</label>
+      <input type="number" [(ngModel)]="selectedYear" min="2020" max="2100" class="form-control">
+    </div>
+    <div class="quick-actions">
+      <button class="btn btn-secondary" (click)="setCurrentQuarter()">Current Quarter</button>
+      <button class="btn btn-secondary" (click)="setPreviousQuarter()">Previous Quarter</button>
+    </div>
+    <button class="btn btn-primary" (click)="refreshReport()">Generate Quarter Report</button>
   </div>
 
   <!-- Error Message -->

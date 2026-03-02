@@ -18,6 +18,14 @@ export class ViewReportsComponent implements OnInit {
   reportData: any = null;
   startDate = '';
   endDate = '';
+  selectedQuarter = 1;
+  selectedYear = new Date().getFullYear();
+  quarterOptions = [
+    { value: 1, label: 'Q1 (Jan-Mar)' },
+    { value: 2, label: 'Q2 (Apr-Jun)' },
+    { value: 3, label: 'Q3 (Jul-Sep)' },
+    { value: 4, label: 'Q4 (Oct-Dec)' }
+  ];
   errorMessage = '';
 
   reportTypes = [
@@ -34,6 +42,8 @@ export class ViewReportsComponent implements OnInit {
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     this.startDate = firstDay.toISOString().split('T')[0];
     this.endDate = today.toISOString().split('T')[0];
+    this.selectedQuarter = Math.ceil((today.getMonth() + 1) / 3);
+    this.selectedYear = today.getFullYear();
   }
 
   ngOnInit(): void {
@@ -68,8 +78,8 @@ export class ViewReportsComponent implements OnInit {
         break;
       case 'principal-health-trends':
         observable = this.adminService.getPrincipalHealthTrendReport({
-          startDate: this.startDate,
-          endDate: this.endDate
+          year: this.selectedYear,
+          quarter: this.selectedQuarter
         });
         break;
       default:
@@ -93,6 +103,31 @@ export class ViewReportsComponent implements OnInit {
 
   refreshReport(): void {
     this.loadReport(this.activeReport);
+  }
+
+  setCurrentQuarter(): void {
+    const now = new Date();
+    this.selectedQuarter = Math.ceil((now.getMonth() + 1) / 3);
+    this.selectedYear = now.getFullYear();
+    if (this.activeReport === 'principal-health-trends') {
+      this.refreshReport();
+    }
+  }
+
+  setPreviousQuarter(): void {
+    const now = new Date();
+    const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+    if (currentQuarter === 1) {
+      this.selectedQuarter = 4;
+      this.selectedYear = now.getFullYear() - 1;
+    } else {
+      this.selectedQuarter = currentQuarter - 1;
+      this.selectedYear = now.getFullYear();
+    }
+
+    if (this.activeReport === 'principal-health-trends') {
+      this.refreshReport();
+    }
   }
 
   exportReport(): void {
