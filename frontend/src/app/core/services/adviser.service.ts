@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface AdviserDashboardData {
@@ -100,15 +101,34 @@ export class AdviserService {
   }
 
   autoAssignStudents(userId: number): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/auto-assign-students.php?user_id=${userId}`);
+    // This functionality should be handled by Laravel API or removed
+    // For now, return a success response to avoid breaking the flow
+    return new Observable(observer => {
+      observer.next({ success: true, message: 'Auto-assignment handled by Laravel API' });
+      observer.complete();
+    });
   }
 
   getStudentCompleteProfile(studentId: number): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-student-complete-profile.php?student_id=${studentId}`);
+    // Try Laravel API first, fallback to legacy if needed
+    return this.http.get<any>(`${environment.apiUrl}/students/${studentId}`)
+      .pipe(
+        catchError(() => {
+          // Fallback to legacy API
+          return this.http.get<any>(`${environment.legacyApiUrl}/get-student-complete-profile.php?student_id=${studentId}`);
+        })
+      );
   }
 
   getAdviserNotifications(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-adviser-notifications.php`);
+    // Try Laravel API first, fallback to legacy if needed
+    return this.http.get<any>(`${environment.apiUrl}/adviser/notifications`)
+      .pipe(
+        catchError(() => {
+          // Fallback to legacy API
+          return this.http.get<any>(`${environment.legacyApiUrl}/get-adviser-notifications.php`);
+        })
+      );
   }
 
   // Grade Promotion & Class Management

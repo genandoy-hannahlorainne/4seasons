@@ -342,14 +342,8 @@
               <label>Grade Level *</label>
               <select [(ngModel)]="newUser.grade_level" (change)="onGradeLevelChange()" class="form-control" required>
                 <option value="">-- Select --</option>
-                <option value="1">Grade 1 (Grade 7)</option>
-                <option value="2">Grade 2 (Grade 8)</option>
-                <option value="3">Grade 3 (Grade 9)</option>
-                <option value="4">Grade 4 (Grade 10)</option>
-                <option value="5">Grade 5 (Grade 11)</option>
-                <option value="6">Grade 6 (Grade 12)</option>
+                <option *ngFor="let grade of gradeLevels" [value]="grade.id">{{ grade.level_name }}</option>
               </select>
-              <small>Admin grade levels map to actual school grades</small>
             </div>
             <div class="form-group">
               <label>Section *</label>
@@ -396,12 +390,7 @@
               <label>Advisory Grade Level</label>
               <select [(ngModel)]="newUser.grade_level" (change)="onGradeLevelChange()" class="form-control">
                 <option value="">-- None --</option>
-                <option value="1">Grade 1 (Grade 7)</option>
-                <option value="2">Grade 2 (Grade 8)</option>
-                <option value="3">Grade 3 (Grade 9)</option>
-                <option value="4">Grade 4 (Grade 10)</option>
-                <option value="5">Grade 5 (Grade 11)</option>
-                <option value="6">Grade 6 (Grade 12)</option>
+                <option *ngFor="let grade of gradeLevels" [value]="grade.id">{{ grade.level_name }}</option>
               </select>
             </div>
             <div class="form-group">

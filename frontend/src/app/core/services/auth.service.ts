@@ -32,7 +32,7 @@ export class AuthService {
             const userData = response.data.user;
             const token = response.data.token;
             
-            // Store user data and JWT token
+            // Store user data and token
             localStorage.setItem('currentUser', JSON.stringify(userData));
             localStorage.setItem('token', token);
             
@@ -56,71 +56,83 @@ export class AuthService {
   logout(): Observable<any> {
     const token = localStorage.getItem('token');
     
-    // Call Laravel logout endpoint if token exists
-    const logoutRequest = token ? 
-      this.http.post(`${environment.apiUrl}/logout`, {}) : 
-      new Observable(observer => observer.complete());
-
-    return logoutRequest.pipe(
-      map(() => {
-        // Clear local storage regardless of API response
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('token');
-        this.currentUserSubject.next(null);
-        return { success: true };
-      }),
-      catchError(error => {
-        // Even if logout API fails, clear local storage
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('token');
-        this.currentUserSubject.next(null);
-        console.warn('Logout API failed, but local storage cleared:', error);
-        return new Observable(observer => {
-          observer.next({ success: true });
-          observer.complete();
-        });
-      })
-    );
-  }
-
-  refreshToken(): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/refresh`, {})
-      .pipe(
-        map(response => {
-          if (response && response.success && response.data) {
-            const token = response.data.token;
-            localStorage.setItem('token', token);
-            return response.data;
-          }
-          throw new Error('Token refresh failed');
-        }),
-        catchError(error => {
-          // If refresh fails, logout user
-          this.logout().subscribe();
-          return throwError(() => error);
-        })
-      );
+    // Call Laravel logout endpoint if we have a token
+    if (token) {
+      return this.http.post<any>(`${environment.apiUrl}/logout`, {})
+        .pipe(
+          map(() => {
+            // Clear local storage
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('token');
+            this.currentUserSubject.next(null);
+            return { success: true };
+          }),
+          catchError(() => {
+            // Even if logout fails, clear local storage
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('token');
+            this.currentUserSubject.next(null);
+            return new Observable(observer => {
+              observer.next({ success: true });
+              observer.complete();
+            });
+          })
+        );
+    } else {
+      // No token, just clear local storage
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('token');
+      this.currentUserSubject.next(null);
+      
+      return new Observable(observer => {
+        observer.next({ success: true });
+        observer.complete();
+      });
+    }
   }
 
   getCurrentUser(): Observable<User> {
-    return this.http.get<any>(`${environment.apiUrl}/me`)
-      .pipe(
-        map(response => {
-          if (response && response.success && response.data) {
-            const userData = response.data;
-            localStorage.setItem('currentUser', JSON.stringify(userData));
-            this.currentUserSubject.next(userData);
-            return userData;
-          }
-          throw new Error('Failed to get user info');
-        })
-      );
+    const token = localStorage.getItem('token');
+    
+    // If we have a token, use Laravel /me endpoint
+    if (token) {
+      return this.http.get<any>(`${environment.apiUrl}/me`)
+        .pipe(
+          map(response => {
+            if (response && response.success && response.data) {
+              const userData = response.data;
+              // Update stored user data
+              localStorage.setItem('currentUser', JSON.stringify(userData));
+              this.currentUserSubject.next(userData);
+              return userData;
+            }
+            throw new Error('Invalid response format');
+          }),
+          catchError(error => {
+            // If /me fails, clear auth data and return error
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('token');
+            this.currentUserSubject.next(null);
+            return throwError(() => error);
+          })
+        );
+    } else {
+      // No token, return current user from storage or error
+      const currentUser = this.currentUserValue;
+      if (currentUser) {
+        return new Observable(observer => {
+          observer.next(currentUser);
+          observer.complete();
+        });
+      } else {
+        return throwError(() => new Error('No authenticated user'));
+      }
+    }
   }
 
   isAuthenticated(): boolean {
-    const token = localStorage.getItem('token');
     const user = this.currentUserValue;
-    return !!(token && user);
+    return !!user;
   }
 
   getToken(): string | null {

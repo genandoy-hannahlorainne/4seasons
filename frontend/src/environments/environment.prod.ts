@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: '/api'
+  apiUrl: '/api', // Laravel API
+  legacyApiUrl: '/backend/api' // Keep for gradual migration
 };

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 28, 2026 at 12:02 PM
+-- Generation Time: Mar 01, 2026 at 11:52 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -41,87 +41,11 @@ CREATE TABLE `activity_logs` (
 --
 
 INSERT INTO `activity_logs` (`log_id`, `user_id`, `action`, `details`, `ip_address`, `created_at`) VALUES
-(2147, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-02-28 09:31:02'),
-(2148, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-02-28 09:31:31'),
-(2149, 32, 'Created User Account', 'Created clinic_staff account: STAFF-01 (Lulubelle Gabasa)', '::1', '2026-02-28 09:31:40'),
-(2150, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-02-28 09:31:44'),
-(2151, 68, 'Login', NULL, '127.0.0.1', '2026-02-28 01:32:08'),
-(2152, 68, 'Password Changed (Forced)', NULL, '127.0.0.1', '2026-02-28 01:32:18'),
-(2153, 32, 'Login', NULL, '127.0.0.1', '2026-02-28 01:33:24'),
-(2154, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-02-28 09:33:25'),
-(2155, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-02-28 09:33:25'),
-(2156, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-02-28 09:33:27'),
-(2157, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-02-28 09:33:27'),
-(2158, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-02-28 09:33:57'),
-(2159, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-02-28 09:34:27'),
-(2160, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-02-28 09:34:57'),
-(2161, 32, 'Created User Account', 'Created adviser account: 2026-01 (Gale  Gregory)', '::1', '2026-02-28 09:35:23'),
-(2162, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 09:35:27'),
-(2163, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 09:35:27'),
-(2164, 69, 'Login', NULL, '127.0.0.1', '2026-02-28 01:35:51'),
-(2165, 69, 'Password Changed (Forced)', NULL, '127.0.0.1', '2026-02-28 01:36:01'),
-(2166, 32, 'Login', NULL, '127.0.0.1', '2026-02-28 01:39:12'),
-(2167, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 09:39:13'),
-(2168, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 09:39:13'),
-(2169, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 09:39:16'),
-(2170, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 09:39:16'),
-(2171, 32, 'Login', NULL, '127.0.0.1', '2026-02-28 01:58:16'),
-(2172, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 09:58:17'),
-(2173, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 09:58:17'),
-(2174, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 09:58:26'),
-(2175, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 09:58:26'),
-(2176, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 09:58:56'),
-(2177, 69, 'Login', NULL, '127.0.0.1', '2026-02-28 02:04:38'),
-(2178, 32, 'Login', NULL, '127.0.0.1', '2026-02-28 02:05:15'),
-(2179, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:05:15'),
-(2180, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:05:15'),
-(2181, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:05:20'),
-(2182, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:05:21'),
-(2183, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:05:50'),
-(2184, 32, 'Created User Account', 'Created student account: 136883100330 (Clyde  Alonzo)', '::1', '2026-02-28 10:06:14'),
-(2185, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 10:06:18'),
-(2186, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 10:06:20'),
-(2187, 70, 'Login', NULL, '127.0.0.1', '2026-02-28 02:06:43'),
-(2188, 70, 'Password Changed (Forced)', NULL, '127.0.0.1', '2026-02-28 02:06:50'),
-(2189, 32, 'Login', NULL, '127.0.0.1', '2026-02-28 02:45:19'),
-(2190, 32, 'Login', NULL, '127.0.0.1', '2026-02-28 02:46:24'),
-(2191, 32, 'Login', NULL, '127.0.0.1', '2026-02-28 02:50:30'),
-(2192, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:50:31'),
-(2193, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:50:31'),
-(2194, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:50:34'),
-(2195, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:50:34'),
-(2196, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:51:04'),
-(2197, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:51:34'),
-(2198, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 10:51:37'),
-(2199, 32, 'Login', NULL, '127.0.0.1', '2026-02-28 02:53:23'),
-(2200, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:53:23'),
-(2201, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:53:23'),
-(2202, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:53:27'),
-(2203, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:53:27'),
-(2204, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:54:14'),
-(2205, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:54:15'),
-(2206, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:54:44'),
-(2207, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 10:55:14'),
-(2208, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 10:55:14'),
-(2209, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 10:55:44'),
-(2210, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 10:56:15'),
-(2211, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:56:28'),
-(2212, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:56:28'),
-(2213, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:56:59'),
-(2214, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:57:30'),
-(2215, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:57:58'),
-(2216, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:58:29'),
-(2217, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:58:34'),
-(2218, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:58:34'),
-(2219, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:58:54'),
-(2220, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:58:54'),
-(2221, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:59:24'),
-(2222, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-02-28 10:59:54'),
-(2223, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 11:00:15'),
-(2224, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 11:00:24'),
-(2225, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 11:00:56'),
-(2226, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 11:01:24'),
-(2227, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-02-28 11:01:55');
+(2618, 32, 'Login', NULL, '::1', '2026-03-01 10:51:15'),
+(2619, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:51:16'),
+(2620, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:51:16'),
+(2621, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:51:46'),
+(2622, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:52:16');
 
 -- --------------------------------------------------------
 
@@ -135,20 +59,17 @@ CREATE TABLE `advisers` (
   `first_name` varchar(80) DEFAULT NULL,
   `last_name` varchar(80) DEFAULT NULL,
   `employee_number` varchar(50) DEFAULT NULL,
-  `contact_phone` varchar(30) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `employee_id` varchar(50) NOT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `contact_phone` varchar(20) DEFAULT NULL,
+  `hire_date` date DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `deleted_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `deleted_at` timestamp NULL DEFAULT NULL,
   `grade_level` varchar(10) DEFAULT NULL,
   `section` varchar(50) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `advisers`
---
-
-INSERT INTO `advisers` (`adviser_id`, `user_id`, `first_name`, `last_name`, `employee_number`, `contact_phone`, `created_at`, `is_active`, `deleted_at`, `grade_level`, `section`) VALUES
-(13, 69, 'Gale', 'Gregory', '2026-01', '09090909099', '2026-02-28 09:35:23', 1, NULL, '12', 'STEM 2');
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -266,13 +187,6 @@ CREATE TABLE `clinic_staff` (
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `clinic_staff`
---
-
-INSERT INTO `clinic_staff` (`clinic_staff_id`, `user_id`, `staff_code`, `position`, `created_at`, `is_active`, `deleted_at`) VALUES
-(5, 68, 'STAFF-01', 'School Nurse', '2026-02-28 09:31:40', 1, NULL);
-
 -- --------------------------------------------------------
 
 --
@@ -285,6 +199,51 @@ CREATE TABLE `diagnoses` (
   `icd_code` varchar(20) DEFAULT NULL,
   `diagnosis_text` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `drill_participants`
+--
+
+CREATE TABLE `drill_participants` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `drill_id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `role` enum('injured','rescuer','observer','evacuee') NOT NULL DEFAULT 'evacuee',
+  `status` enum('assigned','scanned','rescued','safe') NOT NULL DEFAULT 'assigned',
+  `injury_simulation` text DEFAULT NULL,
+  `severity` enum('minor','moderate','severe','critical') DEFAULT NULL,
+  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `first_scan_at` timestamp NULL DEFAULT NULL,
+  `rescued_at` timestamp NULL DEFAULT NULL,
+  `response_time_seconds` int(11) DEFAULT NULL,
+  `rescuer_id` int(10) UNSIGNED DEFAULT NULL,
+  `scan_history` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`scan_history`)),
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `drill_scans`
+--
+
+CREATE TABLE `drill_scans` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `drill_id` bigint(20) UNSIGNED NOT NULL,
+  `participant_id` bigint(20) UNSIGNED NOT NULL,
+  `scanned_by` int(10) UNSIGNED NOT NULL,
+  `scan_type` varchar(255) NOT NULL DEFAULT 'qr',
+  `scanned_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `seconds_from_start` int(11) NOT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`)),
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -303,15 +262,28 @@ CREATE TABLE `email_logs` (
   `sent_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `email_logs`
+-- Table structure for table `emergency_drills`
 --
 
-INSERT INTO `email_logs` (`log_id`, `recipient`, `subject`, `priority`, `status`, `error_message`, `created_at`, `sent_at`) VALUES
-(37, 'lulubelle@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-28 09:23:08', '2026-02-28 09:23:13'),
-(38, 'lulubelle@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-28 09:31:40', '2026-02-28 09:31:44'),
-(39, 'gale@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-28 09:35:23', '2026-02-28 09:35:27'),
-(40, 'clyde@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-02-28 10:06:14', '2026-02-28 10:06:18');
+CREATE TABLE `emergency_drills` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `drill_name` varchar(255) NOT NULL,
+  `drill_type` enum('earthquake','fire','lockdown','medical','evacuation') NOT NULL,
+  `description` text DEFAULT NULL,
+  `status` enum('planned','active','completed','cancelled') NOT NULL DEFAULT 'planned',
+  `scheduled_at` timestamp NULL DEFAULT NULL,
+  `started_at` timestamp NULL DEFAULT NULL,
+  `ended_at` timestamp NULL DEFAULT NULL,
+  `duration_seconds` int(11) DEFAULT NULL,
+  `created_by` int(10) UNSIGNED NOT NULL,
+  `settings` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`settings`)),
+  `statistics` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`statistics`)),
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -340,20 +312,21 @@ CREATE TABLE `grade_levels` (
   `level_number` int(11) NOT NULL COMMENT '7, 8, 9, 10, 11, 12',
   `level_name` varchar(50) NOT NULL COMMENT 'Grade 7, Grade 8, etc.',
   `description` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `is_active` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `grade_levels`
 --
 
-INSERT INTO `grade_levels` (`id`, `level_number`, `level_name`, `description`, `created_at`) VALUES
-(1, 7, 'Grade 7', 'First Year - Junior High School', '2026-01-15 08:03:58'),
-(2, 8, 'Grade 8', 'Second Year - Junior High School', '2026-01-15 08:03:58'),
-(3, 9, 'Grade 9', 'Third Year - Junior High School', '2026-01-15 08:03:58'),
-(4, 10, 'Grade 10', 'Fourth Year - Junior High School', '2026-01-15 08:03:58'),
-(5, 11, 'Grade 11', 'First Year - Senior High School', '2026-01-15 08:03:58'),
-(6, 12, 'Grade 12', 'Second Year - Senior High School', '2026-01-15 08:03:58');
+INSERT INTO `grade_levels` (`id`, `level_number`, `level_name`, `description`, `created_at`, `is_active`) VALUES
+(1, 7, 'Grade 7', 'First Year - Junior High School', '2026-01-15 08:03:58', 1),
+(2, 8, 'Grade 8', 'Second Year - Junior High School', '2026-01-15 08:03:58', 1),
+(3, 9, 'Grade 9', 'Third Year - Junior High School', '2026-01-15 08:03:58', 1),
+(4, 10, 'Grade 10', 'Fourth Year - Junior High School', '2026-01-15 08:03:58', 1),
+(5, 11, 'Grade 11', 'First Year - Senior High School', '2026-01-15 08:03:58', 1),
+(6, 12, 'Grade 12', 'Second Year - Senior High School', '2026-01-15 08:03:58', 1);
 
 -- --------------------------------------------------------
 
@@ -412,16 +385,6 @@ CREATE TABLE `medical_clearances` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Tracks medical clearances for various activities';
-
---
--- Dumping data for table `medical_clearances`
---
-
-INSERT INTO `medical_clearances` (`clearance_id`, `student_id`, `clearance_type`, `status`, `required_for`, `issued_date`, `expiry_date`, `issued_by`, `parent_consent`, `doctor_approval`, `doctor_name`, `medical_notes`, `created_at`, `updated_at`) VALUES
-(1, 21, 'off_campus', 'approved', 'General off-campus activities', '2026-02-16', '2026-08-16', NULL, 1, 1, NULL, 'Student cleared for normal off-campus activities', '2026-02-16 15:20:42', '2026-02-16 15:20:42'),
-(2, 22, 'off_campus', 'approved', 'General off-campus activities', '2026-02-16', '2026-08-16', NULL, 1, 1, NULL, 'Student cleared for normal off-campus activities', '2026-02-16 15:20:42', '2026-02-16 15:20:42'),
-(3, 24, 'off_campus', 'approved', 'General off-campus activities', '2026-02-16', '2026-08-16', NULL, 1, 1, NULL, 'Student cleared for normal off-campus activities', '2026-02-16 15:20:42', '2026-02-16 15:20:42'),
-(4, 25, 'off_campus', 'pending', 'Heart condition - requires doctor approval', '2026-02-16', '2026-08-16', NULL, 1, 1, NULL, 'Student has heart condition. Requires parent consent and doctor approval before off-campus activities.', '2026-02-16 15:43:28', '2026-02-16 15:47:03');
 
 -- --------------------------------------------------------
 
@@ -509,9 +472,13 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (9, '2026_02_25_115323_create_allergies_table', 1),
 (10, '2026_02_25_115338_create_vitals_table', 1),
 (11, '2026_02_25_115403_create_clinic_staff_table', 1),
-(12, '2026_02_25_115436_create_advisers_table', 1),
 (13, '0001_01_01_000001_create_cache_table', 1),
-(14, '0001_01_01_000002_create_jobs_table', 1);
+(14, '0001_01_01_000002_create_jobs_table', 1),
+(15, '2026_02_25_115436_create_advisers_table', 2),
+(16, '2026_02_28_125930_create_emergency_drills_table', 2),
+(17, '2026_02_28_125957_create_drill_participants_table', 2),
+(18, '2026_02_28_130023_create_drill_scans_table', 3),
+(19, '2026_02_28_140000_update_drill_participants_for_all_users', 4);
 
 -- --------------------------------------------------------
 
@@ -572,27 +539,6 @@ CREATE TABLE `personal_access_tokens` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `personal_access_tokens`
---
-
-INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `name`, `token`, `abilities`, `last_used_at`, `expires_at`, `created_at`, `updated_at`) VALUES
-(47, 'App\\Models\\User', 32, 'auth-token', 'fba2221b508bcc4f0ff6a6b06fc18c6bde51876161c6cbf44b0b06af41db5bb6', '[\"*\"]', NULL, '2026-03-01 01:19:52', '2026-02-28 01:19:52', '2026-02-28 01:19:52'),
-(48, 'App\\Models\\User', 67, 'auth-token', 'a42b75ddb6904154971dbb6c0644e819d23a0d99f535307d58da6d128bcef6ba', '[\"*\"]', '2026-02-28 01:29:44', '2026-03-01 01:23:42', '2026-02-28 01:23:42', '2026-02-28 01:29:44'),
-(49, 'App\\Models\\User', 32, 'auth-token', '7fcd5dcce6d647766bd67b42c46096524b86f39d5a8c8b4cc95d06fbd6b67f54', '[\"*\"]', NULL, '2026-03-01 01:30:28', '2026-02-28 01:30:28', '2026-02-28 01:30:28'),
-(50, 'App\\Models\\User', 68, 'auth-token', '7e60f2b5c6513ea8860c60b97565c5021ea78fc7ec27d73dee7532af4e596fdd', '[\"*\"]', '2026-02-28 01:33:06', '2026-03-01 01:32:08', '2026-02-28 01:32:08', '2026-02-28 01:33:06'),
-(51, 'App\\Models\\User', 32, 'auth-token', '641cff2ca67fd813e16b0d15f2dc7173c1bd32dfd9c6516e9b7494cd5079caf1', '[\"*\"]', NULL, '2026-03-01 01:33:24', '2026-02-28 01:33:24', '2026-02-28 01:33:24'),
-(52, 'App\\Models\\User', 69, 'auth-token', '4325f12f3308ba6fb33c52a1cfe06ab205c0998405a30f8e3a77263794abb559', '[\"*\"]', '2026-02-28 01:36:17', '2026-03-01 01:35:51', '2026-02-28 01:35:51', '2026-02-28 01:36:17'),
-(53, 'App\\Models\\User', 32, 'auth-token', '1359a3fb2b876b65eb04e841da4a526fa9281ba2ee8e0a95ddefcf62f0710f2a', '[\"*\"]', '2026-02-28 01:57:50', '2026-03-01 01:39:12', '2026-02-28 01:39:12', '2026-02-28 01:57:50'),
-(54, 'App\\Models\\User', 32, 'auth-token', 'fda58fb9af538699b4654017a1ea64ad8cd619028e3b061aae2cda6c5bffa8b4', '[\"*\"]', '2026-02-28 01:59:00', '2026-03-01 01:58:16', '2026-02-28 01:58:16', '2026-02-28 01:59:00'),
-(55, 'App\\Models\\User', 69, 'auth-token', 'b561a94de5e46f25d6d24785b643399ecc72618b64c9daff0b91042229b54824', '[\"*\"]', '2026-02-28 02:04:42', '2026-03-01 02:04:38', '2026-02-28 02:04:38', '2026-02-28 02:04:42'),
-(56, 'App\\Models\\User', 32, 'auth-token', '326e3b51871d620a632196992542063ddfaf6624ff77321cd99ded7faa28ed4d', '[\"*\"]', NULL, '2026-03-01 02:05:15', '2026-02-28 02:05:15', '2026-02-28 02:05:15'),
-(57, 'App\\Models\\User', 70, 'auth-token', '6e179c2d0dac7fc1222024fb54f83b0049ffc699c0627f263070d3ba487906fe', '[\"*\"]', '2026-02-28 02:06:50', '2026-03-01 02:06:43', '2026-02-28 02:06:43', '2026-02-28 02:06:50'),
-(58, 'App\\Models\\User', 32, 'auth-token', 'f9859634016802eb0e8667a70b58446d5bf9a4b598f6593a92c85c1565c1ed27', '[\"*\"]', '2026-02-28 02:45:24', '2026-03-01 02:45:19', '2026-02-28 02:45:19', '2026-02-28 02:45:24'),
-(59, 'App\\Models\\User', 32, 'auth-token', 'cc801365d286b3c7f570f933afabbb763f074d59130a1681876db5f5340825e5', '[\"*\"]', '2026-02-28 02:46:31', '2026-03-01 02:46:24', '2026-02-28 02:46:24', '2026-02-28 02:46:31'),
-(60, 'App\\Models\\User', 32, 'auth-token', '207930b558380a2396ec35558612d6cf8af875fb8ef9dab1ba3bcf693be67fc2', '[\"*\"]', '2026-02-28 02:51:36', '2026-03-01 02:50:30', '2026-02-28 02:50:30', '2026-02-28 02:51:36'),
-(61, 'App\\Models\\User', 32, 'auth-token', '3259217385fc0d87640be39d6e41f200d1a6c2c97de0fd1d844a6510794b699a', '[\"*\"]', '2026-02-28 03:00:14', '2026-03-01 02:53:23', '2026-02-28 02:53:23', '2026-02-28 03:00:14');
 
 -- --------------------------------------------------------
 
@@ -698,7 +644,7 @@ CREATE TABLE `school_years` (
 --
 
 INSERT INTO `school_years` (`id`, `year_name`, `start_date`, `end_date`, `is_active`, `is_current`, `created_at`, `updated_at`, `created_by`) VALUES
-(12, '2026-2027', '2026-06-01', '2027-03-20', 1, 1, '2026-02-28 09:39:57', '2026-02-28 09:46:03', NULL);
+(12, '2025-2026', '2025-08-01', '2026-05-31', 1, 1, '2026-03-01 10:00:00', '2026-03-01 10:00:00', 32);
 
 -- --------------------------------------------------------
 
@@ -725,7 +671,7 @@ CREATE TABLE `sections` (
 --
 
 INSERT INTO `sections` (`id`, `section_name`, `grade_level_id`, `school_year_id`, `adviser_id`, `capacity`, `current_enrollment`, `is_active`, `created_at`, `updated_at`, `created_by`) VALUES
-(1, 'Mapagmahal', 1, 12, 69, 50, 4, 1, '2026-02-28 09:46:27', '2026-02-28 11:00:15', NULL),
+(1, 'Mapagmahal', 1, 12, 0, 50, 0, 1, '2026-02-28 09:46:27', '2026-03-01 10:50:14', NULL),
 (2, 'Matatag', 1, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
 (3, 'Masipag', 1, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 10:08:48', NULL),
 (4, 'Sampaguita', 2, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:56:11', NULL),
@@ -756,7 +702,13 @@ INSERT INTO `sections` (`id`, `section_name`, `grade_level_id`, `school_year_id`
 (29, 'TVL-HE 1', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
 (30, 'TVL-HE 2', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
 (31, 'TVL-EIM 1', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(32, 'TVL-EIM 2', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL);
+(32, 'TVL-EIM 2', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
+(33, 'A', 1, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL),
+(34, 'A', 2, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL),
+(35, 'A', 3, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL),
+(36, 'A', 4, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL),
+(37, 'A', 5, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL),
+(38, 'A', 6, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL);
 
 -- --------------------------------------------------------
 
@@ -837,13 +789,6 @@ CREATE TABLE `students` (
   `last_physical_update` timestamp NULL DEFAULT NULL COMMENT 'Last time physical info was updated'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `students`
---
-
-INSERT INTO `students` (`student_id`, `current_grade_level_id`, `current_section_id`, `current_adviser_id`, `current_school_year_id`, `enrollment_status`, `promotion_date`, `last_promotion_date`, `student_number`, `user_id`, `first_name`, `middle_name`, `last_name`, `birth_date`, `gender`, `grade_level`, `section`, `address`, `blood_type`, `emergency_contact`, `emergency_contact_relation`, `emergency_contact_phone`, `created_at`, `is_active`, `deleted_at`, `height_cm`, `weight_kg`, `bmi`, `bmi_category`, `general_clearance_status`, `clearance_expiry_date`, `requires_special_clearance`, `clearance_notes`, `last_physical_update`) VALUES
-(31, 1, 1, 69, 12, 'active', NULL, NULL, '136883100331', 74, 'Wilma', NULL, 'Buron', '2005-08-05', 'F', 'Grade 7', 'Mapagmahal', NULL, NULL, NULL, NULL, NULL, '2026-02-28 11:00:15', 1, NULL, NULL, NULL, NULL, NULL, 'not_required', NULL, 0, NULL, NULL);
-
 -- --------------------------------------------------------
 
 --
@@ -919,10 +864,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `role_id`, `username`, `password_hash`, `password_must_change`, `password_changed_at`, `created_by_admin_id`, `temp_password`, `email`, `phone`, `full_name`, `created_at`, `is_active`, `deleted_at`) VALUES
-(32, 1, 'admin', '$2y$10$sazkAihoww8U0TElhFKuMuNzhbdOL9tL80KeUAA1JSk4NtfW14ILq', 0, NULL, NULL, NULL, 'admin@pdmhs.edu.ph', '09171234567', 'System Administrator', '2026-02-01 11:46:49', 1, NULL),
-(68, 4, 'STAFF-01', '$2y$10$UNwod1SOy3l/f5ETJibK5udTLXUED.KZU1QDT4moG8MzfWxVmBqvS', 0, NULL, 32, 'BU#L9pwg', 'lulubelle@gmail.com', '09123456789', 'Lulubelle Gabasa', '2026-02-28 09:31:40', 1, NULL),
-(69, 3, '2026-01', '$2y$10$j.4VRHv/IDcNQ.ouZIOt.uA28cvOimrDhVhzZQbuAP5gfuoejAGYW', 0, NULL, 32, 'EP%a9C7O', 'gale@gmail.com', '09090909099', 'Gale  Gregory', '2026-02-28 09:35:23', 1, NULL),
-(74, 2, '136883100331', '$2y$12$y0Xxcsv5pfoEggbzzaLsR.N9qJls3r3JXrysVDaAKDOndFKQCr2ee', 1, NULL, NULL, NULL, 'wilma1@gmail.com', '09055950245', 'Wilma Buron', '2026-02-28 03:00:15', 1, NULL);
+(32, 1, 'admin', '$2y$10$sazkAihoww8U0TElhFKuMuNzhbdOL9tL80KeUAA1JSk4NtfW14ILq', 0, NULL, NULL, NULL, 'admin@pdmhs.edu.ph', '09171234567', 'System Administrator', '2026-02-01 11:46:49', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -1070,8 +1012,10 @@ ALTER TABLE `activity_logs`
 --
 ALTER TABLE `advisers`
   ADD PRIMARY KEY (`adviser_id`),
-  ADD UNIQUE KEY `employee_number` (`employee_number`),
-  ADD KEY `fk_advisers_user` (`user_id`);
+  ADD UNIQUE KEY `advisers_employee_id_unique` (`employee_id`),
+  ADD KEY `advisers_user_id_index` (`user_id`),
+  ADD KEY `advisers_employee_id_index` (`employee_id`),
+  ADD KEY `advisers_is_active_index` (`is_active`);
 
 --
 -- Indexes for table `adviser_assignments`
@@ -1140,6 +1084,25 @@ ALTER TABLE `diagnoses`
   ADD KEY `fk_diag_visit` (`visit_id`);
 
 --
+-- Indexes for table `drill_participants`
+--
+ALTER TABLE `drill_participants`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `drill_participants_drill_id_user_id_unique` (`drill_id`,`user_id`),
+  ADD KEY `drill_participants_rescuer_id_foreign` (`rescuer_id`),
+  ADD KEY `drill_participants_drill_id_role_status_index` (`drill_id`,`role`,`status`),
+  ADD KEY `drill_participants_user_id_foreign` (`user_id`);
+
+--
+-- Indexes for table `drill_scans`
+--
+ALTER TABLE `drill_scans`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `drill_scans_scanned_by_foreign` (`scanned_by`),
+  ADD KEY `drill_scans_drill_id_scanned_at_index` (`drill_id`,`scanned_at`),
+  ADD KEY `drill_scans_participant_id_scanned_at_index` (`participant_id`,`scanned_at`);
+
+--
 -- Indexes for table `email_logs`
 --
 ALTER TABLE `email_logs`
@@ -1147,6 +1110,14 @@ ALTER TABLE `email_logs`
   ADD KEY `idx_recipient` (`recipient`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_created_at` (`created_at`);
+
+--
+-- Indexes for table `emergency_drills`
+--
+ALTER TABLE `emergency_drills`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `emergency_drills_created_by_foreign` (`created_by`),
+  ADD KEY `emergency_drills_status_drill_type_index` (`status`,`drill_type`);
 
 --
 -- Indexes for table `failed_jobs`
@@ -1371,13 +1342,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2228;
-
---
--- AUTO_INCREMENT for table `advisers`
---
-ALTER TABLE `advisers`
-  MODIFY `adviser_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2623;
 
 --
 -- AUTO_INCREMENT for table `adviser_assignments`
@@ -1389,7 +1354,7 @@ ALTER TABLE `adviser_assignments`
 -- AUTO_INCREMENT for table `allergies`
 --
 ALTER TABLE `allergies`
-  MODIFY `allergy_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `allergy_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `clearance_requests`
@@ -1416,10 +1381,28 @@ ALTER TABLE `diagnoses`
   MODIFY `diagnosis_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
+-- AUTO_INCREMENT for table `drill_participants`
+--
+ALTER TABLE `drill_participants`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `drill_scans`
+--
+ALTER TABLE `drill_scans`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `email_logs`
 --
 ALTER TABLE `email_logs`
   MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+
+--
+-- AUTO_INCREMENT for table `emergency_drills`
+--
+ALTER TABLE `emergency_drills`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
@@ -1449,19 +1432,19 @@ ALTER TABLE `medical_clearances`
 -- AUTO_INCREMENT for table `medical_history`
 --
 ALTER TABLE `medical_history`
-  MODIFY `history_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `history_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `medical_visits`
 --
 ALTER TABLE `medical_visits`
-  MODIFY `visit_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `visit_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `notifications`
@@ -1473,13 +1456,13 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `parents`
 --
 ALTER TABLE `parents`
-  MODIFY `parent_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `parent_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
 
 --
 -- AUTO_INCREMENT for table `promotion_batch_logs`
@@ -1515,7 +1498,7 @@ ALTER TABLE `school_years`
 -- AUTO_INCREMENT for table `sections`
 --
 ALTER TABLE `sections`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `sms_logs`
@@ -1527,7 +1510,7 @@ ALTER TABLE `sms_logs`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `student_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `student_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=204;
 
 --
 -- AUTO_INCREMENT for table `student_promotions`
@@ -1539,7 +1522,7 @@ ALTER TABLE `student_promotions`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
+  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=247;
 
 --
 -- Constraints for dumped tables
@@ -1549,7 +1532,7 @@ ALTER TABLE `users`
 -- Constraints for table `advisers`
 --
 ALTER TABLE `advisers`
-  ADD CONSTRAINT `fk_advisers_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+  ADD CONSTRAINT `advisers_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
 
 --
 -- Constraints for table `adviser_assignments`
@@ -1591,6 +1574,28 @@ ALTER TABLE `clinic_staff`
 --
 ALTER TABLE `diagnoses`
   ADD CONSTRAINT `fk_diag_visit` FOREIGN KEY (`visit_id`) REFERENCES `medical_visits` (`visit_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `drill_participants`
+--
+ALTER TABLE `drill_participants`
+  ADD CONSTRAINT `drill_participants_drill_id_foreign` FOREIGN KEY (`drill_id`) REFERENCES `emergency_drills` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `drill_participants_rescuer_id_foreign` FOREIGN KEY (`rescuer_id`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `drill_participants_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `drill_scans`
+--
+ALTER TABLE `drill_scans`
+  ADD CONSTRAINT `drill_scans_drill_id_foreign` FOREIGN KEY (`drill_id`) REFERENCES `emergency_drills` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `drill_scans_participant_id_foreign` FOREIGN KEY (`participant_id`) REFERENCES `drill_participants` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `drill_scans_scanned_by_foreign` FOREIGN KEY (`scanned_by`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `emergency_drills`
+--
+ALTER TABLE `emergency_drills`
+  ADD CONSTRAINT `emergency_drills_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`);
 
 --
 -- Constraints for table `medical_visits`

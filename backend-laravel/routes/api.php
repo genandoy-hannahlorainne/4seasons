@@ -95,6 +95,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/grade-levels/sections', [\App\Http\Controllers\Api\AdminController::class, 'getGradeLevelsWithSections']);
     Route::get('/admin/sections/grade/{grade_level}', [\App\Http\Controllers\Api\AdminController::class, 'getSectionsForGrade']);
     Route::post('/admin/students', [\App\Http\Controllers\Api\AdminController::class, 'createStudent']);
+    Route::get('/admin/health-risk-visualization', [\App\Http\Controllers\Api\AdminController::class, 'getHealthRiskVisualization']);
+    Route::get('/admin/health-recommendations', [\App\Http\Controllers\Api\AdminController::class, 'getHealthRecommendations']);
+    Route::get('/admin/bmi-trends', [\App\Http\Controllers\Api\AdminController::class, 'getBMITrends']);
+    Route::get('/admin/reports', [\App\Http\Controllers\Api\AdminController::class, 'getReports']);
     
     // Get all sections for filtering (clinic staff student records)
     Route::get('/sections', [\App\Http\Controllers\Api\SchoolYearController::class, 'getAllSections']);
@@ -106,6 +110,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/adviser/health-heatmap', [\App\Http\Controllers\Api\AdviserController::class, 'getHealthHeatmap']);
     Route::get('/adviser/class-roster', [\App\Http\Controllers\Api\AdviserController::class, 'getClassRoster']);
     Route::get('/adviser/advisory-students', [\App\Http\Controllers\Api\AdviserController::class, 'getAdvisoryStudents']);
+    Route::get('/adviser/notifications', [\App\Http\Controllers\Api\AdviserController::class, 'getNotifications']);
     
     // Emergency Drill Management endpoints
     Route::apiResource('emergency-drills', \App\Http\Controllers\Api\EmergencyDrillController::class);

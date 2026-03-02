@@ -68,7 +68,7 @@ try {
     }
     
     if ($gradeLevel) {
-        $query .= " AND gl.level_number = :grade_level";
+        $query .= " AND gl.id = :grade_level";
         $params[':grade_level'] = $gradeLevel;
     }
     
