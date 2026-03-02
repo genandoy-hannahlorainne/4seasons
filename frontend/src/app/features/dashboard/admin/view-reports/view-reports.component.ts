@@ -200,7 +200,7 @@ export class ViewReportsComponent implements OnInit {
     doc.setFontSize(10);
     doc.text(
       peakSlot
-        ? `${peakSlot.day}, ${peakSlot.timeRange} (${peakSlot.visits} visits)`
+        ? `${peakSlot.day}, ${peakSlot.timeRangeLabel || peakSlot.timeRange} (${peakSlot.visits} visits)`
         : 'No peak slot data available for selected period.',
       14,
       peakY + 6
@@ -229,7 +229,7 @@ export class ViewReportsComponent implements OnInit {
       startY: heatmapY,
       head: [['Day', 'Time Slot', 'Visits']],
       body: dayHour.length > 0
-        ? dayHour.slice(0, 20).map((row: any) => [row.day || '-', row.timeRange || '-', String(row.visits || 0)])
+        ? dayHour.slice(0, 20).map((row: any) => [row.day || '-', row.timeRangeLabel || row.timeRange || '-', String(row.visits || 0)])
         : [['No data available', '-', '-']],
       theme: 'striped',
       headStyles: { fillColor: [155, 89, 182] }

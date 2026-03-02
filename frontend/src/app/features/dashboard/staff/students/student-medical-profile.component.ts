@@ -104,7 +104,7 @@ export class StudentMedicalProfileComponent implements OnInit {
               })
             : [];
 
-          this.vitalsHistory = payload.vitals || payload.vitals_history || mappedVitalsFromVisits || [];
+          this.vitalsHistory = this.normalizeVitalsHistory(payload.vitals || payload.vitals_history || mappedVitalsFromVisits || []);
           this.diagnoses = payload.diagnoses || payload.medical_history || [];
           this.allergies = payload.allergies || [];
 
@@ -120,6 +120,51 @@ export class StudentMedicalProfileComponent implements OnInit {
         this.loading = false;
         this.error = 'Failed to load student profile. Please try again.';
       }
+    });
+  }
+
+  private normalizeVitalsHistory(vitals: any[]): any[] {
+    if (!Array.isArray(vitals)) {
+      return [];
+    }
+
+    return vitals.map((vital: any) => ({
+      ...vital,
+      date_display: this.formatDateDisplay(vital?.date || vital?.recorded_at || vital?.created_at)
+    }));
+  }
+
+  private formatDateDisplay(value: any): string {
+    if (!value) {
+      return '';
+    }
+
+    const raw = String(value).trim();
+    if (!raw) {
+      return '';
+    }
+
+    let candidate = raw;
+    if (raw.includes(' ') && !raw.includes('T')) {
+      candidate = raw.replace(' ', 'T');
+    }
+
+    candidate = candidate
+      .replace(/\.(\d{3})\d+Z$/, '.$1Z')
+      .replace(/\.(\d{3})\d+$/, '.$1');
+
+    const parsed = new Date(candidate);
+    if (Number.isNaN(parsed.getTime())) {
+      return raw;
+    }
+
+    return parsed.toLocaleString('en-PH', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
     });
   }
 }

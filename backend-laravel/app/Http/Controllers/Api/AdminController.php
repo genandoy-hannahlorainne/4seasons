@@ -490,9 +490,12 @@ class AdminController extends BaseController
                 return $this->sendError('Validation Error', 'End date must be after start date', 422);
             }
 
+            $localizedDateTimeExpression = 'mv.visit_datetime';
+            $localizedDateExpression = "DATE({$localizedDateTimeExpression})";
+
             $baseQuery = DB::table('medical_visits as mv')
                 ->leftJoin('students as s', 'mv.student_id', '=', 's.student_id')
-                ->whereBetween('mv.visit_datetime', [$startDate->toDateTimeString(), $endDate->toDateTimeString()]);
+                ->whereBetween(DB::raw($localizedDateExpression), [$startDate->toDateString(), $endDate->toDateString()]);
 
             $gradeFilter = $request->get('grade_level');
             if (!empty($gradeFilter)) {
@@ -512,27 +515,37 @@ class AdminController extends BaseController
                 ->count();
 
             $visitsByDayHour = (clone $baseQuery)
-                ->selectRaw('DAYNAME(mv.visit_datetime) as day_name, DAYOFWEEK(mv.visit_datetime) as day_number, HOUR(mv.visit_datetime) as hour_slot, COUNT(*) as visits')
-                ->groupByRaw('DAYNAME(mv.visit_datetime), DAYOFWEEK(mv.visit_datetime), HOUR(mv.visit_datetime)')
+                ->selectRaw("DAYNAME({$localizedDateTimeExpression}) as day_name")
+                ->selectRaw("CASE DAYOFWEEK({$localizedDateTimeExpression}) WHEN 1 THEN 7 ELSE DAYOFWEEK({$localizedDateTimeExpression}) - 1 END as day_number")
+                ->selectRaw("HOUR({$localizedDateTimeExpression}) as hour_slot")
+                ->selectRaw('COUNT(*) as visits')
+                ->groupByRaw("DAYNAME({$localizedDateTimeExpression}), CASE DAYOFWEEK({$localizedDateTimeExpression}) WHEN 1 THEN 7 ELSE DAYOFWEEK({$localizedDateTimeExpression}) - 1 END, HOUR({$localizedDateTimeExpression})")
                 ->orderBy('day_number')
                 ->orderBy('hour_slot')
                 ->get()
                 ->map(function ($row) {
                     $hour = (int)$row->hour_slot;
+                    $nextHour = ($hour + 1) % 24;
                     return [
                         'day' => $row->day_name,
                         'dayNumber' => (int)$row->day_number,
                         'hour' => $hour,
-                        'timeRange' => sprintf('%02d:00-%02d:00', $hour, ($hour + 1) % 24),
+                        'timeRange' => sprintf('%02d:00-%02d:00', $hour, $nextHour),
+                        'timeRangeLabel' => Carbon::createFromTime($hour, 0)->format('g:i A') . ' - ' . Carbon::createFromTime($nextHour, 0)->format('g:i A'),
                         'visits' => (int)$row->visits,
                     ];
                 })
                 ->values();
 
             $peakSlot = (clone $baseQuery)
-                ->selectRaw('DAYNAME(mv.visit_datetime) as day_name, HOUR(mv.visit_datetime) as hour_slot, COUNT(*) as visits')
-                ->groupByRaw('DAYNAME(mv.visit_datetime), HOUR(mv.visit_datetime)')
+                ->selectRaw("DAYNAME({$localizedDateTimeExpression}) as day_name")
+                ->selectRaw("CASE DAYOFWEEK({$localizedDateTimeExpression}) WHEN 1 THEN 7 ELSE DAYOFWEEK({$localizedDateTimeExpression}) - 1 END as day_number")
+                ->selectRaw("HOUR({$localizedDateTimeExpression}) as hour_slot")
+                ->selectRaw('COUNT(*) as visits')
+                ->groupByRaw("DAYNAME({$localizedDateTimeExpression}), CASE DAYOFWEEK({$localizedDateTimeExpression}) WHEN 1 THEN 7 ELSE DAYOFWEEK({$localizedDateTimeExpression}) - 1 END, HOUR({$localizedDateTimeExpression})")
                 ->orderByDesc('visits')
+                ->orderBy('day_number')
+                ->orderBy('hour_slot')
                 ->first();
 
             $topReasons = (clone $baseQuery)
@@ -550,8 +563,8 @@ class AdminController extends BaseController
                 ->values();
 
             $dailyTrend = (clone $baseQuery)
-                ->selectRaw('DATE(mv.visit_datetime) as date, COUNT(*) as visits')
-                ->groupByRaw('DATE(mv.visit_datetime)')
+                ->selectRaw("{$localizedDateExpression} as date, COUNT(*) as visits")
+                ->groupByRaw($localizedDateExpression)
                 ->orderBy('date')
                 ->get()
                 ->map(function ($row) {
@@ -617,8 +630,10 @@ class AdminController extends BaseController
                 ],
                 'peakSlot' => $peakSlot ? [
                     'day' => $peakSlot->day_name,
+                    'dayNumber' => (int)$peakSlot->day_number,
                     'hour' => (int)$peakSlot->hour_slot,
                     'timeRange' => sprintf('%02d:00-%02d:00', (int)$peakSlot->hour_slot, (((int)$peakSlot->hour_slot + 1) % 24)),
+                    'timeRangeLabel' => Carbon::createFromTime((int)$peakSlot->hour_slot, 0)->format('g:i A') . ' - ' . Carbon::createFromTime((((int)$peakSlot->hour_slot + 1) % 24), 0)->format('g:i A'),
                     'visits' => (int)$peakSlot->visits,
                 ] : null,
                 'recommendation' => $recommendation,

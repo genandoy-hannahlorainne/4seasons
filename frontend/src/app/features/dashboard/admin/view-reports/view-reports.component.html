@@ -230,7 +230,7 @@
       <div class="report-table" style="margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
         <p><strong>Period:</strong> {{ reportData.reportMeta?.periodStart }} to {{ reportData.reportMeta?.periodEnd }}</p>
         <p><strong>Peak Slot:</strong>
-          <span *ngIf="reportData.peakSlot">{{ reportData.peakSlot.day }} {{ reportData.peakSlot.timeRange }} ({{ reportData.peakSlot.visits }} visits)</span>
+          <span *ngIf="reportData.peakSlot">{{ reportData.peakSlot.day }} {{ reportData.peakSlot.timeRangeLabel || reportData.peakSlot.timeRange }} ({{ reportData.peakSlot.visits }} visits)</span>
           <span *ngIf="!reportData.peakSlot">No peak data available</span>
         </p>
         <p><strong>Recommendation:</strong> {{ reportData.recommendation?.title }}</p>
@@ -265,7 +265,7 @@
         <tbody>
           <tr *ngFor="let row of reportData.visitsByDayHour">
             <td>{{ row.day }}</td>
-            <td>{{ row.timeRange }}</td>
+            <td>{{ row.timeRangeLabel || row.timeRange }}</td>
             <td>{{ row.visits }}</td>
           </tr>
         </tbody>
