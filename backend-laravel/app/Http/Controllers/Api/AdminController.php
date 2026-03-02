@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends BaseController
 {
@@ -189,10 +190,10 @@ class AdminController extends BaseController
                         'temp_password' => $tempPassword
                     ];
                     
-                    Mail::to($request->email)->send(new UserAccountCreated($emailData));
+                    Mail::to($request->email)->send(new UserAccountCreated($emailData, $tempPassword, 'Student'));
                 } catch (\Exception $e) {
                     // Log email error but don't fail the student creation
-                    \Log::warning('Failed to send account creation email: ' . $e->getMessage());
+                    Log::warning('Failed to send account creation email: ' . $e->getMessage());
                 }
             }
 
