@@ -78,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     Route::get('/dashboard/clinic/overview', [\App\Http\Controllers\Api\DashboardController::class, 'getClinicOverview']);
+    Route::get('/staff/reports', [\App\Http\Controllers\Api\DashboardController::class, 'getStaffReportsAnalytics']);
     
     // School Year Management endpoints
     Route::get('/admin/school-years', [\App\Http\Controllers\Api\SchoolYearController::class, 'index']);

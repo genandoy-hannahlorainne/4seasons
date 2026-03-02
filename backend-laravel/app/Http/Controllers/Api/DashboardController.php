@@ -288,6 +288,88 @@ class DashboardController extends BaseController
     }
 
     /**
+     * Get clinic staff reports and analytics data
+     */
+    public function getStaffReportsAnalytics(Request $request)
+    {
+        try {
+            $startDate = $request->get('start_date', now()->subDays(30)->toDateString());
+            $endDate = $request->get('end_date', now()->toDateString());
+            $gradeFilter = $request->get('grade_level');
+
+            $baseQuery = DB::table('medical_visits as mv')
+                ->leftJoin('students as s', 'mv.student_id', '=', 's.student_id')
+                ->whereBetween(DB::raw('DATE(mv.visit_datetime)'), [$startDate, $endDate]);
+
+            if (!empty($gradeFilter)) {
+                $baseQuery->where(function ($query) use ($gradeFilter) {
+                    $query->where('s.grade_level', $gradeFilter)
+                        ->orWhere('s.grade_level', 'Grade ' . $gradeFilter);
+                });
+            }
+
+            $totalVisits = (clone $baseQuery)->count();
+            $uniqueStudents = (clone $baseQuery)->distinct('mv.student_id')->count('mv.student_id');
+            $emergencyCases = (clone $baseQuery)
+                ->whereRaw('LOWER(COALESCE(mv.visit_type, "")) = ?', ['emergency'])
+                ->count();
+            $referrals = (clone $baseQuery)
+                ->whereRaw('LOWER(COALESCE(mv.status, "")) = ?', ['referred'])
+                ->count();
+
+            $casesByIllness = (clone $baseQuery)
+                ->selectRaw(
+                    'COALESCE(NULLIF(TRIM(mv.chief_complaint), ""), NULLIF(TRIM(mv.notes), ""), "Unspecified") as illness, COUNT(*) as count'
+                )
+                ->groupBy('illness')
+                ->orderByDesc('count')
+                ->limit(10)
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'illness' => $row->illness,
+                        'count' => (int)$row->count,
+                    ];
+                })
+                ->values();
+
+            $casesByGrade = (clone $baseQuery)
+                ->selectRaw('s.grade_level as grade, COUNT(*) as count')
+                ->whereNotNull('s.grade_level')
+                ->groupBy('s.grade_level')
+                ->orderBy('s.grade_level')
+                ->get()
+                ->map(function ($row) {
+                    $gradeRaw = (string)$row->grade;
+                    preg_match('/\d+/', $gradeRaw, $matches);
+                    $gradeNumber = isset($matches[0]) ? (int)$matches[0] : (int)$gradeRaw;
+
+                    return [
+                        'grade' => $gradeNumber,
+                        'count' => (int)$row->count,
+                    ];
+                })
+                ->filter(function ($row) {
+                    return $row['grade'] > 0;
+                })
+                ->values();
+
+            return $this->sendResponse([
+                'totalVisits' => (int)$totalVisits,
+                'uniqueStudents' => (int)$uniqueStudents,
+                'emergencyCases' => (int)$emergencyCases,
+                'referrals' => (int)$referrals,
+                'casesByIllness' => $casesByIllness,
+                'casesByGrade' => $casesByGrade,
+            ], 'Staff reports analytics retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve staff reports analytics', [
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Get clinic dashboard overview statistics
      */
     public function getClinicOverview(Request $request)

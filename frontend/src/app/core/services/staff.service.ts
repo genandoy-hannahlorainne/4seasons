@@ -84,8 +84,13 @@ export class StaffService {
       params = params.set('grade_level', gradeFilter);
     }
 
-    return this.http.get<any>(`${environment.apiUrl}/dashboard/clinic/overview`, { params }).pipe(
-      catchError(() => this.http.get<any>(`${environment.legacyApiUrl}/get-reports-data.php?type=medical`, { params }))
+    return this.http.get<any>(`${environment.apiUrl}/staff/reports`, { params }).pipe(
+      map((response) => this.normalizeReportsResponse(response)),
+      catchError(() =>
+        this.http.get<any>(`${environment.legacyApiUrl}/get-reports-data.php?type=medical`, { params }).pipe(
+          map((response) => this.normalizeReportsResponse(response))
+        )
+      )
     );
   }
 
@@ -140,5 +145,61 @@ export class StaffService {
     });
 
     return { success: true, data: flatSections };
+  }
+
+  private normalizeReportsResponse(response: any): any {
+    if (!response?.success) {
+      return {
+        success: false,
+        message: response?.message || 'Failed to load report data',
+        data: {
+          totalVisits: 0,
+          uniqueStudents: 0,
+          emergencyCases: 0,
+          referrals: 0,
+          casesByIllness: [],
+          casesByGrade: []
+        }
+      };
+    }
+
+    const payload = response.data;
+
+    if (Array.isArray(payload)) {
+      const totalVisits = payload.reduce((sum: number, row: any) => sum + Number(row?.total_visits || 0), 0);
+      const uniqueStudents = payload.reduce((max: number, row: any) => Math.max(max, Number(row?.unique_students || 0)), 0);
+
+      return {
+        success: true,
+        data: {
+          totalVisits,
+          uniqueStudents,
+          emergencyCases: 0,
+          referrals: 0,
+          casesByIllness: [],
+          casesByGrade: []
+        }
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        totalVisits: Number(payload?.totalVisits ?? payload?.total_visits ?? 0),
+        uniqueStudents: Number(payload?.uniqueStudents ?? payload?.unique_students ?? 0),
+        emergencyCases: Number(payload?.emergencyCases ?? payload?.emergency_cases ?? 0),
+        referrals: Number(payload?.referrals ?? 0),
+        casesByIllness: Array.isArray(payload?.casesByIllness)
+          ? payload.casesByIllness
+          : Array.isArray(payload?.cases_by_illness)
+            ? payload.cases_by_illness
+            : [],
+        casesByGrade: Array.isArray(payload?.casesByGrade)
+          ? payload.casesByGrade
+          : Array.isArray(payload?.cases_by_grade)
+            ? payload.cases_by_grade
+            : []
+      }
+    };
   }
 }
