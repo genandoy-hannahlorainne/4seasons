@@ -36,18 +36,16 @@ try {
     $query = "SELECT 
                 a.adviser_id,
                 a.user_id,
-                a.first_name,
-                a.last_name,
-                a.employee_number,
+                                u.full_name,
+                                a.employee_id,
                 a.contact_phone,
                 a.is_active,
-                CONCAT(a.first_name, ' ', a.last_name) as full_name,
                 u.username,
                 u.email
               FROM advisers a
               INNER JOIN users u ON a.user_id = u.user_id
-              WHERE a.is_active = 1
-              ORDER BY a.last_name, a.first_name";
+                            WHERE a.is_active = 1
+                            ORDER BY u.full_name";
     
     $stmt = $db->prepare($query);
     $stmt->execute();

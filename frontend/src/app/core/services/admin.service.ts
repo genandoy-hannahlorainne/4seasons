@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -72,25 +73,52 @@ export class AdminService {
 
   // Get sections for a specific grade level (Legacy API)
   getSectionsForGrade(gradeLevel: number): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/admin/sections/list.php?grade_level=${gradeLevel}`)
-      .pipe(
-        map(response => {
-          if (response.success) {
-            return {
-              success: true,
-              data: {
-                sections: response.data || []
-              }
-            };
-          }
-          return response;
-        })
-      );
+    return this.http.get<any>(`${environment.apiUrl}/admin/school-years/current`).pipe(
+      switchMap((schoolYearResponse) => {
+        const schoolYearId = schoolYearResponse?.data?.id;
+
+        if (!schoolYearId) {
+          return this.http.get<any>(`${environment.legacyApiUrl}/admin/sections/list.php?grade_level=${gradeLevel}`);
+        }
+
+        return this.http.get<any>(`${environment.apiUrl}/admin/sections?school_year_id=${schoolYearId}`).pipe(
+          map((response) => {
+            if (response.success && Array.isArray(response.data)) {
+              const sections = response.data.filter((section: any) => Number(section.grade_level_id) === Number(gradeLevel));
+              return {
+                success: true,
+                data: {
+                  sections
+                }
+              };
+            }
+            return response;
+          })
+        );
+      }),
+      catchError(() => {
+        return this.http.get<any>(`${environment.legacyApiUrl}/admin/sections/list.php?grade_level=${gradeLevel}`).pipe(
+          map(response => {
+            if (response.success) {
+              return {
+                success: true,
+                data: {
+                  sections: response.data || []
+                }
+              };
+            }
+            return response;
+          })
+        );
+      })
+    );
   }
 
-  // Get all grade levels with sections (Legacy API)
+  // Get all grade levels (Laravel-first, fallback to Legacy API)
   getGradeLevelsWithSections(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-grade-levels.php`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/grade-levels`).pipe(
+      catchError(() => this.http.get<any>(`${environment.legacyApiUrl}/get-grade-levels.php`))
+    );
   }
 
   // Bulk Import Students

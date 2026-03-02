@@ -29,9 +29,9 @@ try {
     $user_id = $data->user_id;
     
     // Get adviser info
-    $query = "SELECT a.adviser_id, a.first_name, a.last_name, a.employee_number, 
+    $query = "SELECT a.adviser_id, a.employee_id, 
                      a.contact_phone, u.username, u.email, u.phone,
-                     CONCAT(a.first_name, ' ', a.last_name) as full_name
+                     u.full_name
               FROM advisers a
               JOIN users u ON a.user_id = u.user_id
               WHERE a.user_id = :user_id AND a.is_active = 1";
@@ -51,6 +51,7 @@ try {
     }
     
     $adviser_id = $adviser['adviser_id'];
+    $adviser_user_id = $user_id;
     
     // Get advised students
     $query = "SELECT 
@@ -69,13 +70,12 @@ try {
                  FROM allergies a 
                  WHERE a.student_id = s.student_id) as allergy_count
               FROM students s
-              JOIN student_adviser sa ON s.student_id = sa.student_id
-              WHERE sa.adviser_id = :adviser_id
+              WHERE s.current_adviser_id = :adviser_user_id
               AND s.is_active = 1
               ORDER BY s.last_name, s.first_name";
     
     $stmt = $db->prepare($query);
-    $stmt->bindParam(':adviser_id', $adviser_id);
+    $stmt->bindParam(':adviser_user_id', $adviser_user_id);
     $stmt->execute();
     $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
@@ -102,14 +102,13 @@ try {
                 s.section
               FROM medical_visits mv
               JOIN students s ON mv.student_id = s.student_id
-              JOIN student_adviser sa ON s.student_id = sa.student_id
-              WHERE sa.adviser_id = :adviser_id
+              WHERE s.current_adviser_id = :adviser_user_id
               AND mv.visit_datetime >= DATE_SUB(NOW(), INTERVAL 30 DAY)
               ORDER BY mv.visit_datetime DESC
               LIMIT 20";
     
     $stmt = $db->prepare($query);
-    $stmt->bindParam(':adviser_id', $adviser_id);
+    $stmt->bindParam(':adviser_user_id', $adviser_user_id);
     $stmt->execute();
     $recent_visits = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
@@ -126,23 +125,21 @@ try {
     // Students with recent visits (last 30 days)
     $query = "SELECT COUNT(DISTINCT s.student_id) as count
               FROM students s
-              JOIN student_adviser sa ON s.student_id = sa.student_id
               JOIN medical_visits mv ON s.student_id = mv.student_id
-              WHERE sa.adviser_id = :adviser_id
+              WHERE s.current_adviser_id = :adviser_user_id
               AND mv.visit_datetime >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
     $stmt = $db->prepare($query);
-    $stmt->bindParam(':adviser_id', $adviser_id);
+    $stmt->bindParam(':adviser_user_id', $adviser_user_id);
     $stmt->execute();
     $students_with_visits = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     // Students with allergies
     $query = "SELECT COUNT(DISTINCT s.student_id) as count
               FROM students s
-              JOIN student_adviser sa ON s.student_id = sa.student_id
               JOIN allergies a ON s.student_id = a.student_id
-              WHERE sa.adviser_id = :adviser_id";
+              WHERE s.current_adviser_id = :adviser_user_id";
     $stmt = $db->prepare($query);
-    $stmt->bindParam(':adviser_id', $adviser_id);
+    $stmt->bindParam(':adviser_user_id', $adviser_user_id);
     $stmt->execute();
     $students_with_allergies = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
@@ -150,11 +147,10 @@ try {
     $query = "SELECT COUNT(*) as count
               FROM medical_visits mv
               JOIN students s ON mv.student_id = s.student_id
-              JOIN student_adviser sa ON s.student_id = sa.student_id
-              WHERE sa.adviser_id = :adviser_id
-              AND mv.status = 'Open'";
+              WHERE s.current_adviser_id = :adviser_user_id
+              AND mv.status = 'active'";
     $stmt = $db->prepare($query);
-    $stmt->bindParam(':adviser_id', $adviser_id);
+    $stmt->bindParam(':adviser_user_id', $adviser_user_id);
     $stmt->execute();
     $pending_visits = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     

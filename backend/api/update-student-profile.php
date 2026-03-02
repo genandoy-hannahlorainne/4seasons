@@ -9,10 +9,24 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+function hasColumn(PDO $db, string $table, string $column): bool {
+    $stmt = $db->prepare("SHOW COLUMNS FROM `{$table}` LIKE :column");
+    $stmt->bindValue(':column', $column);
+    $stmt->execute();
+    return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function hasTable(PDO $db, string $table): bool {
+    $stmt = $db->prepare("SHOW TABLES LIKE :table_name");
+    $stmt->bindValue(':table_name', $table);
+    $stmt->execute();
+    return (bool) $stmt->fetch(PDO::FETCH_NUM);
+}
+
 // Get JSON input
 $input = json_decode(file_get_contents("php://input"), true);
 
-$userId = $input['user_id'] ?? null;
+$userId = $input['user_id'] ?? ($_SERVER['HTTP_USER_ID'] ?? null);
 
 // Handle both formats: individual names OR full_name
 $firstName = $input['firstName'] ?? $input['first_name'] ?? null;
@@ -95,54 +109,79 @@ try {
         $genderDb = null;
     }
     
-    // Update students table
-    $updateStudentQuery = "UPDATE students SET 
-                            first_name = :first_name,
-                            middle_name = :middle_name,
-                            last_name = :last_name,
-                            birth_date = :birth_date,
-                            gender = :gender,
-                            grade_level = :grade_level,
-                            section = :section,
-                            address = :address,
-                            blood_type = :blood_type,
-                            emergency_contact = :emergency_contact,
-                            emergency_contact_relation = :emergency_contact_relation,
-                            emergency_contact_phone = :emergency_contact_phone
-                          WHERE student_id = :student_id";
-    
-    $updateStudentStmt = $db->prepare($updateStudentQuery);
-    $updateStudentStmt->bindParam(':student_id', $studentId);
-    $updateStudentStmt->bindParam(':first_name', $firstName);
-    $updateStudentStmt->bindParam(':middle_name', $middleName);
-    $updateStudentStmt->bindParam(':last_name', $lastName);
-    $updateStudentStmt->bindParam(':birth_date', $birthday);
-    $updateStudentStmt->bindParam(':gender', $genderDb);
-    $updateStudentStmt->bindParam(':grade_level', $gradeLevel);
-    $updateStudentStmt->bindParam(':section', $section);
-    $updateStudentStmt->bindParam(':address', $address);
-    $updateStudentStmt->bindParam(':blood_type', $bloodType);
-    $updateStudentStmt->bindParam(':emergency_contact', $emergencyContact);
-    $updateStudentStmt->bindParam(':emergency_contact_relation', $emergencyContactRelation);
-    $updateStudentStmt->bindParam(':emergency_contact_phone', $emergencyContactPhone);
-    
-    $updateStudentStmt->execute();
+    $studentUpdateFields = [];
+
+    $hasNameInput = isset($input['full_name']) || isset($input['firstName']) || isset($input['first_name']) || isset($input['lastName']) || isset($input['last_name']) || isset($input['middleName']) || isset($input['middle_name']);
+    if ($hasNameInput) {
+        $studentUpdateFields['first_name'] = $firstName;
+        $studentUpdateFields['middle_name'] = $middleName;
+        $studentUpdateFields['last_name'] = $lastName;
+    }
+
+    if (array_key_exists('birthday', $input) || array_key_exists('birth_date', $input)) {
+        $studentUpdateFields['birth_date'] = $birthday;
+    }
+    if (array_key_exists('gender', $input)) {
+        $studentUpdateFields['gender'] = $genderDb;
+    }
+    if (array_key_exists('gradeLevel', $input) || array_key_exists('grade_level', $input)) {
+        $studentUpdateFields['grade_level'] = $gradeLevel;
+    }
+    if (array_key_exists('section', $input)) {
+        $studentUpdateFields['section'] = $section;
+    }
+    if (array_key_exists('address', $input)) {
+        $studentUpdateFields['address'] = $address;
+    }
+    if (array_key_exists('bloodType', $input) || array_key_exists('blood_type', $input)) {
+        $studentUpdateFields['blood_type'] = $bloodType;
+    }
+    if (array_key_exists('emergency_contact', $input) || array_key_exists('emergency_contact_person', $input)) {
+        $studentUpdateFields['emergency_contact'] = $emergencyContact;
+    }
+    if (array_key_exists('emergency_contact_relation', $input)) {
+        $studentUpdateFields['emergency_contact_relation'] = $emergencyContactRelation;
+    }
+    if (array_key_exists('emergency_contact_phone', $input) || array_key_exists('phone_number', $input)) {
+        $studentUpdateFields['emergency_contact_phone'] = $emergencyContactPhone;
+    }
+
+    $setParts = [];
+    $params = [':student_id' => $studentId];
+    foreach ($studentUpdateFields as $column => $value) {
+        if (hasColumn($db, 'students', $column)) {
+            $paramName = ':' . $column;
+            $setParts[] = "{$column} = {$paramName}";
+            $params[$paramName] = $value;
+        }
+    }
+
+    if (!empty($setParts)) {
+        $updateStudentQuery = "UPDATE students SET " . implode(', ', $setParts) . " WHERE student_id = :student_id";
+        $updateStudentStmt = $db->prepare($updateStudentQuery);
+        $updateStudentStmt->execute($params);
+    }
+
     error_log("✅ Students table updated");
     
     // Handle emergency contact - create/update parent record if emergency contact info is provided
-    if (!empty($emergencyContact) && !empty($emergencyContactPhone)) {
+    if (!empty($emergencyContact) && !empty($emergencyContactPhone) && hasTable($db, 'parents') && hasTable($db, 'student_parent')) {
         error_log("Processing emergency contact as parent record");
         
         // Check if parent already exists for this student
         $checkParentQuery = "SELECT p.parent_id, p.phone, p.email 
                             FROM parents p
                             INNER JOIN student_parent sp ON p.parent_id = sp.parent_id
-                            WHERE sp.student_id = :student_id 
-                            AND p.relation = :relation
+                    WHERE sp.student_id = :student_id
+                            ORDER BY
+                                (CASE WHEN TRIM(CONCAT(COALESCE(p.first_name, ''), ' ', COALESCE(p.last_name, ''))) = :emergency_name THEN 1 ELSE 0 END) DESC,
+                                (CASE WHEN COALESCE(TRIM(p.relation), '') <> '' THEN 1 ELSE 0 END) DESC,
+                                p.parent_id DESC
                             LIMIT 1";
         $checkParentStmt = $db->prepare($checkParentQuery);
         $checkParentStmt->bindParam(':student_id', $studentId);
-        $checkParentStmt->bindParam(':relation', $emergencyContactRelation);
+        $emergencyName = trim((string)$emergencyContact);
+        $checkParentStmt->bindParam(':emergency_name', $emergencyName);
         $checkParentStmt->execute();
         $existingParent = $checkParentStmt->fetch(PDO::FETCH_ASSOC);
         
@@ -204,25 +243,34 @@ try {
             
             error_log("✅ Student linked to parent");
         }
+    } elseif (!empty($emergencyContact) || !empty($emergencyContactPhone)) {
+        error_log("Skipping parent sync because parents/student_parent tables are unavailable");
     }
     
     // Build full name for users table
     $fullName = trim($firstName . ' ' . ($middleName ? $middleName . ' ' : '') . $lastName);
-    
-    // Update users table
-    $updateUserQuery = "UPDATE users SET 
-                        full_name = :full_name,
-                        email = :email,
-                        phone = :phone
-                      WHERE user_id = :user_id";
-    
-    $updateUserStmt = $db->prepare($updateUserQuery);
-    $updateUserStmt->bindParam(':user_id', $userId);
-    $updateUserStmt->bindParam(':full_name', $fullName);
-    $updateUserStmt->bindParam(':email', $email);
-    $updateUserStmt->bindParam(':phone', $contactNumber);
-    
-    $updateUserStmt->execute();
+
+    $userSetParts = [];
+    $userParams = [':user_id' => $userId];
+
+    if ($hasNameInput || isset($input['full_name'])) {
+        $userSetParts[] = 'full_name = :full_name';
+        $userParams[':full_name'] = $fullName;
+    }
+    if (array_key_exists('email', $input)) {
+        $userSetParts[] = 'email = :email';
+        $userParams[':email'] = $email;
+    }
+    if (array_key_exists('contactNumber', $input) || array_key_exists('phone', $input) || array_key_exists('phone_number', $input)) {
+        $userSetParts[] = 'phone = :phone';
+        $userParams[':phone'] = $contactNumber;
+    }
+
+    if (!empty($userSetParts)) {
+        $updateUserQuery = "UPDATE users SET " . implode(', ', $userSetParts) . " WHERE user_id = :user_id";
+        $updateUserStmt = $db->prepare($updateUserQuery);
+        $updateUserStmt->execute($userParams);
+    }
     error_log("✅ Users table updated with full_name: " . $fullName);
     
     echo json_encode([

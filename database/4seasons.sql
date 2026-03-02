@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 01, 2026 at 11:52 AM
+-- Generation Time: Mar 01, 2026 at 04:16 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,103 @@ SET time_zone = "+00:00";
 --
 -- Database: `4seasons`
 --
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `FixAllStudentAssignments` ()   BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE student_id INT;
+    DECLARE student_grade INT;
+    DECLARE section_id INT;
+    DECLARE adviser_id INT;
+    
+    -- Cursor for unassigned students
+    DECLARE student_cursor CURSOR FOR
+        SELECT s.student_id, s.grade_level
+        FROM students s
+        WHERE s.is_active = 1 
+        AND (s.current_adviser_id IS NULL OR s.current_adviser_id = 0);
+    
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    
+    START TRANSACTION;
+    
+    OPEN student_cursor;
+    
+    student_loop: LOOP
+        FETCH student_cursor INTO student_id, student_grade;
+        IF done THEN
+            LEAVE student_loop;
+        END IF;
+        
+        -- Convert grade level if needed (1-6 to 7-12)
+        IF student_grade >= 1 AND student_grade <= 6 THEN
+            SET student_grade = student_grade + 6;
+        END IF;
+        
+        -- Find best available section for this grade
+        SELECT s.id, s.adviser_id INTO section_id, adviser_id
+        FROM sections s
+        INNER JOIN grade_levels gl ON s.grade_level_id = gl.id
+        WHERE gl.level_number = student_grade
+        AND s.is_active = 1
+        AND s.adviser_id IS NOT NULL
+        AND s.current_enrollment < s.capacity
+        ORDER BY s.current_enrollment ASC
+        LIMIT 1;
+        
+        -- If suitable section found, assign student
+        IF section_id IS NOT NULL AND adviser_id IS NOT NULL THEN
+            UPDATE students 
+            SET current_section_id = section_id,
+                current_adviser_id = adviser_id,
+                grade_level = student_grade,
+                section = (SELECT section_name FROM sections WHERE id = section_id)
+            WHERE students.student_id = student_id;
+            
+            -- Update section enrollment
+            UPDATE sections 
+            SET current_enrollment = current_enrollment + 1
+            WHERE id = section_id;
+        END IF;
+        
+        -- Reset variables
+        SET section_id = NULL;
+        SET adviser_id = NULL;
+    END LOOP;
+    
+    CLOSE student_cursor;
+    COMMIT;
+END$$
+
+--
+-- Functions
+--
+CREATE DEFINER=`root`@`localhost` FUNCTION `GetAssignmentHealthScore` () RETURNS DECIMAL(5,2) DETERMINISTIC READS SQL DATA BEGIN
+    DECLARE total_students INT DEFAULT 0;
+    DECLARE assigned_students INT DEFAULT 0;
+    DECLARE health_score DECIMAL(5,2) DEFAULT 0.00;
+    
+    SELECT COUNT(*) INTO total_students
+    FROM students 
+    WHERE is_active = 1;
+    
+    SELECT COUNT(*) INTO assigned_students
+    FROM students 
+    WHERE is_active = 1 
+    AND current_adviser_id IS NOT NULL 
+    AND current_adviser_id > 0;
+    
+    IF total_students > 0 THEN
+        SET health_score = (assigned_students / total_students) * 100;
+    END IF;
+    
+    RETURN health_score;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -45,7 +142,158 @@ INSERT INTO `activity_logs` (`log_id`, `user_id`, `action`, `details`, `ip_addre
 (2619, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:51:16'),
 (2620, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:51:16'),
 (2621, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:51:46'),
-(2622, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:52:16');
+(2622, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:52:16'),
+(2623, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:52:46'),
+(2624, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:53:16'),
+(2625, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:53:46'),
+(2626, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:54:16'),
+(2627, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:55:43'),
+(2628, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:56:36'),
+(2629, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:57:36'),
+(2630, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:58:36'),
+(2631, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 10:59:36'),
+(2632, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:00:36'),
+(2633, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:01:36'),
+(2634, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:02:22'),
+(2635, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:02:25'),
+(2636, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:02:25'),
+(2637, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:02:30'),
+(2638, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:02:31'),
+(2639, 32, 'Login', NULL, '::1', '2026-03-01 11:02:52'),
+(2640, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:02:52'),
+(2641, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:02:53'),
+(2642, 32, 'Login', NULL, '::1', '2026-03-01 11:07:43'),
+(2643, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:07:44'),
+(2644, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:07:44'),
+(2645, 32, 'School Year Created', 'Created school year: 2026-2027 (ID: 13)', '::1', '2026-03-01 11:08:21'),
+(2646, 32, 'Section Created', 'Created section: Mapagmahal for Grade Level ID: 1, School Year ID: 13', '::1', '2026-03-01 11:17:41'),
+(2647, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:17:46'),
+(2648, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:17:46'),
+(2649, 32, 'Login', NULL, '::1', '2026-03-01 11:18:26'),
+(2650, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:18:26'),
+(2651, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:18:27'),
+(2652, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:18:32'),
+(2653, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:18:32'),
+(2654, 32, 'Login', NULL, '::1', '2026-03-01 11:31:59'),
+(2655, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:31:59'),
+(2656, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:32:00'),
+(2657, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:32:17'),
+(2658, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:32:17'),
+(2659, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:32:21'),
+(2660, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:32:21'),
+(2661, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:32:51'),
+(2662, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:46:30'),
+(2663, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:46:30'),
+(2664, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:47:00'),
+(2665, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:47:30'),
+(2666, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:48:00'),
+(2667, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:48:30'),
+(2668, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:49:00'),
+(2669, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:49:30'),
+(2670, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:50:00'),
+(2671, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:50:30'),
+(2672, 32, 'View Users', 'Viewed all users - 1 total', '::1', '2026-03-01 11:51:00'),
+(2673, 32, 'Created User Account', 'Created adviser account: 2026-01 (Gale  Gregory)', '::1', '2026-03-01 11:51:16'),
+(2674, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 11:51:21'),
+(2675, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 11:51:30'),
+(2676, 247, 'Login', NULL, '::1', '2026-03-01 11:52:03'),
+(2677, 32, 'Login', NULL, '::1', '2026-03-01 12:04:23'),
+(2678, 32, 'Created User Account', 'Created adviser account: API2026001 (API Test User)', '::1', '2026-03-01 12:04:24'),
+(2680, 32, 'Login', NULL, '::1', '2026-03-01 12:06:53'),
+(2681, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 12:06:54'),
+(2682, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 12:06:54'),
+(2683, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 12:07:14'),
+(2684, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 12:07:14'),
+(2685, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 12:07:44'),
+(2686, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:08:14'),
+(2687, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:08:44'),
+(2688, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:09:14'),
+(2689, 32, 'Deactivate User', 'Deactivated user ID: 247', '::1', '2026-03-01 12:09:40'),
+(2690, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:09:44'),
+(2691, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:10:01'),
+(2692, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:10:01'),
+(2693, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:10:02'),
+(2694, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:10:02'),
+(2695, 32, 'Activate User', 'Activated user ID: 247', '::1', '2026-03-01 12:10:04'),
+(2696, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:10:33'),
+(2697, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:11:03'),
+(2698, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:11:33'),
+(2699, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:11:41'),
+(2700, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:12:10'),
+(2701, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:12:33'),
+(2702, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:13:03'),
+(2703, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:13:36'),
+(2704, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:14:05'),
+(2705, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:14:16'),
+(2706, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:14:32'),
+(2707, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:15:02'),
+(2708, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:15:32'),
+(2709, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:15:41'),
+(2710, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:16:03'),
+(2711, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:27:38'),
+(2712, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:27:38'),
+(2713, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:28:08'),
+(2714, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:28:38'),
+(2715, 32, 'View Users', 'Viewed all users - 2 total', '::1', '2026-03-01 12:29:08'),
+(2716, 32, 'Created User Account', 'Created student account: 136883100330 (Rithemay  Surilla)', '::1', '2026-03-01 12:29:26'),
+(2717, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:29:38'),
+(2718, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:30:09'),
+(2719, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:30:39'),
+(2720, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:31:01'),
+(2721, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:31:01'),
+(2722, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:31:22'),
+(2723, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:31:22'),
+(2724, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:31:53'),
+(2725, 32, 'View Users', 'Viewed all users - 3 total', '::1', '2026-03-01 12:32:22'),
+(2726, 32, 'Created User Account', 'Created clinic_staff account: STAFF-01 (Lulubelle Gabasa)', '::1', '2026-03-01 12:32:31'),
+(2727, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-03-01 12:32:35'),
+(2728, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-03-01 12:32:53'),
+(2729, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-03-01 12:33:22'),
+(2730, 251, 'Login', NULL, '::1', '2026-03-01 12:33:47'),
+(2731, 250, 'Login', NULL, '::1', '2026-03-01 12:35:02'),
+(2732, 250, 'Login', NULL, '::1', '2026-03-01 12:50:46'),
+(2733, 250, 'Password Changed', 'User changed password (forced change)', '::1', '2026-03-01 12:50:56'),
+(2734, 32, 'Login', NULL, '::1', '2026-03-01 12:52:18'),
+(2735, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-03-01 12:52:19'),
+(2736, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-03-01 12:52:19'),
+(2737, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-03-01 12:52:28'),
+(2738, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-03-01 12:52:28'),
+(2739, 250, 'Login', NULL, '::1', '2026-03-01 13:01:00'),
+(2740, 250, 'Login', NULL, '::1', '2026-03-01 13:17:13'),
+(2741, 32, 'Created User Account', 'Created student account: TEST2026001 (Test Middle Student)', '::1', '2026-03-01 13:27:23'),
+(2742, 32, 'Created User Account', 'Created student account: TEST2026001 (Test Middle Student)', '::1', '2026-03-01 13:28:21'),
+(2743, 32, 'Created User Account', 'Created student account: FINAL2026001 (Final Test Student)', '::1', '2026-03-01 13:32:41'),
+(2744, 32, 'Created User Account', 'Created student account: ASSIGN2026001 (Assignment Test Student)', '::1', '2026-03-01 13:41:03'),
+(2745, 32, 'Login', NULL, '::1', '2026-03-01 13:43:45'),
+(2746, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:43:46'),
+(2747, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:43:46'),
+(2748, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:43:49'),
+(2749, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:43:50'),
+(2750, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:44:06'),
+(2751, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:44:06'),
+(2752, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:44:37'),
+(2753, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:45:07'),
+(2754, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:45:37'),
+(2755, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:46:07'),
+(2756, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:46:37'),
+(2757, 32, 'View Users', 'Viewed all users - 5 total', '::1', '2026-03-01 13:47:07'),
+(2758, 32, 'View Users', 'Viewed all users - 4 total', '::1', '2026-03-01 13:48:13'),
+(2759, 250, 'Login', NULL, '::1', '2026-03-01 13:48:56'),
+(2760, 250, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-03-01 14:07:51'),
+(2761, 250, 'Update Physical Info', 'Updated physical information (height, weight, BMI, blood type)', '::1', '2026-03-01 14:08:35'),
+(2762, 250, 'Update Allergies', 'Updated allergies list - 1 allergies saved', '::1', '2026-03-01 14:08:48'),
+(2763, 250, 'Update Medical History', 'Updated medical history for student ID: 204', '::1', '2026-03-01 14:09:05'),
+(2764, 247, 'Login', NULL, '::1', '2026-03-01 14:12:51'),
+(2765, 247, 'Password Changed', 'User changed password (forced change)', '::1', '2026-03-01 14:13:01'),
+(2766, 247, 'Login', NULL, '::1', '2026-03-01 14:13:22'),
+(2767, 32, 'Login', NULL, '127.0.0.1', '2026-03-01 06:32:19'),
+(2768, 247, 'Login', NULL, '127.0.0.1', '2026-03-01 06:34:57'),
+(2769, 247, 'Login', NULL, '127.0.0.1', '2026-03-01 06:35:19'),
+(2770, 247, 'Login', NULL, '127.0.0.1', '2026-03-01 06:47:32'),
+(2771, 247, 'Login', NULL, '127.0.0.1', '2026-03-01 06:50:00'),
+(2772, 250, 'Login', NULL, '127.0.0.1', '2026-03-01 07:02:25'),
+(2773, 251, 'Login', NULL, '127.0.0.1', '2026-03-01 07:03:07'),
+(2774, 251, 'Password Changed', 'User changed password (forced change)', '::1', '2026-03-01 15:03:19');
 
 -- --------------------------------------------------------
 
@@ -70,6 +318,36 @@ CREATE TABLE `advisers` (
   `grade_level` varchar(10) DEFAULT NULL,
   `section` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `advisers`
+--
+
+INSERT INTO `advisers` (`adviser_id`, `user_id`, `first_name`, `last_name`, `employee_number`, `employee_id`, `department`, `contact_phone`, `hire_date`, `is_active`, `created_at`, `updated_at`, `deleted_at`, `grade_level`, `section`) VALUES
+(1, 247, 'Gale', '', '2026-01', '2026-01', NULL, '09990312848', NULL, 1, '2026-03-01 11:58:34', '2026-03-01 11:58:34', NULL, NULL, NULL);
+
+--
+-- Triggers `advisers`
+--
+DELIMITER $$
+CREATE TRIGGER `after_adviser_deactivate` AFTER UPDATE ON `advisers` FOR EACH ROW BEGIN
+    -- If adviser was deactivated, clear their assignments
+    IF OLD.is_active = 1 AND NEW.is_active = 0 THEN
+        -- Clear students assigned to this adviser
+        UPDATE students 
+        SET current_adviser_id = NULL
+        WHERE current_adviser_id = NEW.user_id 
+        AND is_active = 1;
+        
+        -- Clear sections assigned to this adviser
+        UPDATE sections 
+        SET adviser_id = NULL
+        WHERE adviser_id = NEW.user_id 
+        AND is_active = 1;
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -104,6 +382,13 @@ CREATE TABLE `allergies` (
   `severity` enum('Mild','Moderate','Severe') DEFAULT 'Moderate',
   `recorded_at` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `allergies`
+--
+
+INSERT INTO `allergies` (`allergy_id`, `student_id`, `allergy_text`, `severity`, `recorded_at`) VALUES
+(18, 204, 'Peanuts', 'Moderate', '2026-03-01');
 
 -- --------------------------------------------------------
 
@@ -187,6 +472,13 @@ CREATE TABLE `clinic_staff` (
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `clinic_staff`
+--
+
+INSERT INTO `clinic_staff` (`clinic_staff_id`, `user_id`, `staff_code`, `position`, `created_at`, `is_active`, `deleted_at`) VALUES
+(6, 251, 'STAFF-01', 'School Nurse', '2026-03-01 12:32:31', 1, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -261,6 +553,20 @@ CREATE TABLE `email_logs` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `sent_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `email_logs`
+--
+
+INSERT INTO `email_logs` (`log_id`, `recipient`, `subject`, `priority`, `status`, `error_message`, `created_at`, `sent_at`) VALUES
+(41, 'galegg@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-03-01 11:51:16', '2026-03-01 11:51:21'),
+(42, 'api.test@example.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-03-01 12:04:24', '2026-03-01 12:04:28'),
+(43, 'rithemay@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-03-01 12:29:26', '2026-03-01 12:29:33'),
+(44, 'lulubelle@gmail.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-03-01 12:32:31', '2026-03-01 12:32:35'),
+(45, 'test.student@test.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-03-01 13:27:23', '2026-03-01 13:27:29'),
+(46, 'test.student@test.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-03-01 13:28:21', '2026-03-01 13:28:27'),
+(47, 'final.test@test.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-03-01 13:32:41', '2026-03-01 13:32:46'),
+(48, 'test.assignment@test.com', 'Your PDMHS Medical System Account', 'normal', 'sent', NULL, '2026-03-01 13:41:03', '2026-03-01 13:41:08');
 
 -- --------------------------------------------------------
 
@@ -423,6 +729,13 @@ CREATE TABLE `medical_history` (
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `medical_history`
+--
+
+INSERT INTO `medical_history` (`history_id`, `student_id`, `recorded_at`, `allergy_medicine`, `allergy_pollens`, `allergy_food`, `allergy_stinging_insects`, `condition_error_refraction`, `condition_heart_problem`, `condition_bleeding_disorder`, `condition_hernia`, `condition_asthma`, `condition_anemia`, `condition_anxiety_depression`, `condition_seizure`, `surgery_hospitalization`, `surgery_details`, `family_tuberculosis`, `family_cancer`, `family_stroke_cardiac`, `family_diabetes`, `family_hypertension`, `family_depression`, `family_thyroid`, `family_phobia`, `smoke_exposure`, `notes`, `updated_at`) VALUES
+(9, 204, '2026-03-01 14:09:05', 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, NULL, 0, 1, 0, 0, 0, 0, 0, 0, 1, NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -521,6 +834,13 @@ CREATE TABLE `parents` (
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `parents`
+--
+
+INSERT INTO `parents` (`parent_id`, `user_id`, `first_name`, `last_name`, `relation`, `phone`, `email`, `address`, `created_at`, `is_active`, `deleted_at`) VALUES
+(5, NULL, 'Anne', 'Surilla', 'Mother', '09988939124', NULL, 'Pinagsama, Taguig City', '2026-03-01 14:08:20', 1, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -539,6 +859,19 @@ CREATE TABLE `personal_access_tokens` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `personal_access_tokens`
+--
+
+INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `name`, `token`, `abilities`, `last_used_at`, `expires_at`, `created_at`, `updated_at`) VALUES
+(97, 'App\\Models\\User', 32, 'auth-token', 'baa4550d31a0e32e55cb522ed9731f8a401b4b7acd128aad49066dc088793636', '[\"*\"]', NULL, '2026-03-02 06:32:19', '2026-03-01 06:32:19', '2026-03-01 06:32:19'),
+(98, 'App\\Models\\User', 247, 'auth-token', '2887365b465268295bdbdbb71a72d24967ccef3d0021b4466aa1de3f5d1c06fa', '[\"*\"]', NULL, '2026-03-02 06:34:57', '2026-03-01 06:34:57', '2026-03-01 06:34:57'),
+(99, 'App\\Models\\User', 247, 'auth-token', '036bff4fa025b7439e17584641c4a0290e8e18a0c4fd8449329de30cd0b7d529', '[\"*\"]', NULL, '2026-03-02 06:35:19', '2026-03-01 06:35:19', '2026-03-01 06:35:19'),
+(100, 'App\\Models\\User', 247, 'auth-token', 'b041a89b008b6761552860a6bc2773f960f6708e132adf77bc48068a4a1b3431', '[\"*\"]', '2026-03-01 07:01:46', '2026-03-02 06:47:32', '2026-03-01 06:47:32', '2026-03-01 07:01:46'),
+(101, 'App\\Models\\User', 247, 'auth-token', '4499e8548e24b24be187fd499896a060b4c3a8458b7fbd694b1ec32b2549f285', '[\"*\"]', '2026-03-01 06:50:01', '2026-03-02 06:50:00', '2026-03-01 06:50:00', '2026-03-01 06:50:01'),
+(102, 'App\\Models\\User', 250, 'auth-token', 'bed4cade00e9945f27c406793b35b4c4d45270ef57b41ecaf4e8030036f49231', '[\"*\"]', NULL, '2026-03-02 07:02:25', '2026-03-01 07:02:25', '2026-03-01 07:02:25'),
+(103, 'App\\Models\\User', 251, 'auth-token', '03922067422df5fe9790901dfb7746a766e07b335f19e993d431ae1f49b786de', '[\"*\"]', '2026-03-01 07:06:32', '2026-03-02 07:03:07', '2026-03-01 07:03:07', '2026-03-01 07:06:32');
 
 -- --------------------------------------------------------
 
@@ -599,6 +932,13 @@ CREATE TABLE `qr_codes` (
   `qr_expires_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `qr_codes`
+--
+
+INSERT INTO `qr_codes` (`qr_id`, `student_id`, `qr_token`, `qr_generated_at`, `qr_expires_at`) VALUES
+(24, 204, 'f33a148020153a6a52fc749e2002519a', '2026-03-01 12:29:26', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -644,7 +984,7 @@ CREATE TABLE `school_years` (
 --
 
 INSERT INTO `school_years` (`id`, `year_name`, `start_date`, `end_date`, `is_active`, `is_current`, `created_at`, `updated_at`, `created_by`) VALUES
-(12, '2025-2026', '2025-08-01', '2026-05-31', 1, 1, '2026-03-01 10:00:00', '2026-03-01 10:00:00', 32);
+(13, '2026-2027', '2026-06-03', '2027-03-31', 1, 1, '2026-03-01 11:08:21', '2026-03-01 13:32:08', 32);
 
 -- --------------------------------------------------------
 
@@ -671,44 +1011,54 @@ CREATE TABLE `sections` (
 --
 
 INSERT INTO `sections` (`id`, `section_name`, `grade_level_id`, `school_year_id`, `adviser_id`, `capacity`, `current_enrollment`, `is_active`, `created_at`, `updated_at`, `created_by`) VALUES
-(1, 'Mapagmahal', 1, 12, 0, 50, 0, 1, '2026-02-28 09:46:27', '2026-03-01 10:50:14', NULL),
-(2, 'Matatag', 1, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(3, 'Masipag', 1, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 10:08:48', NULL),
-(4, 'Sampaguita', 2, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:56:11', NULL),
-(5, 'Daffodils', 2, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:56:11', NULL),
-(6, 'Carnation', 2, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:56:11', NULL),
-(7, 'Rizal', 3, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:56:11', NULL),
-(8, 'Bonifacio', 3, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:56:11', NULL),
-(9, 'Mabini', 3, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:56:11', NULL),
-(10, 'Shakespeare', 4, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:56:11', NULL),
-(11, 'Tennyson', 4, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:56:11', NULL),
-(12, 'Blake', 4, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:56:11', NULL),
-(13, 'STEM 1', 5, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(14, 'STEM 2', 5, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(15, 'ABM 1', 5, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(16, 'ABM 2', 5, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(17, 'HUMSS 1', 5, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(18, 'HUMSS 2', 5, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(19, 'TVL-HE 1', 5, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(20, 'TVL-HE 2', 5, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(21, 'TVL-EIM 1', 5, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(22, 'TVL-EIM 2', 5, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(23, 'STEM 1', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(24, 'STEM 2', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(25, 'ABM 1', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(26, 'ABM 2', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(27, 'HUMSS 1', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(28, 'HUMSS 2', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(29, 'TVL-HE 1', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(30, 'TVL-HE 2', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(31, 'TVL-EIM 1', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(32, 'TVL-EIM 2', 6, 12, NULL, 50, 0, 1, '2026-02-28 09:46:27', '2026-02-28 09:46:27', NULL),
-(33, 'A', 1, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL),
-(34, 'A', 2, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL),
-(35, 'A', 3, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL),
-(36, 'A', 4, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL),
-(37, 'A', 5, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL),
-(38, 'A', 6, 12, NULL, 40, 0, 1, '2026-03-01 08:01:21', '2026-03-01 08:01:21', NULL);
+(39, 'Mapagmahal', 1, 13, 247, 50, 3, 1, '2026-03-01 11:17:41', '2026-03-01 13:46:20', 32),
+(40, 'Matatag', 1, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(41, 'Masipag', 1, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(42, 'Sampaguita', 2, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(43, 'Daffodils', 2, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(44, 'Carnation', 2, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(45, 'Rizal', 3, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(46, 'Bonifacio', 3, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(47, 'Mabini', 3, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(48, 'Shakespeare', 4, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(49, 'Tennyson', 4, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(50, 'Blake', 4, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(51, 'STEM 1', 5, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(52, 'STEM 2', 5, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(53, 'ABM 1', 5, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(54, 'ABM 2', 5, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(55, 'HUMSS 1', 5, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(56, 'HUMSS 2', 5, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(57, 'TVL-HE 1', 5, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(58, 'TVL-HE 2', 5, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(59, 'TVL-EIM 1', 5, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(60, 'TVL-EIM 2', 5, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(61, 'STEM 1', 6, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(62, 'STEM 2', 6, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(63, 'ABM 1', 6, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(64, 'ABM 2', 6, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(65, 'HUMSS 1', 6, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(66, 'HUMSS 2', 6, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(67, 'TVL-HE 1', 6, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(68, 'TVL-HE 2', 6, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(69, 'TVL-EIM 1', 6, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL),
+(70, 'TVL-EIM 2', 6, 13, NULL, 50, 0, 1, '2026-03-01 11:41:56', '2026-03-01 11:41:56', NULL);
+
+--
+-- Triggers `sections`
+--
+DELIMITER $$
+CREATE TRIGGER `after_section_adviser_update` AFTER UPDATE ON `sections` FOR EACH ROW BEGIN
+    -- If section's adviser changed, update all students in that section
+    IF OLD.adviser_id != NEW.adviser_id THEN
+        UPDATE students 
+        SET current_adviser_id = NEW.adviser_id
+        WHERE current_section_id = NEW.id 
+        AND is_active = 1;
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -789,6 +1139,87 @@ CREATE TABLE `students` (
   `last_physical_update` timestamp NULL DEFAULT NULL COMMENT 'Last time physical info was updated'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `students`
+--
+
+INSERT INTO `students` (`student_id`, `current_grade_level_id`, `current_section_id`, `current_adviser_id`, `current_school_year_id`, `enrollment_status`, `promotion_date`, `last_promotion_date`, `student_number`, `user_id`, `first_name`, `middle_name`, `last_name`, `birth_date`, `gender`, `grade_level`, `section`, `address`, `blood_type`, `emergency_contact`, `emergency_contact_relation`, `emergency_contact_phone`, `created_at`, `is_active`, `deleted_at`, `height_cm`, `weight_kg`, `bmi`, `bmi_category`, `general_clearance_status`, `clearance_expiry_date`, `requires_special_clearance`, `clearance_notes`, `last_physical_update`) VALUES
+(204, NULL, 39, 247, NULL, 'active', NULL, NULL, '136883100330', 250, 'Rithemay', NULL, 'Surilla', '2006-03-29', 'F', '7', 'Mapagmahal', 'Pinagsama, Taguig City', 'B+', 'Anne Surilla', 'Mother', '09988939124', '2026-03-01 12:29:26', 1, NULL, 160.00, 50.00, 19.53, 'Normal weight', 'not_required', NULL, 0, NULL, '2026-03-01 14:08:35');
+
+--
+-- Triggers `students`
+--
+DELIMITER $$
+CREATE TRIGGER `after_student_deactivate` AFTER UPDATE ON `students` FOR EACH ROW BEGIN
+    -- If student was deactivated, decrease section enrollment
+    IF OLD.is_active = 1 AND NEW.is_active = 0 THEN
+        IF NEW.current_section_id IS NOT NULL AND NEW.current_section_id > 0 THEN
+            UPDATE sections 
+            SET current_enrollment = GREATEST(0, current_enrollment - 1)
+            WHERE id = NEW.current_section_id;
+        END IF;
+    END IF;
+    
+    -- If student was reactivated, increase section enrollment
+    IF OLD.is_active = 0 AND NEW.is_active = 1 THEN
+        IF NEW.current_section_id IS NOT NULL AND NEW.current_section_id > 0 THEN
+            UPDATE sections 
+            SET current_enrollment = current_enrollment + 1
+            WHERE id = NEW.current_section_id;
+        END IF;
+    END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `after_student_section_assign` AFTER UPDATE ON `students` FOR EACH ROW BEGIN
+    -- If student was moved from one section to another
+    IF OLD.current_section_id != NEW.current_section_id THEN
+        
+        -- Decrease enrollment in old section
+        IF OLD.current_section_id IS NOT NULL AND OLD.current_section_id > 0 THEN
+            UPDATE sections 
+            SET current_enrollment = GREATEST(0, current_enrollment - 1)
+            WHERE id = OLD.current_section_id;
+        END IF;
+        
+        -- Increase enrollment in new section
+        IF NEW.current_section_id IS NOT NULL AND NEW.current_section_id > 0 THEN
+            UPDATE sections 
+            SET current_enrollment = current_enrollment + 1
+            WHERE id = NEW.current_section_id;
+        END IF;
+    END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `after_student_section_update` AFTER UPDATE ON `students` FOR EACH ROW BEGIN
+    -- If section was updated but adviser is not set, try to auto-assign
+    IF NEW.current_section_id != OLD.current_section_id 
+       AND NEW.current_section_id IS NOT NULL 
+       AND (NEW.current_adviser_id IS NULL OR NEW.current_adviser_id = 0) THEN
+        
+        -- Get the adviser for the new section
+        SET @section_adviser_id = (
+            SELECT adviser_id 
+            FROM sections 
+            WHERE id = NEW.current_section_id 
+            AND is_active = 1 
+            AND adviser_id IS NOT NULL
+        );
+        
+        -- Update student's adviser if section has one
+        IF @section_adviser_id IS NOT NULL THEN
+            UPDATE students 
+            SET current_adviser_id = @section_adviser_id 
+            WHERE student_id = NEW.student_id;
+        END IF;
+    END IF;
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -812,6 +1243,13 @@ CREATE TABLE `student_parent` (
   `parent_id` int(10) UNSIGNED NOT NULL,
   `relationship_note` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `student_parent`
+--
+
+INSERT INTO `student_parent` (`student_id`, `parent_id`, `relationship_note`) VALUES
+(204, 5, 'Emergency Contact');
 
 -- --------------------------------------------------------
 
@@ -864,7 +1302,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `role_id`, `username`, `password_hash`, `password_must_change`, `password_changed_at`, `created_by_admin_id`, `temp_password`, `email`, `phone`, `full_name`, `created_at`, `is_active`, `deleted_at`) VALUES
-(32, 1, 'admin', '$2y$10$sazkAihoww8U0TElhFKuMuNzhbdOL9tL80KeUAA1JSk4NtfW14ILq', 0, NULL, NULL, NULL, 'admin@pdmhs.edu.ph', '09171234567', 'System Administrator', '2026-02-01 11:46:49', 1, NULL);
+(32, 1, 'admin', '$2y$10$sazkAihoww8U0TElhFKuMuNzhbdOL9tL80KeUAA1JSk4NtfW14ILq', 0, NULL, NULL, NULL, 'admin@pdmhs.edu.ph', '09171234567', 'System Administrator', '2026-02-01 11:46:49', 1, NULL),
+(247, 3, '2026-01', '$2y$10$/VWK2JWp/p8xzOx.JzPjVOvL37p6MFwZT3KWxsGFzDRjPk6bdkiLC', 0, '2026-03-01 22:13:01', 32, NULL, 'galegg@gmail.com', '09990312848', 'Gale  Gregory', '2026-03-01 11:51:16', 1, NULL),
+(250, 2, '136883100330', '$2y$10$IyxkgMkitO.GTGzqL4L4Peb.9KSyPXM.KIrJnqmcahlfNgxeEqnC.', 0, '2026-03-01 20:50:56', 32, NULL, 'rithemay@gmail.com', '', 'Rithemay Surilla', '2026-03-01 12:29:26', 1, NULL),
+(251, 4, 'STAFF-01', '$2y$10$V3VFotWWrN/eXOXhFKlwJ.5NU3vNnH0CZ6I07ikZAN5spfkhp4K82', 0, '2026-03-01 23:03:19', 32, NULL, 'lulubelle@gmail.com', '09905893921', 'Lulubelle Gabasa', '2026-03-01 12:32:31', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -887,17 +1328,6 @@ CREATE TABLE `vitals` (
   `bmi` decimal(5,2) GENERATED ALWAYS AS (case when `height_cm` > 0 and `weight_kg` > 0 then round(`weight_kg` / (`height_cm` / 100 * (`height_cm` / 100)),2) else NULL end) STORED,
   `bmi_category` varchar(20) GENERATED ALWAYS AS (case when `height_cm` > 0 and `weight_kg` > 0 then case when round(`weight_kg` / (`height_cm` / 100 * (`height_cm` / 100)),2) < 18.5 then _utf8mb4'Underweight' when round(`weight_kg` / (`height_cm` / 100 * (`height_cm` / 100)),2) between 18.5 and 24.9 then _utf8mb4'Normal' when round(`weight_kg` / (`height_cm` / 100 * (`height_cm` / 100)),2) between 25.0 and 29.9 then _utf8mb4'Overweight' when round(`weight_kg` / (`height_cm` / 100 * (`height_cm` / 100)),2) >= 30.0 then _utf8mb4'Obese' else NULL end else NULL end) STORED
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `vitals`
---
-
-INSERT INTO `vitals` (`vitals_id`, `visit_id`, `recorded_at`, `weight_kg`, `height_cm`, `temperature_c`, `bp_systolic`, `bp_diastolic`, `pulse_rate`, `respiration_rate`, `notes`) VALUES
-(0, 13, '2026-01-16 11:55:00', NULL, NULL, 40.00, 120, 90, 75, NULL, NULL),
-(0, 14, '2026-02-02 10:15:00', NULL, NULL, 38.00, 120, 90, 75, NULL, NULL),
-(0, 15, '2026-02-02 10:50:00', NULL, NULL, 37.00, 120, 80, 72, NULL, NULL),
-(0, 17, '2026-02-05 11:31:00', NULL, NULL, 40.00, 120, 90, 73, NULL, NULL),
-(0, 18, '2026-02-14 10:21:00', NULL, NULL, 40.00, 140, 80, 75, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1342,7 +1772,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2623;
+  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2775;
+
+--
+-- AUTO_INCREMENT for table `advisers`
+--
+ALTER TABLE `advisers`
+  MODIFY `adviser_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `adviser_assignments`
@@ -1354,7 +1790,7 @@ ALTER TABLE `adviser_assignments`
 -- AUTO_INCREMENT for table `allergies`
 --
 ALTER TABLE `allergies`
-  MODIFY `allergy_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `allergy_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `clearance_requests`
@@ -1372,7 +1808,7 @@ ALTER TABLE `clearance_violations`
 -- AUTO_INCREMENT for table `clinic_staff`
 --
 ALTER TABLE `clinic_staff`
-  MODIFY `clinic_staff_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `clinic_staff_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `diagnoses`
@@ -1396,7 +1832,7 @@ ALTER TABLE `drill_scans`
 -- AUTO_INCREMENT for table `email_logs`
 --
 ALTER TABLE `email_logs`
-  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `log_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT for table `emergency_drills`
@@ -1432,7 +1868,7 @@ ALTER TABLE `medical_clearances`
 -- AUTO_INCREMENT for table `medical_history`
 --
 ALTER TABLE `medical_history`
-  MODIFY `history_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `history_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `medical_visits`
@@ -1456,13 +1892,13 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `parents`
 --
 ALTER TABLE `parents`
-  MODIFY `parent_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `parent_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
 
 --
 -- AUTO_INCREMENT for table `promotion_batch_logs`
@@ -1480,7 +1916,7 @@ ALTER TABLE `promotion_rules`
 -- AUTO_INCREMENT for table `qr_codes`
 --
 ALTER TABLE `qr_codes`
-  MODIFY `qr_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `qr_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -1492,13 +1928,13 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT for table `school_years`
 --
 ALTER TABLE `school_years`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `sections`
 --
 ALTER TABLE `sections`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT for table `sms_logs`
@@ -1510,7 +1946,7 @@ ALTER TABLE `sms_logs`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `student_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=204;
+  MODIFY `student_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=209;
 
 --
 -- AUTO_INCREMENT for table `student_promotions`
@@ -1522,7 +1958,7 @@ ALTER TABLE `student_promotions`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=247;
+  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=263;
 
 --
 -- Constraints for dumped tables

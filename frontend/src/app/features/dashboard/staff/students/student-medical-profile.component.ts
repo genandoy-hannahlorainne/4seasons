@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { StaffService } from '../../../../core/services/staff.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-student-medical-profile',
@@ -33,8 +34,14 @@ export class StudentMedicalProfileComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private staffService: StaffService
+    private staffService: StaffService,
+    private authService: AuthService
   ) {}
+
+  get backRoute(): string {
+    const role = this.authService.currentUserValue?.role_name;
+    return role === 'Adviser' ? '/dashboard/adviser/alerts' : '/dashboard/staff/students';
+  }
 
   ngOnInit(): void {
     this.studentId = Number(this.route.snapshot.paramMap.get('id'));
@@ -49,55 +56,68 @@ export class StudentMedicalProfileComponent implements OnInit {
   loadStudentProfile(): void {
     this.loading = true;
     this.error = '';
-    
-    console.log('Loading student profile for student ID:', this.studentId);
-    
+
     this.staffService.getStudentProfile(this.studentId).subscribe({
       next: (response: any) => {
-        console.log('Student profile response:', response);
         this.loading = false;
-        
+
         if (response && response.success) {
-          // Get student data from either 'student' or 'profile' key
-          const studentData = response.student || response.profile || {};
-          console.log('Student data:', studentData);
-          
-          // Ensure all required fields are set
+          const payload = response.data ?? response;
+          const studentData = payload.student ?? payload.profile ?? payload;
+          const fullName =
+            studentData.full_name ||
+            studentData.name ||
+            [studentData.first_name, studentData.middle_name, studentData.last_name]
+              .filter(Boolean)
+              .join(' ')
+              .trim();
+
+          const gradeSection =
+            studentData.grade_section ||
+            [studentData.grade_level, studentData.section].filter(Boolean).join(' - ');
+
           this.student = {
-            name: studentData.name || studentData.first_name || 'Unknown',
-            student_number: studentData.student_number || '',
-            grade_section: studentData.grade_section || '',
+            name: fullName || 'Unknown',
+            student_number: studentData.student_number || studentData.lrn || '',
+            grade_section: gradeSection || '',
             blood_type: studentData.blood_type || '',
-            email: studentData.email || '',
-            phone: studentData.phone || '',
+            email: studentData.email || studentData.user?.email || '',
+            phone: studentData.phone || studentData.user?.phone || '',
             avatar: studentData.avatar || (studentData.gender === 'F' ? 'assets/user-female.png' : 'assets/user-male.png')
           };
-          
-          this.vitalsHistory = response.vitals || [];
-          this.diagnoses = response.diagnoses || [];
-          this.allergies = response.allergies || [];
-          
-          console.log('Processed student:', this.student);
-          console.log('Vitals:', this.vitalsHistory);
-          console.log('Diagnoses:', this.diagnoses);
-          
-          // Check if there's any medical record
+
+          const visits = payload.medical_visits || payload.medicalVisits || [];
+          const mappedVitalsFromVisits = Array.isArray(visits)
+            ? visits.flatMap((visit: any) => {
+                if (!Array.isArray(visit?.vitals) || visit.vitals.length === 0) {
+                  return [];
+                }
+
+                return visit.vitals.map((vital: any) => ({
+                  date: vital.recorded_at || vital.created_at || visit.visit_datetime || '',
+                  temperature: vital.temperature_c ?? vital.temperature ?? '',
+                  blood_pressure: vital.blood_pressure || [vital.bp_systolic, vital.bp_diastolic].filter(Boolean).join('/') || '',
+                  pulse_rate: vital.pulse_rate ?? '',
+                  weight: vital.weight_kg ?? '',
+                  height: vital.height_cm ?? ''
+                }));
+              })
+            : [];
+
+          this.vitalsHistory = payload.vitals || payload.vitals_history || mappedVitalsFromVisits || [];
+          this.diagnoses = payload.diagnoses || payload.medical_history || [];
+          this.allergies = payload.allergies || [];
+
           this.hasMedicalRecord = 
             this.vitalsHistory.length > 0 ||
             this.diagnoses.length > 0 ||
             this.allergies.length > 0;
-            
-          console.log('Has medical record:', this.hasMedicalRecord);
         } else {
           this.error = response?.message || 'Failed to load student profile';
-          console.error('API returned success: false', response);
         }
       },
       error: (err: any) => {
         this.loading = false;
-        console.error('Error loading student profile:', err);
-        console.error('Error status:', err.status);
-        console.error('Error response:', err.error);
         this.error = 'Failed to load student profile. Please try again.';
       }
     });

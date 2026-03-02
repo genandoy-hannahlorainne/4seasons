@@ -121,6 +121,13 @@ function checkFrequentVisitPattern($db, $studentId, $currentDiagnosis, $currentV
     }
 }
 
+function hasColumn(PDO $db, string $table, string $column): bool {
+    $stmt = $db->prepare("SHOW COLUMNS FROM `{$table}` LIKE :column");
+    $stmt->bindValue(':column', $column);
+    $stmt->execute();
+    return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 $data = json_decode(file_get_contents("php://input"));
 
 // Validate required fields
@@ -227,7 +234,16 @@ try {
     );
     
     if ($hasVitals) {
-        // Parse blood pressure into systolic/diastolic
+        $hasTemperature = hasColumn($db, 'vitals', 'temperature');
+        $hasTemperatureC = hasColumn($db, 'vitals', 'temperature_c');
+        $hasBloodPressure = hasColumn($db, 'vitals', 'blood_pressure');
+        $hasBpSystolic = hasColumn($db, 'vitals', 'bp_systolic');
+        $hasBpDiastolic = hasColumn($db, 'vitals', 'bp_diastolic');
+        $hasPulseRate = hasColumn($db, 'vitals', 'pulse_rate');
+        $hasRespiratoryRate = hasColumn($db, 'vitals', 'respiratory_rate');
+        $hasRespirationRate = hasColumn($db, 'vitals', 'respiration_rate');
+
+        // Parse blood pressure into systolic/diastolic for legacy schema
         $bpSystolic = null;
         $bpDiastolic = null;
         if (!empty($data->vitals->blood_pressure)) {
@@ -237,37 +253,75 @@ try {
                 $bpDiastolic = intval(trim($bpParts[1]));
             }
         }
-        
-        $vitalsQuery = "INSERT INTO vitals (
-                          visit_id,
-                          recorded_at,
-                          temperature_c,
-                          bp_systolic,
-                          bp_diastolic,
-                          pulse_rate,
-                          respiration_rate
-                        ) VALUES (
-                          :visit_id,
-                          :recorded_at,
-                          :temperature,
-                          :bp_systolic,
-                          :bp_diastolic,
-                          :pulse_rate,
-                          :respiration_rate
-                        )";
-        
-        $vitalsStmt = $db->prepare($vitalsQuery);
+
         $temperature = !empty($data->vitals->temperature) ? $data->vitals->temperature : null;
+        $bloodPressure = !empty($data->vitals->blood_pressure) ? $data->vitals->blood_pressure : null;
         $pulseRate = !empty($data->vitals->pulse_rate) ? $data->vitals->pulse_rate : null;
         $respiratoryRate = !empty($data->vitals->respiratory_rate) ? $data->vitals->respiratory_rate : null;
+
+        $insertColumns = ['visit_id', 'recorded_at'];
+        $insertPlaceholders = [':visit_id', ':recorded_at'];
+
+        if ($hasTemperature) {
+            $insertColumns[] = 'temperature';
+            $insertPlaceholders[] = ':temperature';
+        } elseif ($hasTemperatureC) {
+            $insertColumns[] = 'temperature_c';
+            $insertPlaceholders[] = ':temperature';
+        }
+
+        if ($hasBloodPressure) {
+            $insertColumns[] = 'blood_pressure';
+            $insertPlaceholders[] = ':blood_pressure';
+        } else {
+            if ($hasBpSystolic) {
+                $insertColumns[] = 'bp_systolic';
+                $insertPlaceholders[] = ':bp_systolic';
+            }
+            if ($hasBpDiastolic) {
+                $insertColumns[] = 'bp_diastolic';
+                $insertPlaceholders[] = ':bp_diastolic';
+            }
+        }
+
+        if ($hasPulseRate) {
+            $insertColumns[] = 'pulse_rate';
+            $insertPlaceholders[] = ':pulse_rate';
+        }
+
+        if ($hasRespiratoryRate) {
+            $insertColumns[] = 'respiratory_rate';
+            $insertPlaceholders[] = ':respiratory_rate';
+        } elseif ($hasRespirationRate) {
+            $insertColumns[] = 'respiration_rate';
+            $insertPlaceholders[] = ':respiratory_rate';
+        }
+        
+        $vitalsQuery = "INSERT INTO vitals (" . implode(', ', $insertColumns) . ") VALUES (" . implode(', ', $insertPlaceholders) . ")";
+        
+        $vitalsStmt = $db->prepare($vitalsQuery);
         
         $vitalsStmt->bindParam(':visit_id', $visitId);
         $vitalsStmt->bindParam(':recorded_at', $visitDateTime);
-        $vitalsStmt->bindParam(':temperature', $temperature);
-        $vitalsStmt->bindParam(':bp_systolic', $bpSystolic);
-        $vitalsStmt->bindParam(':bp_diastolic', $bpDiastolic);
-        $vitalsStmt->bindParam(':pulse_rate', $pulseRate);
-        $vitalsStmt->bindParam(':respiration_rate', $respiratoryRate);
+
+        if (strpos($vitalsQuery, ':temperature') !== false) {
+            $vitalsStmt->bindParam(':temperature', $temperature);
+        }
+        if (strpos($vitalsQuery, ':blood_pressure') !== false) {
+            $vitalsStmt->bindParam(':blood_pressure', $bloodPressure);
+        }
+        if (strpos($vitalsQuery, ':bp_systolic') !== false) {
+            $vitalsStmt->bindParam(':bp_systolic', $bpSystolic);
+        }
+        if (strpos($vitalsQuery, ':bp_diastolic') !== false) {
+            $vitalsStmt->bindParam(':bp_diastolic', $bpDiastolic);
+        }
+        if (strpos($vitalsQuery, ':pulse_rate') !== false) {
+            $vitalsStmt->bindParam(':pulse_rate', $pulseRate);
+        }
+        if (strpos($vitalsQuery, ':respiratory_rate') !== false) {
+            $vitalsStmt->bindParam(':respiratory_rate', $respiratoryRate);
+        }
         
         $vitalsStmt->execute();
     }
@@ -358,11 +412,11 @@ try {
         
         // 1. Notify Adviser for routine visits
         $adviserQuery = "SELECT a.adviser_id, a.user_id, u.email, u.full_name
-                         FROM students s
-                         JOIN advisers a ON s.grade_level = a.grade_level AND s.section = a.section
-                         JOIN users u ON a.user_id = u.user_id
-                         WHERE s.student_id = :student_id AND a.is_active = 1
-                         LIMIT 1";
+                 FROM students s
+                 JOIN users u ON s.current_adviser_id = u.user_id
+                 JOIN advisers a ON a.user_id = u.user_id
+                 WHERE s.student_id = :student_id AND a.is_active = 1
+                 LIMIT 1";
         $adviserStmt = $db->prepare($adviserQuery);
         $adviserStmt->bindParam(':student_id', $data->student_id);
         $adviserStmt->execute();

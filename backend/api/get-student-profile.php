@@ -14,6 +14,13 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+function hasColumn(PDO $db, string $table, string $column): bool {
+    $stmt = $db->prepare("SHOW COLUMNS FROM `{$table}` LIKE :column");
+    $stmt->bindValue(':column', $column);
+    $stmt->execute();
+    return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 // Accept either student_id or user_id
 $student_id = isset($_GET['student_id']) ? intval($_GET['student_id']) : 0;
 $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
@@ -103,10 +110,22 @@ try {
     ];
     
     error_log("Student found: " . $student['name']);
+
+    $temperatureSelect = hasColumn($db, 'vitals', 'temperature')
+        ? 'v.temperature AS temperature_value'
+        : 'v.temperature_c AS temperature_value';
+
+    $bloodPressureSelect = hasColumn($db, 'vitals', 'blood_pressure')
+        ? "v.blood_pressure AS blood_pressure_value, NULL AS bp_systolic_value, NULL AS bp_diastolic_value"
+        : "NULL AS blood_pressure_value, v.bp_systolic AS bp_systolic_value, v.bp_diastolic AS bp_diastolic_value";
+
+    $respiratoryRateSelect = hasColumn($db, 'vitals', 'respiratory_rate')
+        ? 'v.respiratory_rate AS respiratory_rate_value'
+        : 'v.respiration_rate AS respiratory_rate_value';
     
     // Get vitals history (medical visits with vitals)
-    $vitalsQuery = "SELECT mv.visit_id, mv.visit_datetime, v.temperature_c, v.bp_systolic, 
-                           v.bp_diastolic, v.pulse_rate, v.respiration_rate, v.weight_kg, v.height_cm
+    $vitalsQuery = "SELECT mv.visit_id, mv.visit_datetime, {$temperatureSelect}, {$bloodPressureSelect},
+                           v.pulse_rate, {$respiratoryRateSelect}, v.weight_kg, v.height_cm
                     FROM medical_visits mv
                     LEFT JOIN vitals v ON mv.visit_id = v.visit_id
                     WHERE mv.student_id = :student_id
@@ -120,24 +139,30 @@ try {
     $vitals = [];
     while ($row = $vitalsStmt->fetch(PDO::FETCH_ASSOC)) {
         $bloodPressure = null;
-        if ($row['bp_systolic'] && $row['bp_diastolic']) {
-            $bloodPressure = $row['bp_systolic'] . '/' . $row['bp_diastolic'];
+        if (!empty($row['blood_pressure_value'])) {
+            $bloodPressure = $row['blood_pressure_value'];
+        } elseif (!empty($row['bp_systolic_value']) && !empty($row['bp_diastolic_value'])) {
+            $bloodPressure = $row['bp_systolic_value'] . '/' . $row['bp_diastolic_value'];
         }
         
         $vitals[] = [
             'visit_id' => intval($row['visit_id']),
             'date' => date('M d, Y', strtotime($row['visit_datetime'])),
             'datetime' => $row['visit_datetime'],
-            'temperature' => $row['temperature_c'],
+            'temperature' => $row['temperature_value'],
             'blood_pressure' => $bloodPressure,
             'pulse_rate' => $row['pulse_rate'],
-            'respiration_rate' => $row['respiration_rate'],
+            'respiration_rate' => $row['respiratory_rate_value'],
             'weight' => $row['weight_kg'],
             'height' => $row['height_cm']
         ];
     }
     
     error_log("Vitals found: " . count($vitals));
+
+    $allergyNameSelect = hasColumn($db, 'allergies', 'allergy_name')
+        ? 'a.allergy_name AS allergy_value'
+        : 'a.allergy_text AS allergy_value';
     
     // Get diagnoses (through medical_visits)
     $diagnosisQuery = "SELECT d.diagnosis_id, d.diagnosis_text, mv.visit_datetime
@@ -172,7 +197,7 @@ try {
     error_log("Medications found: " . count($medications));
     
     // Get allergies
-    $allergyQuery = "SELECT a.allergy_id, a.allergy_text, a.severity
+    $allergyQuery = "SELECT a.allergy_id, {$allergyNameSelect}, a.severity
                      FROM allergies a
                      WHERE a.student_id = :student_id
                      ORDER BY a.severity DESC";
@@ -185,7 +210,7 @@ try {
     while ($row = $allergyStmt->fetch(PDO::FETCH_ASSOC)) {
         $allergies[] = [
             'allergy_id' => intval($row['allergy_id']),
-            'name' => $row['allergy_text'],
+            'name' => $row['allergy_value'],
             'severity' => strtolower($row['severity'])
         ];
     }

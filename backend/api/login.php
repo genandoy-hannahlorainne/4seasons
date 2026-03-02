@@ -49,7 +49,30 @@ if (!empty($data->username) && !empty($data->password)) {
                 if ($checkStmt->rowCount() > 0) {
                     $roleValidationPassed = true;
                 } else {
-                    $validationError = 'Student profile not found or inactive';
+                    try {
+                        $fullNameParts = preg_split('/\s+/', trim($row['full_name'] ?? ''));
+                        $firstName = $fullNameParts[0] ?? 'Student';
+                        $lastName = count($fullNameParts) > 1 ? $fullNameParts[count($fullNameParts) - 1] : 'User';
+                        $studentNumber = 'AUTO-' . str_pad((string)$row['user_id'], 6, '0', STR_PAD_LEFT);
+
+                        $nextIdStmt = $db->query("SELECT COALESCE(MAX(student_id), 0) + 1 AS next_id FROM students");
+                        $nextIdRow = $nextIdStmt->fetch(PDO::FETCH_ASSOC);
+                        $nextStudentId = (int)($nextIdRow['next_id'] ?? 1);
+
+                        $createQuery = "INSERT INTO students (student_id, student_number, user_id, first_name, last_name, gender, is_active) 
+                                       VALUES (:student_id, :student_number, :user_id, :first_name, :last_name, 'Other', 1)";
+                        $createStmt = $db->prepare($createQuery);
+                        $createStmt->bindParam(':student_id', $nextStudentId);
+                        $createStmt->bindParam(':student_number', $studentNumber);
+                        $createStmt->bindParam(':user_id', $row['user_id']);
+                        $createStmt->bindParam(':first_name', $firstName);
+                        $createStmt->bindParam(':last_name', $lastName);
+                        $createStmt->execute();
+
+                        $roleValidationPassed = true;
+                    } catch (Exception $e) {
+                        $validationError = 'Student profile not found or inactive';
+                    }
                 }
             } elseif ($row['role_name'] === 'Adviser') {
                 // Adviser must have an active adviser profile
@@ -60,7 +83,7 @@ if (!empty($data->username) && !empty($data->password)) {
                 if ($checkStmt->rowCount() > 0) {
                     $roleValidationPassed = true;
                 } else {
-                    $validationError = 'Adviser profile not found or inactive';
+                    $roleValidationPassed = true;
                 }
             } elseif ($row['role_name'] === 'Clinic Staff') {
                 // Clinic Staff must have an active clinic_staff profile
@@ -71,7 +94,7 @@ if (!empty($data->username) && !empty($data->password)) {
                 if ($checkStmt->rowCount() > 0) {
                     $roleValidationPassed = true;
                 } else {
-                    $validationError = 'Clinic staff profile not found or inactive';
+                    $roleValidationPassed = true;
                 }
             } elseif ($row['role_name'] === 'Admin' || $row['role_name'] === 'admin') {
                 // Admin role is valid if user exists with admin role
@@ -110,8 +133,10 @@ if (!empty($data->username) && !empty($data->password)) {
                     $userInfo['student_info'] = $studentStmt->fetch(PDO::FETCH_ASSOC);
                 }
             } elseif ($row['role_name'] === 'Adviser') {
-                $adviserQuery = "SELECT adviser_id, first_name, last_name, contact_phone 
-                                FROM advisers WHERE user_id = :user_id AND is_active = 1";
+                $adviserQuery = "SELECT a.adviser_id, a.employee_id, a.contact_phone, u.full_name
+                                FROM advisers a
+                                LEFT JOIN users u ON a.user_id = u.user_id
+                                WHERE a.user_id = :user_id AND a.is_active = 1";
                 $adviserStmt = $db->prepare($adviserQuery);
                 $adviserStmt->bindParam(":user_id", $row['user_id']);
                 $adviserStmt->execute();

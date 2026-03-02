@@ -2,11 +2,13 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AdviserService } from '../../../../core/services/adviser.service';
+import { Router } from '@angular/router';
 import { Subject, interval } from 'rxjs';
 import { takeUntil, switchMap, startWith } from 'rxjs/operators';
 
 interface Alert {
   id: number;
+  studentId?: number;
   senderName: string;
   senderRole: string;
   studentName: string;
@@ -31,6 +33,10 @@ interface Alert {
       <div class="alerts-header">
         <h1>Alerts & Notifications</h1>
         <p>Messages from Clinic Staff regarding your students</p>
+      </div>
+
+      <div *ngIf="actionMessage" class="action-message" [class.error]="actionMessageType === 'error'">
+        {{ actionMessage }}
       </div>
 
       <!-- Loading State -->
@@ -190,6 +196,23 @@ interface Alert {
       }
       
       p { color: #7f8c8d; }
+    }
+
+    .action-message {
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      background: #e8f5e9;
+      color: #1e7e34;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid #c3e6cb;
+
+      &.error {
+        background: #fff3cd;
+        color: #856404;
+        border-color: #ffeeba;
+      }
     }
 
     @keyframes spin {
@@ -414,12 +437,16 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
   activeFilter = 'all';
   loading = false;
   alerts: Alert[] = [];
+  actionMessage = '';
+  actionMessageType: 'success' | 'error' = 'success';
+  private actionMessageTimer: ReturnType<typeof setTimeout> | null = null;
   private destroy$ = new Subject<void>();
   private refreshInterval = 30000; // 30 seconds
 
   constructor(
     private authService: AuthService,
-    private adviserService: AdviserService
+    private adviserService: AdviserService,
+    private router: Router
   ) {}
 
   get filteredAlerts(): Alert[] {
@@ -488,8 +515,14 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
-          if (response?.success && Array.isArray(response.notifications)) {
-            this.alerts = response.notifications;
+          if (!response?.success) {
+            return;
+          }
+
+          if (Array.isArray(response?.data?.notifications)) {
+            this.alerts = this.normalizeNotifications(response.data.notifications);
+          } else if (Array.isArray(response?.notifications)) {
+            this.alerts = this.normalizeNotifications(response.notifications);
           }
         },
         error: (err) => {
@@ -499,6 +532,10 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.actionMessageTimer) {
+      clearTimeout(this.actionMessageTimer);
+      this.actionMessageTimer = null;
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -522,7 +559,7 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
           notifications = response.notifications;
         }
         
-        this.alerts = notifications;
+        this.alerts = this.normalizeNotifications(notifications);
         console.log('✅ Loaded', this.alerts.length, 'notifications');
         this.loading = false;
       },
@@ -551,6 +588,35 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
 
   viewStudentRecord(alert: Alert, event: Event): void {
     event.stopPropagation();
-    console.log('Viewing student record:', alert.studentName);
+    const studentId = alert.studentId ?? (alert as any).student_id;
+
+    if (!studentId) {
+      this.showActionMessage('Unable to open student record for this alert. Student ID is missing.', 'error');
+      return;
+    }
+
+    this.showActionMessage('Opening student medical record...', 'success');
+    this.router.navigate(['/dashboard/adviser/students', studentId]);
+  }
+
+  private normalizeNotifications(notifications: any[]): Alert[] {
+    return notifications.map((notification: any) => ({
+      ...notification,
+      studentId: notification.studentId ?? notification.student_id
+    }));
+  }
+
+  private showActionMessage(message: string, type: 'success' | 'error'): void {
+    this.actionMessage = message;
+    this.actionMessageType = type;
+
+    if (this.actionMessageTimer) {
+      clearTimeout(this.actionMessageTimer);
+    }
+
+    this.actionMessageTimer = setTimeout(() => {
+      this.actionMessage = '';
+      this.actionMessageTimer = null;
+    }, 3000);
   }
 }
