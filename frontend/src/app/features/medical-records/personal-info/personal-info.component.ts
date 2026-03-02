@@ -82,6 +82,7 @@ export class PersonalInfoComponent implements OnInit {
   saving = false;
   
   medicalRecord: MedicalRecord | null = null;
+  studentId: number | null = null;
   personalInfo: PersonalInfo = {
     full_name: '',
     student_number: '',
@@ -192,6 +193,10 @@ export class PersonalInfoComponent implements OnInit {
         console.log('Medical data:', medicalData);
         
         if (profileData && medicalData && medicalData.personal_info) {
+          this.studentId = Number(medicalData.personal_info.student_id || profileData.student_id || 0) || null;
+
+          const normalizedMedicalHistory = this.normalizeMedicalHistory(medicalData.medical_history);
+
           // Map the profile data to the expected format
           this.personalInfo = {
             full_name: medicalData.personal_info.full_name || profileData.name || 
@@ -202,7 +207,7 @@ export class PersonalInfoComponent implements OnInit {
             birth_date: medicalData.personal_info.birth_date || profileData.birth_date,
             gender: medicalData.personal_info.gender || profileData.gender,
             address: medicalData.personal_info.address || '',
-            phone_number: medicalData.personal_info.emergency_contact_phone || '',
+            phone_number: medicalData.personal_info.emergency_contact_phone || medicalData.personal_info.phone || profileData.phone || '',
             emergency_contact_person: medicalData.personal_info.emergency_contact || '',
             emergency_contact_relation: medicalData.personal_info.emergency_contact_relation || ''
           };
@@ -217,46 +222,11 @@ export class PersonalInfoComponent implements OnInit {
               blood_type: medicalData.personal_info.blood_type || profileData.blood_type
             },
             allergies: medicalData.allergies || [],
-            medical_history: medicalData.medical_history || {
-              allergies: {
-                medicine: false,
-                pollens: false,
-                food: false,
-                stinging_insects: false
-              },
-              medical_conditions: {
-                error_refraction: false,
-                heart_problem: false,
-                bleeding_disorder: false,
-                hernia: false,
-                asthma: false,
-                anemia: false,
-                anxiety_depression: false,
-                seizure: false
-              },
-              surgery_hospitalization: false,
-              family_history: {
-                tuberculosis: false,
-                cancer: false,
-                stroke_cardiac: false,
-                diabetes: false,
-                hypertension: false,
-                depression: false,
-                thyroid: false,
-                phobia: false
-              },
-              smoke_exposure: false
-            }
+            medical_history: normalizedMedicalHistory
           };
           
           this.physicalInfoEdit = { ...this.medicalRecord.physical_info };
-          // Always use the medical_history from the API response, not the old cached value
-          if (medicalData.medical_history) {
-            this.medicalHistoryData = { ...medicalData.medical_history };
-          } else {
-            // Initialize with default values if no medical history exists
-            this.medicalHistoryData = { ...this.medicalRecord.medical_history };
-          }
+          this.medicalHistoryData = { ...normalizedMedicalHistory };
           
           // Load adviser name if available
           if (medicalData.personal_info?.adviser_name) {
@@ -343,24 +313,26 @@ export class PersonalInfoComponent implements OnInit {
         return;
       }
 
-      // Transform the data to match backend expectations
-      const updateData = {
-        full_name: this.editableInfo.full_name,
-        birth_date: this.editableInfo.birth_date,
-        gender: this.editableInfo.gender,
-        grade_level: this.editableInfo.grade_level,
-        section: this.editableInfo.section,
-        address: this.editableInfo.address,
-        phone: currentUser.phone || '', // Keep student's own phone from users table
-        emergency_contact: this.editableInfo.emergency_contact_person,
-        emergency_contact_relation: this.editableInfo.emergency_contact_relation,
-        emergency_contact_phone: this.editableInfo.phone_number,
-        email: currentUser.email // Keep existing email
+      if (!this.studentId) {
+        this.error = 'Student record not found';
+        return;
+      }
+
+      const updatePayload = {
+        personal_info: {
+          address: this.editableInfo.address,
+          emergency_contact: this.editableInfo.emergency_contact_person,
+          emergency_contact_relation: this.editableInfo.emergency_contact_relation,
+          emergency_contact_phone: this.editableInfo.phone_number,
+          blood_type: this.physicalInfoEdit.blood_type,
+          phone: this.editableInfo.phone_number,
+          email: currentUser.email
+        }
       };
 
-      console.log('Saving personal info with data:', updateData);
+      console.log('Saving personal info with data:', updatePayload);
 
-      const response = await this.studentService.updateStudentProfile(currentUser.user_id, updateData).toPromise();
+      const response = await this.studentService.updateMedicalData(this.studentId, updatePayload).toPromise();
       
       console.log('Save response:', response);
       
@@ -372,6 +344,7 @@ export class PersonalInfoComponent implements OnInit {
         
         // Reload data to ensure consistency
         await this.loadPersonalInfo();
+        await this.checkAndShowQRCode();
       } else {
         this.error = response?.message || 'Failed to update contact information';
       }
@@ -409,7 +382,20 @@ export class PersonalInfoComponent implements OnInit {
         return;
       }
 
-      const response = await this.studentService.updateStudentPhysicalInfo(currentUser.user_id, this.physicalInfoEdit).toPromise();
+      if (!this.studentId) {
+        this.error = 'Student record not found';
+        return;
+      }
+
+      const payload = {
+        physical_info: {
+          height_cm: this.physicalInfoEdit.height_cm,
+          weight_kg: this.physicalInfoEdit.weight_kg,
+          blood_type: this.physicalInfoEdit.blood_type
+        }
+      };
+
+      const response = await this.studentService.updateMedicalData(this.studentId, payload).toPromise();
       
       if (response?.success) {
         if (this.medicalRecord) {
@@ -418,6 +404,9 @@ export class PersonalInfoComponent implements OnInit {
         this.physicalInfoEditMode = false;
         this.successMessage = 'Physical information updated successfully';
         setTimeout(() => this.successMessage = '', 3000);
+
+        await this.loadPersonalInfo();
+        await this.checkAndShowQRCode();
       } else {
         this.error = response?.message || 'Failed to update physical information';
       }
@@ -468,17 +457,33 @@ export class PersonalInfoComponent implements OnInit {
         return;
       }
 
+      if (!this.studentId) {
+        this.error = 'Student record not found';
+        return;
+      }
+
       if (!this.medicalRecord) {
         this.error = 'No medical record found';
         return;
       }
 
-      console.log('Saving allergies:', {
-        userId: currentUser.user_id,
+      const payload = {
         allergies: this.medicalRecord.allergies
+          .filter((allergy: any) => (allergy.allergy_text || allergy.allergy_name || '').trim() !== '')
+          .map((allergy: any) => ({
+            allergy_name: (allergy.allergy_text || allergy.allergy_name || '').trim(),
+            severity: this.normalizeSeverity(allergy.severity),
+            reaction_description: allergy.reaction_description || null,
+            treatment_notes: allergy.treatment_notes || null
+          }))
+      };
+
+      console.log('Saving allergies:', {
+        studentId: this.studentId,
+        allergies: payload.allergies
       });
 
-      const response = await this.studentService.updateStudentAllergies(currentUser.user_id, this.medicalRecord.allergies).toPromise();
+      const response = await this.studentService.updateMedicalData(this.studentId, payload).toPromise();
       
       console.log('Save allergies response:', response);
       
@@ -489,6 +494,7 @@ export class PersonalInfoComponent implements OnInit {
         
         // Reload data to ensure consistency
         await this.loadPersonalInfo();
+        await this.checkAndShowQRCode();
       } else {
         console.error('Save allergies failed:', response);
         this.error = response?.message || 'Failed to update allergies';
@@ -527,12 +533,60 @@ export class PersonalInfoComponent implements OnInit {
         return;
       }
 
+      if (!this.studentId) {
+        this.error = 'Student record not found';
+        return;
+      }
+
+      const medicalConditions = this.medicalHistoryData.medical_conditions || {};
+      const familyHistory = this.medicalHistoryData.family_history || {};
+
+      const familyHistoryList: string[] = [];
+      if (familyHistory.tuberculosis) familyHistoryList.push('Tuberculosis');
+      if (familyHistory.cancer) familyHistoryList.push('Cancer');
+      if (familyHistory.stroke_cardiac) familyHistoryList.push('Stroke/Cardiac');
+      if (familyHistory.diabetes) familyHistoryList.push('Diabetes');
+      if (familyHistory.hypertension) familyHistoryList.push('Hypertension');
+      if (familyHistory.depression) familyHistoryList.push('Depression');
+      if (familyHistory.thyroid) familyHistoryList.push('Thyroid');
+      if (familyHistory.phobia) familyHistoryList.push('Phobia');
+
+      const otherConditionsList: string[] = [];
+      if (medicalConditions.error_refraction) otherConditionsList.push('Error of refraction');
+      if (medicalConditions.hernia) otherConditionsList.push('Hernia');
+      if (medicalConditions.anemia) otherConditionsList.push('Anemia');
+      if (this.medicalHistoryData.surgery_hospitalization) otherConditionsList.push('Surgery/Hospitalization history');
+
+      const notesList: string[] = [];
+      if (this.medicalHistoryData.smoke_exposure) notesList.push('Smoke exposure');
+      if (this.medicalHistoryData.allergies?.medicine) notesList.push('Medicine allergy');
+      if (this.medicalHistoryData.allergies?.pollens) notesList.push('Pollen allergy');
+      if (this.medicalHistoryData.allergies?.food) notesList.push('Food allergy');
+      if (this.medicalHistoryData.allergies?.stinging_insects) notesList.push('Stinging insects allergy');
+
+      const payload = {
+        medical_history: {
+          condition_asthma: !!medicalConditions.asthma,
+          condition_diabetes: !!familyHistory.diabetes,
+          condition_heart_problem: !!medicalConditions.heart_problem,
+          condition_hypertension: !!familyHistory.hypertension,
+          condition_seizure_disorder: !!medicalConditions.seizure,
+          condition_bleeding_disorder: !!medicalConditions.bleeding_disorder,
+          condition_kidney_disease: false,
+          condition_mental_health: !!medicalConditions.anxiety_depression,
+          other_conditions: otherConditionsList.length ? otherConditionsList.join('; ') : null,
+          current_medications: null,
+          family_medical_history: familyHistoryList.length ? familyHistoryList.join(', ') : null,
+          notes: notesList.length ? notesList.join('; ') : null
+        }
+      };
+
       console.log('Saving medical history:', {
-        userId: currentUser.user_id,
-        medicalHistory: this.medicalHistoryData
+        studentId: this.studentId,
+        medicalHistory: payload.medical_history
       });
 
-      const response = await this.studentService.updateMedicalHistory(currentUser.user_id, this.medicalHistoryData).toPromise();
+      const response = await this.studentService.updateMedicalData(this.studentId, payload).toPromise();
       
       console.log('Save medical history response:', response);
       
@@ -597,8 +651,8 @@ export class PersonalInfoComponent implements OnInit {
 
   isFormComplete(): boolean {
     if (!this.medicalRecord) return false;
-    
-    const info = this.medicalRecord.personal_info;
+
+    const info = this.personalInfo;
     const physical = this.medicalRecord.physical_info;
     const history = this.medicalRecord.medical_history;
     
@@ -612,6 +666,111 @@ export class PersonalInfoComponent implements OnInit {
       physical.weight_kg &&
       history // Medical history exists
     );
+  }
+
+  private normalizeMedicalHistory(raw: any): MedicalHistory {
+    const defaults: MedicalHistory = {
+      allergies: {
+        medicine: false,
+        pollens: false,
+        food: false,
+        stinging_insects: false
+      },
+      medical_conditions: {
+        error_refraction: false,
+        heart_problem: false,
+        bleeding_disorder: false,
+        hernia: false,
+        asthma: false,
+        anemia: false,
+        anxiety_depression: false,
+        seizure: false
+      },
+      surgery_hospitalization: false,
+      family_history: {
+        tuberculosis: false,
+        cancer: false,
+        stroke_cardiac: false,
+        diabetes: false,
+        hypertension: false,
+        depression: false,
+        thyroid: false,
+        phobia: false
+      },
+      smoke_exposure: false
+    };
+
+    if (!raw) {
+      return defaults;
+    }
+
+    const notesText = String(raw.notes || '').toLowerCase();
+    const otherConditionsText = String(raw.other_conditions || '').toLowerCase();
+    const familyHistoryText = String(raw.family_medical_history || '').toLowerCase();
+
+    if (raw.allergies && raw.medical_conditions && raw.family_history) {
+      return {
+        allergies: {
+          medicine: !!raw.allergies.medicine || notesText.includes('medicine allergy'),
+          pollens: !!raw.allergies.pollens || notesText.includes('pollen allergy'),
+          food: !!raw.allergies.food || notesText.includes('food allergy'),
+          stinging_insects: !!raw.allergies.stinging_insects || notesText.includes('stinging insects allergy')
+        },
+        medical_conditions: {
+          error_refraction: !!raw.medical_conditions.error_refraction || otherConditionsText.includes('error of refraction'),
+          heart_problem: !!raw.medical_conditions.heart_problem,
+          bleeding_disorder: !!raw.medical_conditions.bleeding_disorder,
+          hernia: !!raw.medical_conditions.hernia || otherConditionsText.includes('hernia'),
+          asthma: !!raw.medical_conditions.asthma,
+          anemia: !!raw.medical_conditions.anemia || otherConditionsText.includes('anemia'),
+          anxiety_depression: !!raw.medical_conditions.anxiety_depression,
+          seizure: !!raw.medical_conditions.seizure
+        },
+        surgery_hospitalization: !!raw.surgery_hospitalization || otherConditionsText.includes('surgery/hospitalization history'),
+        family_history: {
+          tuberculosis: !!raw.family_history.tuberculosis,
+          cancer: !!raw.family_history.cancer,
+          stroke_cardiac: !!raw.family_history.stroke_cardiac,
+          diabetes: !!raw.family_history.diabetes,
+          hypertension: !!raw.family_history.hypertension,
+          depression: !!raw.family_history.depression,
+          thyroid: !!raw.family_history.thyroid,
+          phobia: !!raw.family_history.phobia
+        },
+        smoke_exposure: !!raw.smoke_exposure || notesText.includes('smoke exposure')
+      };
+    }
+
+    return {
+      allergies: {
+        medicine: notesText.includes('medicine allergy'),
+        pollens: notesText.includes('pollen allergy'),
+        food: notesText.includes('food allergy'),
+        stinging_insects: notesText.includes('stinging insects allergy')
+      },
+      medical_conditions: {
+        error_refraction: otherConditionsText.includes('error of refraction'),
+        heart_problem: !!raw.condition_heart_problem,
+        bleeding_disorder: !!raw.condition_bleeding_disorder,
+        hernia: otherConditionsText.includes('hernia'),
+        asthma: !!raw.condition_asthma,
+        anemia: otherConditionsText.includes('anemia'),
+        anxiety_depression: !!raw.condition_mental_health,
+        seizure: !!raw.condition_seizure_disorder
+      },
+      surgery_hospitalization: otherConditionsText.includes('surgery/hospitalization history'),
+      family_history: {
+        tuberculosis: familyHistoryText.includes('tuberculosis'),
+        cancer: familyHistoryText.includes('cancer'),
+        stroke_cardiac: familyHistoryText.includes('stroke/cardiac') || familyHistoryText.includes('stroke') || familyHistoryText.includes('cardiac'),
+        diabetes: !!raw.condition_diabetes || familyHistoryText.includes('diabetes'),
+        hypertension: !!raw.condition_hypertension || familyHistoryText.includes('hypertension'),
+        depression: familyHistoryText.includes('depression'),
+        thyroid: familyHistoryText.includes('thyroid'),
+        phobia: familyHistoryText.includes('phobia')
+      },
+      smoke_exposure: notesText.includes('smoke exposure')
+    };
   }
 
   closeQRModal() {
@@ -644,5 +803,12 @@ export class PersonalInfoComponent implements OnInit {
       console.error('Error downloading QR code:', error);
       this.error = 'Failed to download QR code';
     }
+  }
+
+  private normalizeSeverity(severity: string | undefined): 'mild' | 'moderate' | 'severe' {
+    const value = (severity || 'mild').toLowerCase();
+    if (value === 'severe') return 'severe';
+    if (value === 'moderate') return 'moderate';
+    return 'mild';
   }
 }

@@ -1,6 +1,6 @@
 <div class="medical-profile-page">
   <div class="page-header">
-    <button class="back-btn" routerLink="/dashboard/staff/students">← Back to Students</button>
+    <button class="back-btn" [routerLink]="backRoute">← Back to Students</button>
     <h1>Student Medical Profile</h1>
   </div>
 
@@ -12,7 +12,7 @@
   <!-- Error State -->
   <div class="error-state" *ngIf="error && !loading">
     <p>{{ error }}</p>
-    <button class="btn btn-secondary" routerLink="/dashboard/staff/students">Back to Students</button>
+    <button class="btn btn-secondary" [routerLink]="backRoute">Back to Students</button>
   </div>
 
   <!-- Student Info Card -->

@@ -16,11 +16,11 @@ class EmailConfig {
     // const SMTP_PASSWORD = 'YOUR_APP_PASSWORD_HERE'; // Your Gmail app password (16 characters)
     // const SMTP_ENCRYPTION = 'tls';
     
-    // TESTING: Mailtrap (ACTIVE - working configuration)
+    // TESTING: Mailtrap Sandbox
     const SMTP_HOST = 'sandbox.smtp.mailtrap.io';
     const SMTP_PORT = 2525;
-    const SMTP_USERNAME = 'da41244fa1af3f';
-    const SMTP_PASSWORD = '0250a28bcffa58';
+    const SMTP_USERNAME = 'ab4c924e1d95b4';
+    const SMTP_PASSWORD = 'e40a4824b94e5c';
     const SMTP_ENCRYPTION = 'tls';
     
     // Email Settings

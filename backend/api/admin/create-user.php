@@ -174,6 +174,43 @@ try {
             error_log("✅ " . $assignmentResult['message']);
         } else {
             error_log("⚠️ Assignment warning: " . $assignmentResult['message']);
+
+            // Fallback assignment when section is provided and already has an adviser
+            if (!empty($data->section_id)) {
+                $fallbackSectionQuery = "SELECT id, adviser_id, section_name
+                                        FROM sections
+                                        WHERE id = :section_id
+                                        AND is_active = 1
+                                        AND adviser_id IS NOT NULL
+                                        LIMIT 1";
+                $fallbackSectionStmt = $db->prepare($fallbackSectionQuery);
+                $fallbackSectionStmt->bindParam(':section_id', $data->section_id);
+                $fallbackSectionStmt->execute();
+                $fallbackSection = $fallbackSectionStmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($fallbackSection) {
+                    $fallbackUpdateStudent = "UPDATE students
+                                             SET current_section_id = :section_id,
+                                                 current_adviser_id = :adviser_id,
+                                                 section = :section_name,
+                                                 grade_level = :grade_level
+                                             WHERE student_id = :student_id";
+                    $fallbackUpdateStmt = $db->prepare($fallbackUpdateStudent);
+                    $fallbackUpdateStmt->bindParam(':section_id', $fallbackSection['id']);
+                    $fallbackUpdateStmt->bindParam(':adviser_id', $fallbackSection['adviser_id']);
+                    $fallbackUpdateStmt->bindParam(':section_name', $fallbackSection['section_name']);
+                    $fallbackUpdateStmt->bindParam(':grade_level', $actualGradeLevel);
+                    $fallbackUpdateStmt->bindParam(':student_id', $roleSpecificId);
+                    $fallbackUpdateStmt->execute();
+
+                    $fallbackEnrollmentQuery = "UPDATE sections SET current_enrollment = current_enrollment + 1 WHERE id = :section_id";
+                    $fallbackEnrollmentStmt = $db->prepare($fallbackEnrollmentQuery);
+                    $fallbackEnrollmentStmt->bindParam(':section_id', $fallbackSection['id']);
+                    $fallbackEnrollmentStmt->execute();
+
+                    error_log("✅ Fallback assignment applied for student_id {$roleSpecificId} to section {$fallbackSection['section_name']} with adviser {$fallbackSection['adviser_id']}");
+                }
+            }
         }
         
         // Generate QR code for student
@@ -188,41 +225,19 @@ try {
         
         error_log("✅ QR code generated for student_id: " . $roleSpecificId . " with token: " . $qrToken);
         
-    } elseif (strtolower($data->role) === 'adviser') {
-        $adviserQuery = "INSERT INTO advisers (
-                          user_id, first_name, last_name, employee_number, employee_id,
-                          contact_phone, grade_level, section, is_active
-                        ) VALUES (
-                          :user_id, :first_name, :last_name, :employee_number, :employee_id,
-                          :contact_phone, :grade_level, :section, 1
-                        )";
+        } elseif (strtolower($data->role) === 'adviser') {
+                $adviserQuery = "INSERT INTO advisers (
+                                                    user_id, employee_id, contact_phone, is_active
+                                                ) VALUES (
+                                                    :user_id, :employee_id, :contact_phone, 1
+                                                )";
         
         $adviserStmt = $db->prepare($adviserQuery);
         $adviserStmt->bindParam(':user_id', $userId);
-        $adviserStmt->bindParam(':first_name', $data->first_name);
-        $adviserStmt->bindParam(':last_name', $data->last_name);
-        $adviserStmt->bindParam(':employee_number', $data->employee_number);
-        $adviserStmt->bindParam(':employee_id', $data->employee_number); // Use employee_number for employee_id too
+        $employeeId = !empty($data->employee_number) ? $data->employee_number : ('ADV-' . str_pad((string)$userId, 6, '0', STR_PAD_LEFT));
+        $adviserStmt->bindParam(':employee_id', $employeeId);
         $adviserStmt->bindParam(':contact_phone', $data->phone);
-        
-        // Handle optional grade_level and section
-        $gradeLevel = !empty($data->grade_level) ? $data->grade_level : null;
-        $section = null;
-        
-        // If section_id is provided, get the section name
-        if (!empty($data->section_id)) {
-            $sectionQuery = "SELECT section_name FROM sections WHERE id = :section_id";
-            $sectionStmt = $db->prepare($sectionQuery);
-            $sectionStmt->bindParam(':section_id', $data->section_id);
-            $sectionStmt->execute();
-            if ($sectionStmt->rowCount() > 0) {
-                $sectionData = $sectionStmt->fetch(PDO::FETCH_ASSOC);
-                $section = $sectionData['section_name'];
-            }
-        }
-        
-        $adviserStmt->bindParam(':grade_level', $gradeLevel);
-        $adviserStmt->bindParam(':section', $section);
+
         $adviserStmt->execute();
         
         $roleSpecificId = $db->lastInsertId();
@@ -355,7 +370,10 @@ function generateUsername($role, $data, $db) {
         if (!empty($data->employee_number)) {
             return $data->employee_number;
         }
-        $base = strtolower($data->first_name[0] . $data->last_name);
+        $nameParts = preg_split('/\s+/', trim((string)$data->full_name));
+        $first = strtolower(substr($nameParts[0] ?? 'adviser', 0, 1));
+        $last = strtolower($nameParts[count($nameParts) - 1] ?? 'user');
+        $base = $first . $last;
         return generateUniqueUsername($base, $db);
     } elseif ($role === 'clinic_staff') {
         // Use staff code or generate from name

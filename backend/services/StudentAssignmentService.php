@@ -76,13 +76,15 @@ class StudentAssignmentService {
             $preferredQuery = "
                 SELECT s.id, s.section_name, s.adviser_id, s.current_enrollment, s.capacity,
                        gl.level_name, gl.level_number,
-                       CONCAT(a.first_name, ' ', a.last_name) as adviser_name
+                       COALESCE(u.full_name, 'Unknown Adviser') as adviser_name
                 FROM sections s
                 INNER JOIN grade_levels gl ON s.grade_level_id = gl.id
                 LEFT JOIN advisers a ON s.adviser_id = a.user_id AND a.is_active = 1
+                LEFT JOIN users u ON a.user_id = u.user_id
                 WHERE s.id = :section_id
                 AND s.is_active = 1 
                 AND s.adviser_id IS NOT NULL 
+                AND a.user_id IS NOT NULL
                 AND s.current_enrollment < s.capacity
             ";
             $stmt = $this->db->prepare($preferredQuery);
@@ -98,13 +100,15 @@ class StudentAssignmentService {
         $sectionQuery = "
             SELECT s.id, s.section_name, s.adviser_id, s.current_enrollment, s.capacity,
                    gl.level_name, gl.level_number,
-                   CONCAT(a.first_name, ' ', a.last_name) as adviser_name
+                   COALESCE(u.full_name, 'Unknown Adviser') as adviser_name
             FROM sections s
             INNER JOIN grade_levels gl ON s.grade_level_id = gl.id
             LEFT JOIN advisers a ON s.adviser_id = a.user_id AND a.is_active = 1
+            LEFT JOIN users u ON a.user_id = u.user_id
             WHERE gl.level_number = :grade_level 
             AND s.is_active = 1 
             AND s.adviser_id IS NOT NULL 
+            AND a.user_id IS NOT NULL
             AND s.current_enrollment < s.capacity
             ORDER BY s.current_enrollment ASC, s.id ASC
             LIMIT 1
@@ -119,7 +123,11 @@ class StudentAssignmentService {
      * Assign a student to a specific section and adviser
      */
     private function assignStudentToSection($studentId, $sectionId, $adviserId, $gradeLevel) {
-        $this->db->beginTransaction();
+        $startedTransaction = false;
+        if (!$this->db->inTransaction()) {
+            $this->db->beginTransaction();
+            $startedTransaction = true;
+        }
         
         try {
             // Get section details
@@ -146,6 +154,30 @@ class StudentAssignmentService {
                 ':grade_level' => $gradeLevel,
                 ':student_id' => $studentId
             ]);
+
+            // Add assignment history entry when student_adviser table is available
+            try {
+                $adviserIdStmt = $this->db->prepare("SELECT adviser_id FROM advisers WHERE user_id = :user_id LIMIT 1");
+                $adviserIdStmt->execute([':user_id' => $adviserId]);
+                $adviserData = $adviserIdStmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($adviserData && !empty($adviserData['adviser_id'])) {
+                    $historyStmt = $this->db->prepare("INSERT INTO student_adviser (student_id, adviser_id, assigned_date)
+                                                      SELECT :student_id, :adviser_id, CURDATE()
+                                                      WHERE NOT EXISTS (
+                                                          SELECT 1 FROM student_adviser
+                                                          WHERE student_id = :student_id_check AND adviser_id = :adviser_id_check
+                                                      )");
+                    $historyStmt->execute([
+                        ':student_id' => $studentId,
+                        ':adviser_id' => $adviserData['adviser_id'],
+                        ':student_id_check' => $studentId,
+                        ':adviser_id_check' => $adviserData['adviser_id']
+                    ]);
+                }
+            } catch (Exception $e) {
+                error_log("StudentAssignmentService history insert skipped: " . $e->getMessage());
+            }
             
             // Update section enrollment count
             $updateEnrollmentQuery = "
@@ -156,10 +188,14 @@ class StudentAssignmentService {
             $stmt = $this->db->prepare($updateEnrollmentQuery);
             $stmt->execute([':section_id' => $sectionId]);
             
-            $this->db->commit();
+            if ($startedTransaction && $this->db->inTransaction()) {
+                $this->db->commit();
+            }
             
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($startedTransaction && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             throw $e;
         }
     }

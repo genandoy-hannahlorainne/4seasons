@@ -10,6 +10,13 @@ require_once '../middleware/auth.php';
 $database = new Database();
 $db = $database->getConnection();
 
+function hasColumn(PDO $db, string $table, string $column): bool {
+    $stmt = $db->prepare("SHOW COLUMNS FROM `{$table}` LIKE :column");
+    $stmt->bindValue(':column', $column);
+    $stmt->execute();
+    return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 // Authenticate user
 $auth = new Auth($database);
 // Allow both Student and Admin roles to manage allergies
@@ -27,6 +34,9 @@ error_log("Method: " . $method);
 error_log("Request data: " . json_encode($data));
 
 try {
+    $allergyNameColumn = hasColumn($db, 'allergies', 'allergy_name') ? 'allergy_name' : 'allergy_text';
+    $allergyTimestampColumn = hasColumn($db, 'allergies', 'recorded_at') ? 'recorded_at' : 'created_at';
+
     // Get student ID from authenticated user or from request
     $userId = $auth->userId();
     
@@ -93,7 +103,7 @@ try {
                             
                             error_log("Inserting allergy: {$allergy->allergy_text} ({$severity})");
                             
-                            $insertQuery = "INSERT INTO allergies (student_id, allergy_text, severity, recorded_at) 
+                            $insertQuery = "INSERT INTO allergies (student_id, {$allergyNameColumn}, severity, {$allergyTimestampColumn}) 
                                            VALUES (:student_id, :allergy_text, :severity, :recorded_at)";
                             $insertStmt = $db->prepare($insertQuery);
                             $insertStmt->bindParam(':student_id', $studentId);
@@ -144,7 +154,7 @@ try {
                 $recordedAt = date('Y-m-d');
                 
                 // Check if allergy already exists
-                $checkQuery = "SELECT allergy_id FROM allergies WHERE student_id = :student_id AND allergy_text = :allergy_text";
+                $checkQuery = "SELECT allergy_id FROM allergies WHERE student_id = :student_id AND {$allergyNameColumn} = :allergy_text";
                 $checkStmt = $db->prepare($checkQuery);
                 $checkStmt->bindParam(':student_id', $studentId);
                 $checkStmt->bindParam(':allergy_text', $data->allergy_text);
@@ -156,7 +166,7 @@ try {
                 }
                 
                 // Insert new allergy
-                $insertQuery = "INSERT INTO allergies (student_id, allergy_text, severity, recorded_at) 
+                $insertQuery = "INSERT INTO allergies (student_id, {$allergyNameColumn}, severity, {$allergyTimestampColumn}) 
                                VALUES (:student_id, :allergy_text, :severity, :recorded_at)";
                 $insertStmt = $db->prepare($insertQuery);
                 $insertStmt->bindParam(':student_id', $studentId);
@@ -192,7 +202,7 @@ try {
             }
             
             // Verify allergy belongs to this student
-            $verifyQuery = "SELECT allergy_text FROM allergies WHERE allergy_id = :allergy_id AND student_id = :student_id";
+            $verifyQuery = "SELECT {$allergyNameColumn} AS allergy_text FROM allergies WHERE allergy_id = :allergy_id AND student_id = :student_id";
             $verifyStmt = $db->prepare($verifyQuery);
             $verifyStmt->bindParam(':allergy_id', $data->allergy_id);
             $verifyStmt->bindParam(':student_id', $studentId);
@@ -245,7 +255,7 @@ try {
                         if (!empty($allergy->allergy_text)) {
                             $severity = $allergy->severity ?? 'Moderate';
                             
-                            $insertQuery = "INSERT INTO allergies (student_id, allergy_text, severity, recorded_at) 
+                            $insertQuery = "INSERT INTO allergies (student_id, {$allergyNameColumn}, severity, {$allergyTimestampColumn}) 
                                            VALUES (:student_id, :allergy_text, :severity, :recorded_at)";
                             $insertStmt = $db->prepare($insertQuery);
                             $insertStmt->bindParam(':student_id', $studentId);
@@ -306,7 +316,7 @@ try {
                 }
                 
                 // Update allergy
-                $updateQuery = "UPDATE allergies SET allergy_text = :allergy_text, severity = :severity 
+                $updateQuery = "UPDATE allergies SET {$allergyNameColumn} = :allergy_text, severity = :severity 
                                WHERE allergy_id = :allergy_id AND student_id = :student_id";
                 $updateStmt = $db->prepare($updateQuery);
                 $updateStmt->bindParam(':allergy_text', $data->allergy_text);

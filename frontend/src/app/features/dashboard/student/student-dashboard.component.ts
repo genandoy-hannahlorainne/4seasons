@@ -253,7 +253,10 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
       }
       
       // Check Contact Information
-      if (!info.emergency_contact || !info.emergency_contact_relation || !info.emergency_contact_phone) {
+      const emergencyContactName = (info.emergency_contact || info.emergency_contact_person || '').toString().trim();
+      const emergencyContactPhone = (info.emergency_contact_phone || info.phone || info.phone_number || '').toString().trim();
+
+      if (!emergencyContactName || !emergencyContactPhone) {
         missingFields.push('Contact Information (Emergency Contact)');
       }
       

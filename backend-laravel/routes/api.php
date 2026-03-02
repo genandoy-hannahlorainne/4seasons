@@ -32,10 +32,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/students/search/query', [\App\Http\Controllers\Api\StudentController::class, 'search']);
     Route::get('/students/qr/lookup', [\App\Http\Controllers\Api\StudentController::class, 'getByQr']);
     Route::get('/students/{student}/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'getMedicalData']);
+    Route::put('/students/{student}/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'updateMedicalData']);
     Route::put('/students/{student}/physical-info', [\App\Http\Controllers\Api\StudentController::class, 'updatePhysicalInfo']);
     
     // Get all students for clinic staff with filtering
     Route::get('/staff/students', [\App\Http\Controllers\Api\StudentController::class, 'getAllStudentsForStaff']);
+    Route::get('/staff/sections', [\App\Http\Controllers\Api\SchoolYearController::class, 'getAllSections']);
     
     // Medical visit endpoints
     Route::apiResource('medical-visits', \App\Http\Controllers\Api\MedicalVisitController::class);
@@ -76,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     Route::get('/dashboard/clinic/overview', [\App\Http\Controllers\Api\DashboardController::class, 'getClinicOverview']);
+    Route::get('/staff/reports', [\App\Http\Controllers\Api\DashboardController::class, 'getStaffReportsAnalytics']);
     
     // School Year Management endpoints
     Route::get('/admin/school-years', [\App\Http\Controllers\Api\SchoolYearController::class, 'index']);

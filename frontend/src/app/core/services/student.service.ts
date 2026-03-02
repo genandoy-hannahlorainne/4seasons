@@ -91,6 +91,15 @@ export class StudentService {
       .pipe(map(response => response.data));
   }
 
+  updateMedicalData(id: number, payload: {
+    personal_info?: any;
+    physical_info?: any;
+    medical_history?: any;
+    allergies?: any[];
+  }): Observable<any> {
+    return this.http.put<ApiResponse<any>>(`${environment.apiUrl}/students/${id}/medical-data`, payload);
+  }
+
   updatePhysicalInfo(id: number, physicalData: { height_cm: number; weight_kg: number; blood_type?: string }): Observable<any> {
     return this.http.put<ApiResponse<any>>(`${environment.apiUrl}/students/${id}/physical-info`, physicalData)
       .pipe(map(response => response.data));

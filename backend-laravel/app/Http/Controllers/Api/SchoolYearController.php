@@ -132,8 +132,12 @@ class SchoolYearController extends BaseController
     public function getSections(Request $request)
     {
         try {
+            if (!$request->filled('school_year_id')) {
+                return $this->getAllSections();
+            }
+
             $validator = Validator::make($request->all(), [
-                'school_year_id' => 'required|integer|exists:school_years,id'
+                'school_year_id' => 'integer|exists:school_years,id'
             ]);
 
             if ($validator->fails()) {
@@ -362,14 +366,15 @@ class SchoolYearController extends BaseController
         try {
             // Get current active school year
             $currentYear = SchoolYear::where('is_current', true)->first();
-            
-            if (!$currentYear) {
-                return $this->sendError('No current school year set');
+
+            $query = Section::with(['gradeLevel'])
+                ->where('is_active', true);
+
+            if ($currentYear) {
+                $query->where('school_year_id', $currentYear->id);
             }
 
-            $sections = Section::with(['gradeLevel'])
-                ->where('school_year_id', $currentYear->id)
-                ->where('is_active', true)
+            $sections = $query
                 ->orderBy('grade_level_id')
                 ->orderBy('section_name')
                 ->get()
@@ -378,6 +383,7 @@ class SchoolYearController extends BaseController
                         'id' => $section->id,
                         'section_name' => $section->section_name,
                         'grade_level_id' => $section->grade_level_id,
+                        'school_year_id' => $section->school_year_id,
                         'level_name' => $section->gradeLevel->level_name ?? 'Unknown',
                         'level_number' => $section->gradeLevel->level_number ?? 0
                     ];

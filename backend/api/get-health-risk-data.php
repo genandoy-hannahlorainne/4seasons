@@ -33,10 +33,10 @@ try {
             COALESCE(s.grade_level, 'Unknown') as grade_name,
             COALESCE(s.grade_level, 'Unknown') as grade_level,
             COUNT(DISTINCT s.student_id) as total_students,
-            SUM(CASE WHEN v.bmi_category = 'Underweight' THEN 1 ELSE 0 END) as underweight_count,
-            SUM(CASE WHEN v.bmi_category = 'Normal' THEN 1 ELSE 0 END) as normal_count,
-            SUM(CASE WHEN v.bmi_category = 'Overweight' THEN 1 ELSE 0 END) as overweight_count,
-            SUM(CASE WHEN v.bmi_category = 'Obese' THEN 1 ELSE 0 END) as obese_count,
+            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi < 18.5 THEN 1 ELSE 0 END) as underweight_count,
+            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi >= 18.5 AND v.bmi < 25 THEN 1 ELSE 0 END) as normal_count,
+            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi >= 25 AND v.bmi < 30 THEN 1 ELSE 0 END) as overweight_count,
+            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi >= 30 THEN 1 ELSE 0 END) as obese_count,
             AVG(v.bmi) as average_bmi
         FROM students s
         LEFT JOIN medical_visits mv ON s.student_id = mv.student_id
@@ -160,8 +160,8 @@ try {
         SELECT 
             DATE(v.recorded_at) as update_date,
             COUNT(*) as updates_count,
-            SUM(CASE WHEN v.bmi_category = 'Overweight' THEN 1 ELSE 0 END) as new_overweight,
-            SUM(CASE WHEN v.bmi_category = 'Obese' THEN 1 ELSE 0 END) as new_obese
+            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi >= 25 AND v.bmi < 30 THEN 1 ELSE 0 END) as new_overweight,
+            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi >= 30 THEN 1 ELSE 0 END) as new_obese
         FROM vitals v
         WHERE v.recorded_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
         AND v.bmi IS NOT NULL

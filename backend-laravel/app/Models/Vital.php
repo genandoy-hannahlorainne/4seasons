@@ -14,14 +14,15 @@ class Vital extends Model
 
     protected $fillable = [
         'visit_id',
-        'temperature',
-        'blood_pressure',
+        'temperature_c',
+        'bp_systolic',
+        'bp_diastolic',
         'pulse_rate',
-        'respiratory_rate',
-        'oxygen_saturation',
+        'respiration_rate',
         'height_cm',
         'weight_kg',
         'bmi',
+        'bmi_category',
         'notes',
         'recorded_at'
     ];
@@ -29,10 +30,11 @@ class Vital extends Model
     protected function casts(): array
     {
         return [
-            'temperature' => 'decimal:1',
+            'temperature_c' => 'decimal:2',
+            'bp_systolic' => 'integer',
+            'bp_diastolic' => 'integer',
             'pulse_rate' => 'integer',
-            'respiratory_rate' => 'integer',
-            'oxygen_saturation' => 'decimal:2',
+            'respiration_rate' => 'integer',
             'height_cm' => 'decimal:2',
             'weight_kg' => 'decimal:2',
             'bmi' => 'decimal:2',

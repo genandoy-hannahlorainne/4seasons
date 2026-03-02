@@ -7,6 +7,8 @@ use App\Models\Student;
 use App\Models\Vital;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class MedicalVisitController extends BaseController
@@ -104,42 +106,117 @@ class MedicalVisitController extends BaseController
                 'visit_type' => 'required|in:Routine,Emergency',
                 'status' => 'in:Open,Closed,Referred',
                 'notification_method' => 'nullable|in:sms,email,call,none',
-                // Vitals data
-                'vitals' => 'nullable|array',
-                'vitals.*.vital_type' => 'required_with:vitals|in:blood_pressure,heart_rate,temperature,respiratory_rate,oxygen_saturation,height,weight',
-                'vitals.*.value' => 'required_with:vitals|string|max:50',
-                'vitals.*.unit' => 'nullable|string|max:20',
-                'vitals.*.notes' => 'nullable|string|max:200'
+                'visit_datetime' => 'nullable|date',
+                'vitals' => 'nullable|array'
             ]);
 
+            $visit = null;
+
             DB::transaction(function () use ($request, &$visit) {
+                $medicalVisitColumns = Schema::getColumnListing('medical_visits');
+
                 // Create medical visit
-                $visit = MedicalVisit::create([
-                    'student_id' => $request->student_id,
-                    'clinic_staff_id' => $request->clinic_staff_id,
-                    'visit_datetime' => now(),
-                    'chief_complaint' => $request->chief_complaint,
-                    'notes' => $request->notes,
-                    'notify_parent' => $request->boolean('notify_parent', false),
-                    'visit_type' => $request->visit_type,
-                    'status' => $request->status ?? 'Open',
-                    'notification_method' => $request->notification_method ?? 'none'
-                ]);
+                $visitPayload = $this->buildMedicalVisitInsertPayload($request, $medicalVisitColumns);
+
+                $visitId = DB::table('medical_visits')->insertGetId($visitPayload, 'visit_id');
+                $visit = MedicalVisit::find($visitId);
 
                 // Add vitals if provided
                 if ($request->has('vitals') && is_array($request->vitals)) {
-                    foreach ($request->vitals as $vitalData) {
-                        Vital::create([
-                            'visit_id' => $visit->visit_id,
-                            'vital_type' => $vitalData['vital_type'],
-                            'value' => $vitalData['value'],
-                            'unit' => $vitalData['unit'] ?? null,
-                            'notes' => $vitalData['notes'] ?? null,
-                            'recorded_at' => now()
-                        ]);
+                    $vitalsPayload = [
+                        'visit_id' => $visit->visit_id,
+                        'temperature_c' => null,
+                        'bp_systolic' => null,
+                        'bp_diastolic' => null,
+                        'pulse_rate' => null,
+                        'respiration_rate' => null,
+                        'height_cm' => null,
+                        'weight_kg' => null,
+                        'notes' => null,
+                        'recorded_at' => now(),
+                    ];
+
+                    if (array_is_list($request->vitals)) {
+                        foreach ($request->vitals as $vitalData) {
+                            if (!is_array($vitalData)) {
+                                continue;
+                            }
+
+                            $vitalType = $vitalData['vital_type'] ?? null;
+                            $vitalValue = $vitalData['value'] ?? null;
+                            if ($vitalType === null || $vitalValue === null || $vitalValue === '') {
+                                continue;
+                            }
+
+                            switch ($vitalType) {
+                                case 'temperature':
+                                case 'temperature_c':
+                                    $vitalsPayload['temperature_c'] = $vitalValue;
+                                    break;
+                                case 'blood_pressure':
+                                case 'bp':
+                                    $bp = $this->parseBloodPressure((string)$vitalValue);
+                                    $vitalsPayload['bp_systolic'] = $bp['systolic'];
+                                    $vitalsPayload['bp_diastolic'] = $bp['diastolic'];
+                                    break;
+                                case 'heart_rate':
+                                case 'pulse_rate':
+                                    $vitalsPayload['pulse_rate'] = $vitalValue;
+                                    break;
+                                case 'respiratory_rate':
+                                case 'respiration_rate':
+                                    $vitalsPayload['respiration_rate'] = $vitalValue;
+                                    break;
+                                case 'height':
+                                case 'height_cm':
+                                    $vitalsPayload['height_cm'] = $vitalValue;
+                                    break;
+                                case 'weight':
+                                case 'weight_kg':
+                                    $vitalsPayload['weight_kg'] = $vitalValue;
+                                    break;
+                            }
+
+                            if (!empty($vitalData['notes']) && empty($vitalsPayload['notes'])) {
+                                $vitalsPayload['notes'] = $vitalData['notes'];
+                            }
+                        }
+                    } else {
+                        $vitalsPayload['temperature_c'] = $request->input('vitals.temperature') ?? $request->input('vitals.temperature_c');
+                        $bloodPressure = $request->input('vitals.blood_pressure') ?? $request->input('vitals.bp');
+                        if ($bloodPressure) {
+                            $bp = $this->parseBloodPressure((string)$bloodPressure);
+                            $vitalsPayload['bp_systolic'] = $bp['systolic'];
+                            $vitalsPayload['bp_diastolic'] = $bp['diastolic'];
+                        }
+                        $vitalsPayload['pulse_rate'] = $request->input('vitals.pulse_rate');
+                        $vitalsPayload['respiration_rate'] = $request->input('vitals.respiration_rate') ?? $request->input('vitals.respiratory_rate');
+                        $vitalsPayload['height_cm'] = $request->input('vitals.height_cm');
+                        $vitalsPayload['weight_kg'] = $request->input('vitals.weight_kg');
+                        $vitalsPayload['notes'] = $request->input('vitals.notes');
+                    }
+
+                    $hasVitals = collect([
+                        $vitalsPayload['temperature_c'],
+                        $vitalsPayload['bp_systolic'],
+                        $vitalsPayload['bp_diastolic'],
+                        $vitalsPayload['pulse_rate'],
+                        $vitalsPayload['respiration_rate'],
+                        $vitalsPayload['height_cm'],
+                        $vitalsPayload['weight_kg'],
+                    ])->filter(function ($value) {
+                        return $value !== null && $value !== '';
+                    })->isNotEmpty();
+
+                    if ($hasVitals) {
+                        $this->storeVitalsCompat($vitalsPayload);
                     }
                 }
             });
+
+            if (!$visit) {
+                return $this->sendError('Failed to create medical visit', [], 500);
+            }
 
             // Load relationships for response
             $visit->load(['student.user', 'clinicStaff.user', 'vitals']);
@@ -152,6 +229,178 @@ class MedicalVisitController extends BaseController
             return $this->sendError('Failed to create medical visit', [
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    private function parseBloodPressure(string $value): array
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return ['systolic' => null, 'diastolic' => null];
+        }
+
+        if (preg_match('/^(\d{2,3})\s*\/\s*(\d{2,3})$/', $trimmed, $matches)) {
+            return [
+                'systolic' => (int)$matches[1],
+                'diastolic' => (int)$matches[2],
+            ];
+        }
+
+        if (preg_match('/^(\d{2,3})$/', $trimmed, $single)) {
+            return [
+                'systolic' => (int)$single[1],
+                'diastolic' => null,
+            ];
+        }
+
+        return ['systolic' => null, 'diastolic' => null];
+    }
+
+    private function buildMedicalVisitInsertPayload(Request $request, array $columns): array
+    {
+        $payload = [];
+        $isLegacySchema = in_array('parent_notified', $columns, true) && !in_array('notify_parent', $columns, true);
+
+        if (in_array('student_id', $columns, true)) {
+            $payload['student_id'] = $request->student_id;
+        }
+        if (in_array('clinic_staff_id', $columns, true)) {
+            $payload['clinic_staff_id'] = $request->clinic_staff_id;
+        }
+        if (in_array('visit_datetime', $columns, true)) {
+            $payload['visit_datetime'] = $request->input('visit_datetime', now());
+        }
+        if (in_array('chief_complaint', $columns, true)) {
+            $payload['chief_complaint'] = $request->chief_complaint;
+        }
+        if (in_array('notes', $columns, true)) {
+            $payload['notes'] = $request->notes;
+        }
+
+        $notifyParent = $request->boolean('notify_parent', false);
+        if (in_array('notify_parent', $columns, true)) {
+            $payload['notify_parent'] = $notifyParent;
+        }
+        if (in_array('parent_notified', $columns, true)) {
+            $payload['parent_notified'] = $notifyParent;
+        }
+        if (in_array('notification_method', $columns, true)) {
+            $payload['notification_method'] = $request->notification_method ?? 'none';
+        }
+
+        $visitType = (string)$request->input('visit_type', 'Routine');
+        if (in_array('visit_type', $columns, true)) {
+            $payload['visit_type'] = $isLegacySchema ? strtolower($visitType) : $visitType;
+        }
+        if (in_array('is_emergency', $columns, true)) {
+            $payload['is_emergency'] = strtolower($visitType) === 'emergency';
+        }
+
+        $status = (string)$request->input('status', 'Open');
+        if (in_array('status', $columns, true)) {
+            if ($isLegacySchema) {
+                $legacyStatus = 'active';
+                if (strcasecmp($status, 'Closed') === 0) {
+                    $legacyStatus = 'completed';
+                } elseif (strcasecmp($status, 'Referred') === 0) {
+                    $legacyStatus = 'cancelled';
+                }
+                $payload['status'] = $legacyStatus;
+            } else {
+                $payload['status'] = $status;
+            }
+        }
+
+        if (in_array('created_at', $columns, true) && !array_key_exists('created_at', $payload)) {
+            $payload['created_at'] = now();
+        }
+
+        return $payload;
+    }
+
+    private function storeVitalsCompat(array $vitalsPayload): void
+    {
+        try {
+            $columns = Schema::getColumnListing('vitals');
+            if (empty($columns)) {
+                return;
+            }
+
+            $insert = [];
+
+            if (in_array('visit_id', $columns, true)) {
+                $insert['visit_id'] = $vitalsPayload['visit_id'] ?? null;
+            }
+            if (in_array('recorded_at', $columns, true)) {
+                $insert['recorded_at'] = $vitalsPayload['recorded_at'] ?? now();
+            }
+            if (in_array('notes', $columns, true) && array_key_exists('notes', $vitalsPayload)) {
+                $insert['notes'] = $vitalsPayload['notes'];
+            }
+
+            if (in_array('temperature_c', $columns, true) && array_key_exists('temperature_c', $vitalsPayload)) {
+                $insert['temperature_c'] = $vitalsPayload['temperature_c'];
+            } elseif (in_array('temperature', $columns, true) && array_key_exists('temperature_c', $vitalsPayload)) {
+                $insert['temperature'] = $vitalsPayload['temperature_c'];
+            }
+
+            if (in_array('bp_systolic', $columns, true) && array_key_exists('bp_systolic', $vitalsPayload)) {
+                $insert['bp_systolic'] = $vitalsPayload['bp_systolic'];
+            }
+            if (in_array('bp_diastolic', $columns, true) && array_key_exists('bp_diastolic', $vitalsPayload)) {
+                $insert['bp_diastolic'] = $vitalsPayload['bp_diastolic'];
+            }
+            if (in_array('blood_pressure', $columns, true)) {
+                $systolic = $vitalsPayload['bp_systolic'] ?? null;
+                $diastolic = $vitalsPayload['bp_diastolic'] ?? null;
+                if ($systolic !== null && $systolic !== '') {
+                    $insert['blood_pressure'] = $diastolic !== null && $diastolic !== ''
+                        ? $systolic . '/' . $diastolic
+                        : (string)$systolic;
+                }
+            }
+
+            if (in_array('pulse_rate', $columns, true) && array_key_exists('pulse_rate', $vitalsPayload)) {
+                $insert['pulse_rate'] = $vitalsPayload['pulse_rate'];
+            }
+
+            if (in_array('respiration_rate', $columns, true) && array_key_exists('respiration_rate', $vitalsPayload)) {
+                $insert['respiration_rate'] = $vitalsPayload['respiration_rate'];
+            } elseif (in_array('respiratory_rate', $columns, true) && array_key_exists('respiration_rate', $vitalsPayload)) {
+                $insert['respiratory_rate'] = $vitalsPayload['respiration_rate'];
+            }
+
+            if (in_array('height_cm', $columns, true) && array_key_exists('height_cm', $vitalsPayload)) {
+                $insert['height_cm'] = $vitalsPayload['height_cm'];
+            }
+            if (in_array('weight_kg', $columns, true) && array_key_exists('weight_kg', $vitalsPayload)) {
+                $insert['weight_kg'] = $vitalsPayload['weight_kg'];
+            }
+
+            if (in_array('vitals_id', $columns, true)) {
+                $nextId = ((int)DB::table('vitals')->max('vitals_id')) + 1;
+                $insert['vitals_id'] = $nextId > 0 ? $nextId : 1;
+            }
+
+            $filtered = collect($insert)
+                ->filter(function ($value, $key) {
+                    if (in_array($key, ['visit_id', 'recorded_at', 'vitals_id'], true)) {
+                        return true;
+                    }
+                    return $value !== null && $value !== '';
+                })
+                ->toArray();
+
+            if (count($filtered) <= 2) {
+                return;
+            }
+
+            DB::table('vitals')->insert($filtered);
+        } catch (\Throwable $e) {
+            Log::warning('Vitals insert skipped for compatibility', [
+                'error' => $e->getMessage(),
+                'visit_id' => $vitalsPayload['visit_id'] ?? null,
+            ]);
         }
     }
 

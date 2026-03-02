@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { QrScannerComponent } from './qr-scanner.component';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-visit-form',
@@ -581,7 +582,8 @@ export class VisitFormComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -630,7 +632,7 @@ export class VisitFormComponent implements OnInit {
       .subscribe({
         next: (response: any) => {
           if (response.success && response.data.student) {
-            this.selectedStudent = response.data.student;
+            this.selectedStudent = this.normalizeStudentData(response.data.student);
             console.log('Student loaded with clearance:', this.selectedStudent);
           } else {
             console.error('Failed to load student:', response.message);
@@ -652,7 +654,7 @@ export class VisitFormComponent implements OnInit {
       .subscribe({
         next: (response: any) => {
           if (response.success && response.data.student) {
-            this.selectedStudent = response.data.student;
+            this.selectedStudent = this.normalizeStudentData(response.data.student);
             console.log('Student loaded with clearance:', this.selectedStudent);
           } else {
             console.error('Failed to load student:', response.message);
@@ -710,9 +712,33 @@ export class VisitFormComponent implements OnInit {
   }
 
   selectStudent(student: any): void {
-    this.selectedStudent = student;
+    this.selectedStudent = this.normalizeStudentData(student);
     this.studentSearch = '';
     this.searchResults = [];
+  }
+
+  private normalizeStudentData(student: any): any {
+    if (!student) {
+      return student;
+    }
+
+    const emergencyContactObj = typeof student.emergency_contact === 'object' && student.emergency_contact !== null
+      ? student.emergency_contact
+      : null;
+
+    const parentPhone = student.parentPhone
+      || student.parent_phone
+      || student.parentPhoneNumber
+      || null;
+
+    return {
+      ...student,
+      parentPhone,
+      emergency_contact: emergencyContactObj || {
+        name: student.emergency_contact || student.emergency_contact_name || '',
+        phone: student.emergency_contact_phone || parentPhone || ''
+      }
+    };
   }
 
   clearStudent(): void {
@@ -730,24 +756,58 @@ export class VisitFormComponent implements OnInit {
       return;
     }
 
+    const currentUser = this.authService.currentUserValue;
+    const clinicStaffId = currentUser?.staff_info?.clinic_staff_id;
+    if (!clinicStaffId) {
+      alert('Clinic staff profile not found. Please login again.');
+      return;
+    }
+
     this.loading = true;
+
+    const visitType = this.visit.visitType === 'emergency' ? 'Emergency' : 'Routine';
+    const status = this.visit.status === 'completed'
+      ? 'Closed'
+      : this.visit.status === 'referred'
+        ? 'Referred'
+        : 'Open';
+
+    const vitals: any[] = [];
+    if (this.visit.vitals.temperature !== null && this.visit.vitals.temperature !== undefined && this.visit.vitals.temperature !== ('' as any)) {
+      vitals.push({
+        vital_type: 'temperature',
+        value: String(this.visit.vitals.temperature),
+        unit: '°C'
+      });
+    }
+    if (this.visit.vitals.bloodPressure && this.visit.vitals.bloodPressure.trim() !== '') {
+      vitals.push({
+        vital_type: 'blood_pressure',
+        value: this.visit.vitals.bloodPressure.trim(),
+        unit: 'mmHg'
+      });
+    }
+    if (this.visit.vitals.pulseRate !== null && this.visit.vitals.pulseRate !== undefined && this.visit.vitals.pulseRate !== ('' as any)) {
+      vitals.push({
+        vital_type: 'heart_rate',
+        value: String(this.visit.vitals.pulseRate),
+        unit: 'bpm'
+      });
+    }
     
     const visitData = {
       student_id: this.selectedStudent.student_id,
-      date_time: this.visit.dateTime,
-      visit_type: this.visit.visitType,
-      diagnosis: this.visit.diagnosis,
-      vitals: {
-        temperature: this.visit.vitals.temperature,
-        blood_pressure: this.visit.vitals.bloodPressure,
-        pulse_rate: this.visit.vitals.pulseRate
-      },
-      status: this.visit.status,
+      clinic_staff_id: clinicStaffId,
+      visit_type: visitType,
+      chief_complaint: this.visit.diagnosis,
+      notes: '',
+      vitals,
+      status,
       notify_parent: this.visit.notifyParent,
-      parent_phone: this.selectedStudent?.parentPhone || null
+      notification_method: this.visit.notifyParent ? 'sms' : 'none'
     };
 
-    this.http.post<any>(`${environment.apiUrl}/save-medical-visit.php`, visitData)
+    this.http.post<any>(`${environment.apiUrl}/medical-visits`, visitData)
       .subscribe({
         next: (response) => {
           this.loading = false;
@@ -761,7 +821,20 @@ export class VisitFormComponent implements OnInit {
         error: (err) => {
           this.loading = false;
           console.error('Error saving visit:', err);
-          alert('Failed to save visit. Please try again.');
+          const apiMessage = err?.error?.message || err?.error?.error || null;
+          const validationErrors = err?.error?.errors;
+          let details = '';
+
+          if (validationErrors && typeof validationErrors === 'object') {
+            const firstKey = Object.keys(validationErrors)[0];
+            const firstValue = firstKey ? validationErrors[firstKey] : null;
+            const firstError = Array.isArray(firstValue) ? firstValue[0] : firstValue;
+            if (firstError) {
+              details = ` (${firstError})`;
+            }
+          }
+
+          alert(`Failed to save visit${apiMessage ? ': ' + apiMessage : ''}${details}`);
         }
       });
   }

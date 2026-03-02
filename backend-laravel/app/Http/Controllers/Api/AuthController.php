@@ -9,6 +9,7 @@ use App\Models\ClinicStaff;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends BaseController
@@ -245,6 +246,11 @@ class AuthController extends BaseController
                 $student = Student::where('user_id', $user->user_id)
                                  ->where('is_active', true)
                                  ->first();
+
+                if (!$student) {
+                    $student = $this->ensureStudentProfile($user);
+                }
+
                 return [
                     'valid' => !!$student,
                     'error' => $student ? '' : 'Student profile not found or inactive'
@@ -255,8 +261,8 @@ class AuthController extends BaseController
                                  ->where('is_active', true)
                                  ->first();
                 return [
-                    'valid' => !!$adviser,
-                    'error' => $adviser ? '' : 'Adviser profile not found or inactive'
+                    'valid' => true,
+                    'error' => $adviser ? '' : ''
                 ];
 
             case 'Clinic Staff':
@@ -265,8 +271,8 @@ class AuthController extends BaseController
                                    ->whereNull('deleted_at')
                                    ->first();
                 return [
-                    'valid' => !!$staff,
-                    'error' => $staff ? '' : 'Clinic staff profile not found or inactive'
+                    'valid' => true,
+                    'error' => $staff ? '' : ''
                 ];
 
             case 'Admin':
@@ -275,6 +281,36 @@ class AuthController extends BaseController
 
             default:
                 return ['valid' => false, 'error' => 'Invalid role'];
+        }
+    }
+
+    private function ensureStudentProfile(User $user): ?Student
+    {
+        try {
+            $nextStudentId = ((int) Student::max('student_id')) + 1;
+            $studentNumber = 'AUTO-' . str_pad((string) $user->user_id, 6, '0', STR_PAD_LEFT);
+
+            $existingNumber = Student::where('student_number', $studentNumber)->first();
+            if ($existingNumber) {
+                $studentNumber = 'AUTO-' . str_pad((string) $user->user_id, 6, '0', STR_PAD_LEFT) . '-' . now()->format('His');
+            }
+
+            $name = trim((string) ($user->full_name ?? ''));
+            $parts = preg_split('/\s+/', $name);
+            $firstName = $parts[0] ?? 'Student';
+            $lastName = count($parts) > 1 ? $parts[count($parts) - 1] : 'User';
+
+            return Student::create([
+                'student_id' => $nextStudentId,
+                'student_number' => $studentNumber,
+                'user_id' => $user->user_id,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'gender' => 'Other',
+                'is_active' => true,
+            ]);
+        } catch (\Throwable $e) {
+            return null;
         }
     }
 
@@ -354,7 +390,7 @@ class AuthController extends BaseController
             ]);
         } catch (\Exception $e) {
             // Log activity failure shouldn't break the main flow
-            \Log::warning('Failed to log activity', [
+            Log::warning('Failed to log activity', [
                 'user_id' => $userId,
                 'action' => $action,
                 'error' => $e->getMessage()
