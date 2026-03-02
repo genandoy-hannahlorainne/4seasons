@@ -558,17 +558,110 @@ class AdviserController extends BaseController
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
-            // For now, return empty notifications to prevent the 500 error
-            // This can be enhanced later with actual notification logic
-            $notifications = [
-                'notifications' => [],
-                'total' => 0
-            ];
+            $section = $this->resolveAdviserSection(intval($user->user_id));
+            $studentsQuery = Student::query()->where('is_active', true);
+            $students = $this->applyAdviserStudentScope(
+                $studentsQuery,
+                intval($user->user_id),
+                $section
+            )->get(['student_id', 'student_number', 'first_name', 'last_name']);
 
-            return $this->sendResponse($notifications, 'Adviser notifications retrieved successfully');
+            if ($students->isEmpty()) {
+                return $this->sendResponse([
+                    'notifications' => [],
+                    'total' => 0,
+                ], 'Adviser notifications retrieved successfully');
+            }
+
+            $studentMap = $students->keyBy('student_id');
+            $studentIds = $students->pluck('student_id')->all();
+
+            $visitRows = DB::table('medical_visits as mv')
+                ->leftJoin('clinic_staff as cs', 'mv.clinic_staff_id', '=', 'cs.clinic_staff_id')
+                ->leftJoin('users as staff_user', 'cs.user_id', '=', 'staff_user.user_id')
+                ->whereIn('mv.student_id', $studentIds)
+                ->orderByDesc('mv.visit_datetime')
+                ->limit(100)
+                ->get([
+                    'mv.visit_id',
+                    'mv.student_id',
+                    'mv.visit_datetime',
+                    'mv.visit_type',
+                    'mv.chief_complaint',
+                    'mv.notes',
+                    'mv.status',
+                    'cs.position as staff_position',
+                    'staff_user.full_name as staff_name',
+                ]);
+
+            $notifications = $visitRows->map(function ($row) use ($studentMap) {
+                $student = $studentMap->get($row->student_id);
+                if (!$student) {
+                    return null;
+                }
+
+                $timestamp = $row->visit_datetime ? now()->parse($row->visit_datetime) : now();
+                $visitType = (string)($row->visit_type ?? 'Visit');
+                $messageSource = trim((string)($row->notes ?: $row->chief_complaint ?: 'Student visited clinic for assessment.'));
+                $previewText = mb_substr($messageSource, 0, 100) . (mb_strlen($messageSource) > 100 ? '...' : '');
+
+                $isUrgent = strcasecmp($visitType, 'Emergency') === 0
+                    || str_contains(strtolower($messageSource), 'urgent')
+                    || str_contains(strtolower($messageSource), 'critical');
+
+                return [
+                    'id' => intval($row->visit_id),
+                    'studentId' => intval($row->student_id),
+                    'senderName' => $row->staff_name ?: 'Clinic Staff',
+                    'senderRole' => $row->staff_position ?: 'Clinic Staff',
+                    'studentName' => trim($student->first_name . ' ' . $student->last_name),
+                    'studentNumber' => $student->student_number,
+                    'subject' => ucfirst(strtolower($visitType)) . ' Visit',
+                    'previewText' => $previewText,
+                    'fullMessage' => $messageSource,
+                    'timeAgo' => $this->formatTimeAgo($timestamp),
+                    'fullDate' => $timestamp->format('M d, Y \a\t h:i A'),
+                    'visitType' => ucfirst(strtolower($visitType)),
+                    'priority' => $isUrgent ? 'urgent' : 'normal',
+                    'isRead' => false,
+                    'isExpanded' => false,
+                ];
+            })->filter()->values()->all();
+
+            return $this->sendResponse([
+                'notifications' => $notifications,
+                'total' => count($notifications),
+            ], 'Adviser notifications retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve notifications', $e->getMessage());
         }
+    }
+
+    private function formatTimeAgo($timestamp): string
+    {
+        $now = now();
+
+        if ($timestamp->greaterThan($now)) {
+            return 'Just now';
+        }
+
+        $seconds = $timestamp->diffInSeconds($now);
+        if ($seconds < 60) {
+            return 'Just now';
+        }
+
+        $minutes = $timestamp->diffInMinutes($now);
+        if ($minutes < 60) {
+            return $minutes . 'm ago';
+        }
+
+        $hours = $timestamp->diffInHours($now);
+        if ($hours < 24) {
+            return $hours . 'h ago';
+        }
+
+        $days = $timestamp->diffInDays($now);
+        return $days . 'd ago';
     }
     public function getAdvisoryStudents(Request $request)
     {
