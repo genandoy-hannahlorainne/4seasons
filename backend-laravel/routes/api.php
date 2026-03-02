@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/students/search/query', [\App\Http\Controllers\Api\StudentController::class, 'search']);
     Route::get('/students/qr/lookup', [\App\Http\Controllers\Api\StudentController::class, 'getByQr']);
     Route::get('/students/{student}/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'getMedicalData']);
+    Route::put('/students/{student}/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'updateMedicalData']);
     Route::put('/students/{student}/physical-info', [\App\Http\Controllers\Api\StudentController::class, 'updatePhysicalInfo']);
     
     // Get all students for clinic staff with filtering

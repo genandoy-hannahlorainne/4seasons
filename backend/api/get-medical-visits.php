@@ -15,6 +15,13 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+function hasColumn(PDO $db, string $table, string $column): bool {
+    $stmt = $db->prepare("SHOW COLUMNS FROM `{$table}` LIKE :column");
+    $stmt->bindValue(':column', $column);
+    $stmt->execute();
+    return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 $studentId = isset($_GET['student_id']) ? $_GET['student_id'] : null;
 $userId = isset($_GET['user_id']) ? $_GET['user_id'] : null;
 $status = isset($_GET['status']) ? $_GET['status'] : null;
@@ -34,13 +41,25 @@ if (!$studentId && $userId) {
 }
 
 try {
+    $temperatureSelect = hasColumn($db, 'vitals', 'temperature')
+        ? 'v.temperature AS temperature_value'
+        : 'v.temperature_c AS temperature_value';
+
+    $bloodPressureSelect = hasColumn($db, 'vitals', 'blood_pressure')
+        ? "v.blood_pressure AS blood_pressure_value, NULL AS bp_systolic_value, NULL AS bp_diastolic_value"
+        : "NULL AS blood_pressure_value, v.bp_systolic AS bp_systolic_value, v.bp_diastolic AS bp_diastolic_value";
+
+    $respiratoryRateSelect = hasColumn($db, 'vitals', 'respiratory_rate')
+        ? 'v.respiratory_rate AS respiratory_rate_value'
+        : 'v.respiration_rate AS respiratory_rate_value';
+
     // Optimized query using LEFT JOINs to fetch all data in one query
     $query = "SELECT DISTINCT
                      mv.visit_id, mv.student_id, mv.visit_datetime, mv.visit_type,
                      mv.notes as diagnosis, mv.status,
                      s.student_number, s.first_name, s.last_name, s.gender,
                      s.grade_level, s.section,
-                     v.temperature_c, v.bp_systolic, v.bp_diastolic, v.pulse_rate, v.respiration_rate
+                     {$temperatureSelect}, {$bloodPressureSelect}, v.pulse_rate, {$respiratoryRateSelect}
               FROM medical_visits mv
               INNER JOIN students s ON mv.student_id = s.student_id
               LEFT JOIN vitals v ON mv.visit_id = v.visit_id
@@ -96,8 +115,10 @@ try {
         $gradeSection = 'Grade ' . $row['grade_level'] . ' - ' . $row['section'];
         
         $bloodPressure = null;
-        if ($row['bp_systolic'] && $row['bp_diastolic']) {
-            $bloodPressure = $row['bp_systolic'] . '/' . $row['bp_diastolic'];
+        if (!empty($row['blood_pressure_value'])) {
+            $bloodPressure = $row['blood_pressure_value'];
+        } elseif (!empty($row['bp_systolic_value']) && !empty($row['bp_diastolic_value'])) {
+            $bloodPressure = $row['bp_systolic_value'] . '/' . $row['bp_diastolic_value'];
         }
         
         $statusMap = ['Open' => 'pending', 'Closed' => 'completed', 'Referred' => 'referred'];
@@ -122,10 +143,10 @@ try {
             'diagnosis' => $row['diagnosis'] ?: 'No diagnosis recorded',
             'status' => $frontendStatus,
             'vitals' => [
-                'temperature' => $row['temperature_c'] ?: null,
+                'temperature' => $row['temperature_value'] ?: null,
                 'bloodPressure' => $bloodPressure,
                 'pulseRate' => $row['pulse_rate'] ?: null,
-                'respiratoryRate' => $row['respiration_rate'] ?: null
+                'respiratoryRate' => $row['respiratory_rate_value'] ?: null
             ]
         ];
     }

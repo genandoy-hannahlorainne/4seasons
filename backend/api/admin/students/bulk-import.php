@@ -215,9 +215,10 @@ try {
                         $updateSectionLinkStmt->execute();
                         
                         // Check if this section has an assigned adviser
-                        $findAdviserQuery = "SELECT s.adviser_id, CONCAT(a.first_name, ' ', a.last_name) as adviser_name
+                        $findAdviserQuery = "SELECT s.adviser_id, COALESCE(u.full_name, 'Unknown Adviser') as adviser_name
                                             FROM sections s
                                             LEFT JOIN advisers a ON s.adviser_id = a.user_id
+                                            LEFT JOIN users u ON a.user_id = u.user_id
                                             WHERE s.id = :section_id AND s.adviser_id IS NOT NULL AND a.is_active = 1";
                         $findAdviserStmt = $db->prepare($findAdviserQuery);
                         $findAdviserStmt->bindParam(':section_id', $matchingSection['id']);

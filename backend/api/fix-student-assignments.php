@@ -60,10 +60,11 @@ try {
             $sectionQuery = "
                 SELECT s.id, s.section_name, s.adviser_id, s.current_enrollment, s.capacity,
                        gl.level_name, gl.level_number,
-                       CONCAT(a.first_name, ' ', a.last_name) as adviser_name
+                      COALESCE(u.full_name, 'Unknown Adviser') as adviser_name
                 FROM sections s
                 INNER JOIN grade_levels gl ON s.grade_level_id = gl.id
                 LEFT JOIN advisers a ON s.adviser_id = a.user_id AND a.is_active = 1
+                  LEFT JOIN users u ON a.user_id = u.user_id
                 WHERE gl.level_number = :grade_level 
                 AND s.is_active = 1 
                 AND s.adviser_id IS NOT NULL 

@@ -17,38 +17,58 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+function hasColumn(PDO $db, string $table, string $column): bool {
+    $stmt = $db->prepare("SHOW COLUMNS FROM `{$table}` LIKE :column");
+    $stmt->bindValue(':column', $column);
+    $stmt->execute();
+    return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function hasTable(PDO $db, string $table): bool {
+    $stmt = $db->prepare("SHOW TABLES LIKE :table_name");
+    $stmt->bindValue(':table_name', $table);
+    $stmt->execute();
+    return (bool) $stmt->fetch(PDO::FETCH_NUM);
+}
+
 // Get student_id from query parameter (direct) or user_id (indirect)
 $student_id = null;
 $student = null;
+
+$hasEmergencyContactRelation = hasColumn($db, 'students', 'emergency_contact_relation');
+$hasEmergencyContactPhone = hasColumn($db, 'students', 'emergency_contact_phone');
+
+$studentQueryBase = "SELECT 
+                                s.student_id,
+                                s.student_number,
+                                s.first_name,
+                                s.middle_name,
+                                s.last_name,
+                                s.birth_date,
+                                s.gender,
+                                s.blood_type,
+                                s.address,
+                                s.emergency_contact,
+                                " . ($hasEmergencyContactRelation ? "s.emergency_contact_relation" : "NULL AS emergency_contact_relation") . ",
+                                " . ($hasEmergencyContactPhone ? "s.emergency_contact_phone" : "NULL AS emergency_contact_phone") . ",
+                                s.grade_level,
+                                s.section,
+                                s.height_cm,
+                                s.weight_kg,
+                                s.bmi,
+                                s.bmi_category,
+                                u.full_name as user_full_name,
+                                u.phone as user_phone,
+                                u.email as user_email
+                            FROM students s
+                            LEFT JOIN users u ON s.user_id = u.user_id";
 
 if (isset($_GET['student_id'])) {
     // Direct student_id provided
     $student_id = $_GET['student_id'];
     
     // Get student info
-    $studentQuery = "SELECT 
-                        s.student_id,
-                        s.student_number,
-                        s.first_name,
-                        s.middle_name,
-                        s.last_name,
-                        s.birth_date,
-                        s.gender,
-                        s.blood_type,
-                        s.address,
-                        s.emergency_contact,
-                        s.emergency_contact_relation,
-                        s.emergency_contact_phone,
-                        s.grade_level,
-                        s.section,
-                        s.height_cm,
-                        s.weight_kg,
-                        s.bmi,
-                        s.bmi_category,
-                        u.full_name as user_full_name
-                     FROM students s
-                     LEFT JOIN users u ON s.user_id = u.user_id
-                     WHERE s.student_id = :student_id AND s.is_active = 1";
+    $studentQuery = $studentQueryBase . " WHERE s.student_id = :student_id AND s.is_active = 1";
     
     $studentStmt = $db->prepare($studentQuery);
     $studentStmt->bindParam(":student_id", $student_id);
@@ -62,29 +82,7 @@ if (isset($_GET['student_id'])) {
     error_log("Getting student for user_id: " . $user_id);
     
     // Get student info from user_id
-    $studentQuery = "SELECT 
-                        s.student_id,
-                        s.student_number,
-                        s.first_name,
-                        s.middle_name,
-                        s.last_name,
-                        s.birth_date,
-                        s.gender,
-                        s.blood_type,
-                        s.address,
-                        s.emergency_contact,
-                        s.emergency_contact_relation,
-                        s.emergency_contact_phone,
-                        s.grade_level,
-                        s.section,
-                        s.height_cm,
-                        s.weight_kg,
-                        s.bmi,
-                        s.bmi_category,
-                        u.full_name as user_full_name
-                     FROM students s
-                     LEFT JOIN users u ON s.user_id = u.user_id
-                     WHERE s.user_id = :user_id AND s.is_active = 1";
+    $studentQuery = $studentQueryBase . " WHERE s.user_id = :user_id AND s.is_active = 1";
     
     $studentStmt = $db->prepare($studentQuery);
     $studentStmt->bindParam(":user_id", $user_id);
@@ -101,29 +99,7 @@ if (isset($_GET['student_id'])) {
     $user_id = 19;
     error_log("No user_id provided, using default: $user_id");
     
-    $studentQuery = "SELECT 
-                        s.student_id,
-                        s.student_number,
-                        s.first_name,
-                        s.middle_name,
-                        s.last_name,
-                        s.birth_date,
-                        s.gender,
-                        s.blood_type,
-                        s.address,
-                        s.emergency_contact,
-                        s.emergency_contact_relation,
-                        s.emergency_contact_phone,
-                        s.grade_level,
-                        s.section,
-                        s.height_cm,
-                        s.weight_kg,
-                        s.bmi,
-                        s.bmi_category,
-                        u.full_name as user_full_name
-                     FROM students s
-                     LEFT JOIN users u ON s.user_id = u.user_id
-                     WHERE s.user_id = :user_id AND s.is_active = 1";
+    $studentQuery = $studentQueryBase . " WHERE s.user_id = :user_id AND s.is_active = 1";
     
     $studentStmt = $db->prepare($studentQuery);
     $studentStmt->bindParam(":user_id", $user_id);
@@ -146,16 +122,56 @@ try {
         exit();
     }
 
+    // Fallback emergency contact values from parent linkage when student columns are unavailable/empty
+    if ((empty($student['emergency_contact']) || empty($student['emergency_contact_relation']) || empty($student['emergency_contact_phone']))
+        && hasTable($db, 'parents') && hasTable($db, 'student_parent')) {
+        try {
+            $parentQuery = "SELECT p.first_name, p.last_name, p.relation, p.phone
+                            FROM student_parent sp
+                            INNER JOIN parents p ON sp.parent_id = p.parent_id
+                            WHERE sp.student_id = :student_id
+                            ORDER BY
+                                (CASE WHEN TRIM(CONCAT(COALESCE(p.first_name, ''), ' ', COALESCE(p.last_name, ''))) = :emergency_name THEN 1 ELSE 0 END) DESC,
+                                (CASE WHEN COALESCE(TRIM(p.relation), '') <> '' THEN 1 ELSE 0 END) DESC,
+                                (CASE WHEN COALESCE(TRIM(p.phone), '') <> '' THEN 1 ELSE 0 END) DESC,
+                                p.parent_id DESC
+                            LIMIT 1";
+            $parentStmt = $db->prepare($parentQuery);
+            $parentStmt->bindParam(':student_id', $student_id);
+            $emergencyName = trim((string)($student['emergency_contact'] ?? ''));
+            $parentStmt->bindParam(':emergency_name', $emergencyName);
+            $parentStmt->execute();
+            $parent = $parentStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($parent) {
+                if (empty($student['emergency_contact'])) {
+                    $student['emergency_contact'] = trim(($parent['first_name'] ?? '') . ' ' . ($parent['last_name'] ?? ''));
+                }
+                if (empty($student['emergency_contact_relation'])) {
+                    $student['emergency_contact_relation'] = $parent['relation'] ?? null;
+                }
+                if (empty($student['emergency_contact_phone'])) {
+                    $student['emergency_contact_phone'] = $parent['phone'] ?? null;
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Parent fallback lookup skipped: " . $e->getMessage());
+        }
+    }
+
     // Get vitals - for now, we'll return null since vitals aren't stored in separate columns
     // In the future, vitals could be stored in a separate table or added to medical_visits
     $vitals = null;
 
     // Get allergies
+    $allergyNameColumn = hasColumn($db, 'allergies', 'allergy_name') ? 'allergy_name' : 'allergy_text';
+    $allergyRecordedColumn = hasColumn($db, 'allergies', 'recorded_at') ? 'recorded_at' : 'created_at';
+
     $allergiesQuery = "SELECT 
                           allergy_id,
-                          allergy_text,
+                          {$allergyNameColumn} AS allergy_text,
                           severity,
-                          recorded_at
+                          {$allergyRecordedColumn} AS recorded_at
                        FROM allergies
                        WHERE student_id = :student_id
                        ORDER BY recorded_at DESC";
@@ -188,31 +204,49 @@ try {
     $recentVisits = $recentVisitsStmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Get medical history
-    $medicalHistoryQuery = "SELECT 
-                              allergy_medicine,
-                              allergy_pollens,
-                              allergy_food,
-                              allergy_stinging_insects,
-                              condition_error_refraction,
-                              condition_heart_problem,
-                              condition_bleeding_disorder,
-                              condition_hernia,
-                              condition_asthma,
-                              condition_anemia,
-                              condition_anxiety_depression,
-                              condition_seizure,
-                              surgery_hospitalization,
-                              family_tuberculosis,
-                              family_cancer,
-                              family_stroke_cardiac,
-                              family_diabetes,
-                              family_hypertension,
-                              family_depression,
-                              family_thyroid,
-                              family_phobia,
-                              smoke_exposure
-                           FROM medical_history
-                           WHERE student_id = :student_id";
+     $hasLegacyMedicalHistoryColumns = hasColumn($db, 'medical_history', 'allergy_medicine');
+
+     $medicalHistoryQuery = $hasLegacyMedicalHistoryColumns
+          ? "SELECT 
+                  allergy_medicine,
+                  allergy_pollens,
+                  allergy_food,
+                  allergy_stinging_insects,
+                  condition_error_refraction,
+                  condition_heart_problem,
+                  condition_bleeding_disorder,
+                  condition_hernia,
+                  condition_asthma,
+                  condition_anemia,
+                  condition_anxiety_depression,
+                  condition_seizure,
+                  surgery_hospitalization,
+                  family_tuberculosis,
+                  family_cancer,
+                  family_stroke_cardiac,
+                  family_diabetes,
+                  family_hypertension,
+                  family_depression,
+                  family_thyroid,
+                  family_phobia,
+                  smoke_exposure
+              FROM medical_history
+              WHERE student_id = :student_id"
+          : "SELECT
+                  condition_asthma,
+                  condition_diabetes,
+                  condition_heart_problem,
+                  condition_hypertension,
+                  condition_seizure_disorder,
+                  condition_bleeding_disorder,
+                  condition_kidney_disease,
+                  condition_mental_health,
+                  other_conditions,
+                  current_medications,
+                  family_medical_history,
+                  notes
+              FROM medical_history
+              WHERE student_id = :student_id";
     
     $medicalHistoryStmt = $db->prepare($medicalHistoryQuery);
     $medicalHistoryStmt->bindParam(":student_id", $student_id);
@@ -223,37 +257,73 @@ try {
         $historyData = $medicalHistoryStmt->fetch(PDO::FETCH_ASSOC);
         
         if ($historyData) {
-            // Convert database format to frontend format
-            $medicalHistory = [
-                'allergies' => [
-                    'medicine' => (bool)$historyData['allergy_medicine'],
-                    'pollens' => (bool)$historyData['allergy_pollens'],
-                    'food' => (bool)$historyData['allergy_food'],
-                    'stinging_insects' => (bool)$historyData['allergy_stinging_insects']
-                ],
-                'medical_conditions' => [
-                    'error_refraction' => (bool)$historyData['condition_error_refraction'],
-                    'heart_problem' => (bool)$historyData['condition_heart_problem'],
-                    'bleeding_disorder' => (bool)$historyData['condition_bleeding_disorder'],
-                    'hernia' => (bool)$historyData['condition_hernia'],
-                    'asthma' => (bool)$historyData['condition_asthma'],
-                    'anemia' => (bool)$historyData['condition_anemia'],
-                    'anxiety_depression' => (bool)$historyData['condition_anxiety_depression'],
-                    'seizure' => (bool)$historyData['condition_seizure']
-                ],
-                'surgery_hospitalization' => (bool)$historyData['surgery_hospitalization'],
-                'family_history' => [
-                    'tuberculosis' => (bool)$historyData['family_tuberculosis'],
-                    'cancer' => (bool)$historyData['family_cancer'],
-                    'stroke_cardiac' => (bool)$historyData['family_stroke_cardiac'],
-                    'diabetes' => (bool)$historyData['family_diabetes'],
-                    'hypertension' => (bool)$historyData['family_hypertension'],
-                    'depression' => (bool)$historyData['family_depression'],
-                    'thyroid' => (bool)$historyData['family_thyroid'],
-                    'phobia' => (bool)$historyData['family_phobia']
-                ],
-                'smoke_exposure' => (bool)$historyData['smoke_exposure']
-            ];
+            if ($hasLegacyMedicalHistoryColumns) {
+                // Convert legacy database format to frontend format
+                $medicalHistory = [
+                    'allergies' => [
+                        'medicine' => (bool)$historyData['allergy_medicine'],
+                        'pollens' => (bool)$historyData['allergy_pollens'],
+                        'food' => (bool)$historyData['allergy_food'],
+                        'stinging_insects' => (bool)$historyData['allergy_stinging_insects']
+                    ],
+                    'medical_conditions' => [
+                        'error_refraction' => (bool)$historyData['condition_error_refraction'],
+                        'heart_problem' => (bool)$historyData['condition_heart_problem'],
+                        'bleeding_disorder' => (bool)$historyData['condition_bleeding_disorder'],
+                        'hernia' => (bool)$historyData['condition_hernia'],
+                        'asthma' => (bool)$historyData['condition_asthma'],
+                        'anemia' => (bool)$historyData['condition_anemia'],
+                        'anxiety_depression' => (bool)$historyData['condition_anxiety_depression'],
+                        'seizure' => (bool)$historyData['condition_seizure']
+                    ],
+                    'surgery_hospitalization' => (bool)$historyData['surgery_hospitalization'],
+                    'family_history' => [
+                        'tuberculosis' => (bool)$historyData['family_tuberculosis'],
+                        'cancer' => (bool)$historyData['family_cancer'],
+                        'stroke_cardiac' => (bool)$historyData['family_stroke_cardiac'],
+                        'diabetes' => (bool)$historyData['family_diabetes'],
+                        'hypertension' => (bool)$historyData['family_hypertension'],
+                        'depression' => (bool)$historyData['family_depression'],
+                        'thyroid' => (bool)$historyData['family_thyroid'],
+                        'phobia' => (bool)$historyData['family_phobia']
+                    ],
+                    'smoke_exposure' => (bool)$historyData['smoke_exposure']
+                ];
+            } else {
+                // Current medical_history schema compatibility mapping
+                $medicalHistory = [
+                    'allergies' => [
+                        'medicine' => false,
+                        'pollens' => false,
+                        'food' => false,
+                        'stinging_insects' => false
+                    ],
+                    'medical_conditions' => [
+                        'error_refraction' => false,
+                        'heart_problem' => (bool)$historyData['condition_heart_problem'],
+                        'bleeding_disorder' => (bool)$historyData['condition_bleeding_disorder'],
+                        'hernia' => false,
+                        'asthma' => (bool)$historyData['condition_asthma'],
+                        'anemia' => false,
+                        'anxiety_depression' => (bool)$historyData['condition_mental_health'],
+                        'seizure' => (bool)$historyData['condition_seizure_disorder']
+                    ],
+                    'surgery_hospitalization' => !empty($historyData['other_conditions']),
+                    'family_history' => [
+                        'tuberculosis' => false,
+                        'cancer' => stripos((string)$historyData['family_medical_history'], 'cancer') !== false,
+                        'stroke_cardiac' => stripos((string)$historyData['family_medical_history'], 'stroke') !== false || stripos((string)$historyData['family_medical_history'], 'cardiac') !== false,
+                        'diabetes' => (bool)$historyData['condition_diabetes'] || stripos((string)$historyData['family_medical_history'], 'diabetes') !== false,
+                        'hypertension' => (bool)$historyData['condition_hypertension'] || stripos((string)$historyData['family_medical_history'], 'hypertension') !== false,
+                        'depression' => stripos((string)$historyData['family_medical_history'], 'depression') !== false,
+                        'thyroid' => stripos((string)$historyData['family_medical_history'], 'thyroid') !== false,
+                        'phobia' => false
+                    ],
+                    'smoke_exposure' => false,
+                    'notes' => $historyData['notes'] ?? null,
+                    'current_medications' => $historyData['current_medications'] ?? null
+                ];
+            }
         }
     } catch (PDOException $e) {
         error_log("Medical history table error: " . $e->getMessage());
@@ -276,17 +346,25 @@ try {
     $lastVisit = $lastVisitStmt->fetch(PDO::FETCH_ASSOC);
     
     // Get adviser information using proper relationships
-    $adviserQuery = "SELECT 
-                        u.user_id,
-                        u.full_name,
-                        u.phone,
-                        u.email
-                     FROM students s
-                     LEFT JOIN sections sec ON s.current_section_id = sec.id
-                     LEFT JOIN users u ON sec.adviser_id = u.user_id
-                     WHERE s.student_id = :student_id
-                     AND s.is_active = 1
-                     LIMIT 1";
+     $adviserQuery = "SELECT 
+                                u.user_id,
+                                u.full_name,
+                                u.phone,
+                                u.email
+                            FROM students s
+                            LEFT JOIN sections sec_current ON s.current_section_id = sec_current.id
+                            LEFT JOIN sections sec_fallback ON sec_fallback.section_name = s.section
+                                AND sec_fallback.is_active = 1
+                                AND sec_fallback.adviser_id IS NOT NULL
+                                AND (s.current_school_year_id IS NULL OR sec_fallback.school_year_id = s.current_school_year_id)
+                            LEFT JOIN grade_levels gl_fallback ON sec_fallback.grade_level_id = gl_fallback.id
+                            LEFT JOIN users u ON u.user_id = COALESCE(
+                                 sec_current.adviser_id,
+                                 CASE WHEN gl_fallback.level_number = s.grade_level THEN sec_fallback.adviser_id ELSE NULL END
+                            )
+                            WHERE s.student_id = :student_id
+                            AND s.is_active = 1
+                            LIMIT 1";
     
     $adviserStmt = $db->prepare($adviserQuery);
     $adviserStmt->bindParam(":student_id", $student_id);
@@ -350,6 +428,8 @@ try {
                 'gender' => $student['gender'],
                 'blood_type' => $student['blood_type'],
                 'address' => $student['address'],
+                'phone' => $student['user_phone'] ?? null,
+                'email' => $student['user_email'] ?? null,
                 'emergency_contact' => $student['emergency_contact'],
                 'emergency_contact_relation' => $student['emergency_contact_relation'],
                 'emergency_contact_phone' => $student['emergency_contact_phone'],

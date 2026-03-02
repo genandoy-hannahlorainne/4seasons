@@ -9,6 +9,13 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+function hasColumn(PDO $db, string $table, string $column): bool {
+    $stmt = $db->prepare("SHOW COLUMNS FROM `{$table}` LIKE :column");
+    $stmt->bindValue(':column', $column);
+    $stmt->execute();
+    return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 // Get parameters
 $studentId = $_GET['student_id'] ?? null;
 
@@ -55,21 +62,36 @@ try {
     }
     
     $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
+
+    $allergyNameSelect = hasColumn($db, 'allergies', 'allergy_name')
+        ? 'allergy_name AS allergy_value'
+        : 'allergy_text AS allergy_value';
     
     // Get allergies
-    $allergyQuery = "SELECT allergy_text, severity FROM allergies WHERE student_id = :student_id";
+    $allergyQuery = "SELECT {$allergyNameSelect}, severity FROM allergies WHERE student_id = :student_id";
     $allergyStmt = $db->prepare($allergyQuery);
     $allergyStmt->bindParam(':student_id', $studentId);
     $allergyStmt->execute();
     $allergies = $allergyStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $temperatureSelect = hasColumn($db, 'vitals', 'temperature')
+        ? 'v.temperature AS temperature_value'
+        : 'v.temperature_c AS temperature_value';
+
+    $bloodPressureSelect = hasColumn($db, 'vitals', 'blood_pressure')
+        ? "v.blood_pressure AS blood_pressure_value, NULL AS bp_systolic_value, NULL AS bp_diastolic_value"
+        : "NULL AS blood_pressure_value, v.bp_systolic AS bp_systolic_value, v.bp_diastolic AS bp_diastolic_value";
+
+    $respiratoryRateSelect = hasColumn($db, 'vitals', 'respiratory_rate')
+        ? 'v.respiratory_rate AS respiratory_rate_value'
+        : 'v.respiration_rate AS respiratory_rate_value';
     
     // Get latest vitals
     $vitalsQuery = "SELECT 
-                        v.temperature_c,
-                        v.bp_systolic,
-                        v.bp_diastolic,
+                        {$temperatureSelect},
+                        {$bloodPressureSelect},
                         v.pulse_rate,
-                        v.respiration_rate,
+                        {$respiratoryRateSelect},
                         v.height_cm,
                         v.weight_kg,
                         v.recorded_at
@@ -89,6 +111,15 @@ try {
     if ($latestVitals && $latestVitals['height_cm'] && $latestVitals['weight_kg']) {
         $heightM = $latestVitals['height_cm'] / 100;
         $bmi = round($latestVitals['weight_kg'] / ($heightM * $heightM), 1);
+    }
+
+    $latestBloodPressure = 'N/A';
+    if ($latestVitals) {
+        if (!empty($latestVitals['blood_pressure_value'])) {
+            $latestBloodPressure = $latestVitals['blood_pressure_value'];
+        } elseif (!empty($latestVitals['bp_systolic_value']) && !empty($latestVitals['bp_diastolic_value'])) {
+            $latestBloodPressure = $latestVitals['bp_systolic_value'] . '/' . $latestVitals['bp_diastolic_value'];
+        }
     }
     
     // Get last clinic visit
@@ -131,7 +162,7 @@ try {
     
     // Format allergies
     $allergyList = array_map(function($a) {
-        return $a['allergy_text'];
+        return $a['allergy_value'];
     }, $allergies);
     
     // Format recent visits
@@ -160,11 +191,10 @@ try {
                 'height' => $latestVitals && $latestVitals['height_cm'] ? $latestVitals['height_cm'] . ' cm' : 'N/A',
                 'weight' => $latestVitals && $latestVitals['weight_kg'] ? $latestVitals['weight_kg'] . ' kg' : 'N/A',
                 'bmi' => $bmi ? $bmi : 'N/A',
-                'temperature' => $latestVitals && $latestVitals['temperature_c'] ? $latestVitals['temperature_c'] . '°C' : 'N/A',
-                'bloodPressure' => $latestVitals && $latestVitals['bp_systolic'] && $latestVitals['bp_diastolic'] ? 
-                    $latestVitals['bp_systolic'] . '/' . $latestVitals['bp_diastolic'] : 'N/A',
+                'temperature' => $latestVitals && $latestVitals['temperature_value'] ? $latestVitals['temperature_value'] . '°C' : 'N/A',
+                'bloodPressure' => $latestBloodPressure,
                 'pulseRate' => $latestVitals && $latestVitals['pulse_rate'] ? $latestVitals['pulse_rate'] . ' bpm' : 'N/A',
-                'respiratoryRate' => $latestVitals && $latestVitals['respiration_rate'] ? $latestVitals['respiration_rate'] . ' breaths/min' : 'N/A'
+                'respiratoryRate' => $latestVitals && $latestVitals['respiratory_rate_value'] ? $latestVitals['respiratory_rate_value'] . ' breaths/min' : 'N/A'
             ],
             'allergies' => $allergyList,
             'emergencyContact' => $student['emergency_contact'] ?: 'N/A',

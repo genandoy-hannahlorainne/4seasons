@@ -156,10 +156,13 @@ if (!empty($data->role) && !empty($data->password)) {
             
             // Auto-assign adviser based on grade level and section
             if (!empty($gradeLevel) && !empty($section)) {
-                $adviserQuery = "SELECT adviser_id, user_id FROM advisers 
-                               WHERE grade_level = :grade_level 
-                               AND section = :section 
-                               AND is_active = 1 
+                $adviserQuery = "SELECT a.adviser_id, a.user_id, sec.id AS section_id
+                               FROM sections sec
+                               INNER JOIN grade_levels gl ON sec.grade_level_id = gl.id
+                               INNER JOIN advisers a ON sec.adviser_id = a.user_id AND a.is_active = 1
+                               WHERE gl.level_number = :grade_level
+                               AND sec.section_name = :section
+                               AND sec.is_active = 1
                                LIMIT 1";
                 $adviserStmt = $db->prepare($adviserQuery);
                 $adviserStmt->bindParam(":grade_level", $gradeLevel);
@@ -172,9 +175,13 @@ if (!empty($data->role) && !empty($data->password)) {
                     $adviser_user_id = $adviserRow['user_id'];
                     
                     // Update student with adviser (using user_id for foreign key)
-                    $updateAdviserQuery = "UPDATE students SET current_adviser_id = :adviser_user_id WHERE student_id = :student_id";
+                    $updateAdviserQuery = "UPDATE students 
+                                         SET current_adviser_id = :adviser_user_id,
+                                             current_section_id = :section_id
+                                         WHERE student_id = :student_id";
                     $updateAdviserStmt = $db->prepare($updateAdviserQuery);
                     $updateAdviserStmt->bindParam(":adviser_user_id", $adviser_user_id);
+                    $updateAdviserStmt->bindParam(":section_id", $adviserRow['section_id']);
                     $updateAdviserStmt->bindParam(":student_id", $student_id);
                     $updateAdviserStmt->execute();
                     
@@ -202,18 +209,16 @@ if (!empty($data->role) && !empty($data->password)) {
             
         } elseif ($data->role === 'adviser') {
             $adviserQuery = "INSERT INTO advisers 
-                           (user_id, first_name, last_name, contact_phone, grade_level, section, is_active) 
-                           VALUES (:user_id, :first_name, :last_name, :contact_phone, :grade_level, :section, 1)";
+                           (user_id, employee_id, contact_phone, is_active) 
+                           VALUES (:user_id, :employee_id, :contact_phone, 1)";
             $adviserStmt = $db->prepare($adviserQuery);
             $adviserStmt->bindParam(":user_id", $user_id);
-            $adviserStmt->bindParam(":first_name", $data->firstName);
-            $adviserStmt->bindParam(":last_name", $data->lastName);
+            $employeeId = !empty($data->employeeId)
+                ? $data->employeeId
+                : ('ADV-' . str_pad((string)$user_id, 6, '0', STR_PAD_LEFT));
+            $adviserStmt->bindParam(":employee_id", $employeeId);
             $contactPhone = $data->contactNumber ?? $data->phone ?? null;
             $adviserStmt->bindParam(":contact_phone", $contactPhone);
-            $gradeLevel = $data->gradeLevel ?? null;
-            $adviserStmt->bindParam(":grade_level", $gradeLevel);
-            $section = $data->section ?? null;
-            $adviserStmt->bindParam(":section", $section);
             $adviserStmt->execute();
             
         } elseif ($data->role === 'clinic-staff') {

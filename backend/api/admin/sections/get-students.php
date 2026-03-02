@@ -21,6 +21,13 @@ require_once '../../../middleware/auth.php';
 $database = new Database();
 $db = $database->getConnection();
 
+function hasColumn(PDO $db, string $table, string $column): bool {
+    $stmt = $db->prepare("SHOW COLUMNS FROM `{$table}` LIKE :column");
+    $stmt->bindValue(':column', $column);
+    $stmt->execute();
+    return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 $auth = new Auth($database);
 
 if (!$auth->hasRole('Admin') && !$auth->hasRole('Adviser')) {
@@ -53,11 +60,11 @@ try {
                         gl.level_name,
                         gl.level_number,
                         sy.year_name,
-                        CONCAT(adv.first_name, ' ', adv.last_name) as adviser_name
+                                COALESCE(adv_user.full_name, '') as adviser_name
                      FROM sections s
                      INNER JOIN grade_levels gl ON s.grade_level_id = gl.id
                      INNER JOIN school_years sy ON s.school_year_id = sy.id
-                     LEFT JOIN advisers adv ON s.adviser_id = adv.user_id
+                            LEFT JOIN users adv_user ON s.adviser_id = adv_user.user_id
                      WHERE s.id = :section_id";
     
     $sectionStmt = $db->prepare($sectionQuery);
@@ -75,6 +82,8 @@ try {
     }
     
     // Get students in this section
+    $hasEmergencyContactPhone = hasColumn($db, 'students', 'emergency_contact_phone');
+
     $studentsQuery = "SELECT 
                         s.student_id,
                         s.student_number,
@@ -85,7 +94,7 @@ try {
                         s.gender,
                         s.blood_type,
                         s.emergency_contact,
-                        s.emergency_contact_phone,
+                        " . ($hasEmergencyContactPhone ? "s.emergency_contact_phone" : "NULL as emergency_contact_phone") . ",
                         s.enrollment_status,
                         s.created_at,
                         u.email,
@@ -101,6 +110,8 @@ try {
     $studentsStmt->bindParam(':section_id', $sectionId);
     $studentsStmt->execute();
     $students = $studentsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $allergyColumn = hasColumn($db, 'allergies', 'allergy_name') ? 'allergy_name' : 'allergy_text';
     
     // Get additional data for each student
     foreach ($students as &$student) {
@@ -110,7 +121,7 @@ try {
                                    $student['last_name']);
         
         // Get allergies
-        $allergyQuery = "SELECT allergy_text FROM allergies WHERE student_id = :student_id";
+        $allergyQuery = "SELECT {$allergyColumn} FROM allergies WHERE student_id = :student_id";
         $allergyStmt = $db->prepare($allergyQuery);
         $allergyStmt->bindParam(':student_id', $student['student_id']);
         $allergyStmt->execute();

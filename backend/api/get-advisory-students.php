@@ -9,6 +9,13 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+function hasColumn(PDO $db, string $table, string $column): bool {
+    $stmt = $db->prepare("SHOW COLUMNS FROM `{$table}` LIKE :column");
+    $stmt->bindValue(':column', $column);
+    $stmt->execute();
+    return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 // Get user_id from header or query param
 $user_id = $_GET['user_id'] ?? $_SERVER['HTTP_USER_ID'] ?? null;
 
@@ -23,8 +30,9 @@ if (empty($user_id)) {
 
 try {
     // First get the adviser info
-    $adviserQuery = "SELECT a.adviser_id, a.first_name, a.last_name, a.employee_number, a.grade_level, a.section
+    $adviserQuery = "SELECT a.adviser_id, a.employee_id, u.full_name
                      FROM advisers a 
+                     LEFT JOIN users u ON a.user_id = u.user_id
                      WHERE a.user_id = :user_id AND a.is_active = 1";
     $adviserStmt = $db->prepare($adviserQuery);
     $adviserStmt->bindParam(":user_id", $user_id);
@@ -76,10 +84,12 @@ try {
     $studentsStmt->execute();
     $students = $studentsStmt->fetchAll(PDO::FETCH_ASSOC);
 
+    $allergyColumn = hasColumn($db, 'allergies', 'allergy_name') ? 'allergy_name' : 'allergy_text';
+
     // Get additional data for each student (allergies, last visit)
     foreach ($students as &$student) {
         // Get allergies
-        $allergyQuery = "SELECT allergy_text FROM allergies WHERE student_id = :student_id";
+        $allergyQuery = "SELECT {$allergyColumn} FROM allergies WHERE student_id = :student_id";
         $allergyStmt = $db->prepare($allergyQuery);
         $allergyStmt->bindParam(":student_id", $student['student_id']);
         $allergyStmt->execute();
@@ -132,10 +142,10 @@ try {
         'success' => true,
         'adviser' => [
             'adviser_id' => $adviser['adviser_id'],
-            'name' => $adviser['first_name'] . ' ' . $adviser['last_name'],
-            'grade_level' => $adviser['grade_level'] ?? '',
-            'section' => $adviser['section'] ?? '',
-            'advisory_class' => 'Grade ' . ($adviser['grade_level'] ?? 'N/A') . ' - ' . ($adviser['section'] ?? 'N/A')
+            'name' => $adviser['full_name'] ?? 'Adviser',
+            'grade_level' => '',
+            'section' => '',
+            'advisory_class' => 'Assigned Sections'
         ],
         'students' => $students,
         'stats' => [

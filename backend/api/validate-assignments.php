@@ -61,14 +61,18 @@ try {
     
     // 3. Get adviser workload
     $adviserWorkloadQuery = "
-        SELECT a.user_id, CONCAT(a.first_name, ' ', a.last_name) as adviser_name,
-               a.grade_level as adviser_grade, a.section as adviser_section,
+         SELECT a.user_id, COALESCE(u.full_name, 'Unknown Adviser') as adviser_name,
+             GROUP_CONCAT(DISTINCT gl.level_name ORDER BY gl.level_number SEPARATOR ', ') as adviser_grade,
+             GROUP_CONCAT(DISTINCT sec.section_name ORDER BY sec.section_name SEPARATOR ', ') as adviser_section,
                COUNT(s.student_id) as student_count,
                GROUP_CONCAT(CONCAT(s.first_name, ' ', s.last_name) SEPARATOR ', ') as students
         FROM advisers a
+         LEFT JOIN users u ON a.user_id = u.user_id
+         LEFT JOIN sections sec ON sec.adviser_id = a.user_id AND sec.is_active = 1
+         LEFT JOIN grade_levels gl ON sec.grade_level_id = gl.id
         LEFT JOIN students s ON a.user_id = s.current_adviser_id AND s.is_active = 1
         WHERE a.is_active = 1
-        GROUP BY a.user_id, a.first_name, a.last_name, a.grade_level, a.section
+         GROUP BY a.user_id, u.full_name
         ORDER BY student_count DESC, adviser_name
     ";
     $adviserStmt = $db->prepare($adviserWorkloadQuery);
@@ -78,11 +82,12 @@ try {
     // 4. Get sections with capacity info
     $sectionsQuery = "
         SELECT s.id, s.section_name, gl.level_name, s.capacity, s.current_enrollment,
-               s.adviser_id, CONCAT(a.first_name, ' ', a.last_name) as adviser_name,
+               s.adviser_id, COALESCE(u.full_name, 'No Adviser') as adviser_name,
                (s.capacity - s.current_enrollment) as available_slots
         FROM sections s
         INNER JOIN grade_levels gl ON s.grade_level_id = gl.id
         LEFT JOIN advisers a ON s.adviser_id = a.user_id
+        LEFT JOIN users u ON a.user_id = u.user_id
         WHERE s.is_active = 1
         ORDER BY gl.level_number, s.section_name
     ";

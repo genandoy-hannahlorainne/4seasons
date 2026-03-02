@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Allergy;
+use App\Models\MedicalHistory;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -90,38 +92,41 @@ class StudentController extends BaseController
                 'address' => 'sometimes|nullable|string',
                 'blood_type' => 'sometimes|nullable|string|max:5',
                 'emergency_contact' => 'sometimes|nullable|string|max:150',
+                'emergency_contact_relation' => 'sometimes|nullable|string|max:100',
+                'emergency_contact_phone' => 'sometimes|nullable|string|max:20',
                 'height_cm' => 'sometimes|nullable|numeric|min:50|max:250',
-                'weight_kg' => 'sometimes|nullable|numeric|min:10|max:200'
+                'weight_kg' => 'sometimes|nullable|numeric|min:10|max:200',
+                'full_name' => 'sometimes|nullable|string|max:150',
+                'email' => 'sometimes|nullable|email|max:100',
+                'phone' => 'sometimes|nullable|string|max:20'
             ]);
 
             DB::transaction(function () use ($request, $student) {
-                // Update student data
-                $student->update($request->only([
+                $studentUpdateData = $this->extractPresent($request, [
                     'first_name', 'last_name', 'middle_name', 'birth_date',
                     'gender', 'address', 'blood_type', 'emergency_contact',
+                    'emergency_contact_relation', 'emergency_contact_phone',
                     'height_cm', 'weight_kg'
-                ]));
+                ]);
 
-                // Calculate BMI if height and weight are provided
-                if ($student->height_cm && $student->weight_kg) {
-                    $heightM = $student->height_cm / 100;
-                    $bmi = round($student->weight_kg / ($heightM * $heightM), 2);
-                    
-                    $bmiCategory = 'Normal weight';
-                    if ($bmi < 18.5) $bmiCategory = 'Underweight';
-                    elseif ($bmi >= 25 && $bmi < 30) $bmiCategory = 'Overweight';
-                    elseif ($bmi >= 30) $bmiCategory = 'Obese';
-                    
-                    $student->update([
-                        'bmi' => $bmi,
-                        'bmi_category' => $bmiCategory,
-                        'last_physical_update' => now()
-                    ]);
+                if (!empty($studentUpdateData)) {
+                    $student->update($studentUpdateData);
                 }
 
-                // Update user data if provided
-                if ($student->user && $request->has(['full_name', 'email', 'phone'])) {
-                    $student->user->update($request->only(['full_name', 'email', 'phone']));
+                if ($request->exists('height_cm') || $request->exists('weight_kg')) {
+                    $height = $request->exists('height_cm') ? $request->input('height_cm') : $student->height_cm;
+                    $weight = $request->exists('weight_kg') ? $request->input('weight_kg') : $student->weight_kg;
+
+                    $bmiData = $this->buildBmiUpdateData($height, $weight);
+                    $bmiData['last_physical_update'] = now();
+                    $student->update($bmiData);
+                }
+
+                if ($student->user) {
+                    $userUpdateData = $this->extractPresent($request, ['full_name', 'email', 'phone']);
+                    if (!empty($userUpdateData)) {
+                        $student->user->update($userUpdateData);
+                    }
                 }
             });
 
@@ -147,12 +152,15 @@ class StudentController extends BaseController
                 'medicalHistory',
                 'allergies',
                 'currentAdviser',
+                'currentSection.adviser',
                 'medicalVisits' => function($query) {
                     $query->with(['vitals', 'clinicStaff.user'])
                           ->orderBy('visit_datetime', 'desc')
                           ->limit(20);
                 }
             ]);
+
+            $resolvedAdviser = $student->currentAdviser ?: ($student->currentSection ? $student->currentSection->adviser : null);
 
             // Calculate visit statistics
             $totalVisits = $student->medicalVisits()->count();
@@ -170,10 +178,12 @@ class StudentController extends BaseController
                     'blood_type' => $student->blood_type,
                     'address' => $student->address,
                     'emergency_contact' => $student->emergency_contact,
+                    'emergency_contact_relation' => $student->emergency_contact_relation,
+                    'emergency_contact_phone' => $student->emergency_contact_phone,
                     'grade_level' => $student->grade_level,
                     'section' => $student->section,
-                    'adviser_name' => $student->currentAdviser ? $student->currentAdviser->full_name : null,
-                    'adviser_contact' => $student->currentAdviser ? $student->currentAdviser->phone : null,
+                    'adviser_name' => $resolvedAdviser ? $resolvedAdviser->full_name : null,
+                    'adviser_contact' => $resolvedAdviser ? $resolvedAdviser->phone : null,
                     'height_cm' => $student->height_cm,
                     'weight_kg' => $student->weight_kg,
                     'bmi' => $student->bmi,
@@ -201,28 +211,28 @@ class StudentController extends BaseController
     {
         try {
             $request->validate([
-                'height_cm' => 'required|numeric|min:50|max:250',
-                'weight_kg' => 'required|numeric|min:10|max:200',
-                'blood_type' => 'nullable|string|max:5'
+                'height_cm' => 'sometimes|nullable|numeric|min:50|max:250',
+                'weight_kg' => 'sometimes|nullable|numeric|min:10|max:200',
+                'blood_type' => 'sometimes|nullable|string|max:5'
             ]);
 
-            // Calculate BMI
-            $heightM = $request->height_cm / 100;
-            $bmi = round($request->weight_kg / ($heightM * $heightM), 2);
-            
-            $bmiCategory = 'Normal weight';
-            if ($bmi < 18.5) $bmiCategory = 'Underweight';
-            elseif ($bmi >= 25 && $bmi < 30) $bmiCategory = 'Overweight';
-            elseif ($bmi >= 30) $bmiCategory = 'Obese';
+            if (!$request->exists('height_cm') && !$request->exists('weight_kg') && !$request->exists('blood_type')) {
+                return $this->sendError('No fields provided for update', [], 422);
+            }
 
-            $student->update([
-                'height_cm' => $request->height_cm,
-                'weight_kg' => $request->weight_kg,
-                'blood_type' => $request->blood_type,
-                'bmi' => $bmi,
-                'bmi_category' => $bmiCategory,
-                'last_physical_update' => now()
-            ]);
+            DB::transaction(function () use ($request, $student) {
+                $updateData = $this->extractPresent($request, ['height_cm', 'weight_kg', 'blood_type']);
+
+                $height = array_key_exists('height_cm', $updateData) ? $updateData['height_cm'] : $student->height_cm;
+                $weight = array_key_exists('weight_kg', $updateData) ? $updateData['weight_kg'] : $student->weight_kg;
+
+                if (array_key_exists('height_cm', $updateData) || array_key_exists('weight_kg', $updateData)) {
+                    $updateData = array_merge($updateData, $this->buildBmiUpdateData($height, $weight));
+                    $updateData['last_physical_update'] = now();
+                }
+
+                $student->update($updateData);
+            });
 
             return $this->sendResponse([
                 'height_cm' => $student->height_cm,
@@ -235,6 +245,152 @@ class StudentController extends BaseController
 
         } catch (\Exception $e) {
             return $this->sendError('Failed to update physical information', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update section-based medical data without overwriting untouched fields
+     */
+    public function updateMedicalData(Request $request, Student $student)
+    {
+        try {
+            $request->validate([
+                'personal_info' => 'sometimes|array',
+                'personal_info.address' => 'sometimes|nullable|string',
+                'personal_info.emergency_contact' => 'sometimes|nullable|string|max:150',
+                'personal_info.emergency_contact_relation' => 'sometimes|nullable|string|max:100',
+                'personal_info.emergency_contact_phone' => 'sometimes|nullable|string|max:20',
+                'personal_info.blood_type' => 'sometimes|nullable|string|max:5',
+                'personal_info.phone' => 'sometimes|nullable|string|max:20',
+                'personal_info.email' => 'sometimes|nullable|email|max:100',
+
+                'physical_info' => 'sometimes|array',
+                'physical_info.height_cm' => 'sometimes|nullable|numeric|min:50|max:250',
+                'physical_info.weight_kg' => 'sometimes|nullable|numeric|min:10|max:200',
+                'physical_info.blood_type' => 'sometimes|nullable|string|max:5',
+
+                'medical_history' => 'sometimes|array',
+                'medical_history.condition_asthma' => 'sometimes|boolean',
+                'medical_history.condition_diabetes' => 'sometimes|boolean',
+                'medical_history.condition_heart_problem' => 'sometimes|boolean',
+                'medical_history.condition_hypertension' => 'sometimes|boolean',
+                'medical_history.condition_seizure_disorder' => 'sometimes|boolean',
+                'medical_history.condition_bleeding_disorder' => 'sometimes|boolean',
+                'medical_history.condition_kidney_disease' => 'sometimes|boolean',
+                'medical_history.condition_mental_health' => 'sometimes|boolean',
+                'medical_history.other_conditions' => 'sometimes|nullable|string',
+                'medical_history.current_medications' => 'sometimes|nullable|string',
+                'medical_history.family_medical_history' => 'sometimes|nullable|string',
+                'medical_history.notes' => 'sometimes|nullable|string',
+
+                'allergies' => 'sometimes|array',
+                'allergies.*.allergy_name' => 'required_with:allergies|string|max:100',
+                'allergies.*.severity' => 'sometimes|nullable|in:mild,moderate,severe',
+                'allergies.*.reaction_description' => 'sometimes|nullable|string',
+                'allergies.*.treatment_notes' => 'sometimes|nullable|string'
+            ]);
+
+            DB::transaction(function () use ($request, $student) {
+                if ($request->exists('personal_info')) {
+                    $personal = $request->input('personal_info', []);
+
+                    $studentUpdateData = $this->extractPresentFromArray($personal, [
+                        'address', 'emergency_contact', 'emergency_contact_relation', 'emergency_contact_phone', 'blood_type'
+                    ]);
+
+                    if (!empty($studentUpdateData)) {
+                        $student->update($studentUpdateData);
+                    }
+
+                    if ($student->user) {
+                        $userUpdateData = $this->extractPresentFromArray($personal, ['phone', 'email']);
+                        if (!empty($userUpdateData)) {
+                            $student->user->update($userUpdateData);
+                        }
+                    }
+                }
+
+                if ($request->exists('physical_info')) {
+                    $physical = $request->input('physical_info', []);
+                    $physicalUpdateData = $this->extractPresentFromArray($physical, ['height_cm', 'weight_kg', 'blood_type']);
+
+                    if (!empty($physicalUpdateData)) {
+                        $height = array_key_exists('height_cm', $physicalUpdateData) ? $physicalUpdateData['height_cm'] : $student->height_cm;
+                        $weight = array_key_exists('weight_kg', $physicalUpdateData) ? $physicalUpdateData['weight_kg'] : $student->weight_kg;
+
+                        if (array_key_exists('height_cm', $physicalUpdateData) || array_key_exists('weight_kg', $physicalUpdateData)) {
+                            $physicalUpdateData = array_merge($physicalUpdateData, $this->buildBmiUpdateData($height, $weight));
+                            $physicalUpdateData['last_physical_update'] = now();
+                        }
+
+                        $student->update($physicalUpdateData);
+                    }
+                }
+
+                if ($request->exists('medical_history')) {
+                    $historyPayload = $request->input('medical_history', []);
+                    $historyData = $this->extractPresentFromArray($historyPayload, [
+                        'condition_asthma',
+                        'condition_diabetes',
+                        'condition_heart_problem',
+                        'condition_hypertension',
+                        'condition_seizure_disorder',
+                        'condition_bleeding_disorder',
+                        'condition_kidney_disease',
+                        'condition_mental_health',
+                        'other_conditions',
+                        'current_medications',
+                        'family_medical_history',
+                        'notes'
+                    ]);
+
+                    if (!empty($historyData)) {
+                        $history = MedicalHistory::firstOrCreate(['student_id' => $student->student_id]);
+                        $history->fill($historyData);
+                        if ($history->isDirty()) {
+                            $history->save();
+                        }
+                    }
+                }
+
+                if ($request->exists('allergies')) {
+                    $allergies = collect($request->input('allergies', []))
+                        ->map(function ($item) {
+                            return [
+                                'allergy_name' => $item['allergy_name'] ?? null,
+                                'severity' => $item['severity'] ?? 'mild',
+                                'reaction_description' => $item['reaction_description'] ?? null,
+                                'treatment_notes' => $item['treatment_notes'] ?? null,
+                            ];
+                        })
+                        ->filter(fn ($item) => !empty($item['allergy_name']))
+                        ->values();
+
+                    Allergy::where('student_id', $student->student_id)->delete();
+                    if ($allergies->isNotEmpty()) {
+                        $insertData = $allergies->map(function ($item) use ($student) {
+                            return array_merge($item, [
+                                'student_id' => $student->student_id,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        })->all();
+
+                        Allergy::insert($insertData);
+                    }
+                }
+            });
+
+            $student->refresh();
+
+            return $this->sendResponse(
+                $this->buildStudentMedicalPayload($student),
+                'Medical data updated successfully'
+            );
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to update medical data', [
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -501,5 +657,88 @@ class StudentController extends BaseController
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function extractPresent(Request $request, array $fields): array
+    {
+        $result = [];
+        foreach ($fields as $field) {
+            if ($request->exists($field)) {
+                $result[$field] = $request->input($field);
+            }
+        }
+
+        return $result;
+    }
+
+    private function extractPresentFromArray(array $source, array $fields): array
+    {
+        $result = [];
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $source)) {
+                $result[$field] = $source[$field];
+            }
+        }
+
+        return $result;
+    }
+
+    private function buildBmiUpdateData($height, $weight): array
+    {
+        if (!$height || !$weight) {
+            return [
+                'bmi' => null,
+                'bmi_category' => null,
+            ];
+        }
+
+        $heightM = $height / 100;
+        $bmi = round($weight / ($heightM * $heightM), 2);
+
+        $bmiCategory = 'Normal weight';
+        if ($bmi < 18.5) {
+            $bmiCategory = 'Underweight';
+        } elseif ($bmi >= 25 && $bmi < 30) {
+            $bmiCategory = 'Overweight';
+        } elseif ($bmi >= 30) {
+            $bmiCategory = 'Obese';
+        }
+
+        return [
+            'bmi' => $bmi,
+            'bmi_category' => $bmiCategory,
+        ];
+    }
+
+    private function buildStudentMedicalPayload(Student $student): array
+    {
+        $student->loadMissing(['user', 'medicalHistory', 'allergies', 'currentAdviser']);
+
+        return [
+            'personal_info' => [
+                'student_id' => $student->student_id,
+                'student_number' => $student->student_number,
+                'full_name' => $student->full_name,
+                'birth_date' => $student->birth_date,
+                'gender' => $student->gender,
+                'blood_type' => $student->blood_type,
+                'address' => $student->address,
+                'emergency_contact' => $student->emergency_contact,
+                'emergency_contact_relation' => $student->emergency_contact_relation,
+                'emergency_contact_phone' => $student->emergency_contact_phone,
+                'phone' => $student->user?->phone,
+                'email' => $student->user?->email,
+                'grade_level' => $student->grade_level,
+                'section' => $student->section,
+                'adviser_name' => $student->currentAdviser?->full_name,
+                'adviser_contact' => $student->currentAdviser?->phone,
+                'height_cm' => $student->height_cm,
+                'weight_kg' => $student->weight_kg,
+                'bmi' => $student->bmi,
+                'bmi_category' => $student->bmi_category,
+            ],
+            'medical_history' => $student->medicalHistory,
+            'allergies' => $student->allergies,
+        ];
     }
 }

@@ -30,8 +30,7 @@ try {
     // Get adviser's students
     $query = "SELECT DISTINCT s.student_id, s.user_id
               FROM students s
-              INNER JOIN advisers a ON s.grade_level = a.grade_level AND s.section = a.section
-              WHERE a.user_id = :adviser_id
+              WHERE s.current_adviser_id = :adviser_id
               AND s.deleted_at IS NULL";
     
     $stmt = $db->prepare($query);

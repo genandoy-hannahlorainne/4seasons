@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MedicalRecordsService, MedicalRecord } from './medical-records.service';
 import { AuthService } from '../../core/services/auth.service';
+import { StudentService } from '../../core/services/student.service';
 import { Subject, interval } from 'rxjs';
 import { takeUntil, switchMap } from 'rxjs/operators';
 
@@ -97,7 +98,8 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
 
   constructor(
     private medicalRecordsService: MedicalRecordsService,
-    private authService: AuthService
+    private authService: AuthService,
+    private studentService: StudentService
   ) {}
 
   ngOnInit() {
@@ -113,6 +115,7 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.success && response.data) {
             this.medicalRecord = response.data;
+            this.ensureAdviserNameFallback();
           }
         },
         error: (err) => {
@@ -134,6 +137,7 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
       next: (response) => {
         if (response.success && response.data) {
           this.medicalRecord = response.data;
+          this.ensureAdviserNameFallback();
         } else {
           this.error = response.message || 'Failed to load medical record';
         }
@@ -143,6 +147,34 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
         console.error('Error loading medical record:', error);
         this.error = 'Failed to load medical record. Please try again.';
         this.loading = false;
+      }
+    });
+  }
+
+  private ensureAdviserNameFallback(): void {
+    if (!this.medicalRecord?.personal_info) {
+      return;
+    }
+
+    const hasAdviser = !!this.medicalRecord.personal_info.adviser_name;
+    const currentUser = this.authService.currentUserValue;
+
+    if (hasAdviser || !currentUser?.user_id) {
+      return;
+    }
+
+    this.studentService.getStudentMedicalData(currentUser.user_id).subscribe({
+      next: (legacyResponse) => {
+        const legacyAdviser = legacyResponse?.data?.personal_info?.adviser_name;
+        const legacyContact = legacyResponse?.data?.personal_info?.adviser_contact;
+
+        if (this.medicalRecord?.personal_info && legacyAdviser) {
+          this.medicalRecord.personal_info.adviser_name = legacyAdviser;
+          this.medicalRecord.personal_info.adviser_contact = legacyContact || this.medicalRecord.personal_info.adviser_contact;
+        }
+      },
+      error: (fallbackError) => {
+        console.warn('Adviser fallback fetch failed:', fallbackError);
       }
     });
   }

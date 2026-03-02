@@ -32,6 +32,8 @@ class Student extends Model
         'address',
         'blood_type',
         'emergency_contact',
+        'emergency_contact_relation',
+        'emergency_contact_phone',
         'height_cm',
         'weight_kg',
         'bmi',
