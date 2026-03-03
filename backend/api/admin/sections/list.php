@@ -51,10 +51,20 @@ try {
                                 (
                                         SELECT COUNT(*)
                                         FROM students st
-                                        WHERE st.current_section_id = sec.id
-                                            AND st.current_school_year_id = sec.school_year_id
+                                        WHERE (
+                                            (
+                                                st.current_section_id = sec.id
+                                                AND (st.current_school_year_id = sec.school_year_id OR st.current_school_year_id IS NULL)
+                                            )
+                                            OR (
+                                                (st.current_section_id IS NULL OR st.current_section_id = 0)
+                                                AND st.section = sec.section_name
+                                                AND CAST(st.grade_level AS UNSIGNED) = gl.level_number
+                                                AND (st.current_school_year_id = sec.school_year_id OR st.current_school_year_id IS NULL)
+                                            )
+                                        )
                                             AND st.is_active = 1
-                                            AND st.enrollment_status = 'active'
+                                            AND LOWER(COALESCE(st.enrollment_status, 'active')) IN ('active', 'enrolled')
                                 ) AS current_enrollment,
                 sec.is_active,
                 gl.level_name,

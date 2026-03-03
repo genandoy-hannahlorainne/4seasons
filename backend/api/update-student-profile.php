@@ -57,8 +57,16 @@ $address = $input['address'] ?? null;
 $bloodType = $input['bloodType'] ?? $input['blood_type'] ?? null;
 $emergencyContact = $input['emergency_contact'] ?? $input['emergency_contact_person'] ?? null;
 $emergencyContactRelation = $input['emergency_contact_relation'] ?? null;
-$emergencyContactPhone = $input['emergency_contact_phone'] ?? $input['phone_number'] ?? null;
-$contactNumber = $input['contactNumber'] ?? $input['phone'] ?? null;
+$emergencyContactPhone = $input['emergency_contact_phone'] ?? null;
+$contactNumber = $input['contactNumber'] ?? $input['phone'] ?? $input['student_phone_number'] ?? null;
+
+if ($emergencyContactPhone === null && array_key_exists('phone_number', $input) && (array_key_exists('emergency_contact', $input) || array_key_exists('emergency_contact_person', $input))) {
+    $emergencyContactPhone = $input['phone_number'];
+}
+
+if ($contactNumber === null && array_key_exists('phone_number', $input) && !array_key_exists('emergency_contact_phone', $input)) {
+    $contactNumber = $input['phone_number'];
+}
 $email = $input['email'] ?? null;
 
 if (!$userId) {
@@ -142,7 +150,7 @@ try {
     if (array_key_exists('emergency_contact_relation', $input)) {
         $studentUpdateFields['emergency_contact_relation'] = $emergencyContactRelation;
     }
-    if (array_key_exists('emergency_contact_phone', $input) || array_key_exists('phone_number', $input)) {
+    if (array_key_exists('emergency_contact_phone', $input) || (array_key_exists('phone_number', $input) && (array_key_exists('emergency_contact', $input) || array_key_exists('emergency_contact_person', $input)))) {
         $studentUpdateFields['emergency_contact_phone'] = $emergencyContactPhone;
     }
 
@@ -261,7 +269,7 @@ try {
         $userSetParts[] = 'email = :email';
         $userParams[':email'] = $email;
     }
-    if (array_key_exists('contactNumber', $input) || array_key_exists('phone', $input) || array_key_exists('phone_number', $input)) {
+    if (array_key_exists('contactNumber', $input) || array_key_exists('phone', $input) || array_key_exists('student_phone_number', $input) || (array_key_exists('phone_number', $input) && !array_key_exists('emergency_contact_phone', $input))) {
         $userSetParts[] = 'phone = :phone';
         $userParams[':phone'] = $contactNumber;
     }
