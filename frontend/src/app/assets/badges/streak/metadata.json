@@ -1,0 +1,49 @@
+{
+  "feature": "student_streak_badges",
+  "version": "1.0.0",
+  "timezone": "Asia/Manila",
+  "count_weekends": false,
+  "streak_type": "school_day_streak",
+  "badges": [
+    {
+      "badge_key": "streak_3",
+      "badge_name": "3-Day Starter",
+      "tier": "bronze",
+      "required_streak_days": 3,
+      "icon_file": "3-starter.png",
+      "description": "Reached 3 consecutive school days of wellness stability."
+    },
+    {
+      "badge_key": "streak_7",
+      "badge_name": "7-Day Rising",
+      "tier": "silver",
+      "required_streak_days": 7,
+      "icon_file": "7-rising.png",
+      "description": "Reached 7 consecutive school days of wellness stability."
+    },
+    {
+      "badge_key": "streak_30",
+      "badge_name": "30-Day Committed",
+      "tier": "gold",
+      "required_streak_days": 30,
+      "icon_file": "30-committed.png",
+      "description": "Reached 30 consecutive school days of wellness stability."
+    },
+    {
+      "badge_key": "streak_90",
+      "badge_name": "90-Day Champion",
+      "tier": "platinum",
+      "required_streak_days": 90,
+      "icon_file": "90-champion.png",
+      "description": "Reached 90 consecutive school days of wellness stability."
+    },
+    {
+      "badge_key": "streak_365",
+      "badge_name": "365-Day Legend",
+      "tier": "legend",
+      "required_streak_days": 365,
+      "icon_file": "365-legend.png",
+      "description": "Reached 365 consecutive school days of wellness stability."
+    }
+  ]
+}
