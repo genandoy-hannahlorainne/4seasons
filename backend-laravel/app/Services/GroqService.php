@@ -101,10 +101,11 @@ class GroqService
      */
     public function generateBadgeNarrative(string $studentName, string $badgeName, int $streakDays): array
     {
-        $systemPrompt = 'You are a school-safe assistant that writes short, motivational badge messages for students. Avoid medical advice or diagnosis. Keep tone positive and encouraging.';
+        $systemPrompt = 'You are a school clinic assistant writing short congratulatory badge messages for students. Always make the message sound like it comes from the clinic team. Explicitly congratulate the student for not visiting the clinic today. Avoid medical advice or diagnosis. Keep tone positive and encouraging.';
 
         $userPrompt = "Generate one short badge narrative (40-70 words) for a student who just unlocked a streak badge. "
             . "Student: {$studentName}. Badge: {$badgeName}. Streak days: {$streakDays}. "
+            . 'The paragraph must mention that the clinic congratulates the student for having no clinic visit today. '
             . 'Output only the paragraph text, no quotes, no markdown.';
 
         $result = $this->chatCompletion([
@@ -138,6 +139,6 @@ class GroqService
 
     private function fallbackNarrative(string $studentName, string $badgeName, int $streakDays): string
     {
-        return "Great job, {$studentName}! You unlocked the {$badgeName} badge by reaching {$streakDays} streak days. Your consistency and commitment are making a real difference—keep up the momentum and aim for your next milestone.";
+        return "From the school clinic team, congratulations {$studentName}! You earned the {$badgeName} badge with {$streakDays} streak days, and we are proud that you did not need to visit the clinic today. Keep taking good care of yourself and continue this strong, healthy routine.";
     }
 }

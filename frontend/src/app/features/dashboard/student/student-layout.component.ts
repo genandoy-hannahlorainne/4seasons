@@ -38,18 +38,6 @@ import { AuthService } from '../../../core/services/auth.service';
                 <div class="item-content">
                   <div class="item-title">{{ badge.badge_name }}</div>
                   <div class="item-sub">{{ badge.required_streak_days }}-day streak badge available</div>
-
-                  <button
-                    class="generate-btn"
-                    type="button"
-                    [disabled]="generatingBadgeKey === badge.badge_key"
-                    (click)="generateNarrative(badge, $event)">
-                    {{ generatingBadgeKey === badge.badge_key ? 'Generating...' : 'Generate Message' }}
-                  </button>
-
-                  <div *ngIf="badgeNarratives[badge.badge_key]" class="narrative">
-                    {{ badgeNarratives[badge.badge_key] }}
-                  </div>
                 </div>
               </div>
             </div>
@@ -74,9 +62,9 @@ import { AuthService } from '../../../core/services/auth.service';
             <div class="modal-badge-sub">{{ activeBadge.required_streak_days }}-day streak milestone</div>
             <div class="modal-badge-description">{{ activeBadge.description }}</div>
 
-            <button class="generate-btn" type="button" [disabled]="generatingBadgeKey === activeBadge.badge_key" (click)="generateNarrative(activeBadge, $event)">
-              {{ generatingBadgeKey === activeBadge.badge_key ? 'Generating...' : 'Generate Message' }}
-            </button>
+            <div *ngIf="generatingBadgeKey === activeBadge.badge_key" class="modal-message-status">
+              Generating streak message...
+            </div>
 
             <div *ngIf="badgeNarratives[activeBadge.badge_key]" class="narrative modal-narrative">
               {{ badgeNarratives[activeBadge.badge_key] }}
@@ -135,11 +123,7 @@ export class StudentLayoutComponent implements OnInit {
     });
   }
 
-  generateNarrative(badge: any, event?: MouseEvent): void {
-    if (event) {
-      event.stopPropagation();
-    }
-
+  generateNarrative(badge: any): void {
     if (!badge?.badge_key || this.generatingBadgeKey) {
       return;
     }
@@ -210,10 +194,6 @@ export class StudentLayoutComponent implements OnInit {
         this.activeBadge = badge;
         this.popupBadgeKey = firstNewUnshownKey;
         this.showBadgeModal = true;
-
-        if (!this.badgeNarratives[badge.badge_key]) {
-          this.generateNarrative(badge);
-        }
 
         popupShown.add(firstNewUnshownKey);
         this.storeBadgeKeySet('shown', popupShown);

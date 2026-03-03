@@ -165,23 +165,6 @@
   color: #5d6b78;
 }
 
-.generate-btn {
-  width: fit-content;
-  border: none;
-  border-radius: 8px;
-  background: #4f7ea9;
-  color: #fff;
-  padding: 5px 8px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.generate-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
 .narrative {
   font-size: 12px;
   line-height: 1.35;
@@ -262,6 +245,11 @@
 .modal-badge-description {
   font-size: 13px;
   color: #2f4a61;
+}
+
+.modal-message-status {
+  font-size: 12px;
+  color: #4f677e;
 }
 
 .modal-narrative {
