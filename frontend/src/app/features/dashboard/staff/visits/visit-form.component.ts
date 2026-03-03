@@ -745,6 +745,15 @@ export class VisitFormComponent implements OnInit {
     this.selectedStudent = null;
   }
 
+  private formatVisitDateTime(value: string): string {
+    if (!value || !value.trim()) {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+    }
+
+    return value.includes('T') ? `${value.replace('T', ' ')}:00` : value;
+  }
+
   onSubmit(): void {
     if (!this.selectedStudent) {
       alert('Please select a student');
@@ -798,6 +807,7 @@ export class VisitFormComponent implements OnInit {
     const visitData = {
       student_id: this.selectedStudent.student_id,
       clinic_staff_id: clinicStaffId,
+      visit_datetime: this.formatVisitDateTime(this.visit.dateTime),
       visit_type: visitType,
       chief_complaint: this.visit.diagnosis,
       notes: '',

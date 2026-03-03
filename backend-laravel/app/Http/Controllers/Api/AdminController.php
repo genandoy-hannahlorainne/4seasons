@@ -9,11 +9,13 @@ use App\Models\Section;
 use App\Models\GradeLevel;
 use App\Models\SchoolYear;
 use App\Mail\UserAccountCreated;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends BaseController
 {
@@ -188,10 +190,10 @@ class AdminController extends BaseController
                         'temp_password' => $tempPassword
                     ];
                     
-                    Mail::to($request->email)->send(new UserAccountCreated($emailData));
+                    Mail::to($request->email)->send(new UserAccountCreated($emailData, $tempPassword, 'Student'));
                 } catch (\Exception $e) {
                     // Log email error but don't fail the student creation
-                    \Log::warning('Failed to send account creation email: ' . $e->getMessage());
+                    Log::warning('Failed to send account creation email: ' . $e->getMessage());
                 }
             }
 
@@ -260,28 +262,63 @@ class AdminController extends BaseController
     public function getHealthRiskVisualization(Request $request)
     {
         try {
-            // Get BMI data from vitals table with student grade information
+            // Get BMI data per student (latest vitals BMI, fallback to student BMI fields)
+            // Then aggregate by grade level to avoid double-counting students with multiple visits
             $bmiStats = DB::select("
                 SELECT 
-                    COALESCE(s.grade_level, 'Unknown') as grade_name,
-                    COALESCE(s.grade_level, 'Unknown') as grade_level,
-                    COUNT(DISTINCT s.student_id) as total_students,
-                    SUM(CASE WHEN v.bmi_category = 'Underweight' THEN 1 ELSE 0 END) as underweight_count,
-                    SUM(CASE WHEN v.bmi_category = 'Normal' THEN 1 ELSE 0 END) as normal_count,
-                    SUM(CASE WHEN v.bmi_category = 'Overweight' THEN 1 ELSE 0 END) as overweight_count,
-                    SUM(CASE WHEN v.bmi_category = 'Obese' THEN 1 ELSE 0 END) as obese_count,
-                    AVG(v.bmi) as average_bmi
-                FROM students s
-                LEFT JOIN medical_visits mv ON s.student_id = mv.student_id
-                LEFT JOIN vitals v ON mv.visit_id = v.visit_id AND v.bmi IS NOT NULL
-                WHERE s.is_active = 1
-                GROUP BY s.grade_level
+                    COALESCE(b.grade_level, 'Unknown') as grade_level,
+                    COUNT(*) as total_students,
+                    SUM(CASE WHEN LOWER(COALESCE(b.bmi_category, '')) = 'underweight' THEN 1 ELSE 0 END) as underweight_count,
+                    SUM(CASE WHEN LOWER(COALESCE(b.bmi_category, '')) IN ('normal', 'normal weight') THEN 1 ELSE 0 END) as normal_count,
+                    SUM(CASE WHEN LOWER(COALESCE(b.bmi_category, '')) = 'overweight' THEN 1 ELSE 0 END) as overweight_count,
+                    SUM(CASE WHEN LOWER(COALESCE(b.bmi_category, '')) = 'obese' THEN 1 ELSE 0 END) as obese_count,
+                    AVG(b.bmi) as average_bmi
+                FROM (
+                    SELECT 
+                        s.student_id,
+                        s.grade_level,
+                        COALESCE(vl.latest_bmi, s.bmi) as bmi,
+                        CASE 
+                            WHEN COALESCE(vl.latest_bmi, s.bmi) < 18.5 THEN 'Underweight'
+                            WHEN COALESCE(vl.latest_bmi, s.bmi) >= 18.5 AND COALESCE(vl.latest_bmi, s.bmi) < 25 THEN 'Normal'
+                            WHEN COALESCE(vl.latest_bmi, s.bmi) >= 25 AND COALESCE(vl.latest_bmi, s.bmi) < 30 THEN 'Overweight'
+                            WHEN COALESCE(vl.latest_bmi, s.bmi) >= 30 THEN 'Obese'
+                            ELSE NULL
+                        END as bmi_category
+                    FROM students s
+                    LEFT JOIN (
+                        SELECT 
+                            ranked.student_id,
+                            ranked.bmi as latest_bmi
+                        FROM (
+                            SELECT 
+                                mv.student_id,
+                                v.bmi,
+                                ROW_NUMBER() OVER (
+                                    PARTITION BY mv.student_id
+                                    ORDER BY COALESCE(v.recorded_at, mv.visit_datetime) DESC, v.vitals_id DESC
+                                ) as rn
+                            FROM medical_visits mv
+                            INNER JOIN vitals v ON v.visit_id = mv.visit_id
+                            WHERE v.bmi IS NOT NULL
+                        ) ranked
+                        WHERE ranked.rn = 1
+                    ) vl ON vl.student_id = s.student_id
+                    WHERE s.is_active = 1
+                ) b
+                WHERE b.bmi IS NOT NULL
+                GROUP BY b.grade_level
                 HAVING total_students > 0
-                ORDER BY s.grade_level
+                ORDER BY b.grade_level
             ");
 
             // Calculate percentages
             $gradeStatistics = collect($bmiStats)->map(function($grade) {
+                $rawGradeLevel = trim((string)$grade->grade_level);
+                $formattedGradeLevel = preg_match('/^\d+$/', $rawGradeLevel)
+                    ? 'Grade ' . $rawGradeLevel
+                    : $rawGradeLevel;
+
                 $total = (int)$grade->total_students;
                 $underweight = (int)$grade->underweight_count;
                 $normal = (int)$grade->normal_count;
@@ -289,19 +326,25 @@ class AdminController extends BaseController
                 $obese = (int)$grade->obese_count;
                 
                 return [
-                    'grade_name' => 'Grade ' . $grade->grade_level,
-                    'grade_level' => 'Grade ' . $grade->grade_level,
+                    'grade_name' => $formattedGradeLevel,
+                    'grade_level' => $formattedGradeLevel,
                     'total_students' => $total,
                     'underweight_count' => $underweight,
                     'normal_count' => $normal,
                     'overweight_count' => $overweight,
                     'obese_count' => $obese,
+                    'average_bmi' => $grade->average_bmi !== null ? round((float)$grade->average_bmi, 1) : 0,
                     'underweight_percentage' => $total > 0 ? round(($underweight / $total) * 100, 1) : 0,
                     'normal_percentage' => $total > 0 ? round(($normal / $total) * 100, 1) : 0,
                     'overweight_percentage' => $total > 0 ? round(($overweight / $total) * 100, 1) : 0,
                     'obese_percentage' => $total > 0 ? round(($obese / $total) * 100, 1) : 0,
                 ];
-            });
+            })->sortBy(function($grade) {
+                if (preg_match('/(\d+)/', $grade['grade_name'], $matches)) {
+                    return (int)$matches[1];
+                }
+                return PHP_INT_MAX;
+            })->values();
 
             // If no data, return empty structure
             if ($gradeStatistics->isEmpty()) {
@@ -333,7 +376,11 @@ class AdminController extends BaseController
                 'total_normal' => $totalNormal,
                 'total_overweight' => $totalOverweight,
                 'total_obese' => $totalObese,
-                'average_bmi' => $totalStudents > 0 ? round(collect($bmiStats)->avg('average_bmi'), 1) : 0
+                'average_bmi' => $totalStudents > 0
+                    ? round($gradeStatistics->sum(function($grade) {
+                        return ($grade['average_bmi'] ?? 0) * ($grade['total_students'] ?? 0);
+                    }) / $totalStudents, 1)
+                    : 0
             ];
 
             // Get top health risks by grade
@@ -368,8 +415,8 @@ class AdminController extends BaseController
                 SELECT 
                     DATE(v.recorded_at) as update_date,
                     COUNT(*) as updates_count,
-                    SUM(CASE WHEN v.bmi_category = 'Overweight' THEN 1 ELSE 0 END) as new_overweight,
-                    SUM(CASE WHEN v.bmi_category = 'Obese' THEN 1 ELSE 0 END) as new_obese
+                    SUM(CASE WHEN v.bmi >= 25 AND v.bmi < 30 THEN 1 ELSE 0 END) as new_overweight,
+                    SUM(CASE WHEN v.bmi >= 30 THEN 1 ELSE 0 END) as new_obese
                 FROM vitals v
                 WHERE v.recorded_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
                 AND v.bmi IS NOT NULL
@@ -450,6 +497,198 @@ class AdminController extends BaseController
             
         } catch (\Exception $e) {
             return $this->sendError('Failed to generate report', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get principal-ready health trend report dataset for printable PDF generation
+     */
+    public function getPrincipalHealthTrendReport(Request $request)
+    {
+        try {
+            $validated = Validator::make($request->all(), [
+                'year' => 'nullable|integer|min:2020|max:2100',
+                'quarter' => 'nullable|integer|min:1|max:4',
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date',
+                'grade_level' => 'nullable|string|max:20',
+            ]);
+
+            if ($validated->fails()) {
+                return $this->sendError('Validation Error', $validated->errors()->first(), 422);
+            }
+
+            $currentYear = (int)date('Y');
+            $year = (int)$request->get('year', $currentYear);
+            $quarter = (int)$request->get('quarter', (int)ceil((int)date('n') / 3));
+
+            if ($request->filled('start_date') && $request->filled('end_date')) {
+                $startDate = Carbon::parse($request->get('start_date'))->startOfDay();
+                $endDate = Carbon::parse($request->get('end_date'))->endOfDay();
+            } else {
+                $quarterStartMonth = (($quarter - 1) * 3) + 1;
+                $startDate = Carbon::create($year, $quarterStartMonth, 1)->startOfDay();
+                $endDate = (clone $startDate)->addMonths(3)->subDay()->endOfDay();
+            }
+
+            if ($endDate->lt($startDate)) {
+                return $this->sendError('Validation Error', 'End date must be after start date', 422);
+            }
+
+            $localizedDateTimeExpression = 'mv.visit_datetime';
+            $localizedDateExpression = "DATE({$localizedDateTimeExpression})";
+
+            $baseQuery = DB::table('medical_visits as mv')
+                ->leftJoin('students as s', 'mv.student_id', '=', 's.student_id')
+                ->whereBetween(DB::raw($localizedDateExpression), [$startDate->toDateString(), $endDate->toDateString()]);
+
+            $gradeFilter = $request->get('grade_level');
+            if (!empty($gradeFilter)) {
+                $baseQuery->where(function ($query) use ($gradeFilter) {
+                    $query->where('s.grade_level', $gradeFilter)
+                        ->orWhere('s.grade_level', 'Grade ' . $gradeFilter);
+                });
+            }
+
+            $totalVisits = (clone $baseQuery)->count();
+            $uniqueStudents = (clone $baseQuery)->distinct('mv.student_id')->count('mv.student_id');
+            $emergencyVisits = (clone $baseQuery)
+                ->whereRaw('LOWER(COALESCE(mv.visit_type, "")) = ?', ['emergency'])
+                ->count();
+            $hospitalReferrals = (clone $baseQuery)
+                ->whereRaw('LOWER(COALESCE(mv.status, "")) = ?', ['referred'])
+                ->count();
+
+            $visitsByDayHour = (clone $baseQuery)
+                ->selectRaw("DAYNAME({$localizedDateTimeExpression}) as day_name")
+                ->selectRaw("CASE DAYOFWEEK({$localizedDateTimeExpression}) WHEN 1 THEN 7 ELSE DAYOFWEEK({$localizedDateTimeExpression}) - 1 END as day_number")
+                ->selectRaw("HOUR({$localizedDateTimeExpression}) as hour_slot")
+                ->selectRaw('COUNT(*) as visits')
+                ->groupByRaw("DAYNAME({$localizedDateTimeExpression}), CASE DAYOFWEEK({$localizedDateTimeExpression}) WHEN 1 THEN 7 ELSE DAYOFWEEK({$localizedDateTimeExpression}) - 1 END, HOUR({$localizedDateTimeExpression})")
+                ->orderBy('day_number')
+                ->orderBy('hour_slot')
+                ->get()
+                ->map(function ($row) {
+                    $hour = (int)$row->hour_slot;
+                    $nextHour = ($hour + 1) % 24;
+                    return [
+                        'day' => $row->day_name,
+                        'dayNumber' => (int)$row->day_number,
+                        'hour' => $hour,
+                        'timeRange' => sprintf('%02d:00-%02d:00', $hour, $nextHour),
+                        'timeRangeLabel' => Carbon::createFromTime($hour, 0)->format('g:i A') . ' - ' . Carbon::createFromTime($nextHour, 0)->format('g:i A'),
+                        'visits' => (int)$row->visits,
+                    ];
+                })
+                ->values();
+
+            $peakSlot = (clone $baseQuery)
+                ->selectRaw("DAYNAME({$localizedDateTimeExpression}) as day_name")
+                ->selectRaw("CASE DAYOFWEEK({$localizedDateTimeExpression}) WHEN 1 THEN 7 ELSE DAYOFWEEK({$localizedDateTimeExpression}) - 1 END as day_number")
+                ->selectRaw("HOUR({$localizedDateTimeExpression}) as hour_slot")
+                ->selectRaw('COUNT(*) as visits')
+                ->groupByRaw("DAYNAME({$localizedDateTimeExpression}), CASE DAYOFWEEK({$localizedDateTimeExpression}) WHEN 1 THEN 7 ELSE DAYOFWEEK({$localizedDateTimeExpression}) - 1 END, HOUR({$localizedDateTimeExpression})")
+                ->orderByDesc('visits')
+                ->orderBy('day_number')
+                ->orderBy('hour_slot')
+                ->first();
+
+            $topReasons = (clone $baseQuery)
+                ->selectRaw('COALESCE(NULLIF(TRIM(mv.chief_complaint), ""), NULLIF(TRIM(mv.notes), ""), "Unspecified") as reason, COUNT(*) as count')
+                ->groupBy('reason')
+                ->orderByDesc('count')
+                ->limit(10)
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'reason' => $row->reason,
+                        'count' => (int)$row->count,
+                    ];
+                })
+                ->values();
+
+            $dailyTrend = (clone $baseQuery)
+                ->selectRaw("{$localizedDateExpression} as date, COUNT(*) as visits")
+                ->groupByRaw($localizedDateExpression)
+                ->orderBy('date')
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'date' => $row->date,
+                        'visits' => (int)$row->visits,
+                    ];
+                })
+                ->values();
+
+            $gradeBreakdown = (clone $baseQuery)
+                ->selectRaw('COALESCE(NULLIF(TRIM(s.grade_level), ""), "Unknown") as grade_level, COUNT(*) as visits')
+                ->groupBy('grade_level')
+                ->orderBy('grade_level')
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'gradeLevel' => $row->grade_level,
+                        'visits' => (int)$row->visits,
+                    ];
+                })
+                ->values();
+
+            $recommendation = [
+                'title' => 'Maintain current clinic staffing schedule',
+                'details' => 'Visit volume is currently manageable across available slots. Continue weekly monitoring.',
+                'priority' => 'normal',
+            ];
+
+            if ($peakSlot && (int)$peakSlot->visits >= 8) {
+                $startHour = (int)$peakSlot->hour_slot;
+                $endHour = ($startHour + 1) % 24;
+                $recommendation = [
+                    'title' => 'Assign additional volunteer nurse on peak hours',
+                    'details' => sprintf(
+                        'Peak clinic demand occurs on %s between %02d:00-%02d:00 (%d visits). Recommend adding 1 volunteer nurse during this slot.',
+                        $peakSlot->day_name,
+                        $startHour,
+                        $endHour,
+                        (int)$peakSlot->visits
+                    ),
+                    'priority' => 'high',
+                ];
+            }
+
+            $preparedBy = $request->user();
+
+            return $this->sendResponse([
+                'reportMeta' => [
+                    'title' => 'Quarterly School Clinic Health Trend Report',
+                    'periodStart' => $startDate->toDateString(),
+                    'periodEnd' => $endDate->toDateString(),
+                    'quarter' => $quarter,
+                    'year' => $year,
+                    'generatedAt' => now()->toISOString(),
+                    'preparedBy' => $preparedBy?->full_name ?? $preparedBy?->username ?? 'System',
+                ],
+                'summary' => [
+                    'totalVisits' => (int)$totalVisits,
+                    'uniqueStudents' => (int)$uniqueStudents,
+                    'emergencyVisits' => (int)$emergencyVisits,
+                    'hospitalReferrals' => (int)$hospitalReferrals,
+                ],
+                'peakSlot' => $peakSlot ? [
+                    'day' => $peakSlot->day_name,
+                    'dayNumber' => (int)$peakSlot->day_number,
+                    'hour' => (int)$peakSlot->hour_slot,
+                    'timeRange' => sprintf('%02d:00-%02d:00', (int)$peakSlot->hour_slot, (((int)$peakSlot->hour_slot + 1) % 24)),
+                    'timeRangeLabel' => Carbon::createFromTime((int)$peakSlot->hour_slot, 0)->format('g:i A') . ' - ' . Carbon::createFromTime((((int)$peakSlot->hour_slot + 1) % 24), 0)->format('g:i A'),
+                    'visits' => (int)$peakSlot->visits,
+                ] : null,
+                'recommendation' => $recommendation,
+                'topReasons' => $topReasons,
+                'dailyTrend' => $dailyTrend,
+                'visitsByDayHour' => $visitsByDayHour,
+                'gradeBreakdown' => $gradeBreakdown,
+            ], 'Principal health trend report retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve principal health trend report', $e->getMessage(), 500);
         }
     }
 

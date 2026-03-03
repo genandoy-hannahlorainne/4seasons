@@ -83,7 +83,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let vital of vitalsHistory">
-            <td>{{ vital.date }}</td>
+            <td>{{ vital.date_display || vital.date }}</td>
             <td>{{ vital.temperature }}°C</td>
             <td>{{ vital.blood_pressure }}</td>
             <td>{{ vital.pulse_rate }} bpm</td>

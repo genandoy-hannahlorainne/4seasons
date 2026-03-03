@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { catchError, switchMap } from 'rxjs/operators';
@@ -169,6 +169,36 @@ export class AdminService {
     return this.getReport('allergies');
   }
 
+  getPrincipalHealthTrendReport(params: {
+    startDate?: string;
+    endDate?: string;
+    year?: number;
+    quarter?: number;
+    gradeLevel?: string;
+  } = {}): Observable<any> {
+    let httpParams = new HttpParams();
+
+    if (params.startDate) {
+      httpParams = httpParams.set('start_date', params.startDate);
+    }
+    if (params.endDate) {
+      httpParams = httpParams.set('end_date', params.endDate);
+    }
+    if (params.year) {
+      httpParams = httpParams.set('year', String(params.year));
+    }
+    if (params.quarter) {
+      httpParams = httpParams.set('quarter', String(params.quarter));
+    }
+    if (params.gradeLevel) {
+      httpParams = httpParams.set('grade_level', params.gradeLevel);
+    }
+
+    return this.http.get<any>(`${environment.apiUrl}/admin/reports/principal-health-trends`, {
+      params: httpParams
+    });
+  }
+
   getActivityLogs(limit: number = 20, offset: number = 0): Observable<any> {
     return this.http.get<any>(`${environment.legacyApiUrl}/get-activity-logs.php?limit=${limit}&offset=${offset}`);
   }
@@ -301,7 +331,12 @@ export class AdminService {
 
   // Health Risk Visualization
   getHealthRiskVisualization(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-health-risk-data.php`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/health-risk-visualization`).pipe(
+      catchError((error) => {
+        console.warn('Laravel health risk endpoint failed, falling back to legacy endpoint:', error);
+        return this.http.get<any>(`${environment.legacyApiUrl}/get-health-risk-data.php`);
+      })
+    );
   }
 
   // Health Recommendations (Legacy API)

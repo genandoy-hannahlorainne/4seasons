@@ -56,7 +56,6 @@ try {
                         s.id,
                         s.section_name,
                         s.capacity,
-                        s.current_enrollment,
                         gl.level_name,
                         gl.level_number,
                         sy.year_name,
@@ -102,12 +101,15 @@ try {
                         u.is_active as user_active
                       FROM students s
                       LEFT JOIN users u ON s.user_id = u.user_id
-                      WHERE s.current_section_id = :section_id 
-                        AND s.is_active = 1
+                                            WHERE s.current_section_id = :section_id 
+                                                AND s.current_school_year_id = :school_year_id
+                                                AND s.is_active = 1
+                                                AND s.enrollment_status = 'active'
                       ORDER BY s.last_name, s.first_name";
     
     $studentsStmt = $db->prepare($studentsQuery);
     $studentsStmt->bindParam(':section_id', $sectionId);
+    $studentsStmt->bindParam(':school_year_id', $section['school_year_id']);
     $studentsStmt->execute();
     $students = $studentsStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -159,7 +161,7 @@ try {
             'school_year' => $section['year_name'],
             'adviser_name' => $section['adviser_name'],
             'capacity' => $section['capacity'],
-            'current_enrollment' => $section['current_enrollment'],
+            'current_enrollment' => count($students),
             'display_name' => $section['level_name'] . ' - ' . $section['section_name']
         ],
         'students' => $students,

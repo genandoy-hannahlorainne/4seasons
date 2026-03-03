@@ -27,24 +27,54 @@ try {
         exit;
     }
 
-    // Get BMI data from vitals table with student grade information
+    // Get BMI data per student (latest vitals BMI, fallback to student BMI)
+    // Then aggregate by grade level to avoid counting multiple visits per student
     $query = "
         SELECT 
-            COALESCE(s.grade_level, 'Unknown') as grade_name,
-            COALESCE(s.grade_level, 'Unknown') as grade_level,
-            COUNT(DISTINCT s.student_id) as total_students,
-            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi < 18.5 THEN 1 ELSE 0 END) as underweight_count,
-            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi >= 18.5 AND v.bmi < 25 THEN 1 ELSE 0 END) as normal_count,
-            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi >= 25 AND v.bmi < 30 THEN 1 ELSE 0 END) as overweight_count,
-            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi >= 30 THEN 1 ELSE 0 END) as obese_count,
-            AVG(v.bmi) as average_bmi
-        FROM students s
-        LEFT JOIN medical_visits mv ON s.student_id = mv.student_id
-        LEFT JOIN vitals v ON mv.visit_id = v.visit_id AND v.bmi IS NOT NULL
-        WHERE s.is_active = 1
-        GROUP BY s.grade_level
+            COALESCE(b.grade_level, 'Unknown') as grade_level,
+            COUNT(*) as total_students,
+            SUM(CASE WHEN LOWER(COALESCE(b.bmi_category, '')) = 'underweight' THEN 1 ELSE 0 END) as underweight_count,
+            SUM(CASE WHEN LOWER(COALESCE(b.bmi_category, '')) IN ('normal', 'normal weight') THEN 1 ELSE 0 END) as normal_count,
+            SUM(CASE WHEN LOWER(COALESCE(b.bmi_category, '')) = 'overweight' THEN 1 ELSE 0 END) as overweight_count,
+            SUM(CASE WHEN LOWER(COALESCE(b.bmi_category, '')) = 'obese' THEN 1 ELSE 0 END) as obese_count,
+            AVG(b.bmi) as average_bmi
+        FROM (
+            SELECT 
+                s.student_id,
+                s.grade_level,
+                COALESCE(vl.latest_bmi, s.bmi) as bmi,
+                CASE 
+                    WHEN COALESCE(vl.latest_bmi, s.bmi) < 18.5 THEN 'Underweight'
+                    WHEN COALESCE(vl.latest_bmi, s.bmi) >= 18.5 AND COALESCE(vl.latest_bmi, s.bmi) < 25 THEN 'Normal'
+                    WHEN COALESCE(vl.latest_bmi, s.bmi) >= 25 AND COALESCE(vl.latest_bmi, s.bmi) < 30 THEN 'Overweight'
+                    WHEN COALESCE(vl.latest_bmi, s.bmi) >= 30 THEN 'Obese'
+                    ELSE NULL
+                END as bmi_category
+            FROM students s
+            LEFT JOIN (
+                SELECT 
+                    ranked.student_id,
+                    ranked.bmi as latest_bmi
+                FROM (
+                    SELECT 
+                        mv.student_id,
+                        v.bmi,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY mv.student_id
+                            ORDER BY COALESCE(v.recorded_at, mv.visit_datetime) DESC, v.vitals_id DESC
+                        ) as rn
+                    FROM medical_visits mv
+                    INNER JOIN vitals v ON v.visit_id = mv.visit_id
+                    WHERE v.bmi IS NOT NULL
+                ) ranked
+                WHERE ranked.rn = 1
+            ) vl ON vl.student_id = s.student_id
+            WHERE s.is_active = 1
+        ) b
+        WHERE b.bmi IS NOT NULL
+        GROUP BY b.grade_level
         HAVING total_students > 0
-        ORDER BY s.grade_level
+        ORDER BY b.grade_level
     ";
     
     $stmt = $pdo->prepare($query);
@@ -89,14 +119,20 @@ try {
             $overweightPct = $total > 0 ? round(($overweight / $total) * 100, 1) : 0;
             $obesePct = $total > 0 ? round(($obese / $total) * 100, 1) : 0;
             
+            $rawGradeLevel = trim((string)$row['grade_level']);
+            $formattedGradeLevel = preg_match('/^\d+$/', $rawGradeLevel)
+                ? 'Grade ' . $rawGradeLevel
+                : $rawGradeLevel;
+
             $gradeStatistics[] = [
-                'grade_name' => 'Grade ' . $row['grade_level'],
-                'grade_level' => 'Grade ' . $row['grade_level'],
+                'grade_name' => $formattedGradeLevel,
+                'grade_level' => $formattedGradeLevel,
                 'total_students' => $total,
                 'underweight_count' => $underweight,
                 'normal_count' => $normal,
                 'overweight_count' => $overweight,
                 'obese_count' => $obese,
+                'average_bmi' => $row['average_bmi'] !== null ? round((float)$row['average_bmi'], 1) : 0,
                 'underweight_percentage' => $underweightPct,
                 'normal_percentage' => $normalPct,
                 'overweight_percentage' => $overweightPct,
@@ -110,12 +146,20 @@ try {
             $totalOverweight += $overweight;
             $totalObese += $obese;
             
-            if ($row['average_bmi']) {
+            if ($row['average_bmi'] !== null) {
                 $totalBmi += (float)$row['average_bmi'] * $total;
                 $bmiCount += $total;
             }
         }
     }
+
+    usort($gradeStatistics, function($a, $b) {
+        preg_match('/(\d+)/', $a['grade_name'], $am);
+        preg_match('/(\d+)/', $b['grade_name'], $bm);
+        $an = isset($am[1]) ? (int)$am[1] : PHP_INT_MAX;
+        $bn = isset($bm[1]) ? (int)$bm[1] : PHP_INT_MAX;
+        return $an <=> $bn;
+    });
 
     $overallStatistics = [
         'total_students' => $totalStudents,
@@ -160,8 +204,8 @@ try {
         SELECT 
             DATE(v.recorded_at) as update_date,
             COUNT(*) as updates_count,
-            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi >= 25 AND v.bmi < 30 THEN 1 ELSE 0 END) as new_overweight,
-            SUM(CASE WHEN v.bmi IS NOT NULL AND v.bmi >= 30 THEN 1 ELSE 0 END) as new_obese
+            SUM(CASE WHEN v.bmi >= 25 AND v.bmi < 30 THEN 1 ELSE 0 END) as new_overweight,
+            SUM(CASE WHEN v.bmi >= 30 THEN 1 ELSE 0 END) as new_obese
         FROM vitals v
         WHERE v.recorded_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
         AND v.bmi IS NOT NULL
