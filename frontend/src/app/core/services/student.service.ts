@@ -105,6 +105,21 @@ export class StudentService {
       .pipe(map(response => response.data));
   }
 
+  getStreakBadgeMetadata(): Observable<any> {
+    return this.http.get<ApiResponse<any>>(`${environment.apiUrl}/student/streak-badges/metadata`)
+      .pipe(map(response => response.data));
+  }
+
+  generateBadgeNarrative(payload: {
+    student_name: string;
+    badge_name: string;
+    streak_days: number;
+    badge_key?: string;
+  }): Observable<any> {
+    return this.http.post<ApiResponse<any>>(`${environment.apiUrl}/student/badges/generate-text`, payload)
+      .pipe(map(response => response.data));
+  }
+
   // Legacy API methods (keep for backward compatibility during migration)
   getStudentProfile(userId: number): Observable<any> {
     return this.http.get<any>(`${environment.legacyApiUrl}/get-student-profile.php?user_id=${userId}`);

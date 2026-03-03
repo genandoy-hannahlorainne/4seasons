@@ -416,7 +416,7 @@ class AdminController extends BaseController
                     DATE(v.recorded_at) as update_date,
                     COUNT(*) as updates_count,
                     SUM(CASE WHEN v.bmi >= 25 AND v.bmi < 30 THEN 1 ELSE 0 END) as new_overweight,
-                    SUM(CASE WHEN v.bmi >= 30 THEN 1 ELSE 0 END) as new_obese
+                    SUM(CASE WHEN v.bmi >= 30 THEN 1 ELSE 0 END) as new_obese  
                 FROM vitals v
                 WHERE v.recorded_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
                 AND v.bmi IS NOT NULL

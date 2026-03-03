@@ -14,7 +14,7 @@ interface PersonalInfo {
   birth_date: string;
   gender: string;
   address: string;
-  phone_number: string;
+  emergency_contact_phone: string;
   emergency_contact_person: string;
   emergency_contact_relation: string;
 }
@@ -91,7 +91,7 @@ export class PersonalInfoComponent implements OnInit {
     birth_date: '',
     gender: '',
     address: '',
-    phone_number: '',
+    emergency_contact_phone: '',
     emergency_contact_person: '',
     emergency_contact_relation: ''
   };
@@ -207,7 +207,7 @@ export class PersonalInfoComponent implements OnInit {
             birth_date: medicalData.personal_info.birth_date || profileData.birth_date,
             gender: medicalData.personal_info.gender || profileData.gender,
             address: medicalData.personal_info.address || '',
-            phone_number: medicalData.personal_info.emergency_contact_phone || medicalData.personal_info.phone || profileData.phone || '',
+            emergency_contact_phone: medicalData.personal_info.emergency_contact_phone || '',
             emergency_contact_person: medicalData.personal_info.emergency_contact || '',
             emergency_contact_relation: medicalData.personal_info.emergency_contact_relation || ''
           };
@@ -323,9 +323,8 @@ export class PersonalInfoComponent implements OnInit {
           address: this.editableInfo.address,
           emergency_contact: this.editableInfo.emergency_contact_person,
           emergency_contact_relation: this.editableInfo.emergency_contact_relation,
-          emergency_contact_phone: this.editableInfo.phone_number,
+          emergency_contact_phone: this.editableInfo.emergency_contact_phone,
           blood_type: this.physicalInfoEdit.blood_type,
-          phone: this.editableInfo.phone_number,
           email: currentUser.email
         }
       };
@@ -661,7 +660,7 @@ export class PersonalInfoComponent implements OnInit {
       info.address &&
       info.emergency_contact_person &&
       info.emergency_contact_relation &&
-      info.phone_number &&
+      info.emergency_contact_phone &&
       physical.height_cm &&
       physical.weight_kg &&
       history // Medical history exists

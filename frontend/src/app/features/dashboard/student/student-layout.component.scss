@@ -47,6 +47,7 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  position: relative;
 }
 
 .icon-btn {
@@ -68,6 +69,191 @@
   height: 26px;
   display: block;
   border-radius: 999px;
+}
+
+.notification {
+  position: relative;
+}
+
+.notif-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #d9534f;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.notifications-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  max-height: 430px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+  padding: 12px;
+  z-index: 50;
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1f3850;
+  margin-bottom: 8px;
+}
+
+.panel-state {
+  font-size: 13px;
+  color: #5d6b78;
+  padding: 8px 0;
+}
+
+.panel-state.error {
+  color: #a94442;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notification-item {
+  display: flex;
+  gap: 8px;
+  background: #f8fbff;
+  border: 1px solid #e3edf7;
+  border-radius: 10px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.badge-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.item-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f3850;
+}
+
+.item-sub {
+  font-size: 12px;
+  color: #5d6b78;
+}
+
+.narrative {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #2f4a61;
+  background: #fff;
+  border: 1px solid #e3edf7;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.badge-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+  padding: 16px;
+}
+
+.badge-modal {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.2);
+  border: 1px solid #e3edf7;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e8eef5;
+}
+
+.modal-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1f3850;
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: #4d6175;
+}
+
+.modal-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-badge-icon {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+}
+
+.modal-badge-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1f3850;
+}
+
+.modal-badge-sub {
+  font-size: 13px;
+  color: #4f677e;
+}
+
+.modal-badge-description {
+  font-size: 13px;
+  color: #2f4a61;
+}
+
+.modal-message-status {
+  font-size: 12px;
+  color: #4f677e;
+}
+
+.modal-narrative {
+  margin-top: 4px;
 }
 
 .content-area {
