@@ -55,6 +55,7 @@ try {
     $sectionQuery = "SELECT 
                         s.id,
                         s.section_name,
+                s.school_year_id,
                         s.capacity,
                         gl.level_name,
                         gl.level_number,
@@ -101,15 +102,27 @@ try {
                         u.is_active as user_active
                       FROM students s
                       LEFT JOIN users u ON s.user_id = u.user_id
-                                            WHERE s.current_section_id = :section_id 
-                                                AND s.current_school_year_id = :school_year_id
+                                            WHERE (
+                                                (
+                                                    s.current_section_id = :section_id
+                                                    AND (s.current_school_year_id = :school_year_id OR s.current_school_year_id IS NULL)
+                                                )
+                                                OR (
+                                                    (s.current_section_id IS NULL OR s.current_section_id = 0)
+                                                    AND s.section = :section_name
+                                                    AND CAST(s.grade_level AS UNSIGNED) = :grade_level_number
+                                                    AND (s.current_school_year_id = :school_year_id OR s.current_school_year_id IS NULL)
+                                                )
+                                            )
                                                 AND s.is_active = 1
-                                                AND s.enrollment_status = 'active'
+                                                AND LOWER(COALESCE(s.enrollment_status, 'active')) IN ('active', 'enrolled')
                       ORDER BY s.last_name, s.first_name";
     
     $studentsStmt = $db->prepare($studentsQuery);
     $studentsStmt->bindParam(':section_id', $sectionId);
     $studentsStmt->bindParam(':school_year_id', $section['school_year_id']);
+    $studentsStmt->bindParam(':section_name', $section['section_name']);
+    $studentsStmt->bindParam(':grade_level_number', $section['level_number']);
     $studentsStmt->execute();
     $students = $studentsStmt->fetchAll(PDO::FETCH_ASSOC);
 
