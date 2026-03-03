@@ -331,7 +331,12 @@ export class AdminService {
 
   // Health Risk Visualization
   getHealthRiskVisualization(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-health-risk-data.php`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/health-risk-visualization`).pipe(
+      catchError((error) => {
+        console.warn('Laravel health risk endpoint failed, falling back to legacy endpoint:', error);
+        return this.http.get<any>(`${environment.legacyApiUrl}/get-health-risk-data.php`);
+      })
+    );
   }
 
   // Health Recommendations (Legacy API)
