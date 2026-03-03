@@ -41,14 +41,21 @@ try {
     $schoolYearId = $_GET['school_year_id'] ?? null;
     $gradeLevel = $_GET['grade_level'] ?? null;
     
-    $query = "SELECT 
+        $query = "SELECT 
                 sec.id,
                 sec.section_name,
                 sec.grade_level_id,
                 sec.school_year_id,
                 sec.adviser_id,
                 sec.capacity,
-                sec.current_enrollment,
+                                (
+                                        SELECT COUNT(*)
+                                        FROM students st
+                                        WHERE st.current_section_id = sec.id
+                                            AND st.current_school_year_id = sec.school_year_id
+                                            AND st.is_active = 1
+                                            AND st.enrollment_status = 'active'
+                                ) AS current_enrollment,
                 sec.is_active,
                 gl.level_name,
                 gl.level_number,
