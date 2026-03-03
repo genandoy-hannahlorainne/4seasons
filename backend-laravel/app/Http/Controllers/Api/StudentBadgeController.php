@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Services\GroqService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class StudentBadgeController extends BaseController
 {
@@ -54,6 +56,57 @@ class StudentBadgeController extends BaseController
             ], 'Streak badge metadata retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve streak badge metadata', $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Generate AI badge narrative text
+     */
+    public function generateBadgeText(Request $request, GroqService $groqService)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'student_name' => 'required|string|max:120',
+                'badge_name' => 'required|string|max:120',
+                'streak_days' => 'required|integer|min:1|max:5000',
+                'badge_key' => 'nullable|string|max:80',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first(), 422);
+            }
+
+            $studentName = trim((string) $request->input('student_name'));
+            $badgeName = trim((string) $request->input('badge_name'));
+            $streakDays = (int) $request->input('streak_days');
+            $badgeKey = $request->input('badge_key');
+
+            $result = $groqService->generateBadgeNarrative($studentName, $badgeName, $streakDays);
+
+            if ($result['success']) {
+                return $this->sendResponse([
+                    'student_name' => $studentName,
+                    'badge_name' => $badgeName,
+                    'badge_key' => $badgeKey,
+                    'streak_days' => $streakDays,
+                    'narrative' => $result['data']['narrative'] ?? '',
+                    'source' => $result['data']['source'] ?? 'groq',
+                    'ai_success' => true,
+                ], 'Badge narrative generated successfully');
+            }
+
+            return $this->sendResponse([
+                'student_name' => $studentName,
+                'badge_name' => $badgeName,
+                'badge_key' => $badgeKey,
+                'streak_days' => $streakDays,
+                'narrative' => $result['data']['narrative'] ?? '',
+                'source' => $result['data']['source'] ?? 'fallback',
+                'ai_success' => false,
+                'fallback_reason' => $result['message'] ?? 'AI service unavailable',
+            ], 'Badge narrative fallback text generated');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to generate badge narrative', $e->getMessage(), 500);
         }
     }
 }

@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/students/{student}/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'updateMedicalData']);
     Route::put('/students/{student}/physical-info', [\App\Http\Controllers\Api\StudentController::class, 'updatePhysicalInfo']);
     Route::get('/student/streak-badges/metadata', [\App\Http\Controllers\Api\StudentBadgeController::class, 'getStreakBadgeMetadata']);
+    Route::post('/student/badges/generate-text', [\App\Http\Controllers\Api\StudentBadgeController::class, 'generateBadgeText']);
     
     // Get all students for clinic staff with filtering
     Route::get('/staff/students', [\App\Http\Controllers\Api\StudentController::class, 'getAllStudentsForStaff']);
