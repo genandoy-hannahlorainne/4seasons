@@ -40,13 +40,6 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   
   // Recent activities instead of immunization records
   recentActivities: any[] = [];
-
-  streakBadges: any[] = [];
-  badgesLoading = false;
-  badgesError = '';
-  generatingBadgeKey = '';
-  badgeNarratives: Record<string, string> = {};
-  badgeNarrativeSources: Record<string, string> = {};
   
   loading = true;
   error = '';
@@ -64,7 +57,6 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Load data initially
     this.loadStudentData();
-    this.loadStreakBadges();
     
     // Reload data whenever we navigate back to this route
     this.routerSubscription = this.router.events
@@ -211,53 +203,6 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
         this.loading = false;
       }
     });
-  }
-
-  loadStreakBadges(): void {
-    this.badgesLoading = true;
-    this.badgesError = '';
-
-    this.studentService.getStreakBadgeMetadata().subscribe({
-      next: (data) => {
-        this.streakBadges = Array.isArray(data?.badges) ? data.badges : [];
-        this.badgesLoading = false;
-      },
-      error: (error) => {
-        this.badgesError = error?.error?.message || 'Failed to load streak badges.';
-        this.badgesLoading = false;
-      }
-    });
-  }
-
-  generateBadgeNarrativeForBadge(badge: any): void {
-    if (!badge || !badge.badge_key || this.generatingBadgeKey) {
-      return;
-    }
-
-    this.generatingBadgeKey = badge.badge_key;
-
-    this.studentService.generateBadgeNarrative({
-      student_name: this.studentName || 'Student',
-      badge_name: badge.badge_name,
-      streak_days: Number(badge.required_streak_days || 1),
-      badge_key: badge.badge_key
-    }).subscribe({
-      next: (result) => {
-        this.badgeNarratives[badge.badge_key] = result?.narrative || 'No narrative generated.';
-        this.badgeNarrativeSources[badge.badge_key] = result?.source || 'unknown';
-        this.generatingBadgeKey = '';
-      },
-      error: () => {
-        this.badgeNarratives[badge.badge_key] = 'Unable to generate message right now. Please try again.';
-        this.badgeNarrativeSources[badge.badge_key] = 'error';
-        this.generatingBadgeKey = '';
-      }
-    });
-  }
-
-  getBadgeTierClass(tier: string): string {
-    const normalizedTier = (tier || '').toLowerCase();
-    return `tier-${normalizedTier}`;
   }
 
   formatDate(dateString: string): string {

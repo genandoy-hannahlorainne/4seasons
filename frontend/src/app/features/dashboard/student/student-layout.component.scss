@@ -47,6 +47,7 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  position: relative;
 }
 
 .icon-btn {
@@ -68,6 +69,126 @@
   height: 26px;
   display: block;
   border-radius: 999px;
+}
+
+.notification {
+  position: relative;
+}
+
+.notif-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #d9534f;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.notifications-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  max-height: 430px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+  padding: 12px;
+  z-index: 50;
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1f3850;
+  margin-bottom: 8px;
+}
+
+.panel-state {
+  font-size: 13px;
+  color: #5d6b78;
+  padding: 8px 0;
+}
+
+.panel-state.error {
+  color: #a94442;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notification-item {
+  display: flex;
+  gap: 8px;
+  background: #f8fbff;
+  border: 1px solid #e3edf7;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.badge-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.item-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f3850;
+}
+
+.item-sub {
+  font-size: 12px;
+  color: #5d6b78;
+}
+
+.generate-btn {
+  width: fit-content;
+  border: none;
+  border-radius: 8px;
+  background: #4f7ea9;
+  color: #fff;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.generate-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.narrative {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #2f4a61;
+  background: #fff;
+  border: 1px solid #e3edf7;
+  border-radius: 8px;
+  padding: 6px;
 }
 
 .content-area {

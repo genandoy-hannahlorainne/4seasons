@@ -106,40 +106,6 @@
               </div>
             </div>
           </div>
-
-          <div class="card streak-badges">
-            <h2>Streak Badges</h2>
-
-            <div *ngIf="badgesLoading" class="badge-loading">Loading streak badges...</div>
-            <div *ngIf="badgesError" class="badge-error">{{ badgesError }}</div>
-
-            <div *ngIf="!badgesLoading && !badgesError" class="badge-list">
-              <div *ngFor="let badge of streakBadges" class="badge-item" [class]="'badge-item ' + getBadgeTierClass(badge.tier)">
-                <div class="badge-top">
-                  <img *ngIf="badge.icon_asset_path" [src]="badge.icon_asset_path" [alt]="badge.badge_name" class="badge-icon" />
-                  <div class="badge-meta">
-                    <div class="badge-name">{{ badge.badge_name }}</div>
-                    <div class="badge-days">{{ badge.required_streak_days }} days</div>
-                  </div>
-                </div>
-
-                <div class="badge-description">{{ badge.description }}</div>
-
-                <button
-                  type="button"
-                  class="badge-generate-btn"
-                  [disabled]="generatingBadgeKey === badge.badge_key"
-                  (click)="generateBadgeNarrativeForBadge(badge)">
-                  {{ generatingBadgeKey === badge.badge_key ? 'Generating...' : 'Generate Message' }}
-                </button>
-
-                <div *ngIf="badgeNarratives[badge.badge_key]" class="badge-narrative">
-                  {{ badgeNarratives[badge.badge_key] }}
-                  <span class="badge-source">{{ badgeNarrativeSources[badge.badge_key] }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
