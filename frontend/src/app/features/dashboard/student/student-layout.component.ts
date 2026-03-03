@@ -33,7 +33,7 @@ import { AuthService } from '../../../core/services/auth.service';
             <div *ngIf="!notificationsLoading && !notificationsError && badgeNotifications.length === 0" class="panel-state">No badge notifications yet.</div>
 
             <div *ngIf="!notificationsLoading && badgeNotifications.length > 0" class="notification-list">
-              <div *ngFor="let badge of badgeNotifications" class="notification-item">
+              <div *ngFor="let badge of badgeNotifications" class="notification-item" (click)="openBadgeDetails(badge)">
                 <img *ngIf="badge.icon_asset_path" [src]="badge.icon_asset_path" [alt]="badge.badge_name" class="badge-icon">
                 <div class="item-content">
                   <div class="item-title">{{ badge.badge_name }}</div>
@@ -43,7 +43,7 @@ import { AuthService } from '../../../core/services/auth.service';
                     class="generate-btn"
                     type="button"
                     [disabled]="generatingBadgeKey === badge.badge_key"
-                    (click)="generateNarrative(badge)">
+                    (click)="generateNarrative(badge, $event)">
                     {{ generatingBadgeKey === badge.badge_key ? 'Generating...' : 'Generate Message' }}
                   </button>
 
@@ -60,6 +60,30 @@ import { AuthService } from '../../../core/services/auth.service';
       <div class="content-area">
         <router-outlet></router-outlet>
       </div>
+
+      <div *ngIf="showBadgeModal && activeBadge" class="badge-modal-overlay" (click)="closeBadgeModal()">
+        <div class="badge-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div class="modal-title">{{ popupBadgeKey ? 'New Badge Unlocked!' : 'Badge Details' }}</div>
+            <button class="modal-close" (click)="closeBadgeModal()">×</button>
+          </div>
+
+          <div class="modal-body">
+            <img *ngIf="activeBadge.icon_asset_path" [src]="activeBadge.icon_asset_path" [alt]="activeBadge.badge_name" class="modal-badge-icon">
+            <div class="modal-badge-name">{{ activeBadge.badge_name }}</div>
+            <div class="modal-badge-sub">{{ activeBadge.required_streak_days }}-day streak milestone</div>
+            <div class="modal-badge-description">{{ activeBadge.description }}</div>
+
+            <button class="generate-btn" type="button" [disabled]="generatingBadgeKey === activeBadge.badge_key" (click)="generateNarrative(activeBadge, $event)">
+              {{ generatingBadgeKey === activeBadge.badge_key ? 'Generating...' : 'Generate Message' }}
+            </button>
+
+            <div *ngIf="badgeNarratives[activeBadge.badge_key]" class="narrative modal-narrative">
+              {{ badgeNarratives[activeBadge.badge_key] }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   `,
 })
@@ -70,6 +94,10 @@ export class StudentLayoutComponent implements OnInit {
   badgeNotifications: any[] = [];
   generatingBadgeKey = '';
   badgeNarratives: Record<string, string> = {};
+  showBadgeModal = false;
+  activeBadge: any = null;
+  popupBadgeKey: string | null = null;
+  isFirstBadgeSyncDone = false;
 
   constructor(
     private studentService: StudentService,
@@ -97,6 +125,7 @@ export class StudentLayoutComponent implements OnInit {
     this.studentService.getStreakBadgeMetadata().subscribe({
       next: (data) => {
         this.badgeNotifications = Array.isArray(data?.badges) ? data.badges : [];
+        this.syncBadgeAcquisitionState(this.badgeNotifications);
         this.notificationsLoading = false;
       },
       error: (error) => {
@@ -106,7 +135,11 @@ export class StudentLayoutComponent implements OnInit {
     });
   }
 
-  generateNarrative(badge: any): void {
+  generateNarrative(badge: any, event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+    }
+
     if (!badge?.badge_key || this.generatingBadgeKey) {
       return;
     }
@@ -133,5 +166,85 @@ export class StudentLayoutComponent implements OnInit {
         this.generatingBadgeKey = '';
       }
     });
+  }
+
+  openBadgeDetails(badge: any): void {
+    this.activeBadge = badge;
+    this.showBadgeModal = true;
+    this.popupBadgeKey = null;
+
+    if (!this.badgeNarratives[badge.badge_key]) {
+      this.generateNarrative(badge);
+    }
+  }
+
+  closeBadgeModal(): void {
+    this.showBadgeModal = false;
+    this.activeBadge = null;
+    this.popupBadgeKey = null;
+  }
+
+  private syncBadgeAcquisitionState(badges: any[]): void {
+    const badgeKeys = badges
+      .map((badge) => badge?.badge_key)
+      .filter((badgeKey) => !!badgeKey);
+
+    const knownAcquired = this.getStoredBadgeKeySet('known');
+    const popupShown = this.getStoredBadgeKeySet('shown');
+
+    if (knownAcquired.size === 0 && !this.isFirstBadgeSyncDone) {
+      this.storeBadgeKeySet('known', new Set(badgeKeys));
+      this.isFirstBadgeSyncDone = true;
+      return;
+    }
+
+    const newlyAcquired = badgeKeys.filter((badgeKey) => !knownAcquired.has(badgeKey));
+    const updatedKnown = new Set([...Array.from(knownAcquired), ...badgeKeys]);
+    this.storeBadgeKeySet('known', updatedKnown);
+
+    const firstNewUnshownKey = newlyAcquired.find((badgeKey) => !popupShown.has(badgeKey));
+
+    if (firstNewUnshownKey) {
+      const badge = badges.find((entry) => entry.badge_key === firstNewUnshownKey);
+      if (badge) {
+        this.activeBadge = badge;
+        this.popupBadgeKey = firstNewUnshownKey;
+        this.showBadgeModal = true;
+
+        if (!this.badgeNarratives[badge.badge_key]) {
+          this.generateNarrative(badge);
+        }
+
+        popupShown.add(firstNewUnshownKey);
+        this.storeBadgeKeySet('shown', popupShown);
+      }
+    }
+  }
+
+  private getStoredBadgeKeySet(type: 'known' | 'shown'): Set<string> {
+    const storageKey = this.getBadgeStorageKey(type);
+    const raw = localStorage.getItem(storageKey);
+
+    if (!raw) {
+      return new Set<string>();
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? new Set<string>(parsed) : new Set<string>();
+    } catch {
+      return new Set<string>();
+    }
+  }
+
+  private storeBadgeKeySet(type: 'known' | 'shown', values: Set<string>): void {
+    const storageKey = this.getBadgeStorageKey(type);
+    localStorage.setItem(storageKey, JSON.stringify(Array.from(values)));
+  }
+
+  private getBadgeStorageKey(type: 'known' | 'shown'): string {
+    const currentUser = this.authService.currentUserValue;
+    const studentId = currentUser?.student_info?.student_id || currentUser?.user_id || 'guest';
+    return `student_badges_${type}_${studentId}`;
   }
 }
