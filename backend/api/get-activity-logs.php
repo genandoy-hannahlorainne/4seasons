@@ -14,6 +14,15 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+if (!$db) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database connection error'
+    ]);
+    exit();
+}
+
 try {
     $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 20;
     $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
@@ -80,7 +89,7 @@ try {
         'offset' => $offset
     ]);
     
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([
         'success' => false,

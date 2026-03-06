@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8000/api', // Laravel API
-  legacyApiUrl: 'http://localhost/4seasons/backend/api' // Keep for gradual migration
+  apiUrl: 'http://localhost:8080/api', // Laravel API (Docker backend)
+  legacyApiUrl: 'http://localhost:8081/api' // Legacy PHP API (Docker)
 };

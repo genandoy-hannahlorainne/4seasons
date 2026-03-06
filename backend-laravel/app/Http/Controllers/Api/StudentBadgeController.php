@@ -15,9 +15,24 @@ class StudentBadgeController extends BaseController
     public function getStreakBadgeMetadata(Request $request)
     {
         try {
-            $metadataPath = base_path('../frontend/src/app/assets/badges/streak/metadata.json');
+            $candidatePaths = [
+                // Works when frontend source is available beside backend-laravel.
+                base_path('../frontend/src/app/assets/badges/streak/metadata.json'),
+                // Docker-safe fallback stored inside Laravel project.
+                base_path('resources/badges/streak/metadata.json'),
+                // Optional deployment fallback if metadata is copied to public assets.
+                public_path('assets/badges/streak/metadata.json'),
+            ];
 
-            if (!file_exists($metadataPath)) {
+            $metadataPath = null;
+            foreach ($candidatePaths as $path) {
+                if (file_exists($path)) {
+                    $metadataPath = $path;
+                    break;
+                }
+            }
+
+            if (!$metadataPath) {
                 return $this->sendError('Streak badge metadata not found', [], 404);
             }
 

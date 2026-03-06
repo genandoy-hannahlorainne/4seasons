@@ -10,6 +10,15 @@ require_once '../middleware/auth.php';
 $database = new Database();
 $db = $database->getConnection();
 
+if (!$db) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database connection error'
+    ]);
+    exit();
+}
+
 // Authenticate user
 $auth = new Auth($database);
 $auth->requireRole('Admin');
@@ -39,7 +48,8 @@ try {
                   LIMIT 50";
         
         $stmt = $db->prepare($query);
-        $stmt->bindParam(':user_id', $auth->userId());
+        $currentUserId = $auth->userId();
+        $stmt->bindParam(':user_id', $currentUserId, PDO::PARAM_INT);
         $stmt->execute();
         
         $notifications = [];
@@ -89,7 +99,7 @@ try {
         ]);
     }
     
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     error_log("Admin Notifications Error: " . $e->getMessage());
     error_log("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
