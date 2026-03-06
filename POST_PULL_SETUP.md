@@ -9,11 +9,29 @@ Run this every time after pulling new changes:
 .\after-pull-setup.ps1
 ```
 
+If you need migration + seed in one run:
+
+```powershell
+.\after-pull-setup-seed.ps1
+```
+
 Or double-click / run:
 
 ```bat
 after-pull-setup.bat
 ```
+
+For migration + seed variant:
+
+```bat
+after-pull-setup-seed.bat
+```
+
+## Docker + Option 3 Guide
+
+For Docker-based teammate setup using deterministic seeders, see:
+
+- [DOCKER_OPTION3_SETUP.md](DOCKER_OPTION3_SETUP.md)
 
 ## What it does
 
@@ -24,6 +42,12 @@ after-pull-setup.bat
 - Links storage (`php artisan storage:link`)
 - Runs migrations (`php artisan migrate --force`)
 - Installs frontend dependencies (`npm install`)
+
+## Seed variant
+
+`after-pull-setup-seed.ps1` does the same steps, but runs:
+
+- `php artisan migrate --seed --force`
 
 ## Start app
 
