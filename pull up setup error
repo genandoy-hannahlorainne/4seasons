@@ -1,0 +1,38 @@
+error
+PS C:\xampp\htdocs\4seasons> cd backend-laravel
+PS C:\xampp\htdocs\4seasons\backend-laravel>  
+PS C:\xampp\htdocs\4seasons\backend-laravel> .
+At line:1 char:1
+Missing expression after '.' in pipeline element.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpression
+ 
+PS C:\xampp\htdocs\4seasons\backend-laravel> .\after-pull-setup.psi
+.\after-pull-setup.psi : The term '.\after-pull-setup.psi' is not recognized as the name of a cmdlet, function,        
+script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is   
+correct and try again.
+At line:1 char:1
++ ~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (.\after-pull-setup.psi:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\xampp\htdocs\4seasons\backend-laravel> cd ..
+PS C:\xampp\htdocs\4seasons> .\after-pull-setup.psi
+.\after-pull-setup.psi : The term '.\after-pull-setup.psi' is not recognized as the name of a cmdlet, function,        
+script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is   
+correct and try again.
+At line:1 char:1
++ .\after-pull-setup.psi
++ ~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (.\after-pull-setup.psi:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+PS C:\xampp\htdocs\4seasons> after-pull-setup.psi
+after-pull-setup.psi : The term 'after-pull-setup.psi' is not recognized as the name of a cmdlet, function, script     
+file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct  
+and try again.
+At line:1 char:1
++ after-pull-setup.psi
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (after-pull-setup.psi:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
