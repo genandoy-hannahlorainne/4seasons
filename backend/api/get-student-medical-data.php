@@ -17,6 +17,15 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+if (!$db) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database connection error'
+    ]);
+    exit();
+}
+
 function hasColumn(PDO $db, string $table, string $column): bool {
     $stmt = $db->prepare("SHOW COLUMNS FROM `{$table}` LIKE :column");
     $stmt->bindValue(':column', $column);
@@ -35,10 +44,11 @@ function hasTable(PDO $db, string $table): bool {
 $student_id = null;
 $student = null;
 
-$hasEmergencyContactRelation = hasColumn($db, 'students', 'emergency_contact_relation');
-$hasEmergencyContactPhone = hasColumn($db, 'students', 'emergency_contact_phone');
+try {
+    $hasEmergencyContactRelation = hasColumn($db, 'students', 'emergency_contact_relation');
+    $hasEmergencyContactPhone = hasColumn($db, 'students', 'emergency_contact_phone');
 
-$studentQueryBase = "SELECT 
+    $studentQueryBase = "SELECT 
                                 s.student_id,
                                 s.student_number,
                                 s.first_name,
@@ -63,55 +73,45 @@ $studentQueryBase = "SELECT
                             FROM students s
                             LEFT JOIN users u ON s.user_id = u.user_id";
 
-if (isset($_GET['student_id'])) {
-    // Direct student_id provided
-    $student_id = $_GET['student_id'];
-    
-    // Get student info
-    $studentQuery = $studentQueryBase . " WHERE s.student_id = :student_id AND s.is_active = 1";
-    
-    $studentStmt = $db->prepare($studentQuery);
-    $studentStmt->bindParam(":student_id", $student_id);
-    $studentStmt->execute();
-    $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
-    
-} elseif (isset($_GET['user_id']) || isset($_SERVER['HTTP_USER_ID'])) {
-    // Get user_id from header or query parameter
-    $user_id = isset($_SERVER['HTTP_USER_ID']) ? $_SERVER['HTTP_USER_ID'] : $_GET['user_id'];
-    
-    error_log("Getting student for user_id: " . $user_id);
-    
-    // Get student info from user_id
-    $studentQuery = $studentQueryBase . " WHERE s.user_id = :user_id AND s.is_active = 1";
-    
-    $studentStmt = $db->prepare($studentQuery);
-    $studentStmt->bindParam(":user_id", $user_id);
-    $studentStmt->execute();
-    $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
-    
-    error_log("Student found: " . ($student ? "Yes" : "No"));
-    
-    if ($student) {
-        $student_id = $student['student_id'];
-    }
-} else {
-    // Default for testing
-    $user_id = 19;
-    error_log("No user_id provided, using default: $user_id");
-    
-    $studentQuery = $studentQueryBase . " WHERE s.user_id = :user_id AND s.is_active = 1";
-    
-    $studentStmt = $db->prepare($studentQuery);
-    $studentStmt->bindParam(":user_id", $user_id);
-    $studentStmt->execute();
-    $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($student) {
-        $student_id = $student['student_id'];
-    }
-}
+    if (isset($_GET['student_id'])) {
+        // Direct student_id provided
+        $student_id = intval($_GET['student_id']);
 
-try {
+        $studentQuery = $studentQueryBase . " WHERE s.student_id = :student_id AND s.is_active = 1";
+
+        $studentStmt = $db->prepare($studentQuery);
+        $studentStmt->bindParam(":student_id", $student_id, PDO::PARAM_INT);
+        $studentStmt->execute();
+        $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
+
+    } elseif (isset($_GET['user_id']) || isset($_SERVER['HTTP_USER_ID'])) {
+        // Get user_id from header or query parameter
+        $user_id = isset($_SERVER['HTTP_USER_ID']) ? intval($_SERVER['HTTP_USER_ID']) : intval($_GET['user_id']);
+
+        error_log("Getting student for user_id: " . $user_id);
+
+        // Get student info from user_id
+        $studentQuery = $studentQueryBase . " WHERE s.user_id = :user_id AND s.is_active = 1";
+
+        $studentStmt = $db->prepare($studentQuery);
+        $studentStmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
+        $studentStmt->execute();
+        $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
+
+        error_log("Student found: " . ($student ? "Yes" : "No"));
+
+        if ($student) {
+            $student_id = intval($student['student_id']);
+        }
+    } else {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Student ID or User ID is required'
+        ]);
+        exit();
+    }
+
     if (!$student || !$student_id) {
         error_log("Student not found - student: " . ($student ? "exists" : "null") . ", student_id: " . ($student_id ? $student_id : "null"));
         http_response_code(404);
@@ -353,7 +353,7 @@ try {
                                 u.email
                             FROM students s
                             LEFT JOIN sections sec_current ON s.current_section_id = sec_current.id
-                            LEFT JOIN sections sec_fallback ON sec_fallback.section_name = s.section
+                            LEFT JOIN sections sec_fallback ON CONVERT(sec_fallback.section_name USING utf8mb4) COLLATE utf8mb4_unicode_ci = CONVERT(s.section USING utf8mb4) COLLATE utf8mb4_unicode_ci
                                 AND sec_fallback.is_active = 1
                                 AND sec_fallback.adviser_id IS NOT NULL
                                 AND (s.current_school_year_id IS NULL OR sec_fallback.school_year_id = s.current_school_year_id)
@@ -450,7 +450,7 @@ try {
     http_response_code(200);
     echo json_encode($response);
     
-} catch (Exception $e) {
+} catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([
         'success' => false,

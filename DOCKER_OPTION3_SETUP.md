@@ -29,6 +29,13 @@ From project root:
 docker compose up -d --build
 ```
 
+If this is your first run after pulling Docker changes, force rebuild backend image:
+
+```powershell
+docker compose build backend
+docker compose up -d
+```
+
 Check container status:
 
 ```powershell
@@ -39,6 +46,13 @@ Install backend dependencies (inside container):
 
 ```powershell
 docker compose exec backend composer install
+```
+
+If you get `service "backend" is not running`, run:
+
+```powershell
+docker compose up -d backend mysql
+docker compose ps
 ```
 
 Create `.env` if missing:
@@ -108,6 +122,13 @@ docker compose exec backend tail -n 200 storage/logs/laravel.log
 - Legacy backend: `http://localhost:8081`
 - MySQL (host machine): `localhost:3307`
 
+## 6.1) XAMPP MySQL vs Docker MySQL
+
+- They are separate databases by default.
+- XAMPP MySQL usually runs on `localhost:3306`.
+- Docker MySQL in this project is exposed as `localhost:3307`.
+- Data is not shared unless you intentionally connect both apps to the same DB host/port/database.
+
 ## 7) Important Repo Note
 
 Current `docker-compose.yml` uses:
@@ -115,6 +136,13 @@ Current `docker-compose.yml` uses:
 - `backend` service with `build: ./backend-laravel`
 
 Make sure a Dockerfile exists at `backend-laravel/Dockerfile`; otherwise `docker compose up --build` will fail for backend service.
+
+If frontend shows CORS errors after config changes, run:
+
+```powershell
+docker compose up -d --build backend
+docker compose exec backend php artisan optimize:clear
+```
 
 ## Recommended Team Rule
 

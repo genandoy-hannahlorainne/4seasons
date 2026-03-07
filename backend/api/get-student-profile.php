@@ -14,6 +14,15 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+if (!$db) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database connection error'
+    ]);
+    exit;
+}
+
 function hasColumn(PDO $db, string $table, string $column): bool {
     $stmt = $db->prepare("SHOW COLUMNS FROM `{$table}` LIKE :column");
     $stmt->bindValue(':column', $column);
@@ -25,26 +34,26 @@ function hasColumn(PDO $db, string $table, string $column): bool {
 $student_id = isset($_GET['student_id']) ? intval($_GET['student_id']) : 0;
 $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
 
-// If user_id is provided, get the student_id from the students table
-if (!$student_id && $user_id) {
-    $userStudentQuery = "SELECT student_id FROM students WHERE user_id = :user_id AND is_active = 1 LIMIT 1";
-    $userStudentStmt = $db->prepare($userStudentQuery);
-    $userStudentStmt->bindParam(':user_id', $user_id);
-    $userStudentStmt->execute();
-    
-    if ($userStudentStmt->rowCount() > 0) {
-        $row = $userStudentStmt->fetch(PDO::FETCH_ASSOC);
-        $student_id = intval($row['student_id']);
-    }
-}
-
-if (!$student_id) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Student ID or User ID is required']);
-    exit;
-}
-
 try {
+    // If user_id is provided, resolve student_id from students table.
+    if (!$student_id && $user_id) {
+        $userStudentQuery = "SELECT student_id FROM students WHERE user_id = :user_id AND is_active = 1 LIMIT 1";
+        $userStudentStmt = $db->prepare($userStudentQuery);
+        $userStudentStmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+        $userStudentStmt->execute();
+
+        if ($userStudentStmt->rowCount() > 0) {
+            $row = $userStudentStmt->fetch(PDO::FETCH_ASSOC);
+            $student_id = intval($row['student_id']);
+        }
+    }
+
+    if (!$student_id) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Student ID or User ID is required']);
+        exit;
+    }
+
     error_log("Getting student profile for student_id: " . $student_id);
     
     // Get student basic info
