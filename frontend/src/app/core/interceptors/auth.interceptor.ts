@@ -7,9 +7,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const token = localStorage.getItem('token');
   
-  // Determine if this is a Laravel API request
-  const isLaravelApi = req.url.includes('/api') && !req.url.includes('/backend/api');
-  const isLegacyApi = req.url.includes('/backend/api');
+  // Treat both old XAMPP and Docker :8081 endpoints as legacy PHP API.
+  const isLegacyApi = req.url.includes('/backend/api') || req.url.includes('localhost:8081/api');
+  const isLaravelApi = req.url.includes('/api') && !isLegacyApi;
   
   // Skip auth for login and register endpoints
   const isAuthEndpoint = req.url.includes('/login') || req.url.includes('/register');

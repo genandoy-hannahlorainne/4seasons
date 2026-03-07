@@ -9,19 +9,31 @@ require_once '../config/database.php';
 try {
     $database = new Database();
     $db = $database->getConnection();
+
+    if (!$db) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Database connection error'
+        ]);
+        exit();
+    }
     
-    // Get staff_id from request
+    // Resolve user_id from JSON body, query string, or header.
     $data = json_decode(file_get_contents("php://input"));
+    $headerUserId = isset($_SERVER['HTTP_USER_ID']) ? intval($_SERVER['HTTP_USER_ID']) : 0;
+    $queryUserId = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
+    $bodyUserId = isset($data->user_id) ? intval($data->user_id) : 0;
+    $user_id = $bodyUserId ?: $queryUserId ?: $headerUserId;
     
-    if (!isset($data->user_id)) {
+    if (!$user_id) {
+        http_response_code(400);
         echo json_encode([
             'success' => false,
             'message' => 'User ID is required'
         ]);
         exit();
     }
-    
-    $user_id = $data->user_id;
     
     // Get clinic staff info
     $query = "SELECT cs.clinic_staff_id, cs.staff_code, cs.position, 
@@ -37,6 +49,7 @@ try {
     $staff = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$staff) {
+        http_response_code(404);
         echo json_encode([
             'success' => false,
             'message' => 'Staff not found'
@@ -153,7 +166,8 @@ try {
         ]
     ]);
     
-} catch (Exception $e) {
+} catch (Throwable $e) {
+    http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Error: ' . $e->getMessage()
