@@ -48,7 +48,7 @@ export class StudentAssignmentService {
    * Returns detailed report of assignment status
    */
   validateAssignments(): Observable<AssignmentValidationResult> {
-    return this.http.get<AssignmentValidationResult>(`${environment.legacyApiUrl}/validate-assignments.php`);
+    return this.http.get<AssignmentValidationResult>(`${environment.apiUrl}/admin/validate-assignments`);
   }
 
   /**
@@ -56,14 +56,14 @@ export class StudentAssignmentService {
    * Automatically assigns unassigned students to appropriate advisers
    */
   fixAssignments(): Observable<AssignmentFixResult> {
-    return this.http.post<AssignmentFixResult>(`${environment.legacyApiUrl}/fix-student-assignments.php`, {});
+    return this.http.post<AssignmentFixResult>(`${environment.apiUrl}/admin/fix-student-assignments`, {});
   }
 
   /**
    * Get assignment health status for dashboard widgets
    */
   getAssignmentHealth(): Observable<{success: boolean, health_status: string, assignment_percentage: number}> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/validate-assignments.php`)
+    return this.http.get<any>(`${environment.apiUrl}/admin/assignment-health`)
       .pipe(
         // Extract just the health info for quick dashboard display
         // Full validation can be done separately when needed

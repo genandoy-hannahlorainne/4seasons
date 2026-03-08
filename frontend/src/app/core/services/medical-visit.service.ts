@@ -134,7 +134,7 @@ export class MedicalVisitService {
 
   // Legacy API methods (keep for backward compatibility during migration)
   saveMedicalVisit(visitData: any): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/save-medical-visit.php`, visitData);
+    return this.http.post<any>(`${environment.apiUrl}/medical-visits`, visitData);
   }
 
   getMedicalVisits(params?: any): Observable<any> {
@@ -146,14 +146,10 @@ export class MedicalVisitService {
         }
       });
     }
-    
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-medical-visits.php`, { params: httpParams });
+    return this.http.get<any>(`${environment.apiUrl}/medical-visits`, { params: httpParams });
   }
 
   updateMedicalVisit(visitId: number, visitData: any): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/medical-record.php`, {
-      visit_id: visitId,
-      ...visitData
-    });
+    return this.http.put<any>(`${environment.apiUrl}/medical-visits/${visitId}`, visitData);
   }
 }
