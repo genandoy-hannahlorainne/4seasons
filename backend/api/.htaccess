@@ -1,5 +1,0 @@
-# CORS is handled by PHP files (cors.php)
-# Allow all HTTP methods
-<Limit GET POST PUT DELETE OPTIONS>
-    Require all granted
-</Limit>
