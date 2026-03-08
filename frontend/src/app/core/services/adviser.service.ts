@@ -110,30 +110,16 @@ export class AdviserService {
   }
 
   getStudentCompleteProfile(studentId: number): Observable<any> {
-    // Try Laravel API first, fallback to legacy if needed
-    return this.http.get<any>(`${environment.apiUrl}/students/${studentId}`)
-      .pipe(
-        catchError(() => {
-          // Fallback to legacy API
-          return this.http.get<any>(`${environment.legacyApiUrl}/get-student-complete-profile.php?student_id=${studentId}`);
-        })
-      );
+    return this.http.get<any>(`${environment.apiUrl}/students/${studentId}`);
   }
 
   getAdviserNotifications(): Observable<any> {
-    // Try Laravel API first, fallback to legacy if needed
-    return this.http.get<any>(`${environment.apiUrl}/adviser/notifications`)
-      .pipe(
-        catchError(() => {
-          // Fallback to legacy API
-          return this.http.get<any>(`${environment.legacyApiUrl}/get-adviser-notifications.php`);
-        })
-      );
+    return this.http.get<any>(`${environment.apiUrl}/adviser/notifications`);
   }
 
   // Grade Promotion & Class Management
   getSchoolYears(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/admin/school-years/list.php`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/school-years`);
   }
 
   getClassRoster(schoolYearId: number): Observable<any> {
@@ -141,24 +127,21 @@ export class AdviserService {
   }
 
   promoteStudents(promotionData: any): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/adviser/promote-students.php`, promotionData);
+    return this.http.post<any>(`${environment.apiUrl}/adviser/promote-students`, promotionData);
   }
 
   getSections(schoolYearId?: number, gradeLevel?: number): Observable<any> {
-    let url = `${environment.legacyApiUrl}/admin/sections/list.php`;
+    let url = `${environment.apiUrl}/admin/sections`;
     const params = [];
-    
     if (schoolYearId) {
       params.push(`school_year_id=${schoolYearId}`);
     }
     if (gradeLevel) {
       params.push(`grade_level=${gradeLevel}`);
     }
-    
     if (params.length > 0) {
       url += '?' + params.join('&');
     }
-    
     return this.http.get<any>(url);
   }
 

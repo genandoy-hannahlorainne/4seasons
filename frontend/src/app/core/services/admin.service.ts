@@ -9,132 +9,74 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class AdminService {
+    updateUser(userId: number, updates: any): Observable<any> {
+      return this.http.put<any>(`${environment.apiUrl}/admin/users/${userId}`, updates);
+    }
+
+    resetPassword(userId: number, newPassword: string): Observable<any> {
+      return this.http.post<any>(`${environment.apiUrl}/admin/users/${userId}/reset-password`, { new_password: newPassword });
+    }
+
+    deactivateUser(userId: number): Observable<any> {
+      return this.http.post<any>(`${environment.apiUrl}/admin/users/${userId}/deactivate`, {});
+    }
+
+    activateUser(userId: number): Observable<any> {
+      return this.http.post<any>(`${environment.apiUrl}/admin/users/${userId}/activate`, {});
+    }
+
+    deleteUser(userId: number): Observable<any> {
+      return this.http.delete<any>(`${environment.apiUrl}/admin/users/${userId}`);
+    }
+
+    createUserLegacy(userData: any): Observable<any> {
+      // For non-student roles, use Laravel endpoint
+      return this.http.post<any>(`${environment.apiUrl}/admin/create-user`, userData);
+    }
   constructor(private http: HttpClient) {}
 
-  getDashboardStats(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-admin-dashboard-stats.php`);
+  createUser(userData: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/create-user`, userData);
   }
 
   getAllUsers(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-all-users.php`);
+    return this.http.get<any>(`${environment.apiUrl}/get-all-users`);
   }
 
   getUsersByRole(role: 'student' | 'adviser' | 'faculty' | 'clinic_staff' | 'staff'): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-all-users.php?role=${role}`);
+    return this.http.get<any>(`${environment.apiUrl}/get-all-users?role=${role}`);
   }
 
-  getStudents(): Observable<any> {
-    return this.getUsersByRole('student');
-  }
-
-  getAdvisers(): Observable<any> {
-    return this.getUsersByRole('adviser');
-  }
-
-  getClinicStaff(): Observable<any> {
-    return this.getUsersByRole('clinic_staff');
-  }
-
-  // User Management
-  getUserDetails(userId: number): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/manage-user.php?action=view&user_id=${userId}`);
-  }
-
-  updateUser(userId: number, userData: any): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/manage-user.php?action=update&user_id=${userId}`, userData);
-  }
-
-  resetPassword(userId: number, newPassword: string): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/manage-user.php?action=reset-password&user_id=${userId}`, { password: newPassword });
-  }
-
-  deactivateUser(userId: number): Observable<any> {
-    return this.http.delete<any>(`${environment.legacyApiUrl}/manage-user.php?action=deactivate&user_id=${userId}`);
-  }
-
-  activateUser(userId: number): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/manage-user.php?action=activate&user_id=${userId}`, {});
-  }
-
-  deleteUser(userId: number): Observable<any> {
-    return this.http.delete<any>(`${environment.legacyApiUrl}/manage-user.php?action=delete&user_id=${userId}`);
-  }
-
-  // Create User - Legacy API (for students)
-  createUser(userData: any): Observable<any> {
-    // Use legacy API for student creation
-    return this.http.post<any>(`${environment.legacyApiUrl}/admin/create-user.php`, userData);
-  }
-
-  // Create User - Legacy API (for non-students)
-  createUserLegacy(userData: any): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/admin/create-user.php`, userData);
-  }
-
-  // Get sections for a specific grade level (Legacy API)
   getSectionsForGrade(gradeLevel: number): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/admin/school-years/current`).pipe(
       switchMap((schoolYearResponse) => {
         const schoolYearId = schoolYearResponse?.data?.id;
-
-        if (!schoolYearId) {
-          return this.http.get<any>(`${environment.legacyApiUrl}/admin/sections/list.php?grade_level=${gradeLevel}`);
-        }
-
-        return this.http.get<any>(`${environment.apiUrl}/admin/sections?school_year_id=${schoolYearId}`).pipe(
-          map((response) => {
-            if (response.success && Array.isArray(response.data)) {
-              const sections = response.data.filter((section: any) => Number(section.grade_level_id) === Number(gradeLevel));
-              return {
-                success: true,
-                data: {
-                  sections
-                }
-              };
-            }
-            return response;
-          })
-        );
+        return this.http.get<any>(`${environment.apiUrl}/admin/sections?school_year_id=${schoolYearId}&grade_level=${gradeLevel}`);
       }),
       catchError(() => {
-        return this.http.get<any>(`${environment.legacyApiUrl}/admin/sections/list.php?grade_level=${gradeLevel}`).pipe(
-          map(response => {
-            if (response.success) {
-              return {
-                success: true,
-                data: {
-                  sections: response.data || []
-                }
-              };
-            }
-            return response;
-          })
-        );
+        return this.http.get<any>(`${environment.apiUrl}/admin/sections?grade_level=${gradeLevel}`);
       })
     );
   }
 
-  // Get all grade levels (Laravel-first, fallback to Legacy API)
   getGradeLevelsWithSections(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/grade-levels`).pipe(
-      catchError(() => this.http.get<any>(`${environment.legacyApiUrl}/get-grade-levels.php`))
-    );
+    return this.http.get<any>(`${environment.apiUrl}/admin/grade-levels`);
   }
 
-  // Bulk Import Students
+  // Bulk Import Students (Laravel)
   bulkImportStudents(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('csv_file', file);
-    return this.http.post<any>(`${environment.legacyApiUrl}/admin/students/bulk-import.php`, formData);
+    return this.http.post<any>(`${environment.apiUrl}/admin/students/bulk-import`, formData);
   }
 
-  // System Settings
+  // System Settings (Laravel)
   getSystemSettings(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/system-settings.php?action=get-all`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/system-settings`);
   }
 
   updateSystemSettings(section: string, settings: any): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/system-settings.php?action=update`, {
+    return this.http.put<any>(`${environment.apiUrl}/admin/system-settings`, {
       section,
       settings
     });
@@ -142,8 +84,7 @@ export class AdminService {
 
   // Reports
   getReport(reportType: string, startDate?: string, endDate?: string): Observable<any> {
-    // Use legacy API for all reports until Laravel implementation is fixed
-    let url = `${environment.legacyApiUrl}/get-reports-data.php?type=${reportType}`;
+    let url = `${environment.apiUrl}/admin/reports?type=${reportType}`;
     if (startDate) url += `&start_date=${startDate}`;
     if (endDate) url += `&end_date=${endDate}`;
     return this.http.get<any>(url);
@@ -200,28 +141,25 @@ export class AdminService {
   }
 
   getActivityLogs(limit: number = 20, offset: number = 0): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-activity-logs.php?limit=${limit}&offset=${offset}`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/activity-logs?limit=${limit}&offset=${offset}`);
   }
 
-  // Backup & Recovery
+  // Backup & Recovery (Laravel)
   createBackup(): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/backup-database.php`, {});
+    return this.http.post<any>(`${environment.apiUrl}/admin/backup-database`, {});
   }
 
   getBackupHistory(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-backup-history.php`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/backup-history`);
   }
 
   downloadBackup(filename: string): void {
-    const url = `${environment.legacyApiUrl}/download-backup.php?filename=${filename}`;
-    
-    // Use HttpClient to download with authentication headers
+    const url = `${environment.apiUrl}/admin/download-backup?filename=${filename}`;
     this.http.get(url, {
       responseType: 'blob',
       observe: 'response'
     }).subscribe({
       next: (response) => {
-        // Create a blob URL and trigger download
         const blob = response.body;
         if (blob) {
           const url = window.URL.createObjectURL(blob);
@@ -240,20 +178,20 @@ export class AdminService {
   }
 
   deleteBackup(filename: string): Observable<any> {
-    return this.http.delete<any>(`${environment.legacyApiUrl}/delete-backup.php?filename=${filename}`);
+    return this.http.delete<any>(`${environment.apiUrl}/admin/delete-backup?filename=${filename}`);
   }
 
   restoreBackup(filename: string): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/restore-backup.php`, { filename });
+    return this.http.post<any>(`${environment.apiUrl}/admin/restore-backup`, { filename });
   }
 
   // Grade Promotion
   getSchoolYears(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/admin/school-years/list.php`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/school-years`);
   }
 
   createSchoolYear(yearName: string, startDate: string, endDate: string, isActive: boolean = false): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/admin/school-years/create.php`, {
+    return this.http.post<any>(`${environment.apiUrl}/admin/school-years`, {
       year_name: yearName,
       start_date: startDate,
       end_date: endDate,
@@ -262,7 +200,7 @@ export class AdminService {
   }
 
   createSection(sectionName: string, gradeLevelId: number, schoolYearId: number, capacity: number = 50): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/admin/sections/create.php`, {
+    return this.http.post<any>(`${environment.apiUrl}/admin/sections`, {
       section_name: sectionName,
       grade_level_id: gradeLevelId,
       school_year_id: schoolYearId,
@@ -271,7 +209,7 @@ export class AdminService {
   }
 
   assignAdviserToSection(sectionId: number, adviserId: number, schoolYearId: number): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/admin/sections/assign-adviser.php`, {
+    return this.http.post<any>(`${environment.apiUrl}/admin/sections/assign-adviser`, {
       section_id: sectionId,
       adviser_id: adviserId,
       school_year_id: schoolYearId
@@ -279,11 +217,11 @@ export class AdminService {
   }
 
   getPromotionSummary(currentSchoolYearId: number, targetSchoolYearId: number): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/admin/promotions/get-summary.php?current_school_year_id=${currentSchoolYearId}&target_school_year_id=${targetSchoolYearId}`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/promotions/summary?current_school_year_id=${currentSchoolYearId}&target_school_year_id=${targetSchoolYearId}`);
   }
 
   bulkPromoteStudents(currentSchoolYearId: number, targetSchoolYearId: number, promotionRules: any, excludeStudentIds: number[] = []): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/admin/students/bulk-promote.php`, {
+    return this.http.post<any>(`${environment.apiUrl}/admin/students/bulk-promote`, {
       current_school_year_id: currentSchoolYearId,
       target_school_year_id: targetSchoolYearId,
       promotion_rules: promotionRules,
@@ -292,7 +230,7 @@ export class AdminService {
   }
 
   manualAdjustPromotion(studentId: number, action: string, newGradeLevelId?: number, newSectionId?: number, notes?: string): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/admin/students/manual-adjust-promotion.php`, {
+    return this.http.post<any>(`${environment.apiUrl}/admin/students/manual-adjust-promotion`, {
       student_id: studentId,
       action,
       new_grade_level_id: newGradeLevelId,
@@ -303,40 +241,35 @@ export class AdminService {
 
   // Notifications
   getNotifications(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-admin-notifications.php`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/notifications`);
   }
 
   markNotificationAsRead(notificationId: number): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/manage-notifications.php`, {
+    return this.http.put<any>(`${environment.apiUrl}/admin/notifications/read`, {
       notification_id: notificationId
     });
   }
 
   markAllNotificationsAsRead(): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/manage-notifications.php`, {});
+    return this.http.post<any>(`${environment.apiUrl}/admin/notifications/read-all`, {});
   }
 
   deleteNotification(notificationId: number): Observable<any> {
-    return this.http.request<any>('DELETE', `${environment.legacyApiUrl}/manage-notifications.php`, {
+    return this.http.request<any>('DELETE', `${environment.apiUrl}/admin/notifications`, {
       body: { notification_id: notificationId }
     });
   }
 
   // Send SMS to parent
   sendParentSMS(visitId: number): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/admin/send-parent-sms.php`, {
+    return this.http.post<any>(`${environment.apiUrl}/admin/send-parent-sms`, {
       visit_id: visitId
     });
   }
 
   // Health Risk Visualization
   getHealthRiskVisualization(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/health-risk-visualization`).pipe(
-      catchError((error) => {
-        console.warn('Laravel health risk endpoint failed, falling back to legacy endpoint:', error);
-        return this.http.get<any>(`${environment.legacyApiUrl}/get-health-risk-data.php`);
-      })
-    );
+    return this.http.get<any>(`${environment.apiUrl}/admin/health-risk-visualization`);
   }
 
   // Health Recommendations (Legacy API)

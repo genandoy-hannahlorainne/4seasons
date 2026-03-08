@@ -104,18 +104,18 @@ export class DashboardService {
 
   // Legacy API methods (keep for backward compatibility during migration)
   getAdminDashboardStats(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-admin-dashboard-stats.php`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/dashboard-stats`);
   }
 
   getAdviserDashboard(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-adviser-dashboard.php`);
+    return this.http.get<any>(`${environment.apiUrl}/adviser/dashboard`);
   }
 
   getStaffDashboard(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-staff-dashboard.php`);
+    return this.http.get<any>(`${environment.apiUrl}/staff/dashboard`);
   }
 
   getDashboardStats(): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-dashboard-stats.php`);
+    return this.http.get<any>(`${environment.apiUrl}/dashboard/stats`);
   }
 }
