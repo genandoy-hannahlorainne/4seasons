@@ -41,11 +41,11 @@ export class StaffService {
 
   getStaffDashboard(userId?: number): Observable<any> {
     const suffix = userId ? `?user_id=${userId}` : '';
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-staff-dashboard.php${suffix}`);
+    return this.http.get<any>(`${environment.apiUrl}/staff/dashboard${suffix}`);
   }
 
   updateStaffProfile(userId: number, profileData: any): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/update-staff-profile.php`, {
+    return this.http.put<any>(`${environment.apiUrl}/staff/profile`, {
       user_id: userId,
       ...profileData
     });
@@ -64,15 +64,11 @@ export class StaffService {
       params = params.set('search', filters.search);
     }
 
-    return this.http.get<any>(`${environment.apiUrl}/staff/students`, { params }).pipe(
-      catchError(() => this.http.get<any>(`${environment.legacyApiUrl}/get-all-students.php`, { params }))
-    );
+    return this.http.get<any>(`${environment.apiUrl}/staff/students`, { params });
   }
 
   getStudentProfile(studentId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/students/${studentId}`).pipe(
-      catchError(() => this.http.get<any>(`${environment.legacyApiUrl}/get-student-complete-profile.php?student_id=${studentId}`))
-    );
+    return this.http.get<any>(`${environment.apiUrl}/students/${studentId}`);
   }
 
   getReportsData(startDate: string, endDate: string, gradeFilter?: string): Observable<any> {
@@ -85,12 +81,7 @@ export class StaffService {
     }
 
     return this.http.get<any>(`${environment.apiUrl}/staff/reports`, { params }).pipe(
-      map((response) => this.normalizeReportsResponse(response)),
-      catchError(() =>
-        this.http.get<any>(`${environment.legacyApiUrl}/get-reports-data.php?type=medical`, { params }).pipe(
-          map((response) => this.normalizeReportsResponse(response))
-        )
-      )
+      map((response) => this.normalizeReportsResponse(response))
     );
   }
 

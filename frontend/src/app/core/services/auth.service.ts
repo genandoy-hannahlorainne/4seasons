@@ -49,8 +49,7 @@ export class AuthService {
   }
 
   register(userData: any): Observable<any> {
-    // Keep using legacy endpoint for now
-    return this.http.post<any>(`${environment.legacyApiUrl}/register.php`, userData);
+    return this.http.post<any>(`${environment.apiUrl}/register`, userData);
   }
 
   logout(): Observable<any> {
@@ -140,8 +139,7 @@ export class AuthService {
   }
 
   changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {
-    // Keep using legacy endpoint for now
-    return this.http.post<any>(`${environment.legacyApiUrl}/change-password.php`, {
+    return this.http.post<any>(`${environment.apiUrl}/change-password`, {
       user_id: userId,
       current_password: currentPassword,
       new_password: newPassword,

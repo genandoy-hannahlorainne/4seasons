@@ -320,7 +320,7 @@ export class ForceChangePasswordComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.http.post<any>(`${environment.legacyApiUrl}/force-change-password.php`, {
+        this.http.post<any>(`${environment.apiUrl}/force-change-password`, {
           current_password: currentPassword,
           new_password: newPassword,
           new_password_confirmation: newPassword

@@ -548,7 +548,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      // For other roles, use legacy API
+      // For other roles, use Laravel endpoint
       this.adminService.createUserLegacy(this.newUser).subscribe({
         next: (response) => {
           this.creatingUser = false;

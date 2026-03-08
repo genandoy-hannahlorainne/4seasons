@@ -122,47 +122,47 @@ export class StudentService {
 
   // Legacy API methods (keep for backward compatibility during migration)
   getStudentProfile(userId: number): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-student-profile.php?user_id=${userId}`);
+    return this.http.get<any>(`${environment.apiUrl}/students/profile?user_id=${userId}`);
   }
 
   updateStudentProfile(userId: number, profileData: any): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/update-student-profile.php`, {
+    return this.http.put<any>(`${environment.apiUrl}/students/profile`, {
       user_id: userId,
       ...profileData
     });
   }
 
   getStudentMedicalData(userId: number): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-student-medical-data.php?user_id=${userId}`);
+    return this.http.get<any>(`${environment.apiUrl}/students/medical-data?user_id=${userId}`);
   }
 
   getStudentQRCode(studentId: number): Observable<any> {
-    return this.http.get<any>(`${environment.legacyApiUrl}/get-student-qr.php?student_id=${studentId}`);
+    return this.http.get<any>(`${environment.apiUrl}/students/qr?student_id=${studentId}`);
   }
 
   addAllergy(allergyData: any): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/manage-student-allergies.php`, allergyData);
+    return this.http.post<any>(`${environment.apiUrl}/students/allergies`, allergyData);
   }
 
   updateAllergy(allergyData: any): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/manage-student-allergies.php`, allergyData);
+    return this.http.put<any>(`${environment.apiUrl}/students/allergies`, allergyData);
   }
 
   removeAllergy(allergyId: number): Observable<any> {
-    return this.http.request<any>('DELETE', `${environment.legacyApiUrl}/manage-student-allergies.php`, {
+    return this.http.request<any>('DELETE', `${environment.apiUrl}/students/allergies`, {
       body: { allergy_id: allergyId }
     });
   }
 
   updateStudentPhysicalInfo(userId: number, physicalData: any): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/update-student-physical-info.php`, {
+    return this.http.put<any>(`${environment.apiUrl}/students/physical-info`, {
       user_id: userId,
       ...physicalData
     });
   }
 
   updateStudentAllergies(userId: number, allergies: any[]): Observable<any> {
-    return this.http.post<any>(`${environment.legacyApiUrl}/manage-student-allergies.php`, {
+    return this.http.post<any>(`${environment.apiUrl}/students/allergies/bulk-update`, {
       action: 'bulk_update',
       user_id: userId,
       allergies: allergies
@@ -170,7 +170,7 @@ export class StudentService {
   }
 
   updateMedicalHistory(userId: number, medicalHistory: any): Observable<any> {
-    return this.http.put<any>(`${environment.legacyApiUrl}/update-medical-info.php`, {
+    return this.http.put<any>(`${environment.apiUrl}/students/medical-history`, {
       user_id: userId,
       medical_history: medicalHistory
     });
