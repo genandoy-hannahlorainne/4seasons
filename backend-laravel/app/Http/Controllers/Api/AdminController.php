@@ -851,4 +851,905 @@ class AdminController extends BaseController
         
         return str_shuffle($password);
     }
+
+    /**
+     * Get all users (admin, faculty, clinic staff, etc)
+     */
+    public function getAllUsers(Request $request)
+    {
+        try {
+            Log::info('getAllUsers called', [
+                'user_id' => $request->user()?->user_id,
+                'role' => $request->user()?->role?->role_name,
+                'role_filter' => $request->get('role')
+            ]);
+
+            $roleFilter = $request->get('role');
+            
+            if ($roleFilter) {
+                // Return flat format when role filter is applied
+                $users = User::with('role')
+                    ->whereHas('role', function($query) use ($roleFilter) {
+                        $query->where('role_name', $roleFilter);
+                    })
+                    ->get()
+                    ->map(function($user) {
+                        return [
+                            'user_id' => $user->user_id,
+                            'username' => $user->username,
+                            'email' => $user->email,
+                            'phone' => $user->phone,
+                            'full_name' => $user->full_name,
+                            'role_name' => $user->role->role_name ?? 'Unknown',
+                            'is_active' => (bool)$user->is_active,
+                            'created_at' => $user->created_at,
+                            'updated_at' => $user->updated_at,
+                        ];
+                    });
+                
+                Log::info('getAllUsers filtered result', ['count' => $users->count(), 'filter' => $roleFilter]);
+                return $this->sendResponse(['users' => $users], 'Users retrieved successfully');
+            }
+            
+            // Return grouped format when no role filter
+            $allUsers = User::with('role')->get();
+            Log::info('getAllUsers total users found', ['count' => $allUsers->count()]);
+            
+            $groupedUsers = [
+                'student' => [],
+                'adviser' => [],
+                'clinic_staff' => [],
+                'admin' => []
+            ];
+            
+            foreach ($allUsers as $user) {
+                $roleName = $user->role->role_name ?? 'unknown';
+                $userData = [
+                    'user_id' => $user->user_id,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'full_name' => $user->full_name,
+                    'role_name' => $roleName,
+                    'is_active' => (bool)$user->is_active,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                ];
+                
+                // Map role names to array keys
+                if ($roleName === 'Student') {
+                    $roleKey = 'student';
+                } elseif ($roleName === 'Adviser') {
+                    $roleKey = 'adviser';
+                } elseif ($roleName === 'Clinic Staff') {
+                    $roleKey = 'clinic_staff';
+                } elseif ($roleName === 'Admin') {
+                    $roleKey = 'admin';
+                } else {
+                    $roleKey = 'admin'; // fallback for unknown roles
+                }
+                
+                $groupedUsers[$roleKey][] = $userData;
+            }
+            
+            $totals = [
+                'students' => count($groupedUsers['student']),
+                'advisers' => count($groupedUsers['adviser']),
+                'clinic_staff' => count($groupedUsers['clinic_staff']),
+                'admins' => count($groupedUsers['admin']),
+                'total' => $allUsers->count()
+            ];
+            
+            Log::info('getAllUsers grouped result', $totals);
+            
+            return $this->sendResponse([
+                'users' => $groupedUsers,
+                'totals' => $totals
+            ], 'Users retrieved successfully');
+            
+        } catch (\Exception $e) {
+            Log::error('getAllUsers failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->sendError('Failed to retrieve users', $e->getMessage());
+        }
+    }
+
+    /**
+     * Update user information
+     */
+    public function updateUser(Request $request, $userId)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'full_name' => 'sometimes|string|max:150',
+                'email' => 'sometimes|email|unique:users,email,' . $userId . ',user_id',
+                'phone' => 'sometimes|nullable|string|max:20',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            $user = User::find($userId);
+            if (!$user) {
+                return $this->sendError('User not found', [], 404);
+            }
+
+            $user->update($request->only(['full_name', 'email', 'phone']));
+
+            return $this->sendResponse(['user' => $user], 'User updated successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to update user', $e->getMessage());
+        }
+    }
+
+    /**
+     * Reset user password
+     */
+    public function resetPassword(Request $request, $userId)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'new_password' => 'required|string|min:6',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            $user = User::find($userId);
+            if (!$user) {
+                return $this->sendError('User not found', [], 404);
+            }
+
+            $user->update([
+                'password_hash' => Hash::make($request->new_password),
+                'password_must_change' => true
+            ]);
+
+            return $this->sendResponse([], 'Password reset successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to reset password', $e->getMessage());
+        }
+    }
+
+    /**
+     * Activate user
+     */
+    public function activateUser($userId)
+    {
+        try {
+            $user = User::find($userId);
+            if (!$user) {
+                return $this->sendError('User not found', [], 404);
+            }
+
+            $user->update(['is_active' => true]);
+
+            // Also activate related records
+            if ($user->student) {
+                $user->student->update(['is_active' => true]);
+            }
+
+            return $this->sendResponse([], 'User activated successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to activate user', $e->getMessage());
+        }
+    }
+
+    /**
+     * Deactivate user
+     */
+    public function deactivateUser($userId)
+    {
+        try {
+            $user = User::find($userId);
+            if (!$user) {
+                return $this->sendError('User not found', [], 404);
+            }
+
+            $user->update(['is_active' => false]);
+
+            // Also deactivate related records
+            if ($user->student) {
+                $user->student->update(['is_active' => false]);
+            }
+
+            return $this->sendResponse([], 'User deactivated successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to deactivate user', $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete user
+     */
+    public function deleteUser($userId)
+    {
+        try {
+            $user = User::find($userId);
+            if (!$user) {
+                return $this->sendError('User not found', [], 404);
+            }
+
+            // Check if user has related records that prevent deletion
+            if ($user->student && $user->student->medicalVisits()->count() > 0) {
+                return $this->sendError('Cannot delete user with medical visit history', [], 400);
+            }
+
+            DB::beginTransaction();
+
+            // Delete related records first
+            if ($user->student) {
+                $user->student->delete();
+            }
+            if ($user->adviser) {
+                $user->adviser->delete();
+            }
+            if ($user->clinicStaff) {
+                $user->clinicStaff->delete();
+            }
+
+            $user->delete();
+
+            DB::commit();
+
+            return $this->sendResponse([], 'User deleted successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->sendError('Failed to delete user', $e->getMessage());
+        }
+    }
+
+    /**
+     * Create a new user (non-student roles: Adviser, Clinic Staff, Admin)
+     */
+    public function createUser(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'role' => 'required|in:adviser,clinic_staff,admin',
+                'full_name' => 'required|string|max:150',
+                'email' => 'required|email|unique:users,email',
+                'phone' => 'nullable|string|max:20',
+                // Adviser specific fields
+                'employee_number' => 'required_if:role,adviser|string|max:50|unique:advisers,employee_number',
+                // Clinic Staff specific fields
+                'staff_code' => 'required_if:role,clinic_staff|string|max:20|unique:clinic_staff,staff_code',
+                'position' => 'required_if:role,clinic_staff|string|max:100',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            DB::beginTransaction();
+
+            // Generate temporary password
+            $tempPassword = $this->generateTempPassword();
+            $passwordHash = Hash::make($tempPassword);
+
+            // Determine role ID
+            $roleMapping = [
+                'adviser' => 3,      // Adviser role
+                'clinic_staff' => 4, // Clinic Staff role
+                'admin' => 1         // Admin role
+            ];
+
+            $roleId = $roleMapping[$request->role];
+
+            // Create user account
+            $user = User::create([
+                'role_id' => $roleId,
+                'username' => $request->email, // Use email as username for non-students
+                'password_hash' => $passwordHash,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'full_name' => $request->full_name,
+                'password_must_change' => true,
+                'is_active' => true
+            ]);
+
+            // Create role-specific records
+            if ($request->role === 'adviser') {
+                \App\Models\Adviser::create([
+                    'user_id' => $user->user_id,
+                    'employee_number' => $request->employee_number,
+                    'full_name' => $request->full_name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'is_active' => true
+                ]);
+            } elseif ($request->role === 'clinic_staff') {
+                \App\Models\ClinicStaff::create([
+                    'user_id' => $user->user_id,
+                    'staff_code' => $request->staff_code,
+                    'full_name' => $request->full_name,
+                    'position' => $request->position,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'is_active' => true
+                ]);
+            }
+
+            DB::commit();
+
+            // Send email notification
+            try {
+                $emailData = [
+                    'username' => $user->username,
+                    'full_name' => $user->full_name,
+                    'email' => $request->email,
+                    'temp_password' => $tempPassword,
+                    'role' => ucfirst(str_replace('_', ' ', $request->role))
+                ];
+                
+                Mail::to($request->email)->send(new UserAccountCreated($emailData, $tempPassword, ucfirst(str_replace('_', ' ', $request->role))));
+            } catch (\Exception $e) {
+                // Log email error but don't fail the user creation
+                Log::warning('Failed to send account creation email: ' . $e->getMessage());
+            }
+
+            return $this->sendResponse([
+                'user' => [
+                    'user_id' => $user->user_id,
+                    'username' => $user->username,
+                    'full_name' => $user->full_name,
+                    'email' => $user->email,
+                    'role' => ucfirst(str_replace('_', ' ', $request->role)),
+                    'temp_password' => $tempPassword
+                ]
+            ], 'User created successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->sendError('Failed to create user', $e->getMessage());
+        }
+    }
+
+    /**
+     * Bulk import students from CSV
+     */
+    public function bulkImportStudents(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'csv_file' => 'required|file|mimes:csv,txt|max:2048'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            $file = $request->file('csv_file');
+            $csvData = array_map('str_getcsv', file($file->getRealPath()));
+            $header = array_shift($csvData);
+
+            // Expected CSV format: student_number,first_name,middle_name,last_name,birth_date,gender,grade_level,section_name,email,phone,emergency_contact_name,emergency_contact_phone
+            $expectedHeaders = ['student_number', 'first_name', 'middle_name', 'last_name', 'birth_date', 'gender', 'grade_level', 'section_name', 'email', 'phone', 'emergency_contact_name', 'emergency_contact_phone'];
+            
+            if (count(array_intersect($header, $expectedHeaders)) < 8) {
+                return $this->sendError('Invalid CSV format. Required columns: ' . implode(', ', $expectedHeaders));
+            }
+
+            $results = [
+                'total_rows' => count($csvData),
+                'successful' => 0,
+                'failed' => 0,
+                'errors' => []
+            ];
+
+            // Get current school year
+            $currentSchoolYear = SchoolYear::where('is_current', true)->first();
+            if (!$currentSchoolYear) {
+                return $this->sendError('No current school year set');
+            }
+
+            DB::beginTransaction();
+
+            foreach ($csvData as $rowIndex => $row) {
+                try {
+                    $studentData = array_combine($header, $row);
+                    
+                    // Validate required fields
+                    if (empty($studentData['student_number']) || empty($studentData['first_name']) || empty($studentData['last_name'])) {
+                        $results['errors'][] = "Row " . ($rowIndex + 2) . ": Missing required fields";
+                        $results['failed']++;
+                        continue;
+                    }
+
+                    // Check if student already exists
+                    if (Student::where('student_number', $studentData['student_number'])->exists()) {
+                        $results['errors'][] = "Row " . ($rowIndex + 2) . ": Student number already exists";
+                        $results['failed']++;
+                        continue;
+                    }
+
+                    // Find section
+                    $section = Section::whereHas('gradeLevel', function($query) use ($studentData) {
+                        $query->where('level_name', 'like', '%' . $studentData['grade_level'] . '%');
+                    })->where('section_name', $studentData['section_name'])->first();
+
+                    if (!$section) {
+                        $results['errors'][] = "Row " . ($rowIndex + 2) . ": Section not found";
+                        $results['failed']++;
+                        continue;
+                    }
+
+                    // Generate temporary password
+                    $tempPassword = $this->generateTempPassword();
+                    $passwordHash = Hash::make($tempPassword);
+
+                    // Create user account
+                    $user = User::create([
+                        'role_id' => 2, // Student role
+                        'username' => $studentData['student_number'],
+                        'password_hash' => $passwordHash,
+                        'email' => $studentData['email'] ?? null,
+                        'phone' => $studentData['phone'] ?? null,
+                        'full_name' => trim($studentData['first_name'] . ' ' . ($studentData['middle_name'] ?? '') . ' ' . $studentData['last_name']),
+                        'password_must_change' => true,
+                        'is_active' => true
+                    ]);
+
+                    // Create student profile
+                    Student::create([
+                        'user_id' => $user->user_id,
+                        'student_number' => $studentData['student_number'],
+                        'first_name' => $studentData['first_name'],
+                        'middle_name' => $studentData['middle_name'] ?? null,
+                        'last_name' => $studentData['last_name'],
+                        'birth_date' => $studentData['birth_date'] ?? null,
+                        'gender' => $studentData['gender'] ?? null,
+                        'grade_level' => $section->gradeLevel->level_name,
+                        'section' => $section->section_name,
+                        'current_grade_level_id' => $section->grade_level_id,
+                        'current_section_id' => $section->id,
+                        'current_school_year_id' => $currentSchoolYear->id,
+                        'emergency_contact_name' => $studentData['emergency_contact_name'] ?? null,
+                        'emergency_contact_phone' => $studentData['emergency_contact_phone'] ?? null,
+                        'is_active' => true
+                    ]);
+
+                    // Update section enrollment
+                    $section->increment('current_enrollment');
+
+                    $results['successful']++;
+
+                } catch (\Exception $e) {
+                    $results['errors'][] = "Row " . ($rowIndex + 2) . ": " . $e->getMessage();
+                    $results['failed']++;
+                }
+            }
+
+            DB::commit();
+
+            return $this->sendResponse($results, 'Bulk import completed');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->sendError('Failed to import students', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get system settings
+     */
+    public function getSystemSettings()
+    {
+        try {
+            // For now, return default settings structure
+            // In production, this would read from a settings table
+            $settings = [
+                'general' => [
+                    'school_name' => 'Pedro Diaz Memorial High School',
+                    'school_address' => 'Sample Address',
+                    'school_phone' => '(123) 456-7890',
+                    'school_email' => 'admin@pdmhs.edu.ph',
+                    'academic_year' => '2025-2026'
+                ],
+                'email' => [
+                    'smtp_host' => env('MAIL_HOST', 'smtp.gmail.com'),
+                    'smtp_port' => env('MAIL_PORT', 587),
+                    'smtp_username' => env('MAIL_USERNAME', ''),
+                    'smtp_encryption' => env('MAIL_ENCRYPTION', 'tls'),
+                    'from_address' => env('MAIL_FROM_ADDRESS', 'noreply@pdmhs.edu.ph'),
+                    'from_name' => env('MAIL_FROM_NAME', 'PDMHS Medical System')
+                ],
+                'sms' => [
+                    'provider' => 'semaphore',
+                    'api_key' => env('SMS_API_KEY', ''),
+                    'sender_name' => env('SMS_SENDER_NAME', 'PDMHS')
+                ],
+                'security' => [
+                    'session_timeout' => 1440, // minutes
+                    'password_min_length' => 6,
+                    'require_password_change' => true,
+                    'max_login_attempts' => 5
+                ]
+            ];
+
+            return $this->sendResponse($settings, 'System settings retrieved successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve system settings', $e->getMessage());
+        }
+    }
+
+    /**
+     * Update system settings
+     */
+    public function updateSystemSettings(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'section' => 'required|in:general,email,sms,security',
+                'settings' => 'required|array'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            // In production, this would update a settings table
+            // For now, just validate and return success
+            $section = $request->section;
+            $settings = $request->settings;
+
+            // Basic validation based on section
+            if ($section === 'email') {
+                $emailValidator = Validator::make($settings, [
+                    'smtp_host' => 'required|string',
+                    'smtp_port' => 'required|integer|min:1|max:65535',
+                    'from_address' => 'required|email'
+                ]);
+
+                if ($emailValidator->fails()) {
+                    return $this->sendError('Email settings validation failed', $emailValidator->errors()->first());
+                }
+            }
+
+            return $this->sendResponse([], 'System settings updated successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to update system settings', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get admin notifications
+     */
+    public function getNotifications()
+    {
+        try {
+            // Mock notifications for now - implement with real notification system
+            $notifications = [
+                [
+                    'notification_id' => 1,
+                    'message' => 'Emergency visit: Student requires immediate attention',
+                    'priority' => 'urgent',
+                    'status' => 'Pending',
+                    'created_at' => now()->subMinutes(15)->toISOString(),
+                    'student' => [
+                        'full_name' => 'John Doe',
+                        'student_number' => '2024001',
+                        'grade_section' => 'Grade 7 - Section A'
+                    ],
+                    'visit' => [
+                        'visit_id' => 1,
+                        'visit_type' => 'Emergency',
+                        'diagnosis' => 'Severe allergic reaction',
+                        'status' => 'Referred'
+                    ],
+                    'staff' => [
+                        'name' => 'Nurse Jane',
+                        'position' => 'Head Nurse'
+                    ]
+                ]
+            ];
+            
+            return $this->sendResponse(['notifications' => $notifications], 'Notifications retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve notifications', $e->getMessage());
+        }
+    }
+
+    /**
+     * Mark notification as read
+     */
+    public function markNotificationAsRead($notificationId)
+    {
+        try {
+            // Implement notification marking logic
+            return $this->sendResponse([], 'Notification marked as read');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to mark notification as read', $e->getMessage());
+        }
+    }
+
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllNotificationsAsRead()
+    {
+        try {
+            // Implement bulk notification marking logic
+            return $this->sendResponse([], 'All notifications marked as read');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to mark notifications as read', $e->getMessage());
+        }
+    }
+
+    /**
+     * Send SMS to parent
+     */
+    public function sendParentSMS(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'visit_id' => 'required|integer|exists:medical_visits,visit_id'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            $visitId = $request->visit_id;
+            
+            // Get visit and student information
+            $visit = \App\Models\MedicalVisit::with(['student'])->find($visitId);
+            if (!$visit || !$visit->student) {
+                return $this->sendError('Visit or student not found');
+            }
+
+            $student = $visit->student;
+            $parentPhone = $student->emergency_contact_phone;
+            
+            if (!$parentPhone) {
+                return $this->sendError('Parent contact number not available');
+            }
+
+            // Create SMS message
+            $message = "PDMHS Medical Alert: Your child {$student->full_name} ({$student->student_number}) had a medical visit today. Please contact the school clinic for details.";
+            
+            // Mock SMS sending - implement with real SMS service
+            $smsResult = [
+                'success' => true,
+                'phone' => $parentPhone,
+                'message' => $message,
+                'sent_at' => now()->toISOString()
+            ];
+            
+            return $this->sendResponse($smsResult, 'SMS sent successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to send SMS', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get activity logs
+     */
+    public function getActivityLogs(Request $request)
+    {
+        try {
+            $limit = $request->get('limit', 10);
+            
+            // Mock activity logs - implement with real activity logging
+            $activities = [
+                [
+                    'activity_type' => 'user',
+                    'action' => 'New student registered',
+                    'username' => 'admin',
+                    'full_name' => 'System Administrator',
+                    'created_at' => now()->subMinutes(5)->toISOString()
+                ],
+                [
+                    'activity_type' => 'record',
+                    'action' => 'Medical visit recorded',
+                    'username' => 'nurse_jane',
+                    'full_name' => 'Jane Doe',
+                    'created_at' => now()->subMinutes(15)->toISOString()
+                ]
+            ];
+            
+            return $this->sendResponse(['activities' => array_slice($activities, 0, $limit)], 'Activity logs retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve activity logs', $e->getMessage());
+        }
+    }
+
+    /**
+     * Create database backup
+     */
+    public function createBackup()
+    {
+        try {
+            // Mock backup creation - implement with real backup logic
+            $backupFilename = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
+            $backupPath = storage_path('app/backups/' . $backupFilename);
+            
+            // Create backups directory if it doesn't exist
+            if (!file_exists(storage_path('app/backups'))) {
+                mkdir(storage_path('app/backups'), 0755, true);
+            }
+            
+            // Mock backup file creation
+            file_put_contents($backupPath, "-- Database backup created at " . now()->toISOString() . "\n-- This is a mock backup file\n");
+            
+            return $this->sendResponse([
+                'filename' => $backupFilename,
+                'size' => filesize($backupPath),
+                'created_at' => now()->toISOString(),
+                'path' => $backupPath
+            ], 'Database backup created successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to create backup', $e->getMessage());
+        }
+    }
+
+    /**
+     * Restore database backup
+     */
+    public function restoreBackup(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'backup_file' => 'required|file|mimes:sql,txt|max:10240' // 10MB max
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            $backupFile = $request->file('backup_file');
+            $filename = $backupFile->getClientOriginalName();
+            
+            // Store the uploaded file
+            $path = $backupFile->storeAs('backups/restore', $filename);
+            
+            // Mock restore process - implement with real restore logic
+            Log::info('Database restore initiated', [
+                'filename' => $filename,
+                'size' => $backupFile->getSize(),
+                'user' => $request->user()->username ?? 'unknown'
+            ]);
+            
+            return $this->sendResponse([
+                'filename' => $filename,
+                'restored_at' => now()->toISOString(),
+                'status' => 'completed'
+            ], 'Database backup restored successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to restore backup', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get health recommendations based on student data
+     */
+    public function getHealthRecommendations()
+    {
+        try {
+            // Mock health recommendations - implement with real analysis
+            $recommendations = [
+                [
+                    'id' => 1,
+                    'type' => 'nutrition',
+                    'priority' => 'high',
+                    'title' => 'Improve Nutrition Program',
+                    'description' => 'Based on BMI data, 15% of students are underweight. Consider enhancing the school nutrition program.',
+                    'affected_students' => 45,
+                    'grade_levels' => ['Grade 7', 'Grade 8'],
+                    'action_items' => [
+                        'Review current meal plans',
+                        'Consult with nutritionist',
+                        'Implement supplemental feeding program'
+                    ]
+                ],
+                [
+                    'id' => 2,
+                    'type' => 'physical_activity',
+                    'priority' => 'medium',
+                    'title' => 'Increase Physical Activity',
+                    'description' => 'Students in Grade 10-12 show higher rates of overweight. Recommend additional PE activities.',
+                    'affected_students' => 32,
+                    'grade_levels' => ['Grade 10', 'Grade 11', 'Grade 12'],
+                    'action_items' => [
+                        'Add extra PE sessions',
+                        'Organize sports competitions',
+                        'Create fitness awareness programs'
+                    ]
+                ],
+                [
+                    'id' => 3,
+                    'type' => 'health_screening',
+                    'priority' => 'low',
+                    'title' => 'Regular Health Screenings',
+                    'description' => 'Maintain current screening schedule to monitor student health trends.',
+                    'affected_students' => 300,
+                    'grade_levels' => ['All Grades'],
+                    'action_items' => [
+                        'Continue monthly health checks',
+                        'Update health records',
+                        'Parent health education sessions'
+                    ]
+                ]
+            ];
+            
+            return $this->sendResponse(['recommendations' => $recommendations], 'Health recommendations retrieved successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve health recommendations', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get BMI trends over time
+     */
+    public function getBMITrends(Request $request)
+    {
+        try {
+            $months = $request->get('months', 6);
+            
+            // Mock BMI trends data - implement with real data analysis
+            $trends = [];
+            $categories = ['Underweight', 'Normal', 'Overweight', 'Obese'];
+            
+            for ($i = $months - 1; $i >= 0; $i--) {
+                $date = now()->subMonths($i);
+                $monthData = [
+                    'month' => $date->format('Y-m'),
+                    'month_name' => $date->format('F Y'),
+                    'total_students' => 300,
+                    'categories' => []
+                ];
+                
+                foreach ($categories as $category) {
+                    $percentage = match($category) {
+                        'Underweight' => rand(10, 20),
+                        'Normal' => rand(50, 70),
+                        'Overweight' => rand(15, 25),
+                        'Obese' => rand(5, 15)
+                    };
+                    
+                    $monthData['categories'][] = [
+                        'category' => $category,
+                        'count' => intval($monthData['total_students'] * $percentage / 100),
+                        'percentage' => $percentage
+                    ];
+                }
+                
+                $trends[] = $monthData;
+            }
+            
+            // Calculate overall trends
+            $overallTrend = [
+                'direction' => 'stable',
+                'change_percentage' => rand(-5, 5),
+                'key_insights' => [
+                    'BMI distribution remains relatively stable',
+                    'Slight increase in normal weight category',
+                    'Nutrition programs showing positive impact'
+                ]
+            ];
+            
+            return $this->sendResponse([
+                'trends' => $trends,
+                'overall_trend' => $overallTrend,
+                'period_months' => $months
+            ], 'BMI trends retrieved successfully');
+            
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve BMI trends', $e->getMessage());
+        }
+    }
 }

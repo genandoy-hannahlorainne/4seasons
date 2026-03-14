@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { StudentService } from '../../../core/services/student.service';
+import { BMIUtils } from '../../../shared/utils/bmi-utils';
 import { QRCodeComponent } from 'angularx-qrcode';
 
 interface PersonalInfo {
@@ -269,24 +270,37 @@ export class PersonalInfoComponent implements OnInit {
     return age;
   }
 
+  formatDateForInput(dateString: string): string {
+    if (!dateString) return '';
+    
+    try {
+      // Handle both ISO format and simple date format
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      // Return in YYYY-MM-DD format for HTML date input
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
+  }
+
   calculateBMI(): string {
     if (!this.physicalInfoEdit.height_cm || !this.physicalInfoEdit.weight_kg) {
       return '';
     }
     
-    const heightInMeters = this.physicalInfoEdit.height_cm / 100;
-    const bmi = this.physicalInfoEdit.weight_kg / (heightInMeters * heightInMeters);
-    return bmi.toFixed(1);
+    // Use BMI utility for safe calculation
+    const bmi = BMIUtils.calculateBMI(this.physicalInfoEdit.height_cm, this.physicalInfoEdit.weight_kg);
+    return bmi ? bmi.toFixed(1) : '';
   }
 
   getBMICategory(): string {
-    const bmiValue = parseFloat(this.calculateBMI());
-    if (!bmiValue) return '';
+    const bmiString = this.calculateBMI();
+    if (!bmiString) return '';
     
-    if (bmiValue < 18.5) return 'Underweight';
-    if (bmiValue < 25) return 'Normal weight';
-    if (bmiValue < 30) return 'Overweight';
-    return 'Obese';
+    return BMIUtils.getBMICategory(parseFloat(bmiString));
   }
 
   // Contact Information Edit Methods

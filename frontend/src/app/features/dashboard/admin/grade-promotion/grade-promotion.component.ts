@@ -477,7 +477,7 @@ export class GradePromotionComponent implements OnInit {
       (response: any) => {
         this.schoolYears = response.data || [];
       },
-      (error) => {
+      (error: any) => {
         console.error('Error loading school years:', error);
       }
     );
@@ -506,7 +506,7 @@ export class GradePromotionComponent implements OnInit {
         this.adviserAssignmentStatus = response.adviser_assignment_status;
         this.manualCases = response.manual_cases;
       },
-      (error) => {
+      (error: any) => {
         console.error('Error loading promotion summary:', error);
         alert('Error loading promotion summary');
       }
@@ -548,7 +548,7 @@ export class GradePromotionComponent implements OnInit {
           stats: response
         };
       },
-      (error) => {
+      (error: any) => {
         this.isProcessing = false;
         this.promotionResult = {
           success: false,

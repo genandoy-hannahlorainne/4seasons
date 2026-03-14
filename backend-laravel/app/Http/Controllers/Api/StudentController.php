@@ -18,15 +18,15 @@ class StudentController extends BaseController
     {
         try {
             $query = Student::with(['user', 'medicalHistory', 'allergies'])
-                           ->where('is_active', true);
+                ->where('is_active', true);
             
             // Add search functionality
             if ($request->has('search')) {
                 $search = $request->get('search');
                 $query->where(function($q) use ($search) {
                     $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%")
-                      ->orWhere('student_number', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('student_number', 'like', "%{$search}%");
                 });
             }
             
@@ -63,13 +63,72 @@ class StudentController extends BaseController
                 'user',
                 'medicalHistory',
                 'allergies',
+                'currentAdviser',
+                'currentSection.adviser',
                 'medicalVisits' => function($query) {
                     $query->with('vitals')->orderBy('visit_datetime', 'desc')->limit(10);
                 }
             ]);
-            
-            return $this->sendResponse($student, 'Student retrieved successfully');
-            
+
+            // Resolve adviser information (same logic as medical data endpoint)
+            $resolvedAdviser = $student->currentAdviser ?: ($student->currentSection ? $student->currentSection->adviser : null);
+
+            $personalInfo = [
+                'student_id' => $student->student_id,
+                'student_number' => $student->student_number,
+                'full_name' => $student->full_name ?? trim($student->first_name . ' ' . ($student->middle_name ? $student->middle_name . ' ' : '') . $student->last_name),
+                'first_name' => $student->first_name,
+                'middle_name' => $student->middle_name,
+                'last_name' => $student->last_name,
+                'birth_date' => $student->birth_date,
+                'gender' => $student->gender,
+                'blood_type' => $student->blood_type,
+                'address' => $student->address,
+                'emergency_contact' => $student->emergency_contact,
+                'emergency_contact_relation' => $student->emergency_contact_relation,
+                'emergency_contact_phone' => $student->emergency_contact_phone,
+                'grade_level' => $student->grade_level,
+                'section' => $student->section,
+                'adviser_name' => $resolvedAdviser ? $resolvedAdviser->full_name : null,
+                'adviser_contact' => $resolvedAdviser ? $resolvedAdviser->phone : null,
+                'height_cm' => $student->height_cm,
+                'weight_kg' => $student->weight_kg,
+                'bmi' => $student->bmi,
+                'bmi_category' => $student->bmi_category,
+                'is_active' => $student->is_active,
+                'email' => $student->user ? $student->user->email : null,
+                'phone' => $student->user ? $student->user->phone : null,
+            ];
+
+            // Standardized response format for frontend compatibility
+            $response = [
+                'success' => true,
+                'message' => 'Student profile retrieved successfully',
+                'data' => [
+                    'profile' => $personalInfo,
+                    'personal_info' => $personalInfo,
+                    'medical_history' => $student->medicalHistory,
+                    'allergies' => $student->allergies,
+                    'medical_visits' => $student->medicalVisits,
+                ],
+                // Legacy compatibility - flatten some fields to root level
+                'profile' => $personalInfo,
+                'student_id' => $personalInfo['student_id'],
+                'student_number' => $personalInfo['student_number'],
+                'first_name' => $personalInfo['first_name'],
+                'last_name' => $personalInfo['last_name'],
+                'full_name' => $personalInfo['full_name'],
+                'grade_level' => $personalInfo['grade_level'],
+                'section' => $personalInfo['section'],
+                'blood_type' => $personalInfo['blood_type'],
+                'gender' => $personalInfo['gender'],
+                'birth_date' => $personalInfo['birth_date'],
+                'adviser_name' => $personalInfo['adviser_name'],
+                'adviser_contact' => $personalInfo['adviser_contact'],
+            ];
+
+            return response()->json($response);
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve student', [
                 'error' => $e->getMessage()
@@ -167,6 +226,11 @@ class StudentController extends BaseController
             $recentVisits = $student->medicalVisits()
                                   ->where('visit_datetime', '>=', now()->subDays(30))
                                   ->count();
+            
+            // Get the last visit
+            $lastVisit = $student->medicalVisits()
+                               ->orderBy('visit_datetime', 'desc')
+                               ->first();
 
             $medicalData = [
                 'personal_info' => [
@@ -192,7 +256,8 @@ class StudentController extends BaseController
                 'allergies' => $student->allergies,
                 'recent_visits_count' => $recentVisits,
                 'total_visits_count' => $totalVisits,
-                'recent_visits' => $student->medicalVisits
+                'recent_visits' => $student->medicalVisits,
+                'last_visit' => $lastVisit
             ];
 
             return $this->sendResponse($medicalData, 'Student medical data retrieved successfully');
@@ -769,23 +834,17 @@ class StudentController extends BaseController
         $gradeLevel = null;
         $section = null;
 
-        if ($student->currentSection) {
-            $section = $student->currentSection->section_name ?? null;
-            if ($student->currentSection->gradeLevel) {
-                $gradeLevel = $student->currentSection->gradeLevel->level_name ?? null;
-            }
+        // Try to get grade level from current section relationship
+        if ($student->currentSection && $student->currentSection->gradeLevel) {
+            $gradeLevel = $student->currentSection->gradeLevel->name;
+            $section = $student->currentSection->name;
         }
 
+        // Fallback to direct fields
         if (!$gradeLevel) {
-            $rawGrade = trim((string)($student->grade_level ?? ''));
-            if ($rawGrade !== '') {
-                if (is_numeric($rawGrade)) {
-                    $gradeLevel = 'Grade ' . $rawGrade;
-                } elseif (stripos($rawGrade, 'grade') === false && preg_match('/^\d+$/', $rawGrade)) {
-                    $gradeLevel = 'Grade ' . $rawGrade;
-                } else {
-                    $gradeLevel = $rawGrade;
-                }
+            $rawGradeLevel = trim((string)($student->grade_level ?? ''));
+            if ($rawGradeLevel !== '') {
+                $gradeLevel = $rawGradeLevel;
             }
         }
 
@@ -824,5 +883,90 @@ class StudentController extends BaseController
         }
 
         return null;
+    }
+
+    /**
+     * Get medical data by user_id (for frontend compatibility)
+     */ 
+    public function getMedicalDataByUserId(Request $request)
+    {
+        $userId = $request->get('user_id');
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing user_id parameter',
+                'error' => 'user_id is required'
+            ], 400);
+        }
+        
+        $student = Student::where('user_id', $userId)->first();
+        if (!$student) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No student record found for this user',
+                'error' => 'Student not found'
+            ], 404);
+        }
+        
+        // Load the medical history and other relationships
+        $student->load([
+            'medicalHistory',
+            'allergies',
+            'currentAdviser',
+            'currentSection.adviser',
+            'medicalVisits' => function($query) {
+                $query->with(['vitals', 'clinicStaff.user'])
+                      ->orderBy('visit_datetime', 'desc')
+                      ->limit(20);
+            }
+        ]);
+        
+        $resolvedAdviser = $student->currentAdviser ?: ($student->currentSection ? $student->currentSection->adviser : null);
+
+        // Calculate visit statistics
+        $totalVisits = $student->medicalVisits()->count();
+        $recentVisits = $student->medicalVisits()
+                              ->where('visit_datetime', '>=', now()->subDays(30))
+                              ->count();
+        
+        // Get the last visit
+        $lastVisit = $student->medicalVisits()
+                           ->orderBy('visit_datetime', 'desc')
+                           ->first();
+
+        $medicalData = [
+            'personal_info' => [
+                'student_id' => $student->student_id,
+                'student_number' => $student->student_number,
+                'full_name' => $student->full_name,
+                'birth_date' => $student->birth_date,
+                'gender' => $student->gender,
+                'blood_type' => $student->blood_type,
+                'address' => $student->address,
+                'emergency_contact' => $student->emergency_contact,
+                'emergency_contact_relation' => $student->emergency_contact_relation,
+                'emergency_contact_phone' => $student->emergency_contact_phone,
+                'grade_level' => $student->grade_level,
+                'section' => $student->section,
+                'adviser_name' => $resolvedAdviser ? $resolvedAdviser->full_name : null,
+                'adviser_contact' => $resolvedAdviser ? $resolvedAdviser->phone : null,
+                'height_cm' => $student->height_cm,
+                'weight_kg' => $student->weight_kg,
+                'bmi' => $student->bmi,
+                'bmi_category' => $student->bmi_category
+            ],
+            'medical_history' => $student->medicalHistory,
+            'allergies' => $student->allergies,
+            'recent_visits_count' => $recentVisits,
+            'total_visits_count' => $totalVisits,
+            'recent_visits' => $student->medicalVisits,
+            'last_visit' => $lastVisit
+        ];
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Student medical data retrieved successfully',
+            'data' => $medicalData
+        ]);
     }
 }

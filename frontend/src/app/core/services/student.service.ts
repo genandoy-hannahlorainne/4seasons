@@ -122,14 +122,11 @@ export class StudentService {
 
   // Legacy API methods (keep for backward compatibility during migration)
   getStudentProfile(userId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/students/profile?user_id=${userId}`);
+    return this.http.get<any>(`${environment.apiUrl}/students/${userId}`);
   }
 
   updateStudentProfile(userId: number, profileData: any): Observable<any> {
-    return this.http.put<any>(`${environment.apiUrl}/students/profile`, {
-      user_id: userId,
-      ...profileData
-    });
+    return this.http.put<any>(`${environment.apiUrl}/students/${userId}`, profileData);
   }
 
   getStudentMedicalData(userId: number): Observable<any> {

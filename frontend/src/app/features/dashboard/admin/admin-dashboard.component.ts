@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Subject, interval, BehaviorSubject } from 'rxjs';
 import { takeUntil, switchMap, startWith, tap } from 'rxjs/operators';
 import { HealthRiskVisualizationComponent } from './health-risk-visualization/health-risk-visualization.component';
@@ -884,10 +885,32 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private adminService: AdminService
+    private adminService: AdminService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    // Enhanced authentication check
+    if (!this.authService.checkAuthenticationStatus()) {
+      console.error('❌ Authentication check failed, redirecting to login');
+      alert('Please login as admin to access the admin panel');
+      this.router.navigate(['/login']);
+      return;
+    }
+    
+    const currentUser = this.authService.currentUserValue;
+    
+    console.log('🔐 Admin Dashboard - Authentication verified');
+    console.log('Current user:', currentUser);
+    
+    if (currentUser?.role_name?.toLowerCase() !== 'admin') {
+      console.error('❌ Not admin user, redirecting');
+      alert('Access denied. Admin privileges required.');
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+    
+    console.log('✅ Authenticated as admin, loading dashboard');
     this.loadDashboardData();
     
     // Auto-refresh dashboard data every 30 seconds
@@ -906,6 +929,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Auto-refresh error:', err);
+          if (err.status === 401) {
+            console.error('❌ Authentication failed during auto-refresh');
+            alert('Session expired. Please login again.');
+            this.router.navigate(['/login']);
+          }
         }
       });
   }
