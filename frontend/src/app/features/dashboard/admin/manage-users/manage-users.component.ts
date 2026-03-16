@@ -1,7 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AdminService } from '../../../../core/services/admin.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { Subject, interval } from 'rxjs';
 import { takeUntil, switchMap, startWith } from 'rxjs/operators';
 
@@ -77,9 +79,29 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   isDragging = false;
   importResults: any = null;
 
-  constructor(private adminService: AdminService) {}
+  constructor(private adminService: AdminService, private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
+    // Enhanced authentication check
+    if (!this.authService.checkAuthenticationStatus()) {
+      console.error('❌ Authentication check failed, redirecting to login');
+      this.errorMessage = 'Please login as admin to access this page';
+      this.router.navigate(['/login']);
+      return;
+    }
+    
+    const currentUser = this.authService.currentUserValue;
+    
+    console.log('🔐 Manage Users - Authentication verified');
+    console.log('Current user:', currentUser);
+    
+    if (currentUser?.role_name?.toLowerCase() !== 'admin') {
+      console.error('❌ Not admin user, access denied');
+      this.errorMessage = 'Access denied. Admin privileges required.';
+      return;
+    }
+    
+    console.log('✅ Authenticated as admin, loading users');
     this.loadUsers();
     this.loadGradeLevels();
     
@@ -98,6 +120,11 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Auto-refresh error:', err);
+          if (err.status === 401) {
+            console.error('❌ Authentication failed during auto-refresh');
+            this.errorMessage = 'Session expired. Please login again.';
+            this.router.navigate(['/login']);
+          }
         }
       });
   }

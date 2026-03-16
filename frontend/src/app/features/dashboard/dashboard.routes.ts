@@ -31,7 +31,7 @@ import { EmergencyDrillsComponent } from './admin/emergency-drills/emergency-dri
 import { DrillDetailComponent } from './admin/emergency-drills/drill-detail.component';
 import { DrillDashboardComponent } from './admin/emergency-drills/drill-dashboard.component';
 import { QrScannerComponent } from './admin/emergency-drills/qr-scanner.component';
-import { AdminGuard } from '../../core/guards/admin.guard';
+import { adminGuard } from '../../core/guards/admin.guard';
 import { roleGuard } from '../../core/guards/role.guard';
 
 export const dashboardRoutes: Routes = [
@@ -86,7 +86,7 @@ export const dashboardRoutes: Routes = [
   {
     path: 'admin',
     component: AdminLayoutComponent,
-    canActivate: [AdminGuard, roleGuard],
+    canActivate: [adminGuard, roleGuard],
     data: { roles: ['Admin'] },
     children: [
       { path: '', component: AdminDashboardComponent },

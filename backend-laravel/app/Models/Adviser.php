@@ -13,11 +13,16 @@ class Adviser extends Model
 
     protected $fillable = [
         'user_id',
+        'first_name',
+        'last_name',
+        'employee_number',
         'employee_id',
         'department',
         'contact_phone',
         'hire_date',
-        'is_active'
+        'is_active',
+        'grade_level',
+        'section'
     ];
 
     protected function casts(): array

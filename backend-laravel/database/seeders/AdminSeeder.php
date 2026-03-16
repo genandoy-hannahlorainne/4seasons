@@ -12,23 +12,22 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        $adminHash = '$2y$10$VRKSez9gbIAB7fyx695fPeaHPg8Qo.VmabPGUBrRWquZYLV5Epd6W'; // Admin@123
+        $adminHash = password_hash('admin_dummy_password', PASSWORD_BCRYPT);
 
-        $existingAdmin = DB::table('users')->where('username', 'admin')->first();
+        $existingAdmin = DB::table('users')->where('username', 'admin_dummy')->first();
 
         if ($existingAdmin) {
             DB::table('users')
-                ->where('username', 'admin')
+                ->where('username', 'admin_dummy')
                 ->update([
                     'role_id' => 1,
                     'password_hash' => $adminHash,
-                    'email' => 'admin@pdmhs.edu.ph',
-                    'phone' => '09171234567',
-                    'full_name' => 'System Administrator',
+                    'email' => 'admin@example.com',
+                    'phone' => '0000000000',
+                    'full_name' => 'Admin Dummy',
                     'is_active' => 1,
                     'password_must_change' => 0,
                 ]);
-
             return;
         }
 
@@ -38,11 +37,11 @@ class AdminSeeder extends Seeder
         DB::table('users')->insert([
             'user_id' => $id,
             'role_id' => 1,
-            'username' => 'admin',
+            'username' => 'admin_dummy',
             'password_hash' => $adminHash,
-            'email' => 'admin@pdmhs.edu.ph',
-            'phone' => '09171234567',
-            'full_name' => 'System Administrator',
+            'email' => 'admin@example.com',
+            'phone' => '0000000000',
+            'full_name' => 'Admin Dummy',
             'is_active' => 1,
             'password_must_change' => 0,
             'created_at' => now(),

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Frontend API Response</title>
+</head>
+<body>
+    <h1>Frontend API Response Test</h1>
+    <div id="results"></div>
+
+    <script>
+        async function testAPI() {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                // Step 1: Login
+                console.log('Step 1: Logging in...');
+                const loginResponse = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: '136883100330',
+                        password: 'Student@123'
+                    })
+                });
+                
+                const loginData = await loginResponse.json();
+                console.log('Login response:', loginData);
+                
+                if (!loginData.success) {
+                    throw new Error('Login failed: ' + loginData.message);
+                }
+                
+                const token = loginData.data.token;
+                const userId = loginData.data.user.user_id;
+                
+                resultsDiv.innerHTML += `<p><strong>Login:</strong> ✅ Success (User ID: ${userId})</p>`;
+                
+                // Step 2: Get Profile
+                console.log('Step 2: Getting profile...');
+                const profileResponse = await fetch(`/api/students/${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const profileData = await profileResponse.json();
+                console.log('Profile response:', profileData);
+                
+                resultsDiv.innerHTML += `<p><strong>Profile API Response:</strong></p>`;
+                resultsDiv.innerHTML += `<pre>${JSON.stringify(profileData, null, 2)}</pre>`;
+                
+                // Check adviser info specifically
+                const adviserName = profileData.profile?.adviser_name;
+                const adviserContact = profileData.profile?.adviser_contact;
+                
+                resultsDiv.innerHTML += `<p><strong>Adviser Name:</strong> ${adviserName || 'NOT FOUND'}</p>`;
+                resultsDiv.innerHTML += `<p><strong>Adviser Contact:</strong> ${adviserContact || 'NOT FOUND'}</p>`;
+                
+                if (adviserName) {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ Adviser information is present in API response</p>`;
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ Adviser information is missing from API response</p>`;
+                }
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+                resultsDiv.innerHTML += `<p style="color: red;"><strong>Error:</strong> ${error.message}</p>`;
+            }
+        }
+        
+        // Run test when page loads
+        window.onload = testAPI;
+    </script>
+</body>
+</html>

@@ -7,9 +7,11 @@
     <p class="subtitle">Complete medical information and health record</p>
   </div>
 
-  <div *ngIf="loading" class="loading">
-    <div class="loading-spinner"></div>
-    <p>Loading personal information...</p>
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading personal information...</div>
+    </div>
   </div>
 
   <div *ngIf="error" class="error-message">
@@ -38,7 +40,7 @@
         </div>
         <div class="form-group">
           <label>Birthday</label>
-          <input type="date" [value]="personalInfo.birth_date" readonly>
+          <input type="date" [value]="formatDateForInput(personalInfo.birth_date)" readonly>
         </div>
         <div class="form-group">
           <label>Sex/Age</label>

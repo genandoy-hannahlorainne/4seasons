@@ -27,7 +27,7 @@ export class BackupRecoveryComponent implements OnInit {
     this.error = '';
     
     this.adminService.getBackupHistory().subscribe({
-      next: (response) => {
+      next: (response: any) => {
         this.loading = false;
         if (response.success) {
           this.backups = response.backups;
@@ -35,7 +35,7 @@ export class BackupRecoveryComponent implements OnInit {
           this.error = response.message || 'Failed to load backups';
         }
       },
-      error: (err) => {
+      error: (err: any) => {
         this.loading = false;
         this.error = 'Failed to load backup history';
         console.error('Error loading backups:', err);
@@ -51,7 +51,7 @@ export class BackupRecoveryComponent implements OnInit {
     this.success = '';
     
     this.adminService.createBackup().subscribe({
-      next: (response) => {
+      next: (response: any) => {
         this.creating = false;
         if (response.success) {
           this.success = 'Backup created successfully!';
@@ -61,7 +61,7 @@ export class BackupRecoveryComponent implements OnInit {
           this.error = response.message || 'Failed to create backup';
         }
       },
-      error: (err) => {
+      error: (err: any) => {
         this.creating = false;
         this.error = 'Failed to create backup. Please try again.';
         console.error('Error creating backup:', err);
@@ -79,7 +79,7 @@ export class BackupRecoveryComponent implements OnInit {
     }
     
     this.adminService.deleteBackup(filename).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         if (response.success) {
           this.success = 'Backup deleted successfully';
           this.loadBackups();
@@ -88,7 +88,7 @@ export class BackupRecoveryComponent implements OnInit {
           this.error = response.message || 'Failed to delete backup';
         }
       },
-      error: (err) => {
+      error: (err: any) => {
         this.error = 'Failed to delete backup';
         console.error('Error deleting backup:', err);
       }
@@ -115,7 +115,7 @@ export class BackupRecoveryComponent implements OnInit {
     this.success = '';
     
     this.adminService.restoreBackup(filename).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         this.loading = false;
         if (response.success) {
           this.success = '✅ Database restored successfully! The page will reload in 3 seconds...';
@@ -126,7 +126,7 @@ export class BackupRecoveryComponent implements OnInit {
           this.error = response.message || 'Failed to restore backup';
         }
       },
-      error: (err) => {
+      error: (err: any) => {
         this.loading = false;
         this.error = 'Failed to restore backup. Please try again or restore manually.';
         console.error('Error restoring backup:', err);
