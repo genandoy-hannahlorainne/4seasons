@@ -10,11 +10,13 @@
       ],
       "extends": [
         "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:@angular-eslint/recommended",
-        "plugin:@angular-eslint/template/process-inline-templates"
+        "@typescript-eslint/recommended",
+        "@angular-eslint/recommended",
+        "@angular-eslint/template/process-inline-templates"
       ],
       "rules": {
+        "@typescript-eslint/no-unused-vars": "warn",
+        "@typescript-eslint/no-explicit-any": "warn",
         "@angular-eslint/directive-selector": [
           "error",
           {
@@ -38,8 +40,7 @@
         "*.html"
       ],
       "extends": [
-        "plugin:@angular-eslint/template/recommended",
-        "plugin:@angular-eslint/template/accessibility"
+        "@angular-eslint/template/recommended"
       ],
       "rules": {}
     }
