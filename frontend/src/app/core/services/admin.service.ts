@@ -140,103 +140,9 @@ export class AdminService {
     });
   }
 
+  // Activity logs
   getActivityLogs(limit: number = 20, offset: number = 0): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/admin/activity-logs?limit=${limit}&offset=${offset}`);
-  }
-
-  // Backup & Recovery (Laravel)
-  createBackup(): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/admin/backup-database`, {});
-  }
-
-  getBackupHistory(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/backup-history`);
-  }
-
-  downloadBackup(filename: string): void {
-    const url = `${environment.apiUrl}/admin/download-backup?filename=${filename}`;
-    this.http.get(url, {
-      responseType: 'blob',
-      observe: 'response'
-    }).subscribe({
-      next: (response) => {
-        const blob = response.body;
-        if (blob) {
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = filename;
-          link.click();
-          window.URL.revokeObjectURL(url);
-        }
-      },
-      error: (error) => {
-        console.error('Download failed:', error);
-        alert('Failed to download backup file');
-      }
-    });
-  }
-
-  deleteBackup(filename: string): Observable<any> {
-    return this.http.delete<any>(`${environment.apiUrl}/admin/delete-backup?filename=${filename}`);
-  }
-
-  restoreBackup(filename: string): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/admin/restore-backup`, { filename });
-  }
-
-  // Grade Promotion
-  getSchoolYears(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/school-years`);
-  }
-
-  createSchoolYear(yearName: string, startDate: string, endDate: string, isActive: boolean = false): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/admin/school-years`, {
-      year_name: yearName,
-      start_date: startDate,
-      end_date: endDate,
-      is_active: isActive
-    });
-  }
-
-  createSection(sectionName: string, gradeLevelId: number, schoolYearId: number, capacity: number = 50): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/admin/sections`, {
-      section_name: sectionName,
-      grade_level_id: gradeLevelId,
-      school_year_id: schoolYearId,
-      capacity
-    });
-  }
-
-  assignAdviserToSection(sectionId: number, adviserId: number, schoolYearId: number): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/admin/sections/assign-adviser`, {
-      section_id: sectionId,
-      adviser_id: adviserId,
-      school_year_id: schoolYearId
-    });
-  }
-
-  getPromotionSummary(currentSchoolYearId: number, targetSchoolYearId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/promotions/summary?current_school_year_id=${currentSchoolYearId}&target_school_year_id=${targetSchoolYearId}`);
-  }
-
-  bulkPromoteStudents(currentSchoolYearId: number, targetSchoolYearId: number, promotionRules: any, excludeStudentIds: number[] = []): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/admin/students/bulk-promote`, {
-      current_school_year_id: currentSchoolYearId,
-      target_school_year_id: targetSchoolYearId,
-      promotion_rules: promotionRules,
-      exclude_student_ids: excludeStudentIds
-    });
-  }
-
-  manualAdjustPromotion(studentId: number, action: string, newGradeLevelId?: number, newSectionId?: number, notes?: string): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/admin/students/manual-adjust-promotion`, {
-      student_id: studentId,
-      action,
-      new_grade_level_id: newGradeLevelId,
-      new_section_id: newSectionId,
-      notes
-    });
   }
 
   // Notifications
@@ -245,13 +151,11 @@ export class AdminService {
   }
 
   markNotificationAsRead(notificationId: number): Observable<any> {
-    return this.http.put<any>(`${environment.apiUrl}/admin/notifications/read`, {
-      notification_id: notificationId
-    });
+    return this.http.post<any>(`${environment.apiUrl}/admin/notifications/${notificationId}/read`, {});
   }
 
   markAllNotificationsAsRead(): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/admin/notifications/read-all`, {});
+    return this.http.post<any>(`${environment.apiUrl}/admin/notifications/mark-all-read`, {});
   }
 
   deleteNotification(notificationId: number): Observable<any> {
@@ -287,6 +191,74 @@ export class AdminService {
     return new Observable(observer => {
       observer.next({ success: true, data: [] });
       observer.complete();
+    });
+  }
+
+  // Backup Operations
+  getBackupHistory(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/backup/history`);
+  }
+
+  createBackup(): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/backup/create`, {});
+  }
+
+  downloadBackup(filename: string): void {
+    window.open(`${environment.apiUrl}/admin/backup/download/${filename}`, '_blank');
+  }
+
+  deleteBackup(filename: string): Observable<any> {
+    return this.http.delete<any>(`${environment.apiUrl}/admin/backup/${filename}`);
+  }
+
+  restoreBackup(filename: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/backup/restore`, { filename });
+  }
+
+  // School Year Management
+  getSchoolYears(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/school-years`);
+  }
+
+  getCurrentSchoolYear(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/school-years/current`);
+  }
+
+  createSchoolYear(schoolYearData: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/school-years`, schoolYearData);
+  }
+
+  setCurrentSchoolYear(schoolYearId: number): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/school-years/set-current`, { school_year_id: schoolYearId });
+  }
+
+  // Grade Promotion
+  getPromotionSummary(currentSchoolYearId: number, targetSchoolYearId?: number): Observable<any> {
+    let url = `${environment.apiUrl}/admin/promotion/summary?current_school_year_id=${currentSchoolYearId}`;
+    if (targetSchoolYearId) {
+      url += `&target_school_year_id=${targetSchoolYearId}`;
+    }
+    return this.http.get<any>(url);
+  }
+
+  bulkPromoteStudents(currentSchoolYearId: number, targetSchoolYearId: number, promotionRules: any, manualCases: any[]): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/promotion/bulk`, {
+      current_school_year_id: currentSchoolYearId,
+      target_school_year_id: targetSchoolYearId,
+      promotion_rules: promotionRules,
+      manual_cases: manualCases
+    });
+  }
+
+  // Admin Profile Management
+  updateProfile(profileData: any): Observable<any> {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    return this.http.put<any>(`${environment.apiUrl}/admin/users/${currentUser.user_id}`, profileData);
+  }
+
+  changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/users/${userId}/reset-password`, {
+      new_password: newPassword
     });
   }
 }

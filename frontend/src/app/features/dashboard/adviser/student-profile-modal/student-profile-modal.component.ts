@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BMIUtils } from '../../../../shared/utils/bmi-utils';
 
 @Component({
   selector: 'app-student-profile-modal',
@@ -63,7 +64,7 @@ import { CommonModule } from '@angular/common';
             </div>
             <div class="info-item">
               <span class="label">BMI</span>
-              <span class="value">{{ student?.vitals?.bmi || '19.8' }}</span>
+              <span class="value">{{ formatBMI(student?.vitals?.bmi) }}</span>
             </div>
           </div>
         </div>
@@ -353,5 +354,9 @@ export class StudentProfileModalComponent {
     if ((event.target as HTMLElement).classList.contains('modal-overlay')) {
       this.close.emit();
     }
+  }
+
+  formatBMI(bmi: any): string {
+    return BMIUtils.formatBMI(bmi);
   }
 }

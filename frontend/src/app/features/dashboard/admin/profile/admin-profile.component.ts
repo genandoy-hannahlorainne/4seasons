@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { AdminService } from '../../../../core/services/admin.service';
 
 @Component({
   selector: 'app-admin-profile',
@@ -150,6 +151,7 @@ export class AdminProfileComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
+    private adminService: AdminService,
     private router: Router
   ) {}
 
@@ -178,22 +180,40 @@ export class AdminProfileComponent implements OnInit {
       return;
     }
 
-    const currentUser = this.authService.currentUserValue;
-    if (!currentUser) {
-      alert('User not found');
-      return;
-    }
-
     const updates = {
       full_name: this.profileData.fullName,
       email: this.profileData.email,
       phone: this.profileData.phone || null
     };
 
-    // Call API to update profile
-    console.log('Saving profile:', updates);
-    alert('Profile updated successfully');
-    this.editMode = false;
+    this.adminService.updateProfile(updates).subscribe({
+      next: (response) => {
+        if (response.success) {
+          // Update local storage with new user data
+          const currentUser = this.authService.currentUserValue;
+          if (currentUser) {
+            const updatedUser = { 
+              ...currentUser, 
+              full_name: updates.full_name,
+              email: updates.email,
+              phone: updates.phone || undefined
+            };
+            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+            this.authService.updateCurrentUser(updatedUser);
+          }
+          
+          alert('Profile updated successfully');
+          this.editMode = false;
+        } else {
+          alert(response.message || 'Failed to update profile');
+        }
+      },
+      error: (err) => {
+        console.error('Profile update error:', err);
+        const errorMessage = err.error?.message || err.message || 'Error updating profile';
+        alert(errorMessage);
+      }
+    });
   }
 
   cancelEdit(): void {
@@ -232,7 +252,7 @@ export class AdminProfileComponent implements OnInit {
       return;
     }
 
-    this.authService.changePassword(
+    this.adminService.changePassword(
       currentUser.user_id,
       this.passwordForm.currentPassword,
       this.passwordForm.newPassword

@@ -110,13 +110,6 @@ class AdviserController extends BaseController
             } else {
                 $outer->where('current_adviser_id', $userId);
             }
-
-            $outer->orWhereExists(function ($pivot) use ($userId) {
-                $pivot->select(DB::raw(1))
-                    ->from('student_adviser as sa')
-                    ->whereColumn('sa.student_id', 'students.student_id')
-                    ->where('sa.adviser_id', $userId);
-            });
         });
     }
 
@@ -328,7 +321,18 @@ class AdviserController extends BaseController
         try {
             $user = $request->user();
             
+            // Debug logging
+            \Log::info('Health heatmap request', [
+                'user' => $user ? $user->user_id : 'null',
+                'role_id' => $user ? $user->role_id : 'null',
+                'token' => $request->bearerToken() ? 'present' : 'missing'
+            ]);
+            
             if (!$this->isAdviserUser($user)) {
+                \Log::warning('Unauthorized heatmap access', [
+                    'user_id' => $user ? $user->user_id : 'null',
+                    'role_id' => $user ? $user->role_id : 'null'
+                ]);
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
@@ -453,6 +457,12 @@ class AdviserController extends BaseController
 
             return $this->sendResponse($heatmapData, 'Health heatmap data retrieved successfully');
         } catch (\Exception $e) {
+            \Log::error('Health heatmap error: ' . $e->getMessage(), [
+                'user_id' => $user->user_id,
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->sendError('Failed to retrieve health heatmap data', $e->getMessage());
         }
     }

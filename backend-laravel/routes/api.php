@@ -14,6 +14,165 @@ Route::get('/health', function () {
     ]);
 });
 
+// Debug endpoint for authentication status
+Route::get('/debug/auth', function (Request $request) {
+    try {
+        $user = $request->user();
+        $token = $request->bearerToken();
+        
+        return response()->json([
+            'success' => true,
+            'authenticated' => !!$user,
+            'user' => $user ? [
+                'user_id' => $user->user_id,
+                'username' => $user->username,
+                'role_name' => $user->role?->role_name,
+                'is_active' => $user->is_active
+            ] : null,
+            'token_present' => !!$token,
+            'token_length' => $token ? strlen($token) : 0,
+            'headers' => [
+                'authorization' => $request->header('Authorization'),
+                'accept' => $request->header('Accept'),
+                'user_agent' => $request->header('User-Agent')
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'authenticated' => false
+        ], 500);
+    }
+})->middleware('auth:sanctum');
+
+// Debug endpoint for database connection
+Route::get('/debug/database', function () {
+    try {
+        $usersCount = \App\Models\User::count();
+        $rolesCount = \App\Models\Role::count();
+        
+        $roles = \App\Models\Role::all()->map(function($role) {
+            return [
+                'role_id' => $role->role_id,
+                'role_name' => $role->role_name,
+                'users_count' => $role->users()->count()
+            ];
+        });
+        
+        $sampleUsers = \App\Models\User::with('role')->take(5)->get()->map(function($user) {
+            return [
+                'user_id' => $user->user_id,
+                'username' => $user->username,
+                'role_id' => $user->role_id,
+                'role_name' => $user->role ? $user->role->role_name : 'NULL',
+                'is_active' => $user->is_active
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'database_connection' => 'OK',
+            'users_count' => $usersCount,
+            'roles_count' => $rolesCount,
+            'roles' => $roles,
+            'sample_users' => $sampleUsers
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'database_connection' => 'FAILED'
+        ], 500);
+    }
+});
+
+// Authentication endpoints (public)
+Route::post('/login', [AuthController::class, 'login']);
+
+// Debug endpoint for frontend troubleshooting (public for debugging)
+Route::get('/debug/student-data/{userId}', function($userId) {
+    try {
+        $user = \App\Models\User::with(['student', 'role'])->find($userId);
+        if (!$user || !$user->student) {
+            return response()->json(['error' => 'Student not found'], 404);
+        }
+        
+        $student = $user->student;
+        return response()->json([
+            'user_info' => [
+                'user_id' => $user->user_id,
+                'username' => $user->username,
+                'role' => $user->role->role_name ?? 'Unknown'
+            ],
+            'student_info' => [
+                'student_id' => $student->student_id,
+                'student_number' => $student->student_number,
+                'first_name' => $student->first_name,
+                'last_name' => $student->last_name,
+                'full_name' => $student->full_name,
+                'grade_level' => $student->grade_level,
+                'section' => $student->section
+            ],
+            'api_endpoints_that_should_work' => [
+                'profile' => "/api/students/{$student->student_id}",
+                'profile_by_user_id' => "/api/students/{$user->user_id}",
+                'medical_data' => "/api/students/medical-data?user_id={$user->user_id}"
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
+
+// Debug endpoint to test current profile API response
+Route::get('/debug/profile-response/{userId}', function($userId) {
+    try {
+        $student = \App\Models\Student::where('user_id', $userId)
+            ->with([
+                'user',
+                'medicalHistory',
+                'allergies',
+                'currentAdviser',
+                'currentSection.adviser',
+                'medicalVisits' => function($query) {
+                    $query->with('vitals')->orderBy('visit_datetime', 'desc')->limit(10);
+                }
+            ])
+            ->first();
+            
+        if (!$student) {
+            return response()->json(['error' => 'Student not found'], 404);
+        }
+
+        // Resolve adviser information
+        $resolvedAdviser = $student->currentAdviser ?: ($student->currentSection ? $student->currentSection->adviser : null);
+
+        return response()->json([
+            'debug_info' => [
+                'student_found' => true,
+                'has_current_adviser' => !!$student->currentAdviser,
+                'has_current_section' => !!$student->currentSection,
+                'section_has_adviser' => !!($student->currentSection && $student->currentSection->adviser),
+                'resolved_adviser' => !!$resolvedAdviser,
+                'adviser_name' => $resolvedAdviser ? $resolvedAdviser->full_name : null,
+                'adviser_contact' => $resolvedAdviser ? $resolvedAdviser->phone : null,
+            ],
+            'student_data' => [
+                'student_id' => $student->student_id,
+                'student_number' => $student->student_number,
+                'full_name' => $student->full_name,
+                'grade_level' => $student->grade_level,
+                'section' => $student->section,
+                'adviser_name' => $resolvedAdviser ? $resolvedAdviser->full_name : null,
+                'adviser_contact' => $resolvedAdviser ? $resolvedAdviser->phone : null,
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+    }
+});
+
 // Authentication endpoints (public)
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -28,9 +187,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     
     // Student endpoints
-    Route::apiResource('students', \App\Http\Controllers\Api\StudentController::class);
     Route::get('/students/search/query', [\App\Http\Controllers\Api\StudentController::class, 'search']);
     Route::get('/students/qr/lookup', [\App\Http\Controllers\Api\StudentController::class, 'getByQr']);
+    Route::get('/students/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'getMedicalDataByUserId']);
+    Route::apiResource('students', \App\Http\Controllers\Api\StudentController::class);
     Route::get('/students/{student}/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'getMedicalData']);
     Route::put('/students/{student}/medical-data', [\App\Http\Controllers\Api\StudentController::class, 'updateMedicalData']);
     Route::put('/students/{student}/physical-info', [\App\Http\Controllers\Api\StudentController::class, 'updatePhysicalInfo']);
@@ -105,10 +265,114 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/bmi-trends', [\App\Http\Controllers\Api\AdminController::class, 'getBMITrends']);
     Route::get('/admin/reports', [\App\Http\Controllers\Api\AdminController::class, 'getReports']);
     Route::get('/admin/reports/principal-health-trends', [\App\Http\Controllers\Api\AdminController::class, 'getPrincipalHealthTrendReport']);
+
+    // Get all users (admin, faculty, clinic staff, etc)
+    Route::get('/get-all-users', [\App\Http\Controllers\Api\AdminController::class, 'getAllUsers']);
+    
+    // User management endpoints
+    Route::post('/admin/create-user', [\App\Http\Controllers\Api\AdminController::class, 'createUser']);
+    Route::put('/admin/users/{userId}', [\App\Http\Controllers\Api\AdminController::class, 'updateUser']);
+    Route::post('/admin/users/{userId}/reset-password', [\App\Http\Controllers\Api\AdminController::class, 'resetPassword']);
+    Route::post('/admin/users/{userId}/activate', [\App\Http\Controllers\Api\AdminController::class, 'activateUser']);
+    Route::post('/admin/users/{userId}/deactivate', [\App\Http\Controllers\Api\AdminController::class, 'deactivateUser']);
+    Route::delete('/admin/users/{userId}', [\App\Http\Controllers\Api\AdminController::class, 'deleteUser']);
+    
+    // Bulk operations
+    Route::post('/admin/students/bulk-import', [\App\Http\Controllers\Api\AdminController::class, 'bulkImportStudents']);
+    
+    // System settings
+    Route::get('/admin/system-settings', [\App\Http\Controllers\Api\AdminController::class, 'getSystemSettings']);
+    Route::put('/admin/system-settings', [\App\Http\Controllers\Api\AdminController::class, 'updateSystemSettings']);
+    
+    // Admin notification management
+    Route::get('/admin/notifications', [\App\Http\Controllers\Api\AdminController::class, 'getNotifications']);
+    Route::post('/admin/notifications/{notificationId}/read', [\App\Http\Controllers\Api\AdminController::class, 'markNotificationAsRead']);
+    Route::post('/admin/notifications/mark-all-read', [\App\Http\Controllers\Api\AdminController::class, 'markAllNotificationsAsRead']);
+    Route::post('/admin/send-parent-sms', [\App\Http\Controllers\Api\AdminController::class, 'sendParentSMS']);
+    
+    // Admin activity logs
+    Route::get('/admin/activity-logs', [\App\Http\Controllers\Api\AdminController::class, 'getActivityLogs']);
+    
+    // Admin backup operations
+    Route::post('/admin/backup/create', [\App\Http\Controllers\Api\AdminController::class, 'createBackup']);
+    Route::post('/admin/backup/restore', [\App\Http\Controllers\Api\AdminController::class, 'restoreBackup']);
+    
+    // Admin health analytics
+    Route::get('/admin/health-recommendations', [\App\Http\Controllers\Api\AdminController::class, 'getHealthRecommendations']);
+    Route::get('/admin/bmi-trends', [\App\Http\Controllers\Api\AdminController::class, 'getBMITrends']);
     
     // Get all sections for filtering (clinic staff student records)
     Route::get('/sections', [\App\Http\Controllers\Api\SchoolYearController::class, 'getAllSections']);
     
+    // Debug endpoint for adviser authentication (no auth required)
+    Route::get('/debug/adviser-auth-noauth', function(Request $request) {
+        try {
+            $token = $request->bearerToken();
+            $user = null;
+            
+            if ($token) {
+                $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+                if ($accessToken) {
+                    $user = $accessToken->tokenable;
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'token_present' => !!$token,
+                'token_valid' => !!$accessToken ?? false,
+                'user' => $user ? [
+                    'user_id' => $user->user_id,
+                    'username' => $user->username,
+                    'full_name' => $user->full_name,
+                    'role_id' => $user->role_id,
+                    'is_active' => $user->is_active,
+                    'is_adviser' => intval($user->role_id) === 3
+                ] : null,
+                'headers' => [
+                    'authorization' => $request->header('Authorization'),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    });
+
+    // Debug endpoint for adviser authentication
+    Route::get('/debug/adviser-auth', function(Request $request) {
+        try {
+            $user = $request->user();
+            
+            return response()->json([
+                'success' => true,
+                'authenticated' => !!$user,
+                'user' => $user ? [
+                    'user_id' => $user->user_id,
+                    'username' => $user->username,
+                    'full_name' => $user->full_name,
+                    'role_id' => $user->role_id,
+                    'role_name' => $user->role?->role_name,
+                    'is_active' => $user->is_active,
+                    'is_adviser' => intval($user->role_id) === 3
+                ] : null,
+                'token_present' => !!$request->bearerToken(),
+                'headers' => [
+                    'authorization' => $request->header('Authorization'),
+                    'accept' => $request->header('Accept'),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'authenticated' => false
+            ], 500);
+        }
+    });
+
     // Adviser endpoints
     Route::get('/adviser/profile', [\App\Http\Controllers\Api\AdviserController::class, 'getProfile']);
     Route::put('/adviser/profile', [\App\Http\Controllers\Api\AdviserController::class, 'updateProfile']);

@@ -1,86 +1,68 @@
 services:
-  # MySQL Database
-  mysql:
-    image: mysql:8.0
-    container_name: 4seasons-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: 4seasons
-    ports:
-      - "3307:3306"  # Changed to 3307 to avoid conflict with XAMPP
-    volumes:
-      - ./database/4seasons.sql:/docker-entrypoint-initdb.d/init.sql
-      - db_data:/var/lib/mysql
-    networks:
-      - 4seasons-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Laravel Backend (Primary)
   backend:
     build: ./backend-laravel
-    container_name: 4seasons-laravel
+    container_name: backend
     ports:
       - "8080:80"
     volumes:
       - ./backend-laravel:/var/www/html
-    networks:
-      - 4seasons-network
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      - DB_CONNECTION=mysql
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_DATABASE=4seasons
-      - DB_USERNAME=root
-      - DB_PASSWORD=root
-
-  # Legacy PHP Backend (Backup - can be removed after migration)
-  backend-legacy:
-    build: ./backend
-    container_name: 4seasons-php-legacy
-    ports:
-      - "8081:80"  # Different port for legacy
-    volumes:
-      - ./backend:/var/www/html
-    networks:
-      - 4seasons-network
-    depends_on:
-      mysql:
-        condition: service_healthy
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_DATABASE=4seasons
       - DB_USERNAME=root
-      - DB_PASSWORD=root
+      - DB_PASSWORD=secret
+      - APP_URL=http://localhost:8080
+      - CORS_ALLOWED_ORIGINS=http://localhost:4200,http://frontend
+    depends_on:
+      - mysql
+    networks:
+      - app-network
 
-  # Angular Frontend
   frontend:
-    image: node:20
-    container_name: 4seasons-frontend
-    working_dir: /app
+    build: ./frontend
+    container_name: frontend
     ports:
-      - "4200:4200"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    networks:
-      - 4seasons-network
+      - "4200:80"
+    environment:
+      - NODE_ENV=production
     depends_on:
       - backend
-    command: bash -c "npm install --legacy-peer-deps && npm start -- --host 0.0.0.0"
-    environment:
-      - NODE_ENV=development
+    networks:
+      - app-network
 
-networks:
-  4seasons-network:
-    driver: bridge
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d
+      - mysql-data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=4seasons
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=secret
+      - PMA_ARBITRARY=1
+    depends_on:
+      - mysql
+    networks:
+      - app-network
 
 volumes:
-  db_data:
+  mysql-data:
+
+networks:
+  app-network:
+    driver: bridge

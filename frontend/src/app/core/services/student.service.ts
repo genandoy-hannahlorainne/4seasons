@@ -122,14 +122,24 @@ export class StudentService {
 
   // Legacy API methods (keep for backward compatibility during migration)
   getStudentProfile(userId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/students/profile?user_id=${userId}`);
+    // Use the medical data endpoint which includes phone number from user table
+    return this.http.get<any>(`${environment.apiUrl}/students/medical-data?user_id=${userId}`)
+      .pipe(
+        map(response => {
+          if (response.success && response.data && response.data.personal_info) {
+            // Transform the response to match the expected format
+            return {
+              success: true,
+              profile: response.data.personal_info
+            };
+          }
+          return response;
+        })
+      );
   }
 
   updateStudentProfile(userId: number, profileData: any): Observable<any> {
-    return this.http.put<any>(`${environment.apiUrl}/students/profile`, {
-      user_id: userId,
-      ...profileData
-    });
+    return this.http.put<any>(`${environment.apiUrl}/students/${userId}`, profileData);
   }
 
   getStudentMedicalData(userId: number): Observable<any> {
