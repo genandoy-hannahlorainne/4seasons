@@ -304,6 +304,75 @@ Route::middleware('auth:sanctum')->group(function () {
     // Get all sections for filtering (clinic staff student records)
     Route::get('/sections', [\App\Http\Controllers\Api\SchoolYearController::class, 'getAllSections']);
     
+    // Debug endpoint for adviser authentication (no auth required)
+    Route::get('/debug/adviser-auth-noauth', function(Request $request) {
+        try {
+            $token = $request->bearerToken();
+            $user = null;
+            
+            if ($token) {
+                $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+                if ($accessToken) {
+                    $user = $accessToken->tokenable;
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'token_present' => !!$token,
+                'token_valid' => !!$accessToken ?? false,
+                'user' => $user ? [
+                    'user_id' => $user->user_id,
+                    'username' => $user->username,
+                    'full_name' => $user->full_name,
+                    'role_id' => $user->role_id,
+                    'is_active' => $user->is_active,
+                    'is_adviser' => intval($user->role_id) === 3
+                ] : null,
+                'headers' => [
+                    'authorization' => $request->header('Authorization'),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    });
+
+    // Debug endpoint for adviser authentication
+    Route::get('/debug/adviser-auth', function(Request $request) {
+        try {
+            $user = $request->user();
+            
+            return response()->json([
+                'success' => true,
+                'authenticated' => !!$user,
+                'user' => $user ? [
+                    'user_id' => $user->user_id,
+                    'username' => $user->username,
+                    'full_name' => $user->full_name,
+                    'role_id' => $user->role_id,
+                    'role_name' => $user->role?->role_name,
+                    'is_active' => $user->is_active,
+                    'is_adviser' => intval($user->role_id) === 3
+                ] : null,
+                'token_present' => !!$request->bearerToken(),
+                'headers' => [
+                    'authorization' => $request->header('Authorization'),
+                    'accept' => $request->header('Accept'),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'authenticated' => false
+            ], 500);
+        }
+    });
+
     // Adviser endpoints
     Route::get('/adviser/profile', [\App\Http\Controllers\Api\AdviserController::class, 'getProfile']);
     Route::put('/adviser/profile', [\App\Http\Controllers\Api\AdviserController::class, 'updateProfile']);

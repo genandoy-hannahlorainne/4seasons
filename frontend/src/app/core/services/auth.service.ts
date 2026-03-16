@@ -41,6 +41,16 @@ export class AuthService {
             
             this.currentUserSubject.next(userData);
             console.log('✅ Login successful, user stored:', userData);
+            console.log('✅ Token stored:', token.substring(0, 20) + '...');
+            console.log('✅ Token expiry set:', new Date(Date.now() + (24 * 60 * 60 * 1000)));
+            
+            // Verify storage immediately
+            setTimeout(() => {
+              const storedToken = localStorage.getItem('token');
+              const storedUser = localStorage.getItem('currentUser');
+              console.log('🔍 Verification - Token in storage:', storedToken ? storedToken.substring(0, 20) + '...' : 'NOT FOUND');
+              console.log('🔍 Verification - User in storage:', storedUser ? 'FOUND' : 'NOT FOUND');
+            }, 100);
             
             // Start token refresh and session timeout timers
             this.startTokenRefreshTimer();

@@ -910,6 +910,7 @@ class StudentController extends BaseController
         
         // Load the medical history and other relationships
         $student->load([
+            'user', // Add user relationship to get phone number
             'medicalHistory',
             'allergies',
             'currentAdviser',
@@ -939,6 +940,9 @@ class StudentController extends BaseController
                 'student_id' => $student->student_id,
                 'student_number' => $student->student_number,
                 'full_name' => $student->full_name,
+                'first_name' => $student->first_name,
+                'middle_name' => $student->middle_name,
+                'last_name' => $student->last_name,
                 'birth_date' => $student->birth_date,
                 'gender' => $student->gender,
                 'blood_type' => $student->blood_type,
@@ -953,7 +957,11 @@ class StudentController extends BaseController
                 'height_cm' => $student->height_cm,
                 'weight_kg' => $student->weight_kg,
                 'bmi' => $student->bmi,
-                'bmi_category' => $student->bmi_category
+                'bmi_category' => $student->bmi_category,
+                // Add phone and email from user table
+                'phone' => $student->user ? $student->user->phone : null,
+                'contact_number' => $student->user ? $student->user->phone : null, // Alias for frontend compatibility
+                'email' => $student->user ? $student->user->email : null,
             ],
             'medical_history' => $student->medicalHistory,
             'allergies' => $student->allergies,

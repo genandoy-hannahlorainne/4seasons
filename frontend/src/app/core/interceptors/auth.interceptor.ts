@@ -8,6 +8,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = localStorage.getItem('token');
   const tokenExpiry = localStorage.getItem('tokenExpiry');
   
+  // Debug logging for all requests
+  console.log('🔍 Interceptor called for:', req.url);
+  console.log('🔍 Token available:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
+  
   // Check if token is expired
   const isTokenExpired = () => {
     if (!tokenExpiry) return true;
@@ -27,7 +31,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const isLaravelApi = req.url.includes('/api') && !isLegacyApi;
   
   // Skip auth for login and register endpoints
-  const isAuthEndpoint = req.url.includes('/login') || req.url.includes('/register') || req.url.includes('/debug/') || req.url.includes('/health');
+  const isAuthEndpoint = req.url.includes('/login') || req.url.includes('/register') || req.url.includes('/debug/') || req.url.endsWith('/health');
+  
+  console.log('🔍 API Detection:', {
+    url: req.url,
+    isLegacyApi,
+    isLaravelApi,
+    isAuthEndpoint,
+    hasToken: !!token
+  });
   
   let headers: any = {};
   
@@ -46,7 +58,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     
     // Use Bearer token for Laravel API (except auth endpoints)
     headers['Authorization'] = `Bearer ${token}`;
-    console.log('🔐 Added Bearer token for Laravel API:', req.url);
+    console.log('🔐 Added Bearer token for Laravel API:', req.url, 'Token:', token.substring(0, 20) + '...');
+  } else if (isLaravelApi && !token && !isAuthEndpoint) {
+    console.error('❌ No token available for Laravel API request:', req.url);
+    console.log('Current localStorage token:', localStorage.getItem('token'));
+    console.log('Current localStorage user:', localStorage.getItem('currentUser'));
+  } else if (isLaravelApi && isAuthEndpoint) {
+    console.log('ℹ️ Skipping auth for endpoint:', req.url);
   } else if (isLegacyApi) {
     // Use legacy user_id header for old PHP API
     const currentUserStr = localStorage.getItem('currentUser');
