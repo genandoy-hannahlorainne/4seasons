@@ -20,6 +20,6 @@ export const environment = {
   logApiCalls: true,
   
   // Fallback URLs for development
-  fallbackApiUrl: 'http://localhost:8080/api', // Direct backend access as fallback
+  fallbackApiUrl: 'http://localhost:8082/api', // Direct backend access as fallback
   enableFallback: true
 };

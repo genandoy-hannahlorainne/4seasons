@@ -20,6 +20,91 @@ use Illuminate\Support\Facades\Log;
 class AdminController extends BaseController
 {
     /**
+     * Get admin dashboard data
+     */
+    public function dashboard()
+    {
+        try {
+            // Get user counts by role
+            $userCounts = DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.role_id')
+                ->select('roles.role_name', DB::raw('COUNT(*) as count'))
+                ->where('users.is_active', 1)
+                ->groupBy('roles.role_name')
+                ->get()
+                ->keyBy('role_name');
+
+            $totalUsers = $userCounts->sum('count');
+            $students = $userCounts->get('Student')?->count ?? 0;
+            $advisers = $userCounts->get('Adviser')?->count ?? 0;
+            $clinicStaff = $userCounts->get('Clinic Staff')?->count ?? 0;
+            $admins = $userCounts->get('Admin')?->count ?? 0;
+
+            // Get recent users count (last 30 days)
+            $recentUsersCount = DB::table('users')
+                ->where('created_at', '>=', now()->subDays(30))
+                ->count();
+
+            // Get BMI statistics for health insights
+            $bmiStats = DB::select("
+                SELECT 
+                    COUNT(*) as total_students_with_bmi,
+                    AVG(COALESCE(vl.latest_bmi, s.bmi)) as average_bmi,
+                    SUM(CASE WHEN COALESCE(vl.latest_bmi, s.bmi) >= 25 THEN 1 ELSE 0 END) as overweight_obese_count
+                FROM students s
+                LEFT JOIN (
+                    SELECT 
+                        ranked.student_id,
+                        ranked.bmi as latest_bmi
+                    FROM (
+                        SELECT 
+                            mv.student_id,
+                            v.bmi,
+                            ROW_NUMBER() OVER (
+                                PARTITION BY mv.student_id
+                                ORDER BY COALESCE(v.recorded_at, mv.visit_datetime) DESC, v.vitals_id DESC
+                            ) as rn
+                        FROM medical_visits mv
+                        INNER JOIN vitals v ON v.visit_id = mv.visit_id
+                        WHERE v.bmi IS NOT NULL
+                    ) ranked
+                    WHERE ranked.rn = 1
+                ) vl ON vl.student_id = s.student_id
+                WHERE s.is_active = 1 AND COALESCE(vl.latest_bmi, s.bmi) IS NOT NULL
+            ");
+
+            $bmiData = $bmiStats[0] ?? null;
+            $totalStudentsWithBmi = $bmiData ? (int)$bmiData->total_students_with_bmi : 0;
+            $averageBmi = $bmiData && $bmiData->average_bmi ? round((float)$bmiData->average_bmi, 1) : 19.5;
+            $overweightObeseCount = $bmiData ? (int)$bmiData->overweight_obese_count : 0;
+
+            return $this->sendResponse([
+                'current_stats' => [
+                    'total_users' => $totalUsers,
+                    'students' => $students,
+                    'faculty' => $advisers,
+                    'clinic_staff' => $clinicStaff,
+                    'admins' => $admins,
+                    'recent_users_count' => $recentUsersCount
+                ],
+                'health_insights' => [
+                    'total_students_analyzed' => $totalStudentsWithBmi,
+                    'school_average_bmi' => $averageBmi,
+                    'students_overweight_obese' => $overweightObeseCount,
+                    'highest_risk_grade' => 'Grade 7' // This would be calculated from actual data
+                ]
+            ], 'Dashboard data retrieved successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Dashboard data retrieval failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->sendError('Failed to retrieve dashboard data', $e->getMessage());
+        }
+    }
+
+    /**
      * Get sections for a specific grade level (for admin forms)
      */
     public function getSectionsForGrade($gradeLevel)
@@ -165,7 +250,9 @@ class AdminController extends BaseController
                 'current_school_year_id' => $currentSchoolYear->id,
                 'emergency_contact_name' => $request->emergency_contact_name,
                 'emergency_contact_phone' => $request->emergency_contact_phone,
+                'phone' => $request->phone,
                 'is_active' => true
+            ]); 'is_active' => true
             ]);
 
             // Update section enrollment count
@@ -252,6 +339,215 @@ class AdminController extends BaseController
 
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve grade levels', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get all advisers
+     */
+    public function getAdvisers()
+    {
+        try {
+            $advisers = User::with(['role', 'adviser'])
+                ->whereHas('role', function($q) {
+                    $q->where('role_name', 'Adviser');
+                })
+                ->where('is_active', true)
+                ->get()
+                ->map(function($user) {
+                    return [
+                        'user_id'         => $user->user_id,
+                        'full_name'       => $user->full_name,
+                        'email'           => $user->email,
+                        'employee_number' => $user->adviser->employee_number ?? null,
+                    ];
+                });
+
+            return $this->sendResponse($advisers, 'Advisers retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve advisers', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get sections, optionally filtered by school_year_id
+     */
+    public function getSections(Request $request)
+    {
+        try {
+            $query = Section::with(['gradeLevel', 'schoolYear'])
+                ->where('is_active', true);
+
+            if ($request->has('school_year_id')) {
+                $query->where('school_year_id', $request->school_year_id);
+            }
+
+            $sections = $query->orderBy('grade_level_id')->orderBy('section_name')->get()
+                ->map(function($section) {
+                    $adviser = null;
+                    if ($section->adviser_id) {
+                        $adviserUser = User::find($section->adviser_id);
+                        $adviser = $adviserUser?->full_name;
+                    }
+                    return [
+                        'id'                 => $section->id,
+                        'section_name'       => $section->section_name,
+                        'grade_level_id'     => $section->grade_level_id,
+                        'school_year_id'     => $section->school_year_id,
+                        'adviser_id'         => $section->adviser_id,
+                        'adviser_name'       => $adviser,
+                        'capacity'           => $section->capacity,
+                        'current_enrollment' => $section->attributes['current_enrollment'] ?? 0,
+                        'is_active'          => $section->is_active,
+                        'level_name'         => $section->gradeLevel->level_name ?? null,
+                        'level_number'       => $section->gradeLevel->level_number ?? null,
+                        'year_name'          => $section->schoolYear->year_name ?? null,
+                    ];
+                });
+
+            return $this->sendResponse($sections, 'Sections retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve sections', $e->getMessage());
+        }
+    }
+
+    /**
+     * Create a new section
+     */
+    public function createSection(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'section_name'   => 'required|string|max:50',
+                'grade_level_id' => 'required|integer|exists:grade_levels,id',
+                'school_year_id' => 'required|integer|exists:school_years,id',
+                'capacity'       => 'nullable|integer|min:1|max:200',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            $section = Section::create([
+                'section_name'       => $request->section_name,
+                'grade_level_id'     => $request->grade_level_id,
+                'school_year_id'     => $request->school_year_id,
+                'capacity'           => $request->capacity ?? 50,
+                'current_enrollment' => 0,
+                'is_active'          => true,
+            ]);
+
+            return $this->sendResponse(['section' => $section], 'Section created successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to create section', $e->getMessage());
+        }
+    }
+
+    /**
+     * Assign or remove an adviser from a section
+     */
+    public function assignAdviserToSection(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'section_id'       => 'required|integer|exists:sections,id',
+                'adviser_user_id'  => 'nullable|integer|exists:users,user_id',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            $section = Section::findOrFail($request->section_id);
+            $section->update(['adviser_id' => $request->adviser_user_id]);
+
+            // Update students in this section to point to the new adviser
+            $studentsUpdated = 0;
+            if ($request->adviser_user_id) {
+                $studentsUpdated = Student::where('current_section_id', $section->id)
+                    ->where('is_active', true)
+                    ->update(['current_adviser_id' => $request->adviser_user_id]);
+            }
+
+            return $this->sendResponse(
+                ['students_updated' => $studentsUpdated],
+                $request->adviser_user_id ? 'Adviser assigned successfully' : 'Adviser removed successfully'
+            );
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to assign adviser', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get students for a specific section
+     */
+    public function getSectionStudents(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'section_id' => 'required|integer|exists:sections,id',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            $section = Section::with(['gradeLevel', 'schoolYear'])->findOrFail($request->section_id);
+
+            $adviserName = null;
+            if ($section->adviser_id) {
+                $adviserUser = User::find($section->adviser_id);
+                $adviserName = $adviserUser?->full_name;
+            }
+
+            $students = Student::with(['allergies', 'medicalVisits' => function($q) {
+                    $q->latest('visit_datetime')->limit(1);
+                }])
+                ->where('current_section_id', $section->id)
+                ->where('is_active', true)
+                ->get()
+                ->map(function($student) {
+                    $age = $student->birth_date
+                        ? \Carbon\Carbon::parse($student->birth_date)->age
+                        : null;
+
+                    return [
+                        'student_id'              => $student->student_id,
+                        'student_number'          => $student->student_number,
+                        'full_name'               => $student->full_name,
+                        'gender'                  => $student->gender,
+                        'age'                     => $age,
+                        'blood_type'              => $student->blood_type ?? null,
+                        'emergency_contact'       => $student->emergency_contact_name ?? null,
+                        'emergency_contact_phone' => $student->emergency_contact_phone ?? null,
+                        'enrollment_status'       => $student->is_active ? 'active' : 'inactive',
+                        'allergies'               => $student->allergies->pluck('allergen')->toArray(),
+                        'last_visit'              => $student->medicalVisits->first() ? [
+                            'visit_datetime' => $student->medicalVisits->first()->visit_datetime,
+                        ] : null,
+                    ];
+                });
+
+            $stats = [
+                'total_students'           => $students->count(),
+                'students_with_allergies'  => $students->filter(fn($s) => count($s['allergies']) > 0)->count(),
+                'students_with_visits'     => $students->filter(fn($s) => $s['last_visit'] !== null)->count(),
+            ];
+
+            return $this->sendResponse([
+                'section'  => [
+                    'id'               => $section->id,
+                    'section_name'     => $section->section_name,
+                    'school_year'      => $section->schoolYear->year_name ?? null,
+                    'adviser_name'     => $adviserName,
+                    'capacity'         => $section->capacity,
+                    'current_enrollment' => $section->attributes['current_enrollment'] ?? $students->count(),
+                ],
+                'students' => $students,
+                'stats'    => $stats,
+            ], 'Section students retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve section students', $e->getMessage());
         }
     }
 
@@ -865,88 +1161,92 @@ class AdminController extends BaseController
             ]);
 
             $roleFilter = $request->get('role');
-            
-            if ($roleFilter) {
-                // Return flat format when role filter is applied
-                $users = User::with('role')
-                    ->whereHas('role', function($query) use ($roleFilter) {
-                        $query->where('role_name', $roleFilter);
-                    })
-                    ->get()
-                    ->map(function($user) {
-                        return [
-                            'user_id' => $user->user_id,
-                            'username' => $user->username,
-                            'email' => $user->email,
-                            'phone' => $user->phone,
-                            'full_name' => $user->full_name,
-                            'role_name' => $user->role->role_name ?? 'Unknown',
-                            'is_active' => (bool)$user->is_active,
-                            'created_at' => $user->created_at,
-                            'updated_at' => $user->updated_at,
-                        ];
-                    });
-                
-                Log::info('getAllUsers filtered result', ['count' => $users->count(), 'filter' => $roleFilter]);
-                return $this->sendResponse(['users' => $users], 'Users retrieved successfully');
-            }
-            
-            // Return grouped format when no role filter
-            $allUsers = User::with('role')->get();
-            Log::info('getAllUsers total users found', ['count' => $allUsers->count()]);
-            
-            $groupedUsers = [
-                'student' => [],
-                'adviser' => [],
-                'clinic_staff' => [],
-                'admin' => []
-            ];
-            
-            foreach ($allUsers as $user) {
+
+            $buildUserData = function($user) {
                 $roleName = $user->role->role_name ?? 'unknown';
-                $userData = [
-                    'user_id' => $user->user_id,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'full_name' => $user->full_name,
-                    'role_name' => $roleName,
-                    'is_active' => (bool)$user->is_active,
+                $data = [
+                    'user_id'    => $user->user_id,
+                    'username'   => $user->username,
+                    'email'      => $user->email,
+                    'phone'      => $user->phone,
+                    'full_name'  => $user->full_name,
+                    'role_name'  => $roleName,
+                    'is_active'  => (bool)$user->is_active,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,
                 ];
-                
-                // Map role names to array keys
-                if ($roleName === 'Student') {
-                    $roleKey = 'student';
-                } elseif ($roleName === 'Adviser') {
-                    $roleKey = 'adviser';
-                } elseif ($roleName === 'Clinic Staff') {
-                    $roleKey = 'clinic_staff';
-                } elseif ($roleName === 'Admin') {
-                    $roleKey = 'admin';
-                } else {
-                    $roleKey = 'admin'; // fallback for unknown roles
+
+                if ($roleName === 'Student' && $user->student) {
+                    $data['student_number']   = $user->student->student_number;
+                    $data['first_name']       = $user->student->first_name;
+                    $data['last_name']        = $user->student->last_name;
+                    $data['gender']           = $user->student->gender;
+                    $data['birth_date']       = $user->student->birth_date;
+                    $data['grade_level']      = $user->student->grade_level;
+                    $data['section']          = $user->student->section;
                 }
-                
-                $groupedUsers[$roleKey][] = $userData;
+
+                if ($roleName === 'Adviser' && $user->adviser) {
+                    $data['employee_number']  = $user->adviser->employee_number;
+                    $data['contact_phone']    = $user->adviser->contact_phone;
+                    $data['department']       = $user->adviser->department;
+                }
+
+                if ($roleName === 'Clinic Staff' && $user->clinicStaff) {
+                    $data['staff_code']       = $user->clinicStaff->staff_code;
+                    $data['position']         = $user->clinicStaff->position;
+                }
+
+                return $data;
+            };
+
+            if ($roleFilter) {
+                $users = User::with(['role', 'student', 'adviser', 'clinicStaff'])
+                    ->whereHas('role', function($query) use ($roleFilter) {
+                        $query->whereRaw('LOWER(role_name) = ?', [strtolower($roleFilter)]);
+                    })
+                    ->get()
+                    ->map($buildUserData);
+
+                Log::info('getAllUsers filtered result', ['count' => $users->count(), 'filter' => $roleFilter]);
+                return $this->sendResponse(['users' => $users], 'Users retrieved successfully');
             }
-            
+
+            $allUsers = User::with(['role', 'student', 'adviser', 'clinicStaff'])->get();
+            Log::info('getAllUsers total users found', ['count' => $allUsers->count()]);
+
+            $groupedUsers = ['student' => [], 'adviser' => [], 'clinic_staff' => [], 'admin' => []];
+
+            foreach ($allUsers as $user) {
+                $roleName = $user->role->role_name ?? 'unknown';
+                $userData = $buildUserData($user);
+
+                if ($roleName === 'Student')           $groupedUsers['student'][]      = $userData;
+                elseif ($roleName === 'Adviser')       $groupedUsers['adviser'][]      = $userData;
+                elseif ($roleName === 'Clinic Staff')  $groupedUsers['clinic_staff'][] = $userData;
+                else                                   $groupedUsers['admin'][]        = $userData;
+            }
+
             $totals = [
-                'students' => count($groupedUsers['student']),
-                'advisers' => count($groupedUsers['adviser']),
-                'clinic_staff' => count($groupedUsers['clinic_staff']),
-                'admins' => count($groupedUsers['admin']),
-                'total' => $allUsers->count()
+                'students'    => count($groupedUsers['student']),
+                'advisers'    => count($groupedUsers['adviser']),
+                'clinic_staff'=> count($groupedUsers['clinic_staff']),
+                'admins'      => count($groupedUsers['admin']),
+                'total'       => $allUsers->count()
             ];
-            
+
             Log::info('getAllUsers grouped result', $totals);
-            
+
             return $this->sendResponse([
-                'users' => $groupedUsers,
+                'users' => [
+                    'student'      => array_values($groupedUsers['student']),
+                    'adviser'      => array_values($groupedUsers['adviser']),
+                    'clinic_staff' => array_values($groupedUsers['clinic_staff']),
+                    'admin'        => array_values($groupedUsers['admin']),
+                ],
                 'totals' => $totals
             ], 'Users retrieved successfully');
-            
+
         } catch (\Exception $e) {
             Log::error('getAllUsers failed', [
                 'error' => $e->getMessage(),
@@ -1106,6 +1406,106 @@ class AdminController extends BaseController
             DB::rollBack();
             return $this->sendError('Failed to delete user', $e->getMessage());
         }
+    /**
+     * Create a new student user account (called from createUser when role=student)
+     */
+    private function createStudentUser(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'student_number' => 'required|string|unique:students,student_number',
+            'first_name'     => 'required|string|max:80',
+            'last_name'      => 'required|string|max:80',
+            'middle_name'    => 'nullable|string|max:80',
+            'birth_date'     => 'required|date',
+            'gender'         => 'required|in:M,F,Other',
+            'grade_level'    => 'required|integer',
+            'section_id'     => 'required|integer|exists:sections,id',
+            'email'          => 'nullable|email|unique:users,email',
+            'phone'          => 'nullable|string|max:20',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error', $validator->errors()->first());
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $currentSchoolYear = SchoolYear::where('is_current', true)->first();
+            if (!$currentSchoolYear) {
+                return $this->sendError('No current school year set');
+            }
+
+            $section = Section::with('gradeLevel')->find($request->section_id);
+            if (!$section || !$section->is_active) {
+                return $this->sendError('Invalid section selected');
+            }
+
+            $tempPassword = $this->generateTempPassword();
+
+            $user = User::create([
+                'role_id'              => 2,
+                'username'             => $request->student_number,
+                'password_hash'        => Hash::make($tempPassword),
+                'email'                => $request->email,
+                'phone'                => $request->phone,
+                'full_name'            => trim($request->first_name . ' ' . ($request->middle_name ? $request->middle_name . ' ' : '') . $request->last_name),
+                'password_must_change' => true,
+                'is_active'            => true,
+            ]);
+
+            $student = Student::create([
+                'user_id'                => $user->user_id,
+                'student_number'         => $request->student_number,
+                'first_name'             => $request->first_name,
+                'middle_name'            => $request->middle_name,
+                'last_name'              => $request->last_name,
+                'birth_date'             => $request->birth_date,
+                'gender'                 => $request->gender,
+                'grade_level'            => $section->gradeLevel->level_name,
+                'section'                => $section->section_name,
+                'current_grade_level_id' => $section->grade_level_id,
+                'current_section_id'     => $section->id,
+                'current_school_year_id' => $currentSchoolYear->id,
+                'phone'                  => $request->phone,
+                'is_active'              => true,
+            ]);
+
+            if ($section->adviser_id) {
+                $student->update(['current_adviser_id' => $section->adviser_id]);
+            }
+
+            $section->increment('current_enrollment');
+
+            DB::commit();
+
+            if ($request->email) {
+                try {
+                    Mail::to($request->email)->send(new UserAccountCreated([
+                        'username'      => $user->username,
+                        'full_name'     => $student->full_name,
+                        'student_number'=> $student->student_number,
+                        'grade_section' => $section->gradeLevel->level_name . ' - ' . $section->section_name,
+                        'email'         => $request->email,
+                        'temp_password' => $tempPassword,
+                    ], $tempPassword, 'Student'));
+                } catch (\Exception $e) {
+                    Log::warning('Failed to send account creation email: ' . $e->getMessage());
+                }
+            }
+
+            return $this->sendResponse([
+                'student_id'     => $student->student_id,
+                'student_number' => $student->student_number,
+                'full_name'      => $student->full_name,
+                'username'       => $user->username,
+                'temp_password'  => $tempPassword,
+            ], 'Student created successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->sendError('Failed to create student', $e->getMessage());
+        }
     }
 
     /**
@@ -1114,6 +1514,11 @@ class AdminController extends BaseController
     public function createUser(Request $request)
     {
         try {
+            // Route student creation to dedicated method
+            if ($request->input('role') === 'student') {
+                return $this->createStudentUser($request);
+            }
+
             $validator = Validator::make($request->all(), [
                 'role' => 'required|in:adviser,clinic_staff,admin',
                 'full_name' => 'required|string|max:150',
@@ -1123,6 +1528,8 @@ class AdminController extends BaseController
                 'employee_number' => 'required_if:role,adviser|string|max:50|unique:advisers,employee_number',
                 // Clinic Staff specific fields
                 'staff_code' => 'required_if:role,clinic_staff|string|max:20|unique:clinic_staff,staff_code',
+                'position' => 'required_if:role,clinic_staff|string|max:100',
+            ]); 'staff_code' => 'required_if:role,clinic_staff|string|max:20|unique:clinic_staff,staff_code',
                 'position' => 'required_if:role,clinic_staff|string|max:100',
             ]);
 
@@ -1429,32 +1836,48 @@ class AdminController extends BaseController
     public function getNotifications()
     {
         try {
-            // Mock notifications for now - implement with real notification system
-            $notifications = [
-                [
-                    'notification_id' => 1,
-                    'message' => 'Emergency visit: Student requires immediate attention',
-                    'priority' => 'urgent',
-                    'status' => 'Pending',
-                    'created_at' => now()->subMinutes(15)->toISOString(),
-                    'student' => [
-                        'full_name' => 'John Doe',
-                        'student_number' => '2024001',
-                        'grade_section' => 'Grade 7 - Section A'
-                    ],
-                    'visit' => [
-                        'visit_id' => 1,
-                        'visit_type' => 'Emergency',
-                        'diagnosis' => 'Severe allergic reaction',
-                        'status' => 'Referred'
-                    ],
-                    'staff' => [
-                        'name' => 'Nurse Jane',
-                        'position' => 'Head Nurse'
-                    ]
-                ]
-            ];
-            
+            $notifications = \App\Models\Notification::with([
+                    'student.currentSection.gradeLevel',
+                    'medicalVisit.clinicStaff.user',
+                ])
+                ->whereNotNull('visit_id')
+                ->orderBy('created_at', 'desc')
+                ->limit(50)
+                ->get()
+                ->map(function ($notif) {
+                    $student = $notif->student;
+                    $visit   = $notif->medicalVisit;
+                    $staff   = $visit?->clinicStaff?->user;
+
+                    $section = $student?->currentSection;
+                    $grade   = $section?->gradeLevel;
+                    $gradeSection = collect([$grade?->level_name, $section?->section_name])
+                        ->filter()->implode(' - ');
+
+                    return [
+                        'notification_id' => $notif->notification_id,
+                        'message'         => $notif->message,
+                        'priority'        => $notif->priority,
+                        'status'          => $notif->status,
+                        'created_at'      => $notif->created_at?->toISOString(),
+                        'student' => $student ? [
+                            'full_name'      => trim($student->first_name . ' ' . $student->last_name),
+                            'student_number' => $student->student_number,
+                            'grade_section'  => $gradeSection ?: null,
+                        ] : null,
+                        'visit' => $visit ? [
+                            'visit_id'   => $visit->visit_id,
+                            'visit_type' => $visit->visit_type,
+                            'diagnosis'  => $visit->chief_complaint,
+                            'status'     => $visit->status,
+                        ] : null,
+                        'staff' => $staff ? [
+                            'name'     => trim($staff->first_name . ' ' . $staff->last_name),
+                            'position' => $visit->clinicStaff->position ?? null,
+                        ] : null,
+                    ];
+                });
+
             return $this->sendResponse(['notifications' => $notifications], 'Notifications retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve notifications', $e->getMessage());
@@ -1750,6 +2173,80 @@ class AdminController extends BaseController
             
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve BMI trends', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get system settings
+     */
+    public function getSettings()
+    {
+        try {
+            // For now, return basic system settings
+            $settings = [
+                'general' => [
+                    'school_name' => 'Four Seasons School',
+                    'school_year' => '2024-2025',
+                    'timezone' => 'Asia/Manila',
+                    'language' => 'en'
+                ],
+                'notifications' => [
+                    'email_enabled' => true,
+                    'sms_enabled' => true,
+                    'emergency_notifications' => true
+                ],
+                'security' => [
+                    'session_timeout' => 1440, // 24 hours in minutes
+                    'password_min_length' => 6,
+                    'require_password_change' => true
+                ],
+                'medical' => [
+                    'bmi_categories' => [
+                        'underweight' => '< 18.5',
+                        'normal' => '18.5 - 24.9',
+                        'overweight' => '25.0 - 29.9',
+                        'obese' => '≥ 30.0'
+                    ],
+                    'emergency_contact_required' => true
+                ]
+            ];
+
+            return $this->sendResponse($settings, 'Settings retrieved successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve settings', $e->getMessage());
+        }
+    }
+
+    /**
+     * Update system settings
+     */
+    public function updateSettings(Request $request)
+    {
+        try {
+            // For now, just return success
+            // In a real implementation, you would validate and save settings to database
+            
+            $validator = Validator::make($request->all(), [
+                'section' => 'required|string|in:general,notifications,security,medical',
+                'settings' => 'required|array'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            // Here you would typically save to a settings table or config file
+            Log::info('Settings update requested', [
+                'section' => $request->section,
+                'settings' => $request->settings,
+                'user_id' => $request->user()?->user_id
+            ]);
+
+            return $this->sendResponse([], 'Settings updated successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to update settings', $e->getMessage());
         }
     }
 }

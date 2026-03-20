@@ -1,20 +1,8 @@
 {
   "/api": {
-    "target": "http://localhost:8080",
+    "target": "http://backend:80",
     "secure": false,
     "changeOrigin": true,
-    "logLevel": "debug",
-    "pathRewrite": {
-      "^/api": "/api"
-    }
-  },
-  "/backend": {
-    "target": "http://localhost",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug",
-    "pathRewrite": {
-      "^/backend": "/4seasons/backend"
-    }
+    "logLevel": "debug"
   }
 }

@@ -923,8 +923,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
-          if (response?.success && response.users) {
-            this.updateDashboardData(response);
+          if (response?.success && response.data?.users) {
+            this.updateRecentUsersData(response.data);
           }
         },
         error: (err) => {
@@ -951,20 +951,40 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.loading = true;
     console.log('📊 Loading dashboard data...');
     
-    // Load users data
+    // Load dashboard statistics first
+    this.adminService.getDashboard().subscribe({
+      next: (response) => {
+        console.log('✅ Dashboard response:', response);
+        if (response?.success && response.data) {
+          const dashboardData = response.data;
+          
+          // Update system stats from dashboard API
+          if (dashboardData.current_stats) {
+            this.systemStats = {
+              totalUsers: dashboardData.current_stats.total_users || 0,
+              totalStudents: dashboardData.current_stats.students || 0,
+              totalAdvisers: dashboardData.current_stats.faculty || 0,
+              totalStaff: dashboardData.current_stats.clinic_staff || 0
+            };
+            console.log('✅ Updated system stats from dashboard:', this.systemStats);
+          }
+        }
+      },
+      error: (err) => {
+        console.error('❌ Error loading dashboard:', err);
+      }
+    });
+    
+    // Load users data for recent users display
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
         console.log('✅ getAllUsers full response:', response);
-        console.log('✅ Response success:', response?.success);
-        console.log('✅ Response users:', response?.users);
-        console.log('✅ Response totals:', response?.totals);
         
-        if (response?.success && response.users) {
+        if (response?.success && response.data?.users) {
           this.usersData$.next(response);
-          this.updateDashboardData(response);
+          this.updateRecentUsersData(response.data);
         } else {
           console.error('❌ Invalid response structure:', response);
-          this.loading = false;
         }
         this.loading = false;
       },
@@ -979,12 +999,19 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.adminService.getActivityLogs(5).subscribe({
       next: (response) => {
         console.log('✅ Activity logs response:', response);
-        if (response?.success && Array.isArray(response.activities)) {
+        if (response?.success && Array.isArray(response.data?.activities)) {
+          this.activityLog = response.data.activities.slice(0, 5).map((activity: any) => ({
+            type: activity?.activity_type || 'system',
+            action: activity?.action || 'Unknown action',
+            user: activity?.username || activity?.full_name || 'System',
+            timestamp: this.formatTimestamp(activity?.created_at || activity?.timestamp || '')
+          }));
+        } else if (response?.success && Array.isArray(response.activities)) {
           this.activityLog = response.activities.slice(0, 5).map((activity: any) => ({
-            type: activity.activity_type || 'system',
-            action: activity.action || 'Unknown action',
-            user: activity.username || activity.full_name || 'System',
-            timestamp: this.formatTimestamp(activity.created_at || activity.timestamp)
+            type: activity?.activity_type || 'system',
+            action: activity?.action || 'Unknown action',
+            user: activity?.username || activity?.full_name || 'System',
+            timestamp: this.formatTimestamp(activity?.created_at || activity?.timestamp || '')
           }));
         }
       },
@@ -997,25 +1024,48 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.adminService.getNotifications().subscribe({
       next: (response) => {
         console.log('✅ Admin notifications response:', response);
-        if (response?.success && Array.isArray(response.notifications)) {
+        if (response?.success && Array.isArray(response.data?.notifications)) {
           // Separate urgent (pending) from history (read/sent)
-          const allNotifications = response.notifications.map((notif: any) => {
+          const allNotifications = response.data.notifications.map((notif: any) => {
             console.log('🔍 Notification structure:', notif);
             console.log('🔍 Visit ID:', notif.visit?.visit_id || notif.visit_id);
             return {
               ...notif,
-              timeAgo: this.formatTimestamp(notif.created_at)
+              timeAgo: this.formatTimestamp(notif?.created_at || '')
             };
           });
           
           // Emergency notifications (urgent + pending)
           this.emergencyNotifications = allNotifications.filter(
-            (notif: any) => notif.priority === 'urgent' && notif.status === 'Pending'
+            (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending'
           );
           
           // Notification history (all read/sent notifications, or normal priority)
           this.notificationHistory = allNotifications.filter(
-            (notif: any) => notif.status !== 'Pending' || notif.priority === 'normal'
+            (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
+          ).slice(0, 10); // Show last 10
+          
+          console.log('✅ Emergency notifications loaded:', this.emergencyNotifications.length);
+          console.log('✅ Notification history loaded:', this.notificationHistory.length);
+        } else if (response?.success && Array.isArray(response.notifications)) {
+          // Fallback for direct notifications array
+          const allNotifications = response.notifications.map((notif: any) => {
+            console.log('🔍 Notification structure:', notif);
+            console.log('🔍 Visit ID:', notif.visit?.visit_id || notif.visit_id);
+            return {
+              ...notif,
+              timeAgo: this.formatTimestamp(notif?.created_at || '')
+            };
+          });
+          
+          // Emergency notifications (urgent + pending)
+          this.emergencyNotifications = allNotifications.filter(
+            (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending'
+          );
+          
+          // Notification history (all read/sent notifications, or normal priority)
+          this.notificationHistory = allNotifications.filter(
+            (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
           ).slice(0, 10); // Show last 10
           
           console.log('✅ Emergency notifications loaded:', this.emergencyNotifications.length);
@@ -1028,77 +1078,34 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  private updateDashboardData(response: UsersResponse): void {
-    console.log('📊 Updating dashboard with response:', response);
+  private updateRecentUsersData(data: any): void {
+    console.log('📊 Updating recent users with data:', data);
     
-    // Validate response structure
-    if (!response || !response.success || !response.users) {
-      console.error('❌ Invalid response structure');
-      console.error('❌ Response:', response);
-      console.error('❌ Response.success:', response?.success);
-      console.error('❌ Response.users:', response?.users);
+    if (!data || !data.users) {
+      console.error('❌ Invalid data structure');
       return;
     }
 
-    // Safely extract user arrays with defaults
-    const students = Array.isArray(response.users.student) ? response.users.student : [];
-    const advisers = Array.isArray(response.users.adviser) ? response.users.adviser : [];
-    const clinicStaff = Array.isArray(response.users.clinic_staff) ? response.users.clinic_staff : [];
-    const admins = Array.isArray(response.users.admin) ? response.users.admin : [];
+    const students = Array.isArray(data.users?.student) ? data.users.student : [];
+    const advisers = Array.isArray(data.users?.adviser) ? data.users.adviser : [];
+    const clinicStaff = Array.isArray(data.users?.clinic_staff) ? data.users.clinic_staff : [];
+    const admins = Array.isArray(data.users?.admin) ? data.users.admin : [];
     
-    console.log('📈 Raw user arrays:');
-    console.log('   Students:', students);
-    console.log('   Advisers:', advisers);
-    console.log('   Clinic Staff:', clinicStaff);
-    console.log('   Admins:', admins);
-    
-    // Combine all users
+    // Combine all users for recent users display
     const allUsers: User[] = [...students, ...advisers, ...clinicStaff, ...admins];
     
-    console.log('📈 User counts - Students:', students.length, 'Advisers:', advisers.length, 
-                'Clinic Staff:', clinicStaff.length, 'Admins:', admins.length);
-    
-    // Update statistics - prefer totals from API, fallback to manual count
-    if (response.totals) {
-      console.log('📊 Using totals from API:', response.totals);
-      this.systemStats = {
-        totalUsers: response.totals.total || 0,
-        totalStudents: response.totals.students || 0,
-        totalAdvisers: response.totals.advisers || 0,
-        totalStaff: response.totals.clinic_staff || 0
-      };
-    } else {
-      console.log('📊 Calculating totals manually');
-      this.systemStats = {
-        totalUsers: allUsers.length,
-        totalStudents: students.length,
-        totalAdvisers: advisers.length,
-        totalStaff: clinicStaff.length
-      };
-    }
-    
-    console.log('✅ Final stats:', this.systemStats);
-    
-    // Sort users by registration date (most recent first)
-    const sortedUsers = allUsers
-      .filter(user => user && user.created_at) // Filter out invalid entries
-      .sort((a, b) => {
-        const dateA = new Date(a.created_at).getTime();
-        const dateB = new Date(b.created_at).getTime();
-        return dateB - dateA; // Most recent first
-      })
-      .slice(0, 10); // Take top 10
-    
-    // Format recent users for display
-    this.recentUsers = sortedUsers.map(user => ({
-      name: user.full_name || user.username || 'Unknown',
-      role: this.formatRoleName(user.role_name || 'Unknown'),
-      registeredDate: this.formatDate(user.created_at),
-      status: user.is_active === 1 ? 'Active' : 'Inactive'
-    }));
-    
-    console.log('✅ Recent users updated:', this.recentUsers.length, 'users');
-    console.log('✅ Recent users:', this.recentUsers);
+    // Get recent users (last 10, sorted by creation date)
+    this.recentUsers = allUsers
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 10)
+      .map(user => ({
+        name: user.full_name || user.username,
+        role: user.role_name,
+        registeredDate: this.formatDate(user.created_at),
+        status: user.is_active ? 'Active' : 'Inactive'
+      }));
+
+    console.log('✅ Recent users updated:', this.recentUsers.length);
   }
 
   private formatRoleName(roleName: string): string {
@@ -1189,21 +1196,21 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const details = `
 Emergency Details:
 
-Student: ${notification.student.full_name}
-Student Number: ${notification.student.student_number}
-Grade & Section: ${notification.student.grade_section}
+Student: ${notification?.student?.full_name || 'N/A'}
+Student Number: ${notification?.student?.student_number || 'N/A'}
+Grade & Section: ${notification?.student?.grade_section || 'N/A'}
 
-Visit Type: ${notification.visit.visit_type}
-Diagnosis: ${notification.visit.diagnosis || notification.visit.chief_complaint || 'N/A'}
-Visit Status: ${notification.visit.status}
-Time: ${notification.timeAgo}
+Visit Type: ${notification?.visit?.visit_type || 'N/A'}
+Diagnosis: ${notification?.visit?.diagnosis || notification?.visit?.chief_complaint || 'N/A'}
+Visit Status: ${notification?.visit?.status || 'N/A'}
+Time: ${notification?.timeAgo || 'N/A'}
 
-Staff: ${notification.staff.name || 'N/A'}
-Position: ${notification.staff.position || 'N/A'}
+Staff: ${notification?.staff?.name || 'N/A'}
+Position: ${notification?.staff?.position || 'N/A'}
     `.trim();
     
     if (confirm(details + '\n\nMark this notification as read?')) {
-      this.markNotificationAsRead(notification.notification_id);
+      this.markNotificationAsRead(notification?.notification_id);
     }
   }
 
@@ -1250,8 +1257,8 @@ Position: ${notification.staff.position || 'N/A'}
   }
 
   sendSMSToParent(notification: any): void {
-    const studentName = notification.student?.full_name || 'the student';
-    const visitId = notification.visit?.visit_id || notification.visit_id;
+    const studentName = notification?.student?.full_name || 'the student';
+    const visitId = notification?.visit?.visit_id || notification?.visit_id;
     
     if (!visitId) {
       alert('Error: Visit ID not found in notification');
@@ -1262,15 +1269,15 @@ Position: ${notification.staff.position || 'N/A'}
     if (confirm(`Send SMS notification to ${studentName}'s parent/guardian about this emergency visit?`)) {
       this.adminService.sendParentSMS(visitId).subscribe({
         next: (response) => {
-          if (response.success) {
-            alert(`SMS sent successfully to ${response.phone}\n\nMessage: ${response.sms_message}`);
+          if (response?.success) {
+            alert(`SMS sent successfully to ${response?.phone || 'parent'}\n\nMessage: ${response?.sms_message || response?.message || 'SMS sent'}`);
           } else {
-            alert('Failed to send SMS: ' + response.message);
+            alert('Failed to send SMS: ' + (response?.message || 'Unknown error'));
           }
         },
         error: (err) => {
           console.error('Failed to send SMS:', err);
-          alert('Failed to send SMS. ' + (err.error?.message || 'Please try again.'));
+          alert('Failed to send SMS. ' + (err?.error?.message || 'Please try again.'));
         }
       });
     }

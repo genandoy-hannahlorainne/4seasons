@@ -105,11 +105,11 @@ class User extends Authenticatable
 
     public function adviser()
     {
-        return $this->hasOne(Adviser::class);
+        return $this->hasOne(Adviser::class, 'user_id', 'user_id');
     }
 
     public function clinicStaff()
     {
-        return $this->hasOne(ClinicStaff::class);
+        return $this->hasOne(ClinicStaff::class, 'user_id', 'user_id');
     }
 }

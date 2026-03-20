@@ -40,12 +40,12 @@ class AuthController extends BaseController
             // Load role relationship
             $user->load('role');
             
-            if (!$user->role) {
+            if  (!$user->role) {
                 return $this->sendError('User role not found', [], 500);
             }
 
             // Validate role-specific profile exists
-            $roleValidation = $this->validateRoleProfile($user);
+            $roleValidation =   $this->validateRoleProfile($user);
             if (!$roleValidation['valid']) {
                 return $this->sendError('Access denied: ' . $roleValidation['error'] . '. You cannot login with this account.', [], 403);
             }
@@ -56,7 +56,7 @@ class AuthController extends BaseController
                 'username' => $user->username,
                 'email' => $user->email,
                 'full_name' => $user->full_name,
-                'role_id' => $user->role_id,
+                'role_id' => $user->role_id, 
                 'role_name' => $user->role->role_name,
                 'password_must_change' => (bool)$user->password_must_change
             ];

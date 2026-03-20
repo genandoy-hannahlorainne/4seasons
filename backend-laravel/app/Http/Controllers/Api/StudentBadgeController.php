@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\GroqService;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -66,12 +67,117 @@ class StudentBadgeController extends BaseController
                 'timezone' => $decoded['timezone'] ?? 'Asia/Manila',
                 'count_weekends' => (bool)($decoded['count_weekends'] ?? false),
                 'streak_type' => $decoded['streak_type'] ?? 'school_day_streak',
+                'description' => $decoded['description'] ?? '',
                 'badges' => $badges,
                 'total_badges' => $badges->count(),
             ], 'Streak badge metadata retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve streak badge metadata', $e->getMessage(), 500);
         }
+    }
+
+    /**
+     * Get student's current wellness streak and badge status
+     */
+    public function getStudentBadges(Request $request, $studentId)
+    {
+        try {
+            $student = \App\Models\Student::find($studentId);
+            if (!$student) {
+                return $this->sendError('Student not found', [], 404);
+            }
+
+            // Calculate wellness streak (days without clinic visits)
+            $lastVisit = \App\Models\MedicalVisit::where('student_id', $studentId)
+                ->orderBy('visit_datetime', 'desc')
+                ->first();
+
+            $currentStreak = 0;
+            if (!$lastVisit) {
+                // No visits ever - streak since enrollment or a reasonable start date
+                $startDate = $student->created_at ?? now()->subDays(365);
+                $currentStreak = now()->diffInDays($startDate);
+            } else {
+                // Days since last visit
+                $currentStreak = now()->diffInDays($lastVisit->visit_datetime);
+            }
+
+            // Load badge metadata
+            $metadataPath = base_path('resources/badges/streak/metadata.json');
+            if (!file_exists($metadataPath)) {
+                return $this->sendError('Badge metadata not found', [], 404);
+            }
+
+            $metadata = json_decode(file_get_contents($metadataPath), true);
+            $badges = collect($metadata['badges'])->sortBy('required_streak_days');
+
+            // Determine badge status for each badge
+            $badgeStatus = $badges->map(function ($badge) use ($currentStreak) {
+                $required = $badge['required_streak_days'];
+                $isUnlocked = $currentStreak >= $required;
+                
+                return [
+                    'badge_key' => $badge['badge_key'],
+                    'badge_name' => $badge['badge_name'],
+                    'tier' => $badge['tier'],
+                    'required_streak_days' => $required,
+                    'description' => $badge['description'],
+                    'icon_file' => $badge['icon_file'],
+                    'icon_asset_path' => 'assets/badges/streak/' . $badge['icon_file'],
+                    'is_unlocked' => $isUnlocked,
+                    'is_earned' => $isUnlocked,
+                    'progress_percentage' => min(100, ($currentStreak / $required) * 100),
+                    'days_remaining' => $isUnlocked ? 0 : ($required - $currentStreak),
+                ];
+            });
+
+            // Find next badge to unlock
+            $nextBadge = $badgeStatus->where('is_unlocked', false)->first();
+            $unlockedBadges = $badgeStatus->where('is_unlocked', true);
+
+            // Check for new badge notifications
+            $this->checkAndCreateBadgeNotifications($studentId, $unlockedBadges, $currentStreak);
+
+            return $this->sendResponse([
+                'student_id' => $studentId,
+                'current_wellness_streak' => $currentStreak,
+                'last_clinic_visit' => $lastVisit ? $lastVisit->visit_datetime : null,
+                'total_badges_available' => $badges->count(),
+                'badges_unlocked' => $unlockedBadges->count(),
+                'badges_remaining' => $badges->count() - $unlockedBadges->count(),
+                'next_badge' => $nextBadge,
+                'badges' => $badgeStatus->values(),
+                'streak_message' => $this->generateStreakMessage($currentStreak, $nextBadge),
+            ], 'Student badges retrieved successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve student badges', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate motivational streak message
+     */
+    private function generateStreakMessage($currentStreak, $nextBadge)
+    {
+        if ($currentStreak === 0) {
+            return "Great! You're starting your wellness journey. Keep staying healthy!";
+        }
+
+        if ($currentStreak === 1) {
+            return "Awesome! 1 day of staying healthy. Keep it up!";
+        }
+
+        if (!$nextBadge) {
+            return "Incredible! You've unlocked all wellness badges. You're a health legend!";
+        }
+
+        $daysRemaining = $nextBadge['days_remaining'];
+        $nextBadgeName = $nextBadge['badge_name'];
+
+        return "Amazing! {$currentStreak} days of wellness! Only {$daysRemaining} more days to unlock '{$nextBadgeName}' badge.";
     }
 
     /**
@@ -122,6 +228,117 @@ class StudentBadgeController extends BaseController
             ], 'Badge narrative fallback text generated');
         } catch (\Exception $e) {
             return $this->sendError('Failed to generate badge narrative', $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get badge notifications for a student
+     */
+    public function getBadgeNotifications(Request $request, $studentId)
+    {
+        try {
+            $student = \App\Models\Student::find($studentId);
+            if (!$student) {
+                return $this->sendError('Student not found', [], 404);
+            }
+
+            $notifications = Notification::where('student_id', $studentId)
+                ->where('channel', 'System')
+                ->where('message', 'like', '%badge%')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($notification) {
+                    $metadata = $notification->metadata ?? [];
+                    return [
+                        'id' => $notification->notification_id,
+                        'badge_key' => $metadata['badge_key'] ?? null,
+                        'badge_name' => $metadata['badge_name'] ?? 'Badge',
+                        'badge_tier' => $metadata['badge_tier'] ?? 'bronze',
+                        'streak_days' => $metadata['streak_days'] ?? 0,
+                        'message' => $notification->message,
+                        'status' => $notification->status,
+                        'created_at' => $notification->created_at,
+                        'is_read' => $notification->status === 'Sent',
+                        'icon_file' => $metadata['icon_file'] ?? null,
+                    ];
+                });
+
+            return $this->sendResponse([
+                'student_id' => $studentId,
+                'notifications' => $notifications,
+                'unread_count' => $notifications->where('is_read', false)->count(),
+                'total_count' => $notifications->count(),
+            ], 'Badge notifications retrieved successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve badge notifications', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Mark badge notification as read
+     */
+    public function markNotificationAsRead(Request $request, $notificationId)
+    {
+        try {
+            $notification = Notification::find($notificationId);
+            if (!$notification) {
+                return $this->sendError('Notification not found', [], 404);
+            }
+
+            $notification->markAsRead();
+
+            return $this->sendResponse([
+                'notification_id' => $notificationId,
+                'status' => 'read'
+            ], 'Notification marked as read');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to mark notification as read', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check and create badge notifications for newly unlocked badges
+     */
+    private function checkAndCreateBadgeNotifications($studentId, $unlockedBadges, $currentStreak)
+    {
+        try {
+            foreach ($unlockedBadges as $badge) {
+                // Check if notification already exists for this badge
+                $existingNotification = Notification::where('student_id', $studentId)
+                    ->where('channel', 'System')
+                    ->where('message', 'like', '%' . $badge['badge_name'] . '%')
+                    ->first();
+
+                if (!$existingNotification) {
+                    // Create new badge notification
+                    $message = "🎉 Congratulations! You've earned the '{$badge['badge_name']}' badge for maintaining a {$badge['required_streak_days']}-day wellness streak!";
+                    
+                    Notification::create([
+                        'student_id' => $studentId,
+                        'channel' => 'System',
+                        'message' => $message,
+                        'status' => 'Pending',
+                        'priority' => $badge['tier'] === 'legend' ? 'urgent' : 'normal',
+                        'metadata' => [
+                            'badge_key' => $badge['badge_key'],
+                            'badge_name' => $badge['badge_name'],
+                            'badge_tier' => $badge['tier'],
+                            'streak_days' => $badge['required_streak_days'],
+                            'icon_file' => $badge['icon_file'],
+                            'notification_type' => 'badge_earned'
+                        ]
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the main request
+            \Log::error('Failed to create badge notifications: ' . $e->getMessage());
         }
     }
 }
