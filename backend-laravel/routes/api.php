@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\EmergencyDrillController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\SchoolYearController;
 use App\Http\Controllers\Api\StudentBadgeController;
+use App\Http\Controllers\Api\GradePromotionController;
 
 // Health check route for CI/CD
 Route::get('/health', function () {
@@ -60,6 +61,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/advisers', [AdminController::class, 'getAdvisers']);
         Route::get('/sections', [AdminController::class, 'getSections']);
         Route::post('/sections', [AdminController::class, 'createSection']);
+        Route::put('/sections/{id}', [AdminController::class, 'updateSection']);
+        Route::delete('/sections/{id}', [AdminController::class, 'deleteSection']);
         Route::post('/sections/assign-adviser', [AdminController::class, 'assignAdviserToSection']);
         Route::get('/sections/get-students', [AdminController::class, 'getSectionStudents']);
         Route::get('/notifications', [AdminController::class, 'getNotifications']);
@@ -80,6 +83,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/settings', [AdminController::class, 'getSettings']);
         Route::put('/settings', [AdminController::class, 'updateSettings']);
         
+        // Grade Promotion
+        Route::get('/promotion/summary', [GradePromotionController::class, 'summary']);
+        Route::post('/promotion/bulk', [GradePromotionController::class, 'bulk']);
+        Route::post('/promotion/copy-sections', [GradePromotionController::class, 'copySections']);
+
         // School years routes
         Route::get('/school-years', [SchoolYearController::class, 'index']);
         Route::get('/school-years/current', [SchoolYearController::class, 'getCurrent']);
@@ -92,6 +100,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('adviser')->middleware('role:adviser')->group(function () {
         Route::get('/dashboard', [AdviserController::class, 'dashboard']);
         Route::get('/students', [AdviserController::class, 'getStudents']);
+    });
+
+    // Staff routes
+    Route::prefix('staff')->group(function () {
+        Route::get('/students', [StudentController::class, 'index']);
+        Route::get('/sections', [AdminController::class, 'getSections']);
     });
 
     // Student routes
@@ -136,6 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard/clinic/overview', [DashboardController::class, 'getClinicOverview']);
 
     // School years
     Route::prefix('school-years')->group(function () {

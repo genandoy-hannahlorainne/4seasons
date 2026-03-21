@@ -260,6 +260,13 @@ export class AdminService {
     });
   }
 
+  copySectionsToYear(sourceSchoolYearId: number, targetSchoolYearId: number): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/promotion/copy-sections`, {
+      source_school_year_id: sourceSchoolYearId,
+      target_school_year_id: targetSchoolYearId,
+    });
+  }
+
   // Admin Profile Management
   updateProfile(profileData: any): Observable<any> {
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');

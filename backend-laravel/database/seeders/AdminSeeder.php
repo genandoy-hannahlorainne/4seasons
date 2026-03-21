@@ -19,16 +19,14 @@ class AdminSeeder extends Seeder
         $existingAdmin = DB::table('users')->where('username', 'admin')->first();
 
         if ($existingAdmin) {
+            // Only update non-sensitive fields — do NOT overwrite password_hash
             DB::table('users')
                 ->where('username', 'admin')
                 ->update([
                     'role_id' => 1,
-                    'password_hash' => $adminHash,
                     'email' => 'admin@pdmhs.edu.ph',
-                    'phone' => '09171234567',
                     'full_name' => 'System Administrator',
                     'is_active' => 1,
-                    'password_must_change' => 0,
                 ]);
             return;
         }

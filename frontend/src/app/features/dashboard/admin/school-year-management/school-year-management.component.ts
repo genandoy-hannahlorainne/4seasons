@@ -1731,7 +1731,7 @@ export class SchoolYearManagementComponent implements OnInit {
     this.http.get<any>(`${environment.apiUrl}/admin/sections/get-students?section_id=${sectionId}`).subscribe({
       next: (response) => {
         if (response.success) {
-          this.sectionStudentsData = response;
+          this.sectionStudentsData = response.data;
         } else {
           this.showMessage('Error loading students: ' + response.message, 'error');
         }

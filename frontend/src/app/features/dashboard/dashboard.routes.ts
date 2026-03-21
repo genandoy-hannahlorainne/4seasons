@@ -22,6 +22,7 @@ import { AdminLayoutComponent } from './admin/admin-layout.component';
 import { AdminDashboardComponent } from './admin/admin-dashboard.component';
 import { AdminProfileComponent } from './admin/profile/admin-profile.component';
 import { ManageUsersComponent } from './admin/manage-users/manage-users.component';
+import { ManageSectionsComponent } from './admin/manage-sections/manage-sections.component';
 import { SystemSettingsComponent } from './admin/system-settings/system-settings.component';
 import { ViewReportsComponent } from './admin/view-reports/view-reports.component';
 import { BackupRecoveryComponent } from './admin/backup-recovery/backup-recovery.component';
@@ -92,6 +93,7 @@ export const dashboardRoutes: Routes = [
       { path: '', component: AdminDashboardComponent },
       { path: 'profile', component: AdminProfileComponent },
       { path: 'manage-users', component: ManageUsersComponent },
+      { path: 'manage-sections', component: ManageSectionsComponent },
       { path: 'school-year-management', component: SchoolYearManagementComponent },
       { path: 'settings', component: SystemSettingsComponent },
       { path: 'reports', component: ViewReportsComponent },

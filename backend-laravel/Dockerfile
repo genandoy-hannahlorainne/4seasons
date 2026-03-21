@@ -2,7 +2,7 @@ FROM php:8.2-apache
 
 # System deps + PHP extensions required by Laravel/MySQL
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git unzip libzip-dev \
+    && apt-get install -y --no-install-recommends git unzip libzip-dev curl \
     && docker-php-ext-install pdo pdo_mysql mysqli \
     && a2enmod rewrite headers \
     && rm -rf /var/lib/apt/lists/*

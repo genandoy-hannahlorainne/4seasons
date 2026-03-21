@@ -11,6 +11,7 @@ class ClinicStaff extends Model
 
     protected $table = 'clinic_staff';
     protected $primaryKey = 'clinic_staff_id';
+    public $timestamps = false;
 
     protected $fillable = [
         'user_id',

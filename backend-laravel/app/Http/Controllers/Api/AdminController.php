@@ -252,7 +252,6 @@ class AdminController extends BaseController
                 'emergency_contact_phone' => $request->emergency_contact_phone,
                 'phone' => $request->phone,
                 'is_active' => true
-            ]); 'is_active' => true
             ]);
 
             // Update section enrollment count
@@ -307,29 +306,33 @@ class AdminController extends BaseController
     public function getGradeLevelsWithSections()
     {
         try {
+            // Pre-load all adviser names in one query
+            $adviserNames = DB::table('users')
+                ->whereIn('role_id', function($q) {
+                    $q->select('role_id')->from('roles')->where('role_name', 'Adviser');
+                })
+                ->pluck('full_name', 'user_id');
+
             $gradeLevels = GradeLevel::with(['sections' => function($query) {
-                $query->where('is_active', true)->orderBy('section_name');
+                $query->where('is_active', true)->orderBy('section_number');
             }])
             ->where('is_active', true)
             ->orderBy('level_number')
             ->get()
-            ->map(function($gradeLevel) {
-                // Map actual grades to admin grade levels
-                $adminGradeMapping = [
-                    7 => 1, 8 => 2, 9 => 3, 10 => 4, 11 => 5, 12 => 6
-                ];
-                
+            ->map(function($gradeLevel) use ($adviserNames) {
                 return [
-                    'id' => $gradeLevel->id,
-                    'level_number' => $gradeLevel->level_number,
-                    'level_name' => $gradeLevel->level_name,
-                    'admin_grade_level' => $adminGradeMapping[$gradeLevel->level_number] ?? $gradeLevel->level_number,
-                    'sections' => $gradeLevel->sections->map(function($section) {
+                    'id'               => $gradeLevel->id,
+                    'level_number'     => $gradeLevel->level_number,
+                    'level_name'       => $gradeLevel->level_name,
+                    'sections'         => $gradeLevel->sections->map(function($section) use ($adviserNames) {
                         return [
-                            'id' => $section->id,
-                            'section_name' => $section->section_name,
-                            'capacity' => $section->capacity,
-                            'current_enrollment' => $section->current_enrollment ?? 0
+                            'id'                 => $section->id,
+                            'section_name'       => $section->section_name,
+                            'adviser_id'         => $section->adviser_id,
+                            'adviser_name'       => $section->adviser_id ? ($adviserNames[$section->adviser_id] ?? null) : null,
+                            'capacity'           => $section->capacity,
+                            'current_enrollment' => $section->current_enrollment ?? 0,
+                            'grade_level_id'     => $section->grade_level_id,
                         ];
                     })
                 ];
@@ -356,10 +359,9 @@ class AdminController extends BaseController
                 ->get()
                 ->map(function($user) {
                     return [
-                        'user_id'         => $user->user_id,
-                        'full_name'       => $user->full_name,
-                        'email'           => $user->email,
-                        'employee_number' => $user->adviser->employee_number ?? null,
+                        'user_id'  => $user->user_id,
+                        'full_name' => $user->full_name,
+                        'email'    => $user->email,
                     ];
                 });
 
@@ -382,7 +384,7 @@ class AdminController extends BaseController
                 $query->where('school_year_id', $request->school_year_id);
             }
 
-            $sections = $query->orderBy('grade_level_id')->orderBy('section_name')->get()
+            $sections = $query->orderBy('grade_level_id')->orderBy('section_number')->get()
                 ->map(function($section) {
                     $adviser = null;
                     if ($section->adviser_id) {
@@ -392,6 +394,7 @@ class AdminController extends BaseController
                     return [
                         'id'                 => $section->id,
                         'section_name'       => $section->section_name,
+                        'section_number'     => $section->section_number,
                         'grade_level_id'     => $section->grade_level_id,
                         'school_year_id'     => $section->school_year_id,
                         'adviser_id'         => $section->adviser_id,
@@ -420,7 +423,7 @@ class AdminController extends BaseController
             $validator = Validator::make($request->all(), [
                 'section_name'   => 'required|string|max:50',
                 'grade_level_id' => 'required|integer|exists:grade_levels,id',
-                'school_year_id' => 'required|integer|exists:school_years,id',
+                'school_year_id' => 'nullable|integer|exists:school_years,id',
                 'capacity'       => 'nullable|integer|min:1|max:200',
             ]);
 
@@ -428,10 +431,18 @@ class AdminController extends BaseController
                 return $this->sendError('Validation Error', $validator->errors()->first());
             }
 
+            // Fall back to current school year if not provided
+            $schoolYearId = $request->school_year_id
+                ?? SchoolYear::where('is_current', true)->value('id');
+
+            if (!$schoolYearId) {
+                return $this->sendError('No current school year set');
+            }
+
             $section = Section::create([
                 'section_name'       => $request->section_name,
                 'grade_level_id'     => $request->grade_level_id,
-                'school_year_id'     => $request->school_year_id,
+                'school_year_id'     => $schoolYearId,
                 'capacity'           => $request->capacity ?? 50,
                 'current_enrollment' => 0,
                 'is_active'          => true,
@@ -440,6 +451,63 @@ class AdminController extends BaseController
             return $this->sendResponse(['section' => $section], 'Section created successfully');
         } catch (\Exception $e) {
             return $this->sendError('Failed to create section', $e->getMessage());
+        }
+    }
+
+    /**
+     * Update an existing section
+     */
+    public function updateSection(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'section_name' => 'sometimes|required|string|max:50',
+                'adviser_id'   => 'nullable|integer|exists:users,user_id',
+                'capacity'     => 'nullable|integer|min:1|max:200',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            $section = Section::findOrFail($id);
+
+            $section->update(array_filter([
+                'section_name' => $request->section_name ?? $section->section_name,
+                'adviser_id'   => $request->has('adviser_id') ? $request->adviser_id : $section->adviser_id,
+                'capacity'     => $request->capacity ?? $section->capacity,
+            ], fn($v) => $v !== null));
+
+            // If adviser changed, update students in this section
+            if ($request->has('adviser_id')) {
+                Student::where('current_section_id', $section->id)
+                    ->where('is_active', true)
+                    ->update(['current_adviser_id' => $request->adviser_id]);
+            }
+
+            return $this->sendResponse(['section' => $section], 'Section updated successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to update section', $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a section
+     */
+    public function deleteSection($id)
+    {
+        try {
+            $section = Section::findOrFail($id);
+
+            // Unassign students from this section
+            Student::where('current_section_id', $section->id)
+                ->update(['current_section_id' => null, 'current_adviser_id' => null]);
+
+            $section->delete();
+
+            return $this->sendResponse([], 'Section deleted successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to delete section', $e->getMessage());
         }
     }
 
@@ -1406,6 +1474,8 @@ class AdminController extends BaseController
             DB::rollBack();
             return $this->sendError('Failed to delete user', $e->getMessage());
         }
+    }
+
     /**
      * Create a new student user account (called from createUser when role=student)
      */
@@ -1477,6 +1547,14 @@ class AdminController extends BaseController
 
             $section->increment('current_enrollment');
 
+            // Generate QR code record for the student
+            DB::table('qr_codes')->insert([
+                'student_id'      => $student->student_id,
+                'qr_token'        => \Illuminate\Support\Str::uuid()->toString(),
+                'qr_generated_at' => now(),
+                'qr_expires_at'   => null,
+            ]);
+
             DB::commit();
 
             if ($request->email) {
@@ -1522,14 +1600,12 @@ class AdminController extends BaseController
             $validator = Validator::make($request->all(), [
                 'role' => 'required|in:adviser,clinic_staff,admin',
                 'full_name' => 'required|string|max:150',
-                'email' => 'required|email|unique:users,email',
+                'email' => 'nullable|email|unique:users,email',
                 'phone' => 'nullable|string|max:20',
                 // Adviser specific fields
-                'employee_number' => 'required_if:role,adviser|string|max:50|unique:advisers,employee_number',
+                'employee_number' => 'required_if:role,adviser|string|max:50|unique:advisers,employee_number|unique:users,username',
                 // Clinic Staff specific fields
-                'staff_code' => 'required_if:role,clinic_staff|string|max:20|unique:clinic_staff,staff_code',
-                'position' => 'required_if:role,clinic_staff|string|max:100',
-            ]); 'staff_code' => 'required_if:role,clinic_staff|string|max:20|unique:clinic_staff,staff_code',
+                'staff_code' => 'required_if:role,clinic_staff|string|max:20|unique:clinic_staff,staff_code|unique:users,username',
                 'position' => 'required_if:role,clinic_staff|string|max:100',
             ]);
 
@@ -1552,10 +1628,19 @@ class AdminController extends BaseController
 
             $roleId = $roleMapping[$request->role];
 
+            // Determine username: use staff_code for clinic_staff, employee_number for adviser, email otherwise
+            if ($request->role === 'clinic_staff') {
+                $username = $request->staff_code;
+            } elseif ($request->role === 'adviser') {
+                $username = $request->employee_number;
+            } else {
+                $username = $request->email;
+            }
+
             // Create user account
             $user = User::create([
                 'role_id' => $roleId,
-                'username' => $request->email, // Use email as username for non-students
+                'username' => $username,
                 'password_hash' => $passwordHash,
                 'email' => $request->email,
                 'phone' => $request->phone,
@@ -1576,13 +1661,10 @@ class AdminController extends BaseController
                 ]);
             } elseif ($request->role === 'clinic_staff') {
                 \App\Models\ClinicStaff::create([
-                    'user_id' => $user->user_id,
+                    'user_id'    => $user->user_id,
                     'staff_code' => $request->staff_code,
-                    'full_name' => $request->full_name,
-                    'position' => $request->position,
-                    'email' => $request->email,
-                    'phone' => $request->phone,
-                    'is_active' => true
+                    'position'   => $request->position,
+                    'is_active'  => true
                 ]);
             }
 

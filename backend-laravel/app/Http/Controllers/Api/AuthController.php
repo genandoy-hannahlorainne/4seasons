@@ -33,7 +33,7 @@ class AuthController extends BaseController
                        ->first();
 
             // Check if user exists and password is correct
-            if (!$user || !password_verify($request->password, $user->password_hash)) {
+            if (!$user || !Hash::check($request->password, $user->password_hash)) {
                 return $this->sendError('Invalid username or password', [], 401);
             }
 
@@ -202,18 +202,18 @@ class AuthController extends BaseController
             }
 
             // Verify current password
-            if (!password_verify($request->current_password, $user->password_hash)) {
+            if (!Hash::check($request->current_password, $user->password_hash)) {
                 return $this->sendError('Current password is incorrect', [], 400);
             }
 
             // Check if new password is different from current
-            if (password_verify($request->new_password, $user->password_hash)) {
+            if (Hash::check($request->new_password, $user->password_hash)) {
                 return $this->sendError('New password must be different from current password', [], 400);
             }
 
             // Update password and remove force change flag
             $user->update([
-                'password_hash' => password_hash($request->new_password, PASSWORD_DEFAULT),
+                'password_hash' => Hash::make($request->new_password),
                 'password_must_change' => false,
                 'password_changed_at' => now()
             ]);

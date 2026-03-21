@@ -656,10 +656,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   isCreateFormValid(): boolean {
-    // Basic validation
-    if (!this.newUser.role || !this.newUser.email) {
-      return false;
-    }
+    if (!this.newUser.role) return false;
 
     // Role-specific validation
     if (this.newUser.role === 'student') {
@@ -736,7 +733,8 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.creatingUser = false;
           if (response.success && response.data) {
-            this.createSuccessMessage = `Account created successfully! Username: ${response.data.username || 'N/A'}. An email has been sent with login credentials.`;
+            const user = response.data.user || response.data;
+            this.createSuccessMessage = `Account created successfully! Username: ${user.username || 'N/A'}, Temp Password: ${user.temp_password || 'N/A'}`;
             
             // Reload users list
             this.loadUsers();
