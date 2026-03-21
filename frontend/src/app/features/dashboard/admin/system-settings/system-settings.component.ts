@@ -36,7 +36,7 @@ export class SystemSettingsComponent implements OnInit {
     this.adminService.getSystemSettings().subscribe({
       next: (response) => {
         if (response.success) {
-          this.settings = response.settings;
+          this.settings = response.data || response.settings || {};
         }
         this.loading = false;
       },

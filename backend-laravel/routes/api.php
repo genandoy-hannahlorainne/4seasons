@@ -79,9 +79,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports', [AdminController::class, 'getReports']);
         Route::get('/reports/principal-health-trends', [AdminController::class, 'getPrincipalHealthTrendReport']);
         
-        // Settings routes (placeholder for now)
+        // Settings routes
         Route::get('/settings', [AdminController::class, 'getSettings']);
         Route::put('/settings', [AdminController::class, 'updateSettings']);
+        Route::get('/system-settings', [AdminController::class, 'getSystemSettings']);
+        Route::put('/system-settings', [AdminController::class, 'updateSystemSettings']);
         
         // Grade Promotion
         Route::get('/promotion/summary', [GradePromotionController::class, 'summary']);
