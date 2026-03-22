@@ -313,8 +313,12 @@ class AdminController extends BaseController
                 })
                 ->pluck('full_name', 'user_id');
 
-            $gradeLevels = GradeLevel::with(['sections' => function($query) {
-                $query->where('is_active', true)->orderBy('section_number');
+            $currentSchoolYearId = DB::table('school_years')->where('is_current', true)->value('id');
+
+            $gradeLevels = GradeLevel::with(['sections' => function($query) use ($currentSchoolYearId) {
+                $query->where('is_active', true)
+                      ->when($currentSchoolYearId, fn($q) => $q->where('school_year_id', $currentSchoolYearId))
+                      ->orderBy('section_number');
             }])
             ->where('is_active', true)
             ->orderBy('level_number')
