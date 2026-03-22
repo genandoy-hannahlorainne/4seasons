@@ -140,9 +140,12 @@ class AdminController extends BaseController
                 return $this->sendError('Grade level not found');
             }
 
-            // Get sections for this grade level
+            $currentSchoolYearId = DB::table('school_years')->where('is_current', true)->value('id');
+
+            // Get sections for this grade level filtered by current school year
             $sections = Section::where('grade_level_id', $gradeLevel->id)
                 ->where('is_active', true)
+                ->when($currentSchoolYearId, fn($q) => $q->where('school_year_id', $currentSchoolYearId))
                 ->orderBy('section_name')
                 ->get()
                 ->map(function($section) {
@@ -181,7 +184,7 @@ class AdminController extends BaseController
                 'middle_name' => 'nullable|string|max:80',
                 'birth_date' => 'required|date',
                 'gender' => 'required|in:M,F',
-                'grade_level' => 'required|integer|min:1|max:12',
+                'grade_level' => 'required|integer|exists:grade_levels,id',
                 'section_id' => 'required|integer|exists:sections,id',
                 'email' => 'nullable|email|unique:users,email',
                 'phone' => 'nullable|string|max:20',
@@ -207,14 +210,8 @@ class AdminController extends BaseController
                 return $this->sendError('Invalid section selected');
             }
 
-            // Map admin grade level to actual grade
-            $gradeMapping = [
-                1 => 7, 2 => 8, 3 => 9, 4 => 10, 5 => 11, 6 => 12
-            ];
-            $actualGradeNumber = $gradeMapping[$request->grade_level] ?? $request->grade_level;
-
-            // Verify section matches the selected grade level
-            if ($section->gradeLevel->level_number !== $actualGradeNumber) {
+            // Verify section belongs to the selected grade level
+            if ($section->grade_level_id != $request->grade_level) {
                 return $this->sendError('Section does not match the selected grade level');
             }
 
@@ -1492,7 +1489,7 @@ class AdminController extends BaseController
             'middle_name'    => 'nullable|string|max:80',
             'birth_date'     => 'required|date',
             'gender'         => 'required|in:M,F,Other',
-            'grade_level'    => 'required|integer',
+            'grade_level'    => 'required|integer|exists:grade_levels,id',
             'section_id'     => 'required|integer|exists:sections,id',
             'email'          => 'nullable|email|unique:users,email',
             'phone'          => 'nullable|string|max:20',
@@ -1513,6 +1510,11 @@ class AdminController extends BaseController
             $section = Section::with('gradeLevel')->find($request->section_id);
             if (!$section || !$section->is_active) {
                 return $this->sendError('Invalid section selected');
+            }
+
+            // Verify section belongs to the selected grade level
+            if ($section->grade_level_id != $request->grade_level) {
+                return $this->sendError('Section does not match the selected grade level');
             }
 
             $tempPassword = $this->generateTempPassword();

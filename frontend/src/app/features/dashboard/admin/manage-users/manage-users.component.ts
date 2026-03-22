@@ -544,6 +544,10 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.resetNewUserForm();
     this.createSuccessMessage = '';
     this.createErrorMessage = '';
+    // Reload grade levels if not yet loaded
+    if (this.gradeLevels.length === 0) {
+      this.loadGradeLevels();
+    }
   }
 
   closeCreateUserModal(): void {
@@ -581,7 +585,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.newUser.gender = '';
     this.newUser.birth_date = '';
     this.newUser.grade_level = '';
-    this.newUser.section_id = ''; // Changed from section to section_id
+    this.newUser.section_id = '';
     this.newUser.employee_number = '';
     this.newUser.staff_code = '';
     this.newUser.position = '';
@@ -590,39 +594,21 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   onGradeLevelChange(): void {
-    // Clear section when grade level changes
     this.newUser.section_id = '';
-    this.availableSections = [];
-    
-    // Load sections for the selected grade level (for students and advisers)
+    this.loadingSections = false;
+
     if ((this.newUser.role === 'student' || this.newUser.role === 'adviser') && this.newUser.grade_level) {
-      const gradeLevelId = parseInt(this.newUser.grade_level);
-      
-      console.log(`🎓 Loading sections for grade level ID: ${gradeLevelId}`);
-      
-      this.loadSectionsForGrade(gradeLevelId);
+      const selectedId = Number(this.newUser.grade_level);
+      const selectedGrade = this.gradeLevels.find(g => Number(g.id) === selectedId);
+      this.availableSections = selectedGrade?.sections ?? [];
+    } else {
+      this.availableSections = [];
     }
   }
 
   loadSectionsForGrade(gradeLevelId: number): void {
-    this.loadingSections = true;
-    this.adminService.getSectionsForGrade(gradeLevelId).subscribe({
-      next: (response) => {
-        this.loadingSections = false;
-        if (response.success && response.data.sections) {
-          this.availableSections = response.data.sections;
-          console.log('✅ Loaded sections for grade level ID', gradeLevelId, ':', this.availableSections);
-        } else {
-          this.availableSections = [];
-          console.error('❌ Failed to load sections:', response.message);
-        }
-      },
-      error: (err) => {
-        this.loadingSections = false;
-        this.availableSections = [];
-        console.error('❌ Error loading sections:', err);
-      }
-    });
+    const selectedGrade = this.gradeLevels.find(g => Number(g.id) === gradeLevelId);
+    this.availableSections = selectedGrade?.sections ?? [];
   }
 
   loadGradeLevels(): void {
