@@ -15,6 +15,7 @@ class ClinicStaff extends Model
 
     protected $fillable = [
         'user_id',
+        'staff_id',
         'staff_code',
         'position',
         'is_active'

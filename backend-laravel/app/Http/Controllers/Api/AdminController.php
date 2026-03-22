@@ -1259,7 +1259,7 @@ class AdminController extends BaseController
                 }
 
                 if ($roleName === 'Adviser' && $user->adviser) {
-                    $data['employee_number']  = $user->adviser->employee_number;
+                    $data['employee_number']  = $user->adviser->employee_id;
                     $data['contact_phone']    = $user->adviser->contact_phone;
                     $data['department']       = $user->adviser->department;
                 }
@@ -1552,12 +1552,16 @@ class AdminController extends BaseController
             $section->increment('current_enrollment');
 
             // Generate QR code record for the student
-            DB::table('qr_codes')->insert([
-                'student_id'      => $student->student_id,
-                'qr_token'        => \Illuminate\Support\Str::uuid()->toString(),
-                'qr_generated_at' => now(),
-                'qr_expires_at'   => null,
-            ]);
+            try {
+                DB::table('qr_codes')->insert([
+                    'student_id'      => $student->student_id,
+                    'qr_token'        => \Illuminate\Support\Str::uuid()->toString(),
+                    'qr_generated_at' => now(),
+                    'qr_expires_at'   => null,
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Failed to generate QR code for student: ' . $e->getMessage());
+            }
 
             DB::commit();
 
@@ -1601,16 +1605,24 @@ class AdminController extends BaseController
                 return $this->createStudentUser($request);
             }
 
-            $validator = Validator::make($request->all(), [
+            // Convert empty strings to null so nullable rules work correctly
+            $input = $request->all();
+            foreach (['email', 'phone', 'employee_number', 'staff_code', 'position'] as $field) {
+                if (isset($input[$field]) && $input[$field] === '') {
+                    $input[$field] = null;
+                }
+            }
+
+            $validator = Validator::make($input, [
                 'role' => 'required|in:adviser,clinic_staff,admin',
                 'full_name' => 'required|string|max:150',
                 'email' => 'nullable|email|unique:users,email',
                 'phone' => 'nullable|string|max:20',
                 // Adviser specific fields
-                'employee_number' => 'required_if:role,adviser|string|max:50|unique:advisers,employee_number|unique:users,username',
+                'employee_number' => 'required_if:role,adviser|nullable|string|max:50|unique:advisers,employee_id|unique:users,username',
                 // Clinic Staff specific fields
-                'staff_code' => 'required_if:role,clinic_staff|string|max:20|unique:clinic_staff,staff_code|unique:users,username',
-                'position' => 'required_if:role,clinic_staff|string|max:100',
+                'staff_code' => 'required_if:role,clinic_staff|nullable|string|max:20|unique:clinic_staff,staff_code|unique:users,username',
+                'position' => 'required_if:role,clinic_staff|nullable|string|max:100',
             ]);
 
             if ($validator->fails()) {
@@ -1630,15 +1642,15 @@ class AdminController extends BaseController
                 'admin' => 1         // Admin role
             ];
 
-            $roleId = $roleMapping[$request->role];
+            $roleId = $roleMapping[$input['role']];
 
             // Determine username: use staff_code for clinic_staff, employee_number for adviser, email otherwise
-            if ($request->role === 'clinic_staff') {
-                $username = $request->staff_code;
-            } elseif ($request->role === 'adviser') {
-                $username = $request->employee_number;
+            if ($input['role'] === 'clinic_staff') {
+                $username = $input['staff_code'];
+            } elseif ($input['role'] === 'adviser') {
+                $username = $input['employee_number'];
             } else {
-                $username = $request->email;
+                $username = $input['email'];
             }
 
             // Create user account
@@ -1646,28 +1658,26 @@ class AdminController extends BaseController
                 'role_id' => $roleId,
                 'username' => $username,
                 'password_hash' => $passwordHash,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'full_name' => $request->full_name,
+                'email' => $input['email'] ?? null,
+                'phone' => $input['phone'] ?? null,
+                'full_name' => $input['full_name'],
                 'password_must_change' => true,
                 'is_active' => true
             ]);
 
             // Create role-specific records
-            if ($request->role === 'adviser') {
+            if ($input['role'] === 'adviser') {
                 \App\Models\Adviser::create([
-                    'user_id' => $user->user_id,
-                    'employee_number' => $request->employee_number,
-                    'full_name' => $request->full_name,
-                    'email' => $request->email,
-                    'phone' => $request->phone,
-                    'is_active' => true
+                    'user_id'     => $user->user_id,
+                    'employee_id' => $input['employee_number'],
+                    'is_active'   => true
                 ]);
-            } elseif ($request->role === 'clinic_staff') {
+            } elseif ($input['role'] === 'clinic_staff') {
                 \App\Models\ClinicStaff::create([
                     'user_id'    => $user->user_id,
-                    'staff_code' => $request->staff_code,
-                    'position'   => $request->position,
+                    'staff_id'   => $input['staff_code'],
+                    'staff_code' => $input['staff_code'],
+                    'position'   => $input['position'],
                     'is_active'  => true
                 ]);
             }
@@ -1679,12 +1689,14 @@ class AdminController extends BaseController
                 $emailData = [
                     'username' => $user->username,
                     'full_name' => $user->full_name,
-                    'email' => $request->email,
+                    'email' => $input['email'] ?? null,
                     'temp_password' => $tempPassword,
-                    'role' => ucfirst(str_replace('_', ' ', $request->role))
+                    'role' => ucfirst(str_replace('_', ' ', $input['role']))
                 ];
                 
-                Mail::to($request->email)->send(new UserAccountCreated($emailData, $tempPassword, ucfirst(str_replace('_', ' ', $request->role))));
+                if (!empty($input['email'])) {
+                    Mail::to($input['email'])->send(new UserAccountCreated($emailData, $tempPassword, ucfirst(str_replace('_', ' ', $input['role']))));
+                }
             } catch (\Exception $e) {
                 // Log email error but don't fail the user creation
                 Log::warning('Failed to send account creation email: ' . $e->getMessage());
@@ -1696,14 +1708,14 @@ class AdminController extends BaseController
                     'username' => $user->username,
                     'full_name' => $user->full_name,
                     'email' => $user->email,
-                    'role' => ucfirst(str_replace('_', ' ', $request->role)),
+                    'role' => ucfirst(str_replace('_', ' ', $input['role'])),
                     'temp_password' => $tempPassword
                 ]
             ], 'User created successfully');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->sendError('Failed to create user', $e->getMessage());
+            return $this->sendError('Failed to create user', $e->getMessage(), 500);
         }
     }
 
