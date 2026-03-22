@@ -79,7 +79,77 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   isDragging = false;
   importResults: any = null;
 
-  constructor(private adminService: AdminService, private authService: AuthService, private router: Router) {}
+  constructor(private adminService: AdminService, public authService: AuthService, private router: Router) {}
+
+  // Make localStorage accessible in template
+  get localStorage() {
+    return localStorage;
+  }
+
+  // Debug methods
+  debugReload(): void {
+    console.log('🔄 Force reloading users...');
+    this.users = [];
+    this.filteredUsers = [];
+    this.userCounts = { students: 0, advisers: 0, clinicStaff: 0, admins: 0 };
+    this.loadUsers();
+  }
+
+  debugAuth(): void {
+    console.log('🔐 Testing authentication...');
+    const token = localStorage.getItem('token');
+    const user = this.authService.currentUserValue;
+    
+    console.log('Token:', token ? token.substring(0, 20) + '...' : 'MISSING');
+    console.log('User:', user);
+    console.log('Is authenticated:', this.authService.isAuthenticated());
+    
+    if (token) {
+      // Test auth endpoint first
+      this.adminService.testAuth().subscribe({
+        next: (response) => {
+          console.log('✅ Auth test successful:', response);
+          
+          // Now test getAllUsers directly
+          this.adminService.getAllUsers().subscribe({
+            next: (usersResponse) => {
+              console.log('✅ getAllUsers test successful:', usersResponse);
+              alert('Authentication and API test successful!\n\n' +
+                'Auth User: ' + (response.user?.username || 'Unknown') + '\n' +
+                'Auth Role: ' + (response.user?.role || 'Unknown') + '\n\n' +
+                'Users API Success: ' + (usersResponse.success ? 'Yes' : 'No') + '\n' +
+                'Users Data Present: ' + (usersResponse.data ? 'Yes' : 'No') + '\n' +
+                'Users.users Present: ' + (usersResponse.data?.users ? 'Yes' : 'No') + '\n' +
+                'Response Keys: ' + Object.keys(usersResponse).join(', '));
+            },
+            error: (usersErr) => {
+              console.error('❌ getAllUsers test failed:', usersErr);
+              alert('Authentication successful but getAllUsers failed!\n\n' +
+                'Auth User: ' + (response.user?.username || 'Unknown') + '\n' +
+                'Users API Error: ' + (usersErr.error?.message || usersErr.message || 'Unknown error'));
+            }
+          });
+        },
+        error: (err) => {
+          console.error('❌ Auth test failed:', err);
+          alert('Authentication test failed!\n\nError: ' + (err.error?.message || err.message || 'Unknown error') + '\n\nPlease login again.');
+        }
+      });
+    } else {
+      alert('No authentication token found. Please login again.');
+    }
+  }
+
+  debugClearAndRelogin(): void {
+    if (confirm('This will clear all authentication data and redirect to login. Continue?')) {
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('token');
+      localStorage.removeItem('tokenExpiry');
+      console.log('🧹 Cleared all auth data');
+      alert('Authentication data cleared. Redirecting to login...');
+      this.router.navigate(['/login']);
+    }
+  }
 
   ngOnInit(): void {
     // Enhanced authentication check
@@ -91,9 +161,13 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     }
     
     const currentUser = this.authService.currentUserValue;
+    const token = localStorage.getItem('token');
     
     console.log('🔐 Manage Users - Authentication verified');
     console.log('Current user:', currentUser);
+    console.log('Token available:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
+    console.log('Token in localStorage:', localStorage.getItem('token') ? 'YES' : 'NO');
+    console.log('User in localStorage:', localStorage.getItem('currentUser') ? 'YES' : 'NO');
     
     if (currentUser?.role_name?.toLowerCase() !== 'admin') {
       console.error('❌ Not admin user, access denied');
@@ -101,11 +175,17 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       return;
     }
     
+    if (!token) {
+      console.error('❌ No authentication token found');
+      this.errorMessage = 'Authentication token missing. Please login again.';
+      this.router.navigate(['/login']);
+      return;
+    }
+    
     console.log('✅ Authenticated as admin, loading users');
-    this.loadUsers();
     this.loadGradeLevels();
     
-    // Auto-refresh users every 30 seconds
+    // Auto-refresh users every 30 seconds (startWith(0) handles initial load)
     interval(this.refreshInterval)
       .pipe(
         startWith(0),
@@ -114,7 +194,9 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
-          if (response.success && response.users) {
+          console.log('🔄 Auto-refresh response:', response);
+          
+          if (response?.success) {
             this.updateUsersList(response);
           }
         },
@@ -137,18 +219,57 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   loadUsers(): void {
     this.loading = true;
     console.log('👥 Loading users for manage-users component...');
+    
+    // Check authentication first
+    const currentUser = this.authService.currentUserValue;
+    const token = localStorage.getItem('token');
+    console.log('🔐 Current user in loadUsers:', currentUser);
+    console.log('🔐 Token available:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
+    
+    if (!currentUser || !token) {
+      console.error('❌ No authentication token found');
+      this.errorMessage = 'Authentication required. Please login again.';
+      this.loading = false;
+      this.router.navigate(['/login']);
+      return;
+    }
+    
+    // Load users directly
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
         console.log('✅ getAllUsers response received:', response);
-        console.log('✅ Response.success:', response?.success);
-        console.log('✅ Response.users keys:', response?.users ? Object.keys(response.users) : 'no users object');
-        this.updateUsersList(response);
+        console.log('✅ Response structure:', {
+          success: response?.success,
+          data: response?.data ? 'present' : 'missing',
+          users: response?.users ? 'present' : 'missing',
+          dataUsers: response?.data?.users ? 'present' : 'missing',
+          responseKeys: response ? Object.keys(response) : 'no response'
+        });
+        
+        // Handle the response
+        if (response?.success) {
+          this.updateUsersList(response);
+        } else {
+          console.error('❌ API response indicates failure:', response?.message);
+          this.errorMessage = response?.message || 'Failed to load users';
+        }
+        
         this.loading = false;
       },
       error: (err) => {
         console.error('❌ Error loading users:', err);
+        console.error('❌ Error status:', err.status);
         console.error('❌ Error details:', err.error);
-        this.errorMessage = 'Failed to load users. Make sure you are logged in as admin.';
+        
+        if (err.status === 401) {
+          this.errorMessage = 'Authentication failed. Please login again.';
+          this.router.navigate(['/login']);
+        } else if (err.status === 403) {
+          this.errorMessage = 'Access denied. Admin privileges required.';
+        } else {
+          this.errorMessage = 'Failed to load users. Please try again.';
+        }
+        
         this.loading = false;
       }
     });
@@ -157,34 +278,55 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   private updateUsersList(response: any): void {
     console.log('👥 updateUsersList called with response:', response);
     
-    if (response.success && response.users) {
-      console.log('✅ Response is successful and has users');
+    if (response.success) {
+      console.log('✅ Response is successful');
+      
+      let users: any;
+      
+      // Handle different response formats
+      if (response.data && response.data.users) {
+        console.log('📊 Using response.data.users format');
+        users = response.data.users;
+      } else if (response.users) {
+        console.log('📊 Using response.users format');
+        users = response.users;
+      } else {
+        console.error('❌ No users data found in response structure:', {
+          hasData: !!response.data,
+          hasUsers: !!response.users,
+          dataKeys: response.data ? Object.keys(response.data) : 'no data',
+          responseKeys: Object.keys(response)
+        });
+        this.errorMessage = 'Invalid response structure from server';
+        return;
+      }
       
       // Handle grouped response (when no role filter)
-      if (response.users.student || response.users.adviser || response.users.clinic_staff || response.users.admin) {
+      if (!Array.isArray(users) && typeof users === 'object' && users !== null &&
+          ('student' in users || 'adviser' in users || 'clinic_staff' in users || 'admin' in users)) {
         console.log('📊 Detected grouped response format');
-        console.log('   student count:', response.users.student?.length || 0);
-        console.log('   adviser count:', response.users.adviser?.length || 0);
-        console.log('   clinic_staff count:', response.users.clinic_staff?.length || 0);
-        console.log('   admin count:', response.users.admin?.length || 0);
+        console.log('   student count:', users.student?.length || 0);
+        console.log('   adviser count:', users.adviser?.length || 0);
+        console.log('   clinic_staff count:', users.clinic_staff?.length || 0);
+        console.log('   admin count:', users.admin?.length || 0);
         
         this.users = [
-          ...(response.users.student || []).map((u: any) => ({ 
+          ...(users.student || []).map((u: any) => ({ 
             ...u, 
             roleDisplay: 'Student',
             role: 'student'
           })),
-          ...(response.users.adviser || []).map((u: any) => ({ 
+          ...(users.adviser || []).map((u: any) => ({ 
             ...u, 
             roleDisplay: 'Faculty/Adviser',
             role: 'adviser'
           })),
-          ...(response.users.clinic_staff || []).map((u: any) => ({ 
+          ...(users.clinic_staff || []).map((u: any) => ({ 
             ...u, 
             roleDisplay: 'Clinic Staff',
             role: 'clinic_staff'
           })),
-          ...(response.users.admin || []).map((u: any) => ({ 
+          ...(users.admin || []).map((u: any) => ({ 
             ...u, 
             roleDisplay: 'Admin',
             role: 'admin'
@@ -198,15 +340,19 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
           clinicStaff: this.users.filter(u => u.role === 'clinic_staff').length,
           admins: this.users.filter(u => u.role === 'admin').length
         });
-      } else {
-        console.log('📊 Detected flat response format');
-        // Handle flat response (when role filter is applied)
-        this.users = (response.users || []).map((u: any) => ({
+      } else if (Array.isArray(users)) {
+        console.log('📊 Detected flat array response format');
+        // Handle flat response (when role filter is applied or direct array)
+        this.users = users.map((u: any) => ({
           ...u,
           roleDisplay: this.formatRoleName(u.role_name || 'Unknown'),
           role: u.role_name?.toLowerCase() || 'unknown'
         }));
         console.log('✅ Mapped flat users array, total count:', this.users.length);
+      } else {
+        console.error('❌ Unexpected users data structure:', users);
+        this.errorMessage = 'Unexpected data format from server';
+        return;
       }
       
       this.filterUsers();
@@ -221,8 +367,8 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       };
       console.log('✅ User counts:', this.userCounts);
     } else {
-      console.error('❌ Invalid response structure:', response);
-      this.errorMessage = 'Invalid response from server';
+      console.error('❌ Response indicates failure:', response?.message);
+      this.errorMessage = response?.message || 'API request failed';
     }
   }
 
@@ -237,16 +383,25 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   filterUsers(): void {
+    console.log('🔍 Filtering users...');
+    console.log('🔍 Total users before filter:', this.users.length);
+    console.log('🔍 Selected role:', this.selectedRole);
+    console.log('🔍 Search query:', this.searchQuery);
+    
     this.filteredUsers = this.users.filter(user => {
       const userRole = user.role || user.roleDisplay?.toLowerCase();
       const matchesRole = this.selectedRole === 'all' || userRole === this.selectedRole;
       const matchesSearch = !this.searchQuery || 
-        user.full_name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        user.username.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        (user.full_name && user.full_name.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
+        (user.username && user.username.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
         (user.email && user.email.toLowerCase().includes(this.searchQuery.toLowerCase()));
+      
+      console.log(`🔍 User ${user.username}: role=${userRole}, matchesRole=${matchesRole}, matchesSearch=${matchesSearch}`);
       
       return matchesRole && matchesSearch;
     });
+    
+    console.log('🔍 Filtered users count:', this.filteredUsers.length);
   }
 
   onRoleChange(): void {
@@ -389,6 +544,10 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.resetNewUserForm();
     this.createSuccessMessage = '';
     this.createErrorMessage = '';
+    // Reload grade levels if not yet loaded
+    if (this.gradeLevels.length === 0) {
+      this.loadGradeLevels();
+    }
   }
 
   closeCreateUserModal(): void {
@@ -426,7 +585,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.newUser.gender = '';
     this.newUser.birth_date = '';
     this.newUser.grade_level = '';
-    this.newUser.section_id = ''; // Changed from section to section_id
+    this.newUser.section_id = '';
     this.newUser.employee_number = '';
     this.newUser.staff_code = '';
     this.newUser.position = '';
@@ -435,39 +594,21 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   onGradeLevelChange(): void {
-    // Clear section when grade level changes
     this.newUser.section_id = '';
-    this.availableSections = [];
-    
-    // Load sections for the selected grade level (for students and advisers)
+    this.loadingSections = false;
+
     if ((this.newUser.role === 'student' || this.newUser.role === 'adviser') && this.newUser.grade_level) {
-      const gradeLevelId = parseInt(this.newUser.grade_level);
-      
-      console.log(`🎓 Loading sections for grade level ID: ${gradeLevelId}`);
-      
-      this.loadSectionsForGrade(gradeLevelId);
+      const selectedId = Number(this.newUser.grade_level);
+      const selectedGrade = this.gradeLevels.find(g => Number(g.id) === selectedId);
+      this.availableSections = selectedGrade?.sections ?? [];
+    } else {
+      this.availableSections = [];
     }
   }
 
   loadSectionsForGrade(gradeLevelId: number): void {
-    this.loadingSections = true;
-    this.adminService.getSectionsForGrade(gradeLevelId).subscribe({
-      next: (response) => {
-        this.loadingSections = false;
-        if (response.success && response.data.sections) {
-          this.availableSections = response.data.sections;
-          console.log('✅ Loaded sections for grade level ID', gradeLevelId, ':', this.availableSections);
-        } else {
-          this.availableSections = [];
-          console.error('❌ Failed to load sections:', response.message);
-        }
-      },
-      error: (err) => {
-        this.loadingSections = false;
-        this.availableSections = [];
-        console.error('❌ Error loading sections:', err);
-      }
-    });
+    const selectedGrade = this.gradeLevels.find(g => Number(g.id) === gradeLevelId);
+    this.availableSections = selectedGrade?.sections ?? [];
   }
 
   loadGradeLevels(): void {
@@ -500,10 +641,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   isCreateFormValid(): boolean {
-    // Basic validation
-    if (!this.newUser.role || !this.newUser.email) {
-      return false;
-    }
+    if (!this.newUser.role) return false;
 
     // Role-specific validation
     if (this.newUser.role === 'student') {
@@ -580,7 +718,8 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.creatingUser = false;
           if (response.success && response.data) {
-            this.createSuccessMessage = `Account created successfully! Username: ${response.data.username || 'N/A'}. An email has been sent with login credentials.`;
+            const user = response.data.user || response.data;
+            this.createSuccessMessage = `Account created successfully! Username: ${user.username || 'N/A'}, Temp Password: ${user.temp_password || 'N/A'}`;
             
             // Reload users list
             this.loadUsers();
@@ -617,11 +756,11 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   downloadCSVTemplate(): void {
-    const csvContent = 'student_number,first_name,last_name,email,grade_level,section,gender,date_of_birth\n' +
-                      '2024001,Juan,Dela Cruz,juan.delacruz@example.com,7,Section A,Male,2010-01-15\n' +
-                      '2024002,Maria,Santos,maria.santos@example.com,7,Section A,Female,2010-03-20\n' +
-                      '2024003,Pedro,Reyes,pedro.reyes@example.com,8,Section B,Male,2009-05-10';
-    
+    const csvContent = 'student_number,first_name,middle_name,last_name,birth_date,gender,grade_level,section_name,email,phone,emergency_contact_name,emergency_contact_phone\n' +
+                      '2024001,Juan,,Dela Cruz,2010-01-15,M,Grade 7,Genesis,juan.delacruz@email.com,09171234567,Maria Dela Cruz,09181234567\n' +
+                      '2024002,Maria,Santos,Reyes,2010-03-20,F,Grade 7,Isaiah,maria.reyes@email.com,09171234568,Pedro Reyes,09181234568\n' +
+                      '2024003,Pedro,,Santos,2009-05-10,M,Grade 8,Charity,,,Jose Santos,09181234569';
+
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');

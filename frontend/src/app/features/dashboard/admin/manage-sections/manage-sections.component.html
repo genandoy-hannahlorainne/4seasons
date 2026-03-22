@@ -1,0 +1,129 @@
+<div class="manage-sections">
+  <div class="page-header">
+    <h1>Manage Sections</h1>
+    <button class="btn btn-primary" (click)="openAdd()">
+      <i class="fa-solid fa-plus"></i> Add Section
+    </button>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <!-- Grade filter -->
+  <div class="filter-bar">
+    <label>Filter by Grade:</label>
+    <select [(ngModel)]="selectedGradeId">
+      <option [ngValue]="null">All Grades</option>
+      <option *ngFor="let g of gradeLevels" [ngValue]="g.id">{{ g.level_name }}</option>
+    </select>
+  </div>
+
+  <div class="loading" *ngIf="loading">Loading...</div>
+
+  <!-- Grade level blocks -->
+  <div class="grade-block" *ngFor="let grade of filteredGradeLevels">
+    <div class="grade-header">
+      <h2>{{ grade.level_name }}</h2>
+      <span class="section-count">{{ grade.sections?.length || 0 }} sections</span>
+      <button class="btn btn-sm btn-outline" (click)="openAdd(grade.id)">
+        <i class="fa-solid fa-plus"></i> Add Section
+      </button>
+    </div>
+
+    <div class="sections-table-wrap" *ngIf="grade.sections?.length > 0; else noSections">
+      <table class="sections-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Section Name</th>
+            <th>Adviser</th>
+            <th>Capacity</th>
+            <th>Enrolled</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let section of grade.sections; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ section.section_name }}</td>
+            <td>{{ section.adviser_name || (section.adviser_id ? getAdviserName(section.adviser_id) : '—') }}</td>
+            <td>{{ section.capacity }}</td>
+            <td>{{ section.current_enrollment || 0 }}</td>
+            <td class="actions">
+              <button class="btn btn-sm btn-outline" (click)="openEdit(section)" title="Edit">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" (click)="confirmDelete(section)" title="Delete">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noSections>
+      <p class="no-data">No sections yet for this grade level.</p>
+    </ng-template>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ isEditing ? 'Edit Section' : 'Add Section' }}</h3>
+      <button class="close-btn" (click)="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="alert alert-error" *ngIf="modalError">{{ modalError }}</div>
+
+    <div class="form-group">
+      <label>Grade Level <span class="required">*</span></label>
+      <select [(ngModel)]="form.grade_level_id" [disabled]="isEditing">
+        <option value="">Select grade level</option>
+        <option *ngFor="let g of gradeLevels" [value]="g.id">{{ g.level_name }}</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Section Name <span class="required">*</span></label>
+      <input type="text" [(ngModel)]="form.section_name" placeholder="e.g. Genesis" class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label>Adviser</label>
+      <select [(ngModel)]="form.adviser_id">
+        <option value="">— No adviser assigned —</option>
+        <option *ngFor="let a of advisers" [value]="a.user_id">{{ a.full_name }}</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Capacity</label>
+      <input type="number" [(ngModel)]="form.capacity" min="1" max="200" class="form-control">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" (click)="saveSection()" [disabled]="saving">
+        <i class="fa-solid fa-spinner fa-spin" *ngIf="saving"></i>
+        {{ saving ? 'Saving...' : (isEditing ? 'Update' : 'Create') }}
+      </button>
+      <button class="btn btn-outline" (click)="closeModal()" [disabled]="saving">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="cancelDelete()">
+  <div class="modal-content confirm-modal" (click)="$event.stopPropagation()">
+    <h3>Delete Section</h3>
+    <p>Are you sure you want to delete <strong>{{ deletingSection?.section_name }}</strong>?</p>
+    <p class="warning-text">Students assigned to this section will be unassigned.</p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" (click)="deleteSection()" [disabled]="deleting">
+        {{ deleting ? 'Deleting...' : 'Delete' }}
+      </button>
+      <button class="btn btn-outline" (click)="cancelDelete()">Cancel</button>
+    </div>
+  </div>
+</div>

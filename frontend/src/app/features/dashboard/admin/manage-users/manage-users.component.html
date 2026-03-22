@@ -40,16 +40,6 @@
     </div>
   </div>
 
-  <!-- Debug Info -->
-  <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #4caf50; font-size: 0.9em;">
-    <strong>📊 Debug Info:</strong>
-    Total: {{ users.length }} | 
-    Filtered: {{ filteredUsers.length }} | 
-    Students: {{ userCounts.students }} | 
-    Faculty: {{ userCounts.advisers }} | 
-    Clinic Staff: {{ userCounts.clinicStaff }} | 
-    Admins: {{ userCounts.admins }}
-  </div>
 
   <!-- Loading State -->
   <div *ngIf="loading" class="loading-state">

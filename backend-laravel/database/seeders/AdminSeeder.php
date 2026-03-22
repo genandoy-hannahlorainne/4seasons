@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
 {
@@ -12,21 +13,20 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        $adminHash = password_hash('admin_dummy_password', PASSWORD_BCRYPT);
+        // Create a default admin account for initial setup
+        $adminHash = Hash::make('admin123'); // Use a secure password
 
-        $existingAdmin = DB::table('users')->where('username', 'admin_dummy')->first();
+        $existingAdmin = DB::table('users')->where('username', 'admin')->first();
 
         if ($existingAdmin) {
+            // Only update non-sensitive fields — do NOT overwrite password_hash
             DB::table('users')
-                ->where('username', 'admin_dummy')
+                ->where('username', 'admin')
                 ->update([
                     'role_id' => 1,
-                    'password_hash' => $adminHash,
-                    'email' => 'admin@example.com',
-                    'phone' => '0000000000',
-                    'full_name' => 'Admin Dummy',
+                    'email' => 'admin@pdmhs.edu.ph',
+                    'full_name' => 'System Administrator',
                     'is_active' => 1,
-                    'password_must_change' => 0,
                 ]);
             return;
         }
@@ -37,11 +37,11 @@ class AdminSeeder extends Seeder
         DB::table('users')->insert([
             'user_id' => $id,
             'role_id' => 1,
-            'username' => 'admin_dummy',
+            'username' => 'admin',
             'password_hash' => $adminHash,
-            'email' => 'admin@example.com',
-            'phone' => '0000000000',
-            'full_name' => 'Admin Dummy',
+            'email' => 'admin@pdmhs.edu.ph',
+            'phone' => '09171234567',
+            'full_name' => 'System Administrator',
             'is_active' => 1,
             'password_must_change' => 0,
             'created_at' => now(),

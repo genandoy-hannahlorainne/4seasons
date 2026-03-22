@@ -36,7 +36,7 @@ export class SystemSettingsComponent implements OnInit {
     this.adminService.getSystemSettings().subscribe({
       next: (response) => {
         if (response.success) {
-          this.settings = response.settings;
+          this.settings = response.data || response.settings || {};
         }
         this.loading = false;
       },
@@ -61,14 +61,12 @@ export class SystemSettingsComponent implements OnInit {
 
     this.adminService.updateSystemSettings(this.activeTab, this.settings[this.activeTab]).subscribe({
       next: (response) => {
-        if (response.success) {
-          this.successMessage = `${this.activeTab.charAt(0).toUpperCase() + this.activeTab.slice(1)} settings updated successfully`;
-          setTimeout(() => this.successMessage = '', 3000);
-        }
+        this.successMessage = `${this.activeTab.charAt(0).toUpperCase() + this.activeTab.slice(1)} settings saved successfully`;
+        setTimeout(() => this.successMessage = '', 3000);
         this.saving = false;
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Failed to save settings';
+        this.errorMessage = err.error?.message || err.error?.error || 'Failed to save settings';
         this.saving = false;
       }
     });

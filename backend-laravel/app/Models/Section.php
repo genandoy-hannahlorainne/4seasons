@@ -51,7 +51,8 @@ class Section extends Model
     // Accessors
     public function getCurrentEnrollmentAttribute()
     {
-        return $this->students()->where('is_active', true)->count();
+        // Use DB column if set, otherwise count dynamically
+        return $this->attributes['current_enrollment'] ?? $this->students()->where('is_active', true)->count();
     }
 
     // Scopes

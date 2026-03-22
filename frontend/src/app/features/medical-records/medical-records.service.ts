@@ -67,18 +67,20 @@ export class MedicalRecordsService {
 
   getMedicalRecord(): Observable<ApiResponse<MedicalRecord>> {
     const currentUser = this.authService.currentUserValue;
-    if (!currentUser || !currentUser.student_info?.student_id) {
-      throw new Error('Student not authenticated or student info not available');
+    if (!currentUser) {
+      throw new Error('User not authenticated');
     }
-    return this.http.get<ApiResponse<MedicalRecord>>(`${this.apiUrl}/students/${currentUser.student_info.student_id}/medical-data`);
+    
+    // Use the user_id to get medical data (same as student dashboard)
+    return this.http.get<ApiResponse<MedicalRecord>>(`${this.apiUrl}/students/medical-data?user_id=${currentUser.user_id}`);
   }
 
   getMedicalVisits(): Observable<ApiResponse<MedicalVisit[]>> {
     const currentUser = this.authService.currentUserValue;
-    if (!currentUser || !currentUser.student_info?.student_id) {
-      throw new Error('Student not authenticated or student info not available');
+    if (!currentUser) {
+      throw new Error('User not authenticated');
     }
-    return this.http.get<ApiResponse<MedicalVisit[]>>(`${this.apiUrl}/students/${currentUser.student_info.student_id}/visits`);
+    return this.http.get<ApiResponse<MedicalVisit[]>>(`${this.apiUrl}/students/medical-data?user_id=${currentUser.user_id}`);
   }
 
   getVisitDetails(visitId: number): Observable<ApiResponse<MedicalVisit>> {
@@ -87,10 +89,10 @@ export class MedicalRecordsService {
 
   updateMedicalInfo(data: { emergency_contact?: string; address?: string }): Observable<ApiResponse<any>> {
     const currentUser = this.authService.currentUserValue;
-    if (!currentUser || !currentUser.student_info?.student_id) {
-      throw new Error('Student not authenticated or student info not available');
+    if (!currentUser) {
+      throw new Error('User not authenticated');
     }
-    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/students/${currentUser.student_info.student_id}/physical-info`, data);
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/students/medical-data?user_id=${currentUser.user_id}`, data);
   }
 
   getAdviserByGradeSection(gradeLevel: string, section: string): Observable<any> {

@@ -295,11 +295,8 @@ export class ForceChangePasswordComponent implements OnInit {
           const currentUser = localStorage.getItem('currentUser');
           if (currentUser) {
             const user = JSON.parse(currentUser);
-            user.password_must_change = false; // Clear the flag
+            user.password_must_change = false;
             localStorage.setItem('currentUser', JSON.stringify(user));
-            
-            // Also update the auth service's current user subject
-            // This ensures any components listening to currentUser observable get the update
             this.authService.updateCurrentUser(user);
             
             const roleRoutes: { [key: string]: string } = {
@@ -320,45 +317,8 @@ export class ForceChangePasswordComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.http.post<any>(`${environment.apiUrl}/force-change-password`, {
-          current_password: currentPassword,
-          new_password: newPassword,
-          new_password_confirmation: newPassword
-        }).subscribe({
-          next: (response) => {
-            this.loading = false;
-            if (response.success) {
-              this.success = 'Password changed successfully! Redirecting...';
-
-              const currentUser = localStorage.getItem('currentUser');
-              if (currentUser) {
-                const user = JSON.parse(currentUser);
-                user.password_must_change = false;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                this.authService.updateCurrentUser(user);
-
-                const roleRoutes: { [key: string]: string } = {
-                  'Student': '/dashboard/student',
-                  'Adviser': '/dashboard/adviser',
-                  'Clinic Staff': '/dashboard/staff',
-                  'Admin': '/dashboard/admin'
-                };
-
-                const route = roleRoutes[user.role_name] || '/dashboard';
-
-                setTimeout(() => {
-                  this.router.navigate([route]);
-                }, 2000);
-              }
-            } else {
-              this.error = response.message || 'Failed to change password';
-            }
-          },
-          error: (legacyErr) => {
-            this.loading = false;
-            this.error = legacyErr.error?.message || err.error?.message || 'An error occurred while changing password';
-          }
-        });
+        this.loading = false;
+        this.error = err.error?.message || 'An error occurred while changing password';
       }
     });
   }

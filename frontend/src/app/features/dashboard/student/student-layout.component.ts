@@ -26,11 +26,11 @@ import { AuthService } from '../../../core/services/auth.service';
           </button>
 
           <div *ngIf="showNotificationsPanel" class="notifications-panel" (click)="$event.stopPropagation()">
-            <div class="panel-title">Badge Notifications</div>
+            <div class="panel-title">Earned Badges</div>
 
             <div *ngIf="notificationsLoading" class="panel-state">Loading badges...</div>
             <div *ngIf="notificationsError" class="panel-state error">{{ notificationsError }}</div>
-            <div *ngIf="!notificationsLoading && !notificationsError && badgeNotifications.length === 0" class="panel-state">No badge notifications yet.</div>
+            <div *ngIf="!notificationsLoading && !notificationsError && badgeNotifications.length === 0" class="panel-state">No badges earned yet. Keep staying healthy!</div>
 
             <div *ngIf="!notificationsLoading && badgeNotifications.length > 0" class="notification-list">
               <div *ngFor="let badge of badgeNotifications" class="notification-item" (click)="openBadgeDetails(badge)">
@@ -110,14 +110,28 @@ export class StudentLayoutComponent implements OnInit {
     this.notificationsLoading = true;
     this.notificationsError = '';
 
-    this.studentService.getStreakBadgeMetadata().subscribe({
-      next: (data) => {
-        this.badgeNotifications = Array.isArray(data?.badges) ? data.badges : [];
-        this.syncBadgeAcquisitionState(this.badgeNotifications);
+    // Get current user to fetch their actual badge status
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser?.user_id) {
+      this.notificationsError = 'User not authenticated';
+      this.notificationsLoading = false;
+      return;
+    }
+
+    // Load student's actual badge data instead of all available badges
+    this.studentService.getStudentMedicalData(currentUser.user_id).subscribe({
+      next: (response) => {
+        if (response.success && response.data?.badges) {
+          // Only show unlocked/earned badges as notifications
+          this.badgeNotifications = response.data.badges.filter((badge: any) => badge.is_unlocked) || [];
+        } else {
+          this.badgeNotifications = [];
+        }
         this.notificationsLoading = false;
       },
       error: (error) => {
         this.notificationsError = error?.error?.message || 'Unable to load badge notifications.';
+        this.badgeNotifications = [];
         this.notificationsLoading = false;
       }
     });

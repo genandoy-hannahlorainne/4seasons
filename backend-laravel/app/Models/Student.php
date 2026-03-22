@@ -34,6 +34,7 @@ class Student extends Model
         'emergency_contact',
         'emergency_contact_relation',
         'emergency_contact_phone',
+        'phone',
         'height_cm',
         'weight_kg',
         'bmi',

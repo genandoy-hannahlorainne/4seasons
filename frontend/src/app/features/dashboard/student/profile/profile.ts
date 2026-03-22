@@ -56,8 +56,8 @@ export class StudentProfileComponent implements OnInit {
       section: ['', Validators.required],
       address: ['', Validators.required],
       bloodType: [''],
-      contactNumber: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]]
+      contactNumber: [''],
+      email: ['', [Validators.email]]
     });
 
     this.changePasswordForm = this.fb.group({
@@ -213,6 +213,11 @@ export class StudentProfileComponent implements OnInit {
       return;
     }
 
+    if (!this.studentId) {
+      this.errorMessage = 'Student profile not loaded yet';
+      return;
+    }
+
     this.loading = true;
     this.errorMessage = '';
     this.successMessage = '';
@@ -220,7 +225,7 @@ export class StudentProfileComponent implements OnInit {
     const profileData = this.profileForm.getRawValue();
     console.log('Sending profile data:', profileData);
 
-    this.studentService.updateStudentProfile(this.currentUser.user_id, profileData).subscribe({
+    this.studentService.updateStudentProfile(this.studentId!, profileData).subscribe({
       next: (response) => {
         console.log('Update response:', response);
         this.loading = false;

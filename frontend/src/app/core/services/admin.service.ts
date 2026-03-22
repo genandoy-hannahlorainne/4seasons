@@ -30,21 +30,31 @@ export class AdminService {
     }
 
     createUserLegacy(userData: any): Observable<any> {
-      // For non-student roles, use Laravel endpoint
-      return this.http.post<any>(`${environment.apiUrl}/admin/create-user`, userData);
+      // For non-student roles, use the same admin users endpoint
+      return this.http.post<any>(`${environment.apiUrl}/admin/users`, userData);
     }
   constructor(private http: HttpClient) {}
 
+  // Test authentication
+  testAuth(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/debug/auth`);
+  }
+
+  // Dashboard data
+  getDashboard(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/dashboard`);
+  }
+
   createUser(userData: any): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/admin/create-user`, userData);
+    return this.http.post<any>(`${environment.apiUrl}/admin/users`, userData);
   }
 
   getAllUsers(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/get-all-users`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/users`);
   }
 
   getUsersByRole(role: 'student' | 'adviser' | 'faculty' | 'clinic_staff' | 'staff'): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/get-all-users?role=${role}`);
+    return this.http.get<any>(`${environment.apiUrl}/admin/users?role=${role}`);
   }
 
   getSectionsForGrade(gradeLevel: number): Observable<any> {
@@ -247,6 +257,13 @@ export class AdminService {
       target_school_year_id: targetSchoolYearId,
       promotion_rules: promotionRules,
       manual_cases: manualCases
+    });
+  }
+
+  copySectionsToYear(sourceSchoolYearId: number, targetSchoolYearId: number): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/promotion/copy-sections`, {
+      source_school_year_id: sourceSchoolYearId,
+      target_school_year_id: targetSchoolYearId,
     });
   }
 

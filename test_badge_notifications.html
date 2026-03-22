@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badge Notification System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .notification {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            position: relative;
+        }
+        .notification.unread {
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+        .badge-icon {
+            width: 40px;
+            height: 40px;
+            background: #4caf50;
+            border-radius: 50%;
+            display: inline-block;
+            text-align: center;
+            line-height: 40px;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .notification-content {
+            display: inline-block;
+            vertical-align: top;
+            width: calc(100% - 60px);
+        }
+        .notification-title {
+            font-weight: bold;
+            color: #333;
+        }
+        .notification-message {
+            color: #666;
+            margin: 5px 0;
+        }
+        .notification-time {
+            font-size: 12px;
+            color: #999;
+        }
+        .badge-count {
+            background: #f44336;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        .error {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 Badge Notification System Test</h1>
+        
+        <div id="status"></div>
+        
+        <div>
+            <h3>Test Actions</h3>
+            <button onclick="testBadgeMetadata()">Get Badge Metadata</button>
+            <button onclick="testStudentBadges()">Get Student Badges</button>
+            <button onclick="testBadgeNotifications()">Get Badge Notifications</button>
+            <button onclick="createTestNotification()">Create Test Notification</button>
+        </div>
+
+        <div id="results"></div>
+
+        <div id="notifications">
+            <h3>Badge Notifications <span id="notificationCount" class="badge-count" style="display: none;">0</span></h3>
+            <div id="notificationList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000/api';
+        let testStudentId = null;
+
+        // Test functions
+        async function testBadgeMetadata() {
+            try {
+                showStatus('Loading badge metadata...', 'info');
+                const response = await fetch(`${API_BASE}/student/streak-badges/metadata`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResults('Badge Metadata', data.data);
+                    showStatus('Badge metadata loaded successfully!', 'success');
+                } else {
+                    showStatus('Failed to load badge metadata: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testStudentBadges() {
+            if (!testStudentId) {
+                // Use student ID 1 for testing
+                testStudentId = 1;
+            }
+            
+            try {
+                showStatus(`Loading badges for student ${testStudentId}...`, 'info');
+                const response = await fetch(`${API_BASE}/students/${testStudentId}/badges`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResults('Student Badges', data.data);
+                    showStatus('Student badges loaded successfully!', 'success');
+                } else {
+                    showStatus('Failed to load student badges: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testBadgeNotifications() {
+            if (!testStudentId) {
+                testStudentId = 1;
+            }
+            
+            try {
+                showStatus(`Loading badge notifications for student ${testStudentId}...`, 'info');
+                const response = await fetch(`${API_BASE}/students/${testStudentId}/badge-notifications`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayNotifications(data.data.notifications);
+                    updateNotificationCount(data.data.unread_count);
+                    showStatus('Badge notifications loaded successfully!', 'success');
+                } else {
+                    showStatus('Failed to load badge notifications: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function createTestNotification() {
+            showStatus('Creating test notification...', 'info');
+            
+            // Simulate creating a notification by calling the badge check
+            await testStudentBadges();
+            
+            // Then load notifications
+            setTimeout(() => {
+                testBadgeNotifications();
+            }, 1000);
+        }
+
+        function displayNotifications(notifications) {
+            const notificationList = document.getElementById('notificationList');
+            
+            if (!notifications || notifications.length === 0) {
+                notificationList.innerHTML = '<p>No badge notifications found.</p>';
+                return;
+            }
+
+            notificationList.innerHTML = notifications.map(notification => `
+                <div class="notification ${notification.is_read ? '' : 'unread'}">
+                    <div class="badge-icon">🏆</div>
+                    <div class="notification-content">
+                        <div class="notification-title">${notification.badge_name} Badge Earned!</div>
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-time">
+                            ${new Date(notification.created_at).toLocaleString()}
+                            ${notification.is_read ? '' : '(Unread)'}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateNotificationCount(count) {
+            const countElement = document.getElementById('notificationCount');
+            if (count > 0) {
+                countElement.textContent = count;
+                countElement.style.display = 'inline';
+            } else {
+                countElement.style.display = 'none';
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = type;
+            statusDiv.textContent = message;
+        }
+
+        function showResults(title, data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h3>${title}</h3>
+                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+${JSON.stringify(data, null, 2)}
+                </pre>
+            `;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('Badge Notification System Test Ready', 'success');
+        });
+    </script>
+</body>
+</html>

@@ -60,8 +60,11 @@
             <span class="input-icon" aria-hidden="true">
               <img src="assets/message-icon.png" alt="" class="input-icon-img">
             </span>
-            <input type="email" id="email" formControlName="email" class="form-control" [readonly]="!isEditing">
+            <input type="email" id="email" formControlName="email" class="form-control" [readonly]="!isEditing" placeholder="Not provided">
           </div>
+          <small class="field-note" *ngIf="!profileForm.get('email')?.value && !isEditing">
+            No email on file. Click Edit to add one.
+          </small>
         </div>
 
         <div class="field">
@@ -70,7 +73,7 @@
             <span class="input-icon" aria-hidden="true">
               <img src="assets/contact-icon.png" alt="" class="input-icon-img">
             </span>
-            <input type="tel" id="contactNumber" formControlName="contactNumber" class="form-control" [readonly]="!isEditing" placeholder="Enter your phone number">
+            <input type="tel" id="contactNumber" formControlName="contactNumber" class="form-control" [readonly]="!isEditing" placeholder="Not provided">
           </div>
           <small class="field-note" *ngIf="!profileForm.get('contactNumber')?.value && !isEditing">
             No phone number on file. Click Edit to add one.

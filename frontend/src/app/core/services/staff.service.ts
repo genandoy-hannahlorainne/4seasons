@@ -51,11 +51,11 @@ export class StaffService {
     });
   }
 
-  getAllStudents(filters: { grade?: number; section?: string; search?: string } = {}): Observable<any> {
+  getAllStudents(filters: { grade?: string; section?: string; search?: string } = {}): Observable<any> {
     let params = new HttpParams();
 
     if (filters.grade) {
-      params = params.set('grade', String(filters.grade));
+      params = params.set('grade_level', filters.grade);
     }
     if (filters.section) {
       params = params.set('section', filters.section);
