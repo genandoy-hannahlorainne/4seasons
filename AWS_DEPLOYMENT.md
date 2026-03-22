@@ -36,7 +36,7 @@ Estimated cost: **~$20–35/month** on `t3.small` or `t3.medium`.
    - **Key pair**: Create new → download `.pem` file (keep this safe)
    - **Storage**: 20GB gp3 minimum (30GB recommended)
 3. **Security Group** — open these ports:
-   | Port | Protocol | Source | Purpose |
+   | Port | Protocol | Source | Purpose |pwe
    |------|----------|--------|---------|
    | 22   | TCP | Your IP only | SSH access |
    | 80   | TCP | 0.0.0.0/0 | HTTP |
