@@ -64,8 +64,9 @@ class AuthController extends BaseController
             // Fetch role-specific data
             $userInfo = $this->addRoleSpecificData($user, $userInfo);
 
-            // Create Sanctum token
-            $token = $user->createToken('auth-token', ['*'], now()->addHours(24))->plainTextToken;
+            // Create Sanctum token — expiry driven by security settings
+            $sessionMinutes = \App\Models\SystemSetting::get('security', 'session_timeout_minutes', 1440);
+            $token = $user->createToken('auth-token', ['*'], now()->addMinutes((int) $sessionMinutes))->plainTextToken;
 
             // Log activity
             $this->logActivity($user->user_id, 'Login', $request->ip());
@@ -74,7 +75,7 @@ class AuthController extends BaseController
                 'user' => $userInfo,
                 'token' => $token,
                 'token_type' => 'Bearer',
-                'expires_in' => 24 * 60 * 60 // 24 hours in seconds
+                'expires_in' => $sessionMinutes * 60
             ], 'Login successful');
 
         } catch (ValidationException $e) {
@@ -190,9 +191,10 @@ class AuthController extends BaseController
     {
         try {
             // Validate request
+            $minLength = \App\Models\SystemSetting::get('security', 'password_min_length', 6);
             $request->validate([
                 'current_password' => 'required|string',
-                'new_password' => 'required|string|min:8|confirmed'
+                'new_password'     => "required|string|min:{$minLength}|confirmed"
             ]);
 
             $user = $request->user();

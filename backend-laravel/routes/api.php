@@ -84,6 +84,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/settings', [AdminController::class, 'updateSettings']);
         Route::get('/system-settings', [AdminController::class, 'getSystemSettings']);
         Route::put('/system-settings', [AdminController::class, 'updateSystemSettings']);
+
+        // Backup & Recovery
+        Route::get('/backup/history', [AdminController::class, 'getBackupHistory']);
+        Route::post('/backup/create', [AdminController::class, 'createBackup']);
+        Route::post('/backup/restore', [AdminController::class, 'restoreBackup']);
+        Route::delete('/backup/{filename}', [AdminController::class, 'deleteBackup']);
         
         // Grade Promotion
         Route::get('/promotion/summary', [GradePromotionController::class, 'summary']);

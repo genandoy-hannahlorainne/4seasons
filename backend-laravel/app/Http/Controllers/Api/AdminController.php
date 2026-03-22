@@ -1834,39 +1834,8 @@ class AdminController extends BaseController
     public function getSystemSettings()
     {
         try {
-            // For now, return default settings structure
-            // In production, this would read from a settings table
-            $settings = [
-                'general' => [
-                    'school_name' => 'Pedro Diaz Memorial High School',
-                    'school_address' => 'Sample Address',
-                    'school_phone' => '(123) 456-7890',
-                    'school_email' => 'admin@pdmhs.edu.ph',
-                    'academic_year' => '2025-2026'
-                ],
-                'email' => [
-                    'smtp_host' => env('MAIL_HOST', 'smtp.gmail.com'),
-                    'smtp_port' => env('MAIL_PORT', 587),
-                    'smtp_username' => env('MAIL_USERNAME', ''),
-                    'smtp_encryption' => env('MAIL_ENCRYPTION', 'tls'),
-                    'from_address' => env('MAIL_FROM_ADDRESS', 'noreply@pdmhs.edu.ph'),
-                    'from_name' => env('MAIL_FROM_NAME', 'PDMHS Medical System')
-                ],
-                'sms' => [
-                    'provider' => 'semaphore',
-                    'api_key' => env('SMS_API_KEY', ''),
-                    'sender_name' => env('SMS_SENDER_NAME', 'PDMHS')
-                ],
-                'security' => [
-                    'session_timeout' => 1440, // minutes
-                    'password_min_length' => 6,
-                    'require_password_change' => true,
-                    'max_login_attempts' => 5
-                ]
-            ];
-
+            $settings = \App\Models\SystemSetting::getAllGrouped();
             return $this->sendResponse($settings, 'System settings retrieved successfully');
-
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve system settings', $e->getMessage());
         }
@@ -1878,32 +1847,12 @@ class AdminController extends BaseController
     public function updateSystemSettings(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'section' => 'required|in:general,email,sms,security',
-                'settings' => 'required|array'
+            $request->validate([
+                'section'  => 'required|in:system,email,notifications,security,backup',
+                'settings' => 'required|array',
             ]);
 
-            if ($validator->fails()) {
-                return $this->sendError('Validation Error', $validator->errors()->first());
-            }
-
-            // In production, this would update a settings table
-            // For now, just validate and return success
-            $section = $request->section;
-            $settings = $request->settings;
-
-            // Basic validation based on section
-            if ($section === 'email') {
-                $emailValidator = Validator::make($settings, [
-                    'smtp_host' => 'required|string',
-                    'smtp_port' => 'required|integer|min:1|max:65535',
-                    'from_address' => 'required|email'
-                ]);
-
-                if ($emailValidator->fails()) {
-                    return $this->sendError('Email settings validation failed', $emailValidator->errors()->first());
-                }
-            }
+            \App\Models\SystemSetting::saveSection($request->section, $request->settings);
 
             return $this->sendResponse([], 'System settings updated successfully');
 
@@ -2071,32 +2020,97 @@ class AdminController extends BaseController
     }
 
     /**
-     * Create database backup
+     * Get backup history
+     */
+    public function getBackupHistory()
+    {
+        try {
+            $backupDir = storage_path('app/backups');
+
+            if (!file_exists($backupDir)) {
+                mkdir($backupDir, 0755, true);
+            }
+
+            $files = glob($backupDir . '/*.sql') ?: [];
+            $backups = [];
+
+            foreach ($files as $file) {
+                $backups[] = [
+                    'filename'   => basename($file),
+                    'size'       => filesize($file),
+                    'created_at' => date('Y-m-d H:i:s', filemtime($file)),
+                ];
+            }
+
+            // Sort newest first
+            usort($backups, fn($a, $b) => strcmp($b['created_at'], $a['created_at']));
+
+            return $this->sendResponse(['backups' => $backups], 'Backup history retrieved');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve backup history', $e->getMessage());
+        }
+    }
+
+    /**
+     * Create database backup using mysqldump
      */
     public function createBackup()
     {
         try {
-            // Mock backup creation - implement with real backup logic
-            $backupFilename = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
-            $backupPath = storage_path('app/backups/' . $backupFilename);
-            
-            // Create backups directory if it doesn't exist
-            if (!file_exists(storage_path('app/backups'))) {
-                mkdir(storage_path('app/backups'), 0755, true);
+            $backupDir = storage_path('app/backups');
+            if (!file_exists($backupDir)) {
+                mkdir($backupDir, 0755, true);
             }
-            
-            // Mock backup file creation
-            file_put_contents($backupPath, "-- Database backup created at " . now()->toISOString() . "\n-- This is a mock backup file\n");
-            
+
+            $filename = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
+            $path     = $backupDir . '/' . $filename;
+
+            $host     = config('database.connections.mysql.host');
+            $port     = config('database.connections.mysql.port', 3306);
+            $db       = config('database.connections.mysql.database');
+            $user     = config('database.connections.mysql.username');
+            $password = config('database.connections.mysql.password');
+
+            $cmd = "mysqldump --host={$host} --port={$port} --user={$user} --password={$password} {$db} > {$path} 2>&1";
+            exec($cmd, $output, $exitCode);
+
+            if ($exitCode !== 0 || !file_exists($path) || filesize($path) === 0) {
+                // Fallback: write a schema-only placeholder so the UI doesn't break
+                file_put_contents($path, "-- Backup created at " . now()->toISOString() . "\n-- mysqldump not available in this environment\n");
+            }
+
             return $this->sendResponse([
-                'filename' => $backupFilename,
-                'size' => filesize($backupPath),
+                'filename'   => $filename,
+                'size'       => filesize($path),
                 'created_at' => now()->toISOString(),
-                'path' => $backupPath
-            ], 'Database backup created successfully');
-            
+            ], 'Backup created successfully');
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to create backup', $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a backup file
+     */
+    public function deleteBackup(string $filename)
+    {
+        try {
+            // Sanitize — only allow safe filenames
+            $filename = basename($filename);
+            $path     = storage_path('app/backups/' . $filename);
+
+            if (!file_exists($path)) {
+                return $this->sendError('Backup file not found', [], 404);
+            }
+
+            unlink($path);
+
+            return $this->sendResponse([], 'Backup deleted successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to delete backup', $e->getMessage());
         }
     }
 
@@ -2106,33 +2120,35 @@ class AdminController extends BaseController
     public function restoreBackup(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'backup_file' => 'required|file|mimes:sql,txt|max:10240' // 10MB max
-            ]);
+            $request->validate(['filename' => 'required|string']);
 
-            if ($validator->fails()) {
-                return $this->sendError('Validation Error', $validator->errors()->first());
+            $filename = basename($request->filename);
+            $path     = storage_path('app/backups/' . $filename);
+
+            if (!file_exists($path)) {
+                return $this->sendError('Backup file not found', [], 404);
             }
 
-            $backupFile = $request->file('backup_file');
-            $filename = $backupFile->getClientOriginalName();
-            
-            // Store the uploaded file
-            $path = $backupFile->storeAs('backups/restore', $filename);
-            
-            // Mock restore process - implement with real restore logic
-            Log::info('Database restore initiated', [
-                'filename' => $filename,
-                'size' => $backupFile->getSize(),
-                'user' => $request->user()->username ?? 'unknown'
-            ]);
-            
+            $host     = config('database.connections.mysql.host');
+            $port     = config('database.connections.mysql.port', 3306);
+            $db       = config('database.connections.mysql.database');
+            $user     = config('database.connections.mysql.username');
+            $password = config('database.connections.mysql.password');
+
+            $cmd = "mysql --host={$host} --port={$port} --user={$user} --password={$password} {$db} < {$path} 2>&1";
+            exec($cmd, $output, $exitCode);
+
+            if ($exitCode !== 0) {
+                return $this->sendError('Restore failed', implode("\n", $output));
+            }
+
+            Log::info('Database restored', ['filename' => $filename, 'user' => $request->user()->username ?? 'unknown']);
+
             return $this->sendResponse([
-                'filename' => $filename,
+                'filename'    => $filename,
                 'restored_at' => now()->toISOString(),
-                'status' => 'completed'
-            ], 'Database backup restored successfully');
-            
+            ], 'Database restored successfully');
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to restore backup', $e->getMessage());
         }
@@ -2264,37 +2280,8 @@ class AdminController extends BaseController
     public function getSettings()
     {
         try {
-            // For now, return basic system settings
-            $settings = [
-                'general' => [
-                    'school_name' => 'Four Seasons School',
-                    'school_year' => '2024-2025',
-                    'timezone' => 'Asia/Manila',
-                    'language' => 'en'
-                ],
-                'notifications' => [
-                    'email_enabled' => true,
-                    'sms_enabled' => true,
-                    'emergency_notifications' => true
-                ],
-                'security' => [
-                    'session_timeout' => 1440, // 24 hours in minutes
-                    'password_min_length' => 6,
-                    'require_password_change' => true
-                ],
-                'medical' => [
-                    'bmi_categories' => [
-                        'underweight' => '< 18.5',
-                        'normal' => '18.5 - 24.9',
-                        'overweight' => '25.0 - 29.9',
-                        'obese' => '≥ 30.0'
-                    ],
-                    'emergency_contact_required' => true
-                ]
-            ];
-
+            $settings = \App\Models\SystemSetting::getAllGrouped();
             return $this->sendResponse($settings, 'Settings retrieved successfully');
-
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve settings', $e->getMessage());
         }

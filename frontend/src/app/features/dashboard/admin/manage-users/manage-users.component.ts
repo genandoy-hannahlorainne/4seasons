@@ -183,10 +183,9 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     }
     
     console.log('✅ Authenticated as admin, loading users');
-    this.loadUsers();
     this.loadGradeLevels();
     
-    // Auto-refresh users every 30 seconds
+    // Auto-refresh users every 30 seconds (startWith(0) handles initial load)
     interval(this.refreshInterval)
       .pipe(
         startWith(0),

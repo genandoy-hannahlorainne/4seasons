@@ -11,7 +11,16 @@ RUN apt-get update \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
+
+# Copy composer files first for better layer caching
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --no-dev --optimize-autoloader --no-scripts
+
+# Copy the rest of the app
 COPY . /var/www/html
+
+# Run post-install scripts after full copy
+RUN composer run-script post-autoload-dump || true
 
 # Serve Laravel from /public
 RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf /etc/apache2/apache2.conf

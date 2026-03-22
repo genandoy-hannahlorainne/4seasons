@@ -24,15 +24,14 @@ services:
         condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 300s
     volumes:
       - ./backend-laravel:/var/www/html
     command: >
-      sh -c "composer install --no-interaction &&
-             php artisan config:clear &&
+      sh -c "php artisan config:clear &&
              php artisan migrate --force &&
              php artisan db:seed --force --class=RoleSeeder || true &&
              php artisan db:seed --force --class=AdminSeeder || true &&
