@@ -29,11 +29,7 @@ export class BackupRecoveryComponent implements OnInit {
     this.adminService.getBackupHistory().subscribe({
       next: (response: any) => {
         this.loading = false;
-        if (response.success) {
-          this.backups = response.backups;
-        } else {
-          this.error = response.message || 'Failed to load backups';
-        }
+        this.backups = response.data?.backups || response.backups || [];
       },
       error: (err: any) => {
         this.loading = false;
@@ -53,13 +49,9 @@ export class BackupRecoveryComponent implements OnInit {
     this.adminService.createBackup().subscribe({
       next: (response: any) => {
         this.creating = false;
-        if (response.success) {
-          this.success = 'Backup created successfully!';
-          this.loadBackups();
-          setTimeout(() => this.success = '', 5000);
-        } else {
-          this.error = response.message || 'Failed to create backup';
-        }
+        this.success = 'Backup created successfully!';
+        this.loadBackups();
+        setTimeout(() => this.success = '', 5000);
       },
       error: (err: any) => {
         this.creating = false;
@@ -80,13 +72,9 @@ export class BackupRecoveryComponent implements OnInit {
     
     this.adminService.deleteBackup(filename).subscribe({
       next: (response: any) => {
-        if (response.success) {
-          this.success = 'Backup deleted successfully';
-          this.loadBackups();
-          setTimeout(() => this.success = '', 3000);
-        } else {
-          this.error = response.message || 'Failed to delete backup';
-        }
+        this.success = 'Backup deleted successfully';
+        this.loadBackups();
+        setTimeout(() => this.success = '', 3000);
       },
       error: (err: any) => {
         this.error = 'Failed to delete backup';
@@ -117,14 +105,8 @@ export class BackupRecoveryComponent implements OnInit {
     this.adminService.restoreBackup(filename).subscribe({
       next: (response: any) => {
         this.loading = false;
-        if (response.success) {
-          this.success = '✅ Database restored successfully! The page will reload in 3 seconds...';
-          setTimeout(() => {
-            window.location.reload();
-          }, 3000);
-        } else {
-          this.error = response.message || 'Failed to restore backup';
-        }
+        this.success = '✅ Database restored successfully! The page will reload in 3 seconds...';
+        setTimeout(() => window.location.reload(), 3000);
       },
       error: (err: any) => {
         this.loading = false;

@@ -97,7 +97,8 @@ class StudentController extends BaseController
                 'bmi_category' => $student->bmi_category,
                 'is_active' => $student->is_active,
                 'email' => $student->user ? $student->user->email : null,
-                'phone' => $student->user ? $student->user->phone : null,
+                'phone' => $student->phone,
+                'contact_number' => $student->phone,
             ];
 
             // Standardized response format for frontend compatibility
@@ -165,7 +166,7 @@ class StudentController extends BaseController
                     'first_name', 'last_name', 'middle_name', 'birth_date',
                     'gender', 'address', 'blood_type', 'emergency_contact',
                     'emergency_contact_relation', 'emergency_contact_phone',
-                    'height_cm', 'weight_kg'
+                    'height_cm', 'weight_kg', 'phone'
                 ]);
 
                 if (!empty($studentUpdateData)) {
@@ -182,7 +183,7 @@ class StudentController extends BaseController
                 }
 
                 if ($student->user) {
-                    $userUpdateData = $this->extractPresent($request, ['full_name', 'email', 'phone']);
+                    $userUpdateData = $this->extractPresent($request, ['full_name', 'email']);
                     if (!empty($userUpdateData)) {
                         $student->user->update($userUpdateData);
                     }
@@ -362,7 +363,7 @@ class StudentController extends BaseController
                     $personal = $request->input('personal_info', []);
 
                     $studentUpdateData = $this->extractPresentFromArray($personal, [
-                        'address', 'emergency_contact', 'emergency_contact_relation', 'emergency_contact_phone', 'blood_type'
+                        'address', 'emergency_contact', 'emergency_contact_relation', 'emergency_contact_phone', 'blood_type', 'phone'
                     ]);
 
                     if (!empty($studentUpdateData)) {
@@ -370,7 +371,7 @@ class StudentController extends BaseController
                     }
 
                     if ($student->user) {
-                        $userUpdateData = $this->extractPresentFromArray($personal, ['phone', 'email']);
+                        $userUpdateData = $this->extractPresentFromArray($personal, ['email']);
                         if (!empty($userUpdateData)) {
                             $student->user->update($userUpdateData);
                         }
@@ -813,7 +814,8 @@ class StudentController extends BaseController
                 'emergency_contact' => $student->emergency_contact,
                 'emergency_contact_relation' => $student->emergency_contact_relation,
                 'emergency_contact_phone' => $student->emergency_contact_phone,
-                'phone' => $student->user?->phone,
+                'phone' => $student->phone,
+                'contact_number' => $student->phone,
                 'email' => $student->user?->email,
                 'grade_level' => $student->grade_level,
                 'section' => $student->section,
@@ -935,6 +937,20 @@ class StudentController extends BaseController
                            ->orderBy('visit_datetime', 'desc')
                            ->first();
 
+        // Calculate wellness streak (days without clinic visits)
+        $currentStreak = 0;
+        if (!$lastVisit) {
+            // No visits ever - streak since enrollment or a reasonable start date
+            $startDate = $student->created_at ?? now()->subDays(365);
+            $currentStreak = now()->diffInDays($startDate);
+        } else {
+            // Days since last visit
+            $currentStreak = now()->diffInDays($lastVisit->visit_datetime);
+        }
+
+        // Load badge metadata and calculate badge status
+        $badgeData = $this->calculateBadgeStatus($student->student_id, $currentStreak);
+
         $medicalData = [
             'personal_info' => [
                 'student_id' => $student->student_id,
@@ -958,9 +974,9 @@ class StudentController extends BaseController
                 'weight_kg' => $student->weight_kg,
                 'bmi' => $student->bmi,
                 'bmi_category' => $student->bmi_category,
-                // Add phone and email from user table
-                'phone' => $student->user ? $student->user->phone : null,
-                'contact_number' => $student->user ? $student->user->phone : null, // Alias for frontend compatibility
+                // Phone: prefer students.phone, fallback to users.phone
+                'phone' => $student->phone ?? ($student->user ? $student->user->phone : null),
+                'contact_number' => $student->phone ?? ($student->user ? $student->user->phone : null),
                 'email' => $student->user ? $student->user->email : null,
             ],
             'medical_history' => $student->medicalHistory,
@@ -968,7 +984,16 @@ class StudentController extends BaseController
             'recent_visits_count' => $recentVisits,
             'total_visits_count' => $totalVisits,
             'recent_visits' => $student->medicalVisits,
-            'last_visit' => $lastVisit
+            'last_visit' => $lastVisit,
+            // Add wellness streak and badge information
+            'wellness_streak' => [
+                'current_streak_days' => $currentStreak,
+                'last_clinic_visit' => $lastVisit ? $lastVisit->visit_datetime : null,
+                'streak_message' => $badgeData['streak_message'],
+                'badges_unlocked' => $badgeData['badges_unlocked'],
+                'next_badge' => $badgeData['next_badge'],
+            ],
+            'badges' => $badgeData['badges']
         ];
         
         return response()->json([
@@ -976,5 +1001,92 @@ class StudentController extends BaseController
             'message' => 'Student medical data retrieved successfully',
             'data' => $medicalData
         ]);
+    }
+
+    /**
+     * Calculate badge status for a student
+     */
+    private function calculateBadgeStatus($studentId, $currentStreak)
+    {
+        try {
+            // Load badge metadata
+            $metadataPath = base_path('resources/badges/streak/metadata.json');
+            if (!file_exists($metadataPath)) {
+                return $this->getDefaultBadgeData();
+            }
+
+            $metadata = json_decode(file_get_contents($metadataPath), true);
+            $badges = collect($metadata['badges'])->sortBy('required_streak_days');
+
+            // Determine badge status for each badge
+            $badgeStatus = $badges->map(function ($badge) use ($currentStreak) {
+                $required = $badge['required_streak_days'];
+                $isUnlocked = $currentStreak >= $required;
+                
+                return [
+                    'badge_key' => $badge['badge_key'],
+                    'badge_name' => $badge['badge_name'],
+                    'tier' => $badge['tier'],
+                    'required_streak_days' => $required,
+                    'description' => $badge['description'],
+                    'icon_file' => $badge['icon_file'],
+                    'icon_asset_path' => 'assets/badges/streak/' . $badge['icon_file'],
+                    'is_unlocked' => $isUnlocked,
+                    'is_earned' => $isUnlocked,
+                    'progress_percentage' => min(100, ($currentStreak / $required) * 100),
+                    'days_remaining' => $isUnlocked ? 0 : ($required - $currentStreak),
+                ];
+            });
+
+            // Find next badge to unlock
+            $nextBadge = $badgeStatus->where('is_unlocked', false)->first();
+            $unlockedBadges = $badgeStatus->where('is_unlocked', true);
+
+            return [
+                'badges' => $badgeStatus->values(),
+                'badges_unlocked' => $unlockedBadges->count(),
+                'next_badge' => $nextBadge,
+                'streak_message' => $this->generateStreakMessage($currentStreak, $nextBadge),
+            ];
+
+        } catch (\Exception $e) {
+            return $this->getDefaultBadgeData();
+        }
+    }
+
+    /**
+     * Generate motivational streak message
+     */
+    private function generateStreakMessage($currentStreak, $nextBadge)
+    {
+        if ($currentStreak === 0) {
+            return "Great! You're starting your wellness journey. Keep staying healthy!";
+        }
+
+        if ($currentStreak === 1) {
+            return "Awesome! 1 day of staying healthy. Keep it up!";
+        }
+
+        if (!$nextBadge) {
+            return "Incredible! You've unlocked all wellness badges. You're a health legend!";
+        }
+
+        $daysRemaining = $nextBadge['days_remaining'];
+        $nextBadgeName = $nextBadge['badge_name'];
+
+        return "Amazing! {$currentStreak} days of wellness! Only {$daysRemaining} more days to unlock '{$nextBadgeName}' badge.";
+    }
+
+    /**
+     * Get default badge data when metadata is not available
+     */
+    private function getDefaultBadgeData()
+    {
+        return [
+            'badges' => [],
+            'badges_unlocked' => 0,
+            'next_badge' => null,
+            'streak_message' => 'Keep staying healthy!',
+        ];
     }
 }

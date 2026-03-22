@@ -113,6 +113,32 @@ class SchoolYearController extends BaseController
     }
 
     /**
+     * Update a school year
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'year_name' => 'sometimes|string|max:20|unique:school_years,year_name,' . $id,
+                'start_date' => 'sometimes|date',
+                'end_date' => 'sometimes|date|after:start_date',
+                'is_active' => 'sometimes|boolean'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors()->first());
+            }
+
+            $schoolYear = SchoolYear::findOrFail($id);
+            $schoolYear->update($request->only(['year_name', 'start_date', 'end_date', 'is_active']));
+
+            return $this->sendResponse($schoolYear, 'School year updated successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to update school year', $e->getMessage());
+        }
+    }
+
+    /**
      * Get all grade levels
      */
     public function getGradeLevels()

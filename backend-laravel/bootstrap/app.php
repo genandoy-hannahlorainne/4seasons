@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
             }
             return '/login';
         });
+
+        // Register role middleware
+        $middleware->alias([
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

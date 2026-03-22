@@ -138,8 +138,23 @@ export class StudentService {
       );
   }
 
-  updateStudentProfile(userId: number, profileData: any): Observable<any> {
-    return this.http.put<any>(`${environment.apiUrl}/students/${userId}`, profileData);
+  updateStudentProfile(studentId: number, profileData: any): Observable<any> {
+    // Map frontend form fields to backend expected fields
+    const payload: any = {};
+    if (profileData.firstName !== undefined)    payload.first_name = profileData.firstName;
+    if (profileData.lastName !== undefined)     payload.last_name = profileData.lastName;
+    if (profileData.middleName !== undefined)   payload.middle_name = profileData.middleName;
+    if (profileData.birthday !== undefined)     payload.birth_date = profileData.birthday;
+    if (profileData.gender !== undefined) {
+      const genderMap: any = { male: 'M', female: 'F', other: 'Other' };
+      payload.gender = genderMap[profileData.gender] ?? profileData.gender;
+    }
+    if (profileData.address !== undefined)      payload.address = profileData.address;
+    if (profileData.bloodType !== undefined)    payload.blood_type = profileData.bloodType;
+    if (profileData.contactNumber !== undefined) payload.phone = profileData.contactNumber;
+    if (profileData.email !== undefined)        payload.email = profileData.email;
+
+    return this.http.put<any>(`${environment.apiUrl}/students/${studentId}`, payload);
   }
 
   getStudentMedicalData(userId: number): Observable<any> {

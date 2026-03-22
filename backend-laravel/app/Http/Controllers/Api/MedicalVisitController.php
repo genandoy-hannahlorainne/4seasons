@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\MedicalVisit;
+use App\Models\Notification;
 use App\Models\Student;
 use App\Models\Vital;
 use Illuminate\Http\Request;
@@ -120,6 +121,23 @@ class MedicalVisitController extends BaseController
 
                 $visitId = DB::table('medical_visits')->insertGetId($visitPayload, 'visit_id');
                 $visit = MedicalVisit::find($visitId);
+
+                // Create notification for emergency visits
+                if (strtolower($request->input('visit_type', '')) === 'emergency') {
+                    $student = Student::find($request->student_id);
+                    $studentName = $student
+                        ? trim($student->first_name . ' ' . $student->last_name)
+                        : 'Unknown Student';
+
+                    Notification::create([
+                        'student_id' => $request->student_id,
+                        'visit_id'   => $visitId,
+                        'channel'    => 'System',
+                        'message'    => "Emergency visit: {$studentName} requires immediate attention",
+                        'priority'   => 'urgent',
+                        'status'     => 'Pending',
+                    ]);
+                }
 
                 // Add vitals if provided
                 if ($request->has('vitals') && is_array($request->vitals)) {

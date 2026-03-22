@@ -33,19 +33,19 @@ class AuthController extends BaseController
                        ->first();
 
             // Check if user exists and password is correct
-            if (!$user || !password_verify($request->password, $user->password_hash)) {
+            if (!$user || !Hash::check($request->password, $user->password_hash)) {
                 return $this->sendError('Invalid username or password', [], 401);
             }
 
             // Load role relationship
             $user->load('role');
             
-            if (!$user->role) {
+            if  (!$user->role) {
                 return $this->sendError('User role not found', [], 500);
             }
 
             // Validate role-specific profile exists
-            $roleValidation = $this->validateRoleProfile($user);
+            $roleValidation =   $this->validateRoleProfile($user);
             if (!$roleValidation['valid']) {
                 return $this->sendError('Access denied: ' . $roleValidation['error'] . '. You cannot login with this account.', [], 403);
             }
@@ -56,7 +56,7 @@ class AuthController extends BaseController
                 'username' => $user->username,
                 'email' => $user->email,
                 'full_name' => $user->full_name,
-                'role_id' => $user->role_id,
+                'role_id' => $user->role_id, 
                 'role_name' => $user->role->role_name,
                 'password_must_change' => (bool)$user->password_must_change
             ];
@@ -64,8 +64,9 @@ class AuthController extends BaseController
             // Fetch role-specific data
             $userInfo = $this->addRoleSpecificData($user, $userInfo);
 
-            // Create Sanctum token
-            $token = $user->createToken('auth-token', ['*'], now()->addHours(24))->plainTextToken;
+            // Create Sanctum token — expiry driven by security settings
+            $sessionMinutes = \App\Models\SystemSetting::get('security', 'session_timeout_minutes', 1440);
+            $token = $user->createToken('auth-token', ['*'], now()->addMinutes((int) $sessionMinutes))->plainTextToken;
 
             // Log activity
             $this->logActivity($user->user_id, 'Login', $request->ip());
@@ -74,7 +75,7 @@ class AuthController extends BaseController
                 'user' => $userInfo,
                 'token' => $token,
                 'token_type' => 'Bearer',
-                'expires_in' => 24 * 60 * 60 // 24 hours in seconds
+                'expires_in' => $sessionMinutes * 60
             ], 'Login successful');
 
         } catch (ValidationException $e) {
@@ -190,9 +191,10 @@ class AuthController extends BaseController
     {
         try {
             // Validate request
+            $minLength = \App\Models\SystemSetting::get('security', 'password_min_length', 6);
             $request->validate([
                 'current_password' => 'required|string',
-                'new_password' => 'required|string|min:8|confirmed'
+                'new_password'     => "required|string|min:{$minLength}|confirmed"
             ]);
 
             $user = $request->user();
@@ -202,18 +204,18 @@ class AuthController extends BaseController
             }
 
             // Verify current password
-            if (!password_verify($request->current_password, $user->password_hash)) {
+            if (!Hash::check($request->current_password, $user->password_hash)) {
                 return $this->sendError('Current password is incorrect', [], 400);
             }
 
             // Check if new password is different from current
-            if (password_verify($request->new_password, $user->password_hash)) {
+            if (Hash::check($request->new_password, $user->password_hash)) {
                 return $this->sendError('New password must be different from current password', [], 400);
             }
 
             // Update password and remove force change flag
             $user->update([
-                'password_hash' => password_hash($request->new_password, PASSWORD_DEFAULT),
+                'password_hash' => Hash::make($request->new_password),
                 'password_must_change' => false,
                 'password_changed_at' => now()
             ]);

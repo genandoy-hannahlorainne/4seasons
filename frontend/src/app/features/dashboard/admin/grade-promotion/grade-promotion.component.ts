@@ -71,17 +71,17 @@ interface AdviserAssignmentStatus {
             </select>
           </div>
 
-          <button (click)="loadPromotionSummary()" class="btn-primary">
-            Load Summary
+          <button (click)="loadPromotionSummary()" class="btn-primary" [disabled]="isLoadingSummary">
+            {{ isLoadingSummary ? 'Loading...' : 'Load Summary' }}
           </button>
         </div>
       </div>
 
-      <div *ngIf="promotionSummary" class="summary-section">
+      <div *ngIf="summaryLoaded" class="summary-section">
         <h3>Promotion Summary</h3>
 
         <!-- Adviser Assignment Check -->
-        <div class="adviser-check" *ngIf="targetSections">
+        <div class="adviser-check" *ngIf="targetSections && targetSections.length > 0 && adviserAssignmentStatus">
           <h4>Target Year Section Status</h4>
           <div class="status-grid">
             <div class="status-card">
@@ -109,11 +109,23 @@ interface AdviserAssignmentStatus {
             <h4>{{ item.level_name }}</h4>
             <p class="count">{{ item.total_students }} students</p>
           </div>
+          <div *ngIf="promotionSummary?.length === 0" class="empty-state">
+            <p>No enrolled students found for the selected school year.</p>
+          </div>
         </div>
 
         <div class="target-capacity">
           <h4>Target Year Capacity</h4>
-          <table>
+          <div *ngIf="targetSections?.length === 0" class="empty-state warning">
+            <p>⚠️ No sections found for the target school year. You need to create sections first.</p>
+            <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn-copy" (click)="copySectionsFromCurrentYear()" [disabled]="isCopyingSections">
+                {{ isCopyingSections ? 'Copying...' : '📋 Copy Sections from ' + getYearName(currentSchoolYearId) }}
+              </button>
+              <button class="btn-link" (click)="navigateToSchoolYearManagement()">Or create manually in School Year Management</button>
+            </div>
+          </div>
+          <table *ngIf="targetSections && targetSections.length > 0">
             <thead>
               <tr>
                 <th>Grade Level</th>
@@ -393,12 +405,42 @@ interface AdviserAssignmentStatus {
       color: #c62828;
     }
 
-    .btn-primary, .btn-success, .btn-secondary, .btn-small {
+    .empty-state {
+      padding: 20px;
+      text-align: center;
+      color: #6c757d;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px dashed #dee2e6;
+    }
+
+    .empty-state.warning {
+      background: #fff3cd;
+      border-color: #ffc107;
+      color: #856404;
+      text-align: left;
+    }
+
+    .empty-state p {
+      margin: 0;
+    }
+
+    .btn-primary, .btn-success, .btn-secondary, .btn-small, .btn-copy {
       padding: 10px 20px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
+    }
+
+    .btn-copy {
+      background: #0288d1;
+      color: white;
+    }
+
+    .btn-copy:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .btn-primary {
@@ -461,6 +503,9 @@ export class GradePromotionComponent implements OnInit {
   adviserAssignmentStatus: AdviserAssignmentStatus | null = null;
   manualCases: any[] = [];
   isProcessing = false;
+  isLoadingSummary = false;
+  isCopyingSections = false;
+  summaryLoaded = false;
   promotionResult: any = null;
 
   constructor(
@@ -484,13 +529,13 @@ export class GradePromotionComponent implements OnInit {
   }
 
   onCurrentYearChange() {
-    // Reset summary when year changes
     this.promotionSummary = null;
+    this.summaryLoaded = false;
   }
 
   onTargetYearChange() {
-    // Reset summary when year changes
     this.promotionSummary = null;
+    this.summaryLoaded = false;
   }
 
   loadPromotionSummary() {
@@ -499,16 +544,28 @@ export class GradePromotionComponent implements OnInit {
       return;
     }
 
+    if (this.currentSchoolYearId == this.targetSchoolYearId) {
+      alert('Current and target school years must be different');
+      return;
+    }
+
+    this.isLoadingSummary = true;
+    this.summaryLoaded = false;
+
     this.adminService.getPromotionSummary(this.currentSchoolYearId, this.targetSchoolYearId).subscribe(
       (response: any) => {
-        this.promotionSummary = response.summary;
-        this.targetSections = response.target_sections;
-        this.adviserAssignmentStatus = response.adviser_assignment_status;
-        this.manualCases = response.manual_cases;
+        const data = response.data || response;
+        this.promotionSummary = data.summary || [];
+        this.targetSections = data.target_sections || [];
+        this.adviserAssignmentStatus = data.adviser_assignment_status;
+        this.manualCases = data.manual_cases || [];
+        this.isLoadingSummary = false;
+        this.summaryLoaded = true;
       },
       (error: any) => {
         console.error('Error loading promotion summary:', error);
-        alert('Error loading promotion summary');
+        this.isLoadingSummary = false;
+        alert('Error loading promotion summary: ' + (error.error?.message || 'Unknown error'));
       }
     );
   }
@@ -545,7 +602,7 @@ export class GradePromotionComponent implements OnInit {
         this.promotionResult = {
           success: true,
           message: 'Promotion completed successfully',
-          stats: response
+          stats: response.data || response
         };
       },
       (error: any) => {
@@ -566,6 +623,36 @@ export class GradePromotionComponent implements OnInit {
   openManualAdjustment(student: any) {
     // TODO: Open modal for manual adjustment
     console.log('Open manual adjustment for student:', student);
+  }
+
+  copySectionsFromCurrentYear() {
+    if (!this.currentSchoolYearId || !this.targetSchoolYearId) return;
+
+    if (!confirm(`Copy all sections from ${this.getYearName(this.currentSchoolYearId)} to ${this.getYearName(this.targetSchoolYearId)}? Adviser assignments will be cleared and must be re-assigned.`)) {
+      return;
+    }
+
+    this.isCopyingSections = true;
+
+    this.adminService.copySectionsToYear(this.currentSchoolYearId, this.targetSchoolYearId).subscribe(
+      (response: any) => {
+        const data = response.data || response;
+        this.isCopyingSections = false;
+        alert(`Done! ${data.copied} sections copied. ${data.skipped} already existed.`);
+        // Reload summary to reflect new sections
+        this.loadPromotionSummary();
+      },
+      (error: any) => {
+        this.isCopyingSections = false;
+        alert('Failed to copy sections: ' + (error.error?.message || 'Unknown error'));
+      }
+    );
+  }
+
+  getYearName(yearId: number | null): string {
+    if (!yearId) return '';
+    const year = this.schoolYears.find(y => y.id == yearId);
+    return year?.year_name || '';
   }
 
   navigateToSchoolYearManagement() {

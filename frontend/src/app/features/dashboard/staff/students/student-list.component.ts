@@ -39,7 +39,7 @@ interface StaffStudentRecord {
         <div class="filter-group">
           <select [(ngModel)]="gradeFilter" (ngModelChange)="filterStudents()" class="filter-select">
             <option value="">All Grades</option>
-            <option *ngFor="let grade of grades" [value]="grade">Grade {{ grade }}</option>
+            <option *ngFor="let grade of grades" [value]="grade">{{ grade }}</option>
           </select>
           <select [(ngModel)]="sectionFilter" (ngModelChange)="filterStudents()" class="filter-select">
             <option value="">All Sections</option>
@@ -235,8 +235,9 @@ export class StudentListComponent implements OnInit {
   gradeFilter = '';
   sectionFilter = '';
   loading = true;
-  grades = [7, 8, 9, 10, 11, 12];
+  grades = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
   sections: string[] = [];
+  allSectionsData: any[] = []; // full list with grade info
   
   students: StaffStudentRecord[] = [];
   filteredStudents: StaffStudentRecord[] = [];
@@ -252,7 +253,7 @@ export class StudentListComponent implements OnInit {
     this.loading = true;
     
     const filters: any = {};
-    if (this.gradeFilter) filters.grade = parseInt(this.gradeFilter);
+    if (this.gradeFilter) filters.grade = this.gradeFilter;
     if (this.sectionFilter) filters.section = this.sectionFilter;
     if (this.searchTerm) filters.search = this.searchTerm;
     
@@ -261,7 +262,18 @@ export class StudentListComponent implements OnInit {
         next: (response) => {
           this.loading = false;
           if (response.success) {
-            this.students = response.data?.students || [];
+            // Handle both paginated and flat array responses
+            const raw = response.data?.data || response.data?.students || response.data || [];
+            this.students = (Array.isArray(raw) ? raw : []).map((s: any) => ({
+              id: s.student_id,
+              studentNumber: s.student_number,
+              name: `${s.first_name} ${s.last_name}`,
+              gradeSection: `Grade ${s.grade_level} - ${s.section}`,
+              gender: s.gender,
+              lastVisit: s.last_visit || null,
+              hasAllergies: !!(s.allergies && s.allergies.length > 0),
+              avatar: `/assets/user-${s.gender === 'F' ? 'female' : 'male'}.png`
+            }));
             this.filteredStudents = this.students;
           } else {
             this.students = [];
@@ -278,31 +290,29 @@ export class StudentListComponent implements OnInit {
   }
 
   loadSections(): void {
-    // Load sections from Laravel API
-    this.staffService.getSections()
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            // Extract unique section names from all grades
-            const allSections = response.data || [];
-            const sectionNames: string[] = allSections.map((section: any) => section.section_name as string);
-            this.sections = [...new Set(sectionNames)].sort();
-          } else {
-            // Fallback to default sections if API fails
-            this.sections = ['Mapagmahal', 'Matatag', 'Masigasig', 'STEM 1', 'STEM 2', 'ABM 1', 'ABM 2', 'HUMSS 1', 'HUMSS 2'];
-          }
-        },
-        error: (err) => {
-          console.error('Error loading sections:', err);
-          // Fallback to default sections if API fails
-          this.sections = ['Mapagmahal', 'Matatag', 'Masigasig', 'STEM 1', 'STEM 2', 'ABM 1', 'ABM 2', 'HUMSS 1', 'HUMSS 2'];
+    this.staffService.getSections().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.allSectionsData = response.data || [];
+          this.updateSectionsDropdown();
         }
-      });
+      },
+      error: () => { this.allSectionsData = []; }
+    });
+  }
+
+  updateSectionsDropdown(): void {
+    const filtered = this.gradeFilter
+      ? this.allSectionsData.filter((s: any) => s.level_name === this.gradeFilter)
+      : this.allSectionsData;
+    this.sections = filtered.map((s: any) => s.section_name);
+    if (this.sectionFilter && !this.sections.includes(this.sectionFilter)) {
+      this.sectionFilter = '';
+    }
   }
 
   filterStudents(): void {
-    // Server-side filtering is now handled by the API
-    // Just reload the students with current filters
+    this.updateSectionsDropdown();
     this.loadStudents();
   }
 }
