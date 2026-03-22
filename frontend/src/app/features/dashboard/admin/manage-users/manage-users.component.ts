@@ -756,11 +756,11 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   downloadCSVTemplate(): void {
-    const csvContent = 'student_number,first_name,last_name,email,grade_level,section,gender,date_of_birth\n' +
-                      '2024001,Juan,Dela Cruz,juan.delacruz@example.com,7,Section A,Male,2010-01-15\n' +
-                      '2024002,Maria,Santos,maria.santos@example.com,7,Section A,Female,2010-03-20\n' +
-                      '2024003,Pedro,Reyes,pedro.reyes@example.com,8,Section B,Male,2009-05-10';
-    
+    const csvContent = 'student_number,first_name,middle_name,last_name,birth_date,gender,grade_level,section_name,email,phone,emergency_contact_name,emergency_contact_phone\n' +
+                      '2024001,Juan,,Dela Cruz,2010-01-15,M,Grade 7,Genesis,juan.delacruz@email.com,09171234567,Maria Dela Cruz,09181234567\n' +
+                      '2024002,Maria,Santos,Reyes,2010-03-20,F,Grade 7,Isaiah,maria.reyes@email.com,09171234568,Pedro Reyes,09181234568\n' +
+                      '2024003,Pedro,,Santos,2009-05-10,M,Grade 8,Charity,,,Jose Santos,09181234569';
+
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');

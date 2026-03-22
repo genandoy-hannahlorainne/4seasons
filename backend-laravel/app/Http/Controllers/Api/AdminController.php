@@ -1820,7 +1820,8 @@ class AdminController extends BaseController
                         'current_grade_level_id' => $section->grade_level_id,
                         'current_section_id' => $section->id,
                         'current_school_year_id' => $currentSchoolYear->id,
-                        'emergency_contact_name' => $studentData['emergency_contact_name'] ?? null,
+                        'phone' => $studentData['phone'] ?? null,
+                        'emergency_contact' => $studentData['emergency_contact_name'] ?? null,
                         'emergency_contact_phone' => $studentData['emergency_contact_phone'] ?? null,
                         'is_active' => true
                     ]);

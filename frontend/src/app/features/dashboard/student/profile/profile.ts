@@ -56,8 +56,8 @@ export class StudentProfileComponent implements OnInit {
       section: ['', Validators.required],
       address: ['', Validators.required],
       bloodType: [''],
-      contactNumber: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]]
+      contactNumber: [''],
+      email: ['', [Validators.email]]
     });
 
     this.changePasswordForm = this.fb.group({

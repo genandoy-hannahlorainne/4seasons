@@ -974,9 +974,9 @@ class StudentController extends BaseController
                 'weight_kg' => $student->weight_kg,
                 'bmi' => $student->bmi,
                 'bmi_category' => $student->bmi_category,
-                // Phone from student record (set by admin at creation, editable by student)
-                'phone' => $student->phone,
-                'contact_number' => $student->phone, // alias for frontend
+                // Phone: prefer students.phone, fallback to users.phone
+                'phone' => $student->phone ?? ($student->user ? $student->user->phone : null),
+                'contact_number' => $student->phone ?? ($student->user ? $student->user->phone : null),
                 'email' => $student->user ? $student->user->email : null,
             ],
             'medical_history' => $student->medicalHistory,
