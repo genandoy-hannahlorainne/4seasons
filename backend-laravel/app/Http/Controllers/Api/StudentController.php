@@ -19,7 +19,7 @@ class StudentController extends BaseController
         try {
             $query = Student::with(['user', 'medicalHistory', 'allergies'])
                 ->where('is_active', true);
-            
+
             // Add search functionality
             if ($request->has('search')) {
                 $search = $request->get('search');
@@ -29,23 +29,23 @@ class StudentController extends BaseController
                     ->orWhere('student_number', 'like', "%{$search}%");
                 });
             }
-            
+
             // Add grade level filter
             if ($request->has('grade_level')) {
                 $query->where('grade_level', $request->get('grade_level'));
             }
-            
+
             // Add section filter
             if ($request->has('section')) {
                 $query->where('section', $request->get('section'));
             }
-            
+
             $students = $query->orderBy('last_name')
                             ->orderBy('first_name')
                             ->paginate(20);
-            
+
             return $this->sendResponse($students, 'Students retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve students', [
                 'error' => $e->getMessage()
@@ -227,7 +227,7 @@ class StudentController extends BaseController
             $recentVisits = $student->medicalVisits()
                                   ->where('visit_datetime', '>=', now()->subDays(30))
                                   ->count();
-            
+
             // Get the last visit
             $lastVisit = $student->medicalVisits()
                                ->orderBy('visit_datetime', 'desc')
@@ -468,14 +468,14 @@ class StudentController extends BaseController
     public function search(Request $request)
     {
         try {
-            $query = $request->get('q', '');
-            
+            $query = $request->get('query', $request->get('q', ''));
+
             if (strlen($query) < 2) {
                 return $this->sendResponse([
                     'students' => []
                 ], 'Search query too short');
             }
-            
+
             $students = Student::with(['currentSection.gradeLevel', 'allergies'])
                              ->select('students.*')
                              ->selectSub(function($sub) {
@@ -495,7 +495,7 @@ class StudentController extends BaseController
                              })
                              ->limit(10)
                              ->get();
-            
+
             $formattedStudents = $students->map(function($student) {
                 $gradeData = $this->resolveGradeSectionData($student);
                 $allergyList = $student->allergies
@@ -503,7 +503,7 @@ class StudentController extends BaseController
                         return $allergy->allergy_name ?? $allergy->allergy_text;
                     })->filter()->values()->toArray()
                     : [];
-                
+
                 return [
                     'student_id' => $student->student_id,
                     'student_number' => $student->student_number,
@@ -520,12 +520,12 @@ class StudentController extends BaseController
                     'avatar' => $student->gender === 'Female' ? 'assets/user-female.png' : 'assets/user-male.png'
                 ];
             });
-            
+
             return $this->sendResponse([
                 'success' => true,
                 'students' => $formattedStudents
             ], 'Students found successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to search students', [
                 'error' => $e->getMessage()
@@ -541,11 +541,11 @@ class StudentController extends BaseController
         try {
             $studentId = $request->get('student_id');
             $studentNumber = $request->get('student_number');
-            
+
             if (!$studentId && !$studentNumber) {
                 return $this->sendError('Student ID or student number is required', [], 400);
             }
-            
+
             $query = Student::with(['currentSection.gradeLevel', 'allergies', 'medicalHistory', 'medicalVisits' => function($q) {
                 $q->where('visit_type', 'emergency')
                   ->where('visit_datetime', '>=', now()->subDays(30))
@@ -559,31 +559,31 @@ class StudentController extends BaseController
                     ->whereColumn('sp.student_id', 'students.student_id')
                     ->limit(1);
             }, 'parent_phone');
-            
+
             if ($studentId) {
                 $query->where('student_id', $studentId);
             } else {
                 $query->where('student_number', $studentNumber);
             }
-            
+
             $student = $query->where('is_active', true)
                            ->whereNull('deleted_at')
                            ->first();
-            
+
             if (!$student) {
                 return $this->sendError('Student not found', [], 404);
             }
-            
+
             // Calculate clearance status
             $clearanceStatus = $this->calculateClearanceStatus($student);
-            
+
             $gradeData = $this->resolveGradeSectionData($student);
             $allergyList = $student->allergies
                 ? $student->allergies->map(function($allergy) {
                     return $allergy->allergy_name ?? $allergy->allergy_text;
                 })->filter()->values()->toArray()
                 : [];
-            
+
             $studentData = [
                 'student_id' => $student->student_id,
                 'student_number' => $student->student_number,
@@ -604,12 +604,12 @@ class StudentController extends BaseController
                     'phone' => $student->emergency_contact_phone
                 ]
             ];
-            
+
             return $this->sendResponse([
                 'success' => true,
                 'student' => $studentData
             ], 'Student found successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to get student information', [
                 'error' => $e->getMessage()
@@ -645,7 +645,7 @@ class StudentController extends BaseController
         if ($student->medicalHistory) {
             $chronicConditions = ['asthma', 'diabetes', 'heart condition', 'epilepsy'];
             $medicalHistory = strtolower($student->medicalHistory->medical_history ?? '');
-            
+
             foreach ($chronicConditions as $condition) {
                 if (strpos($medicalHistory, $condition) !== false) {
                     $warnings[] = ucfirst($condition);
@@ -671,7 +671,7 @@ class StudentController extends BaseController
     {
         try {
             $query = Student::with([
-                'currentSection.gradeLevel', 
+                'currentSection.gradeLevel',
                 'allergies',
                 'medicalVisits' => function($q) {
                     $q->orderBy('visit_datetime', 'desc')->limit(1);
@@ -679,7 +679,7 @@ class StudentController extends BaseController
             ])
             ->where('is_active', true)
             ->whereNull('deleted_at');
-            
+
             // Filter by grade level
             if ($request->has('grade') && $request->grade !== '') {
                 $gradeParam = (string)$request->grade;
@@ -691,7 +691,7 @@ class StudentController extends BaseController
                       ->orWhere('grade_level', 'LIKE', "Grade {$gradeParam}%");
                 });
             }
-            
+
             // Filter by section name
             if ($request->has('section') && $request->section !== '') {
                 $sectionParam = $request->section;
@@ -701,7 +701,7 @@ class StudentController extends BaseController
                     })->orWhere('section', $sectionParam);
                 });
             }
-            
+
             // Search by name or student number
             if ($request->has('search') && $request->search !== '') {
                 $search = $request->search;
@@ -712,16 +712,16 @@ class StudentController extends BaseController
                       ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
                 });
             }
-            
+
             $students = $query->orderBy('first_name')
                             ->orderBy('last_name')
                             ->get();
-            
+
             $formattedStudents = $students->map(function($student) {
                 $gradeData = $this->resolveGradeSectionData($student);
-                
+
                 $lastVisit = $student->medicalVisits->first();
-                
+
                 return [
                     'id' => $student->student_id,
                     'studentNumber' => $student->student_number,
@@ -733,13 +733,13 @@ class StudentController extends BaseController
                     'avatar' => $student->gender === 'Female' ? 'assets/user-female.png' : 'assets/user-male.png'
                 ];
             });
-            
+
             return $this->sendResponse([
                 'success' => true,
                 'students' => $formattedStudents,
                 'total' => $formattedStudents->count()
             ], 'Students retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve students', [
                 'error' => $e->getMessage()
@@ -889,9 +889,10 @@ class StudentController extends BaseController
 
     /**
      * Get medical data by user_id (for frontend compatibility)
-     */ 
+     */
     public function getMedicalDataByUserId(Request $request)
     {
+        try {
         $userId = $request->get('user_id');
         if (!$userId) {
             return response()->json([
@@ -900,7 +901,7 @@ class StudentController extends BaseController
                 'error' => 'user_id is required'
             ], 400);
         }
-        
+
         $student = Student::where('user_id', $userId)->first();
         if (!$student) {
             return response()->json([
@@ -909,7 +910,7 @@ class StudentController extends BaseController
                 'error' => 'Student not found'
             ], 404);
         }
-        
+
         // Load the medical history and other relationships
         $student->load([
             'user', // Add user relationship to get phone number
@@ -923,7 +924,7 @@ class StudentController extends BaseController
                       ->limit(20);
             }
         ]);
-        
+
         $resolvedAdviser = $student->currentAdviser ?: ($student->currentSection ? $student->currentSection->adviser : null);
 
         // Calculate visit statistics
@@ -931,7 +932,7 @@ class StudentController extends BaseController
         $recentVisits = $student->medicalVisits()
                               ->where('visit_datetime', '>=', now()->subDays(30))
                               ->count();
-        
+
         // Get the last visit
         $lastVisit = $student->medicalVisits()
                            ->orderBy('visit_datetime', 'desc')
@@ -942,10 +943,10 @@ class StudentController extends BaseController
         if (!$lastVisit) {
             // No visits ever - streak since enrollment or a reasonable start date
             $startDate = $student->created_at ?? now()->subDays(365);
-            $currentStreak = now()->diffInDays($startDate);
+            $currentStreak = max(0, (int) now()->diffInDays($startDate, false));
         } else {
             // Days since last visit
-            $currentStreak = now()->diffInDays($lastVisit->visit_datetime);
+            $currentStreak = max(0, (int) now()->diffInDays($lastVisit->visit_datetime, false));
         }
 
         // Load badge metadata and calculate badge status
@@ -995,12 +996,19 @@ class StudentController extends BaseController
             ],
             'badges' => $badgeData['badges']
         ];
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Student medical data retrieved successfully',
             'data' => $medicalData
         ]);
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve medical data', [
+                'error' => $e->getMessage(),
+                'file'  => basename($e->getFile()),
+                'line'  => $e->getLine()
+            ], 500);
+        }
     }
 
     /**
@@ -1022,7 +1030,7 @@ class StudentController extends BaseController
             $badgeStatus = $badges->map(function ($badge) use ($currentStreak) {
                 $required = $badge['required_streak_days'];
                 $isUnlocked = $currentStreak >= $required;
-                
+
                 return [
                     'badge_key' => $badge['badge_key'],
                     'badge_name' => $badge['badge_name'],

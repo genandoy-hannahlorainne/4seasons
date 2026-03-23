@@ -47,17 +47,17 @@ class AdminController extends BaseController
 
             // Get BMI statistics for health insights
             $bmiStats = DB::select("
-                SELECT 
+                SELECT
                     COUNT(*) as total_students_with_bmi,
                     AVG(COALESCE(vl.latest_bmi, s.bmi)) as average_bmi,
                     SUM(CASE WHEN COALESCE(vl.latest_bmi, s.bmi) >= 25 THEN 1 ELSE 0 END) as overweight_obese_count
                 FROM students s
                 LEFT JOIN (
-                    SELECT 
+                    SELECT
                         ranked.student_id,
                         ranked.bmi as latest_bmi
                     FROM (
-                        SELECT 
+                        SELECT
                             mv.student_id,
                             v.bmi,
                             ROW_NUMBER() OVER (
@@ -119,7 +119,7 @@ class AdminController extends BaseController
             }
 
             $adminGradeLevel = (int)$gradeLevel;
-            
+
             // Map admin grade levels to actual grade numbers
             // Admin uses 1-3 for Grade 7-9, 4-6 for Grade 10-12
             $gradeMapping = [
@@ -135,7 +135,7 @@ class AdminController extends BaseController
 
             // Get the grade level
             $gradeLevel = GradeLevel::where('level_number', $actualGradeNumber)->first();
-            
+
             if (!$gradeLevel) {
                 return $this->sendError('Grade level not found');
             }
@@ -178,7 +178,7 @@ class AdminController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'student_number' => 'required|string|unique:students,student_number',
+                'student_number' => ['required', 'string', 'unique:students,student_number', 'digits:12', 'regex:/^13/'],
                 'first_name' => 'required|string|max:80',
                 'last_name' => 'required|string|max:80',
                 'middle_name' => 'nullable|string|max:80',
@@ -272,7 +272,7 @@ class AdminController extends BaseController
                         'email' => $request->email,
                         'temp_password' => $tempPassword
                     ];
-                    
+
                     Mail::to($request->email)->send(new UserAccountCreated($emailData, $tempPassword, 'Student'));
                 } catch (\Exception $e) {
                     // Log email error but don't fail the student creation
@@ -630,7 +630,7 @@ class AdminController extends BaseController
             // Get BMI data per student (latest vitals BMI, fallback to student BMI fields)
             // Then aggregate by grade level to avoid double-counting students with multiple visits
             $bmiStats = DB::select("
-                SELECT 
+                SELECT
                     COALESCE(b.grade_level, 'Unknown') as grade_level,
                     COUNT(*) as total_students,
                     SUM(CASE WHEN LOWER(COALESCE(b.bmi_category, '')) = 'underweight' THEN 1 ELSE 0 END) as underweight_count,
@@ -639,11 +639,11 @@ class AdminController extends BaseController
                     SUM(CASE WHEN LOWER(COALESCE(b.bmi_category, '')) = 'obese' THEN 1 ELSE 0 END) as obese_count,
                     AVG(b.bmi) as average_bmi
                 FROM (
-                    SELECT 
+                    SELECT
                         s.student_id,
                         s.grade_level,
                         COALESCE(vl.latest_bmi, s.bmi) as bmi,
-                        CASE 
+                        CASE
                             WHEN COALESCE(vl.latest_bmi, s.bmi) < 18.5 THEN 'Underweight'
                             WHEN COALESCE(vl.latest_bmi, s.bmi) >= 18.5 AND COALESCE(vl.latest_bmi, s.bmi) < 25 THEN 'Normal'
                             WHEN COALESCE(vl.latest_bmi, s.bmi) >= 25 AND COALESCE(vl.latest_bmi, s.bmi) < 30 THEN 'Overweight'
@@ -652,11 +652,11 @@ class AdminController extends BaseController
                         END as bmi_category
                     FROM students s
                     LEFT JOIN (
-                        SELECT 
+                        SELECT
                             ranked.student_id,
                             ranked.bmi as latest_bmi
                         FROM (
-                            SELECT 
+                            SELECT
                                 mv.student_id,
                                 v.bmi,
                                 ROW_NUMBER() OVER (
@@ -689,7 +689,7 @@ class AdminController extends BaseController
                 $normal = (int)$grade->normal_count;
                 $overweight = (int)$grade->overweight_count;
                 $obese = (int)$grade->obese_count;
-                
+
                 return [
                     'grade_name' => $formattedGradeLevel,
                     'grade_level' => $formattedGradeLevel,
@@ -755,17 +755,17 @@ class AdminController extends BaseController
                     'overweight' => $grade['overweight_percentage'],
                     'obese' => $grade['obese_percentage']
                 ];
-                
+
                 $highestRisk = 'normal';
                 $highestPercentage = $grade['normal_percentage'];
-                
+
                 foreach ($risks as $riskType => $percentage) {
                     if ($percentage > $highestPercentage) {
                         $highestRisk = $riskType;
                         $highestPercentage = $percentage;
                     }
                 }
-                
+
                 return [
                     'grade_name' => $grade['grade_name'],
                     'grade_level' => $grade['grade_level'],
@@ -777,11 +777,11 @@ class AdminController extends BaseController
 
             // Get recent BMI update trends (last 30 days)
             $recentTrends = DB::select("
-                SELECT 
+                SELECT
                     DATE(v.recorded_at) as update_date,
                     COUNT(*) as updates_count,
                     SUM(CASE WHEN v.bmi >= 25 AND v.bmi < 30 THEN 1 ELSE 0 END) as new_overweight,
-                    SUM(CASE WHEN v.bmi >= 30 THEN 1 ELSE 0 END) as new_obese  
+                    SUM(CASE WHEN v.bmi >= 30 THEN 1 ELSE 0 END) as new_obese
                 FROM vitals v
                 WHERE v.recorded_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
                 AND v.bmi IS NOT NULL
@@ -844,7 +844,7 @@ class AdminController extends BaseController
             $reportType = $request->get('type', 'summary');
             $startDate = $request->get('start_date', date('Y-m-01'));
             $endDate = $request->get('end_date', date('Y-m-d'));
-            
+
             switch ($reportType) {
                 case 'summary':
                     return $this->getSummaryReport();
@@ -859,7 +859,7 @@ class AdminController extends BaseController
                 default:
                     return $this->sendError('Invalid report type');
             }
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to generate report', $e->getMessage());
         }
@@ -1080,7 +1080,7 @@ class AdminController extends BaseController
             'total_visits' => DB::table('medical_visits')->count(),
             'total_allergies' => DB::table('allergies')->count()
         ];
-        
+
         return $this->sendResponse($summary, 'Summary report retrieved successfully');
     }
 
@@ -1108,7 +1108,7 @@ class AdminController extends BaseController
                     'inactive' => (int)$row->inactive
                 ];
             });
-        
+
         return $this->sendResponse($userStats, 'Users report retrieved successfully');
     }
 
@@ -1136,7 +1136,7 @@ class AdminController extends BaseController
                     'staff_involved' => (int)$row->staff_involved
                 ];
             });
-        
+
         return $this->sendResponse($medicalStats, 'Medical report retrieved successfully');
     }
 
@@ -1163,7 +1163,7 @@ class AdminController extends BaseController
                     'count' => (int)$row->count
                 ];
             });
-        
+
         return $this->sendResponse($registrationStats, 'Registration report retrieved successfully');
     }
 
@@ -1189,7 +1189,7 @@ class AdminController extends BaseController
                     'count' => (int)$row->count
                 ];
             });
-        
+
         return $this->sendResponse($allergyStats, 'Allergies report retrieved successfully');
     }
 
@@ -1202,18 +1202,18 @@ class AdminController extends BaseController
         $lowercase = 'abcdefghijklmnopqrstuvwxyz';
         $numbers = '0123456789';
         $symbols = '%#@&*';
-        
+
         $password = '';
         $password .= $uppercase[rand(0, strlen($uppercase) - 1)];
         $password .= $lowercase[rand(0, strlen($lowercase) - 1)];
         $password .= $numbers[rand(0, strlen($numbers) - 1)];
         $password .= $symbols[rand(0, strlen($symbols) - 1)];
-        
+
         $allChars = $uppercase . $lowercase . $numbers;
         for ($i = 0; $i < 4; $i++) {
             $password .= $allChars[rand(0, strlen($allChars) - 1)];
         }
-        
+
         return str_shuffle($password);
     }
 
@@ -1483,7 +1483,7 @@ class AdminController extends BaseController
     private function createStudentUser(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'student_number' => 'required|string|unique:students,student_number',
+            'student_number' => ['required', 'string', 'unique:students,student_number', 'digits:12', 'regex:/^13/'],
             'first_name'     => 'required|string|max:80',
             'last_name'      => 'required|string|max:80',
             'middle_name'    => 'nullable|string|max:80',
@@ -1695,7 +1695,7 @@ class AdminController extends BaseController
                     'temp_password' => $tempPassword,
                     'role' => ucfirst(str_replace('_', ' ', $input['role']))
                 ];
-                
+
                 if (!empty($input['email'])) {
                     Mail::to($input['email'])->send(new UserAccountCreated($emailData, $tempPassword, ucfirst(str_replace('_', ' ', $input['role']))));
                 }
@@ -1741,7 +1741,7 @@ class AdminController extends BaseController
 
             // Expected CSV format: student_number,first_name,middle_name,last_name,birth_date,gender,grade_level,section_name,email,phone,emergency_contact_name,emergency_contact_phone
             $expectedHeaders = ['student_number', 'first_name', 'middle_name', 'last_name', 'birth_date', 'gender', 'grade_level', 'section_name', 'email', 'phone', 'emergency_contact_name', 'emergency_contact_phone'];
-            
+
             if (count(array_intersect($header, $expectedHeaders)) < 8) {
                 return $this->sendError('Invalid CSV format. Required columns: ' . implode(', ', $expectedHeaders));
             }
@@ -1764,7 +1764,7 @@ class AdminController extends BaseController
             foreach ($csvData as $rowIndex => $row) {
                 try {
                     $studentData = array_combine($header, $row);
-                    
+
                     // Validate required fields
                     if (empty($studentData['student_number']) || empty($studentData['first_name']) || empty($studentData['last_name'])) {
                         $results['errors'][] = "Row " . ($rowIndex + 2) . ": Missing required fields";
@@ -1975,7 +1975,7 @@ class AdminController extends BaseController
             }
 
             $visitId = $request->visit_id;
-            
+
             // Get visit and student information
             $visit = \App\Models\MedicalVisit::with(['student'])->find($visitId);
             if (!$visit || !$visit->student) {
@@ -1984,14 +1984,14 @@ class AdminController extends BaseController
 
             $student = $visit->student;
             $parentPhone = $student->emergency_contact_phone;
-            
+
             if (!$parentPhone) {
                 return $this->sendError('Parent contact number not available');
             }
 
             // Create SMS message
             $message = "PDMHS Medical Alert: Your child {$student->full_name} ({$student->student_number}) had a medical visit today. Please contact the school clinic for details.";
-            
+
             // Mock SMS sending - implement with real SMS service
             $smsResult = [
                 'success' => true,
@@ -1999,7 +1999,7 @@ class AdminController extends BaseController
                 'message' => $message,
                 'sent_at' => now()->toISOString()
             ];
-            
+
             return $this->sendResponse($smsResult, 'SMS sent successfully');
         } catch (\Exception $e) {
             return $this->sendError('Failed to send SMS', $e->getMessage());
@@ -2013,7 +2013,7 @@ class AdminController extends BaseController
     {
         try {
             $limit = $request->get('limit', 10);
-            
+
             // Mock activity logs - implement with real activity logging
             $activities = [
                 [
@@ -2031,7 +2031,7 @@ class AdminController extends BaseController
                     'created_at' => now()->subMinutes(15)->toISOString()
                 ]
             ];
-            
+
             return $this->sendResponse(['activities' => array_slice($activities, 0, $limit)], 'Activity logs retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve activity logs', $e->getMessage());
@@ -2224,9 +2224,9 @@ class AdminController extends BaseController
                     ]
                 ]
             ];
-            
+
             return $this->sendResponse(['recommendations' => $recommendations], 'Health recommendations retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve health recommendations', $e->getMessage());
         }
@@ -2239,11 +2239,11 @@ class AdminController extends BaseController
     {
         try {
             $months = $request->get('months', 6);
-            
+
             // Mock BMI trends data - implement with real data analysis
             $trends = [];
             $categories = ['Underweight', 'Normal', 'Overweight', 'Obese'];
-            
+
             for ($i = $months - 1; $i >= 0; $i--) {
                 $date = now()->subMonths($i);
                 $monthData = [
@@ -2252,7 +2252,7 @@ class AdminController extends BaseController
                     'total_students' => 300,
                     'categories' => []
                 ];
-                
+
                 foreach ($categories as $category) {
                     $percentage = match($category) {
                         'Underweight' => rand(10, 20),
@@ -2260,17 +2260,17 @@ class AdminController extends BaseController
                         'Overweight' => rand(15, 25),
                         'Obese' => rand(5, 15)
                     };
-                    
+
                     $monthData['categories'][] = [
                         'category' => $category,
                         'count' => intval($monthData['total_students'] * $percentage / 100),
                         'percentage' => $percentage
                     ];
                 }
-                
+
                 $trends[] = $monthData;
             }
-            
+
             // Calculate overall trends
             $overallTrend = [
                 'direction' => 'stable',
@@ -2281,13 +2281,13 @@ class AdminController extends BaseController
                     'Nutrition programs showing positive impact'
                 ]
             ];
-            
+
             return $this->sendResponse([
                 'trends' => $trends,
                 'overall_trend' => $overallTrend,
                 'period_months' => $months
             ], 'BMI trends retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve BMI trends', $e->getMessage());
         }
@@ -2314,7 +2314,7 @@ class AdminController extends BaseController
         try {
             // For now, just return success
             // In a real implementation, you would validate and save settings to database
-            
+
             $validator = Validator::make($request->all(), [
                 'section' => 'required|string|in:general,notifications,security,medical',
                 'settings' => 'required|array'

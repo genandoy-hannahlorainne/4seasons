@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('medical_history', function (Blueprint $table) {
-            $table->bigInteger('history_id', false, true)->primary();
+            $table->bigInteger('history_id', true, true)->primary();
             $table->integer('student_id', false, true);
             $table->boolean('condition_asthma')->default(false);
             $table->boolean('condition_diabetes')->default(false);
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-            
+
             $table->foreign('student_id')->references('student_id')->on('students');
             $table->unique(['student_id']);
             $table->index(['condition_asthma']);
