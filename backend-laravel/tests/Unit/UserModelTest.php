@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use App\Models\User;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -11,31 +11,39 @@ class UserModelTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_has_role_relationship()
+    protected function setUp(): void
     {
-        $role = Role::factory()->create(['name' => 'admin']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        parent::setUp();
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+    }
+
+    public function test_user_has_role_relationship(): void
+    {
+        $role = Role::where('role_name', 'Admin')->first();
+        $user = User::factory()->create(['role_id' => $role->role_id]);
 
         $this->assertInstanceOf(Role::class, $user->role);
-        $this->assertEquals('admin', $user->role->name);
+        $this->assertEquals('Admin', $user->role->role_name);
     }
 
-    public function test_user_can_check_if_has_role()
+    public function test_user_full_name_is_stored_correctly(): void
     {
-        $role = Role::factory()->create(['name' => 'admin']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        $user = User::factory()->create(['full_name' => 'Juan dela Cruz']);
 
-        $this->assertTrue($user->hasRole('admin'));
-        $this->assertFalse($user->hasRole('student'));
+        $this->assertEquals('Juan dela Cruz', $user->full_name);
     }
 
-    public function test_user_full_name_attribute()
+    public function test_user_password_hash_is_hidden(): void
     {
-        $user = User::factory()->create([
-            'first_name' => 'John',
-            'last_name' => 'Doe'
-        ]);
+        $user = User::factory()->create();
 
-        $this->assertEquals('John Doe', $user->full_name);
+        $this->assertArrayNotHasKey('password_hash', $user->toArray());
+    }
+
+    public function test_user_is_active_by_default(): void
+    {
+        $user = User::factory()->create();
+
+        $this->assertTrue($user->is_active);
     }
 }

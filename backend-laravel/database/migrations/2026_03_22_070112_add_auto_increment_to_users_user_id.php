@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -11,6 +12,7 @@ return new class extends Migration
         'students'           => 'students_user_id_foreign',
         'emergency_drills'   => 'emergency_drills_created_by_foreign',
         'drill_scans'        => 'drill_scans_scanned_by_foreign',
+        'sections'           => 'sections_adviser_id_foreign',
     ];
 
     // drill_participants has two FKs on user_id
@@ -19,14 +21,29 @@ return new class extends Migration
         'drill_participants_rescuer_id_foreign',
     ];
 
+    private function dropForeignKeyIfExists(string $table, string $fk): void
+    {
+        $exists = DB::select("
+            SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = ?
+              AND CONSTRAINT_NAME = ?
+              AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+        ", [$table, $fk]);
+
+        if (!empty($exists)) {
+            DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$fk}`");
+        }
+    }
+
     public function up(): void
     {
         // Drop all foreign keys referencing users.user_id
         foreach ($this->foreignKeys as $table => $fk) {
-            DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$fk}`");
+            $this->dropForeignKeyIfExists($table, $fk);
         }
         foreach ($this->drillParticipantFKs as $fk) {
-            DB::statement("ALTER TABLE `drill_participants` DROP FOREIGN KEY `{$fk}`");
+            $this->dropForeignKeyIfExists('drill_participants', $fk);
         }
 
         // Add AUTO_INCREMENT
@@ -34,7 +51,12 @@ return new class extends Migration
 
         // Restore foreign keys
         foreach ($this->foreignKeys as $table => $fk) {
-            $col = ($table === 'emergency_drills') ? 'created_by' : (($table === 'drill_scans') ? 'scanned_by' : 'user_id');
+            $col = match($table) {
+                'emergency_drills' => 'created_by',
+                'drill_scans'      => 'scanned_by',
+                'sections'         => 'adviser_id',
+                default            => 'user_id',
+            };
             DB::statement("ALTER TABLE `{$table}` ADD CONSTRAINT `{$fk}` FOREIGN KEY (`{$col}`) REFERENCES `users` (`user_id`)");
         }
         DB::statement("ALTER TABLE `drill_participants` ADD CONSTRAINT `drill_participants_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)");
@@ -45,10 +67,10 @@ return new class extends Migration
     {
         // Drop all foreign keys
         foreach ($this->foreignKeys as $table => $fk) {
-            DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$fk}`");
+            $this->dropForeignKeyIfExists($table, $fk);
         }
         foreach ($this->drillParticipantFKs as $fk) {
-            DB::statement("ALTER TABLE `drill_participants` DROP FOREIGN KEY `{$fk}`");
+            $this->dropForeignKeyIfExists('drill_participants', $fk);
         }
 
         // Remove AUTO_INCREMENT
@@ -56,7 +78,12 @@ return new class extends Migration
 
         // Restore foreign keys
         foreach ($this->foreignKeys as $table => $fk) {
-            $col = ($table === 'emergency_drills') ? 'created_by' : (($table === 'drill_scans') ? 'scanned_by' : 'user_id');
+            $col = match($table) {
+                'emergency_drills' => 'created_by',
+                'drill_scans'      => 'scanned_by',
+                'sections'         => 'adviser_id',
+                default            => 'user_id',
+            };
             DB::statement("ALTER TABLE `{$table}` ADD CONSTRAINT `{$fk}` FOREIGN KEY (`{$col}`) REFERENCES `users` (`user_id`)");
         }
         DB::statement("ALTER TABLE `drill_participants` ADD CONSTRAINT `drill_participants_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)");
