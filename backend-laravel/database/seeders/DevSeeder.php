@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Hash;
  *
  * | Role         | Username          |
  * |--------------|-------------------|
+ * | Admin        | dev.admin         |
+ * | Adviser      | dev.adviser       |
  * | Clinic Staff | dev.clinicstaff   |
  * | Student      | dev.student       |
  */
@@ -28,6 +30,18 @@ class DevSeeder extends Seeder
         $roles = DB::table('roles')->pluck('role_id', 'role_name');
 
         $accounts = [
+            [
+                'role'     => 'Admin',
+                'username' => 'dev.admin',
+                'email'    => 'dev.admin@pdmhs.edu.ph',
+                'name'     => 'Dev Admin',
+            ],
+            [
+                'role'     => 'Adviser',
+                'username' => 'dev.adviser',
+                'email'    => 'dev.adviser@pdmhs.edu.ph',
+                'name'     => 'Dev Adviser',
+            ],
             [
                 'role'     => 'Clinic Staff',
                 'username' => 'dev.clinicstaff',
@@ -81,6 +95,8 @@ class DevSeeder extends Seeder
     private function createRoleProfile(string $role, int $userId, string $username): void
     {
         match ($role) {
+            'Admin' => null, // no separate profile table for admin
+
             'Adviser' => DB::table('advisers')->insert([
                 'adviser_id'  => (DB::table('advisers')->max('adviser_id') ?? 0) + 1,
                 'user_id'     => $userId,
