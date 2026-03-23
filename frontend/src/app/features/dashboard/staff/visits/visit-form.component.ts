@@ -21,8 +21,8 @@ import { AuthService } from '../../../../core/services/auth.service';
       <!-- QR Scanner Modal -->
       <div class="modal-overlay" *ngIf="showScanner" (click)="closeScanner()">
         <div class="modal-content" (click)="$event.stopPropagation()">
-          <app-qr-scanner 
-            (scanned)="onQrScanned($event)" 
+          <app-qr-scanner
+            (scanned)="onQrScanned($event)"
             (cancelled)="closeScanner()">
           </app-qr-scanner>
         </div>
@@ -32,7 +32,7 @@ import { AuthService } from '../../../../core/services/auth.service';
         <!-- Student Selection -->
         <div class="form-section">
           <h3>Student Information</h3>
-          
+
           <!-- Scan QR Button -->
           <div class="scan-section" *ngIf="!selectedStudent">
             <button type="button" class="btn btn-scan" (click)="openScanner()">
@@ -43,9 +43,9 @@ import { AuthService } from '../../../../core/services/auth.service';
 
           <div class="form-group" *ngIf="!selectedStudent">
             <label>Search Student</label>
-            <input 
-              type="text" 
-              [(ngModel)]="studentSearch" 
+            <input
+              type="text"
+              [(ngModel)]="studentSearch"
               name="studentSearch"
               placeholder="Enter student number or name"
               class="form-control"
@@ -67,7 +67,7 @@ import { AuthService } from '../../../../core/services/auth.service';
             <div class="student-info">
               <span class="student-name">{{ selectedStudent.full_name }}</span>
               <span class="student-details">{{ selectedStudent.student_number }} | {{ selectedStudent.grade_section }}</span>
-              
+
               <!-- Medical Clearance Status -->
               <div class="clearance-status" *ngIf="selectedStudent.clearance">
                 <div class="clearance-badge" [ngClass]="'clearance-' + selectedStudent.clearance.level">
@@ -82,7 +82,7 @@ import { AuthService } from '../../../../core/services/auth.service';
                   <span *ngFor="let warning of selectedStudent.clearance.warnings" class="warning-tag">{{ warning }}</span>
                 </div>
               </div>
-              
+
               <div class="student-allergies" *ngIf="selectedStudent.allergies && selectedStudent.allergies.length > 0">
                 <span class="allergy-label">⚠️ Allergies:</span>
                 <span class="allergy-tags">
@@ -92,7 +92,7 @@ import { AuthService } from '../../../../core/services/auth.service';
             </div>
             <button type="button" class="btn-clear" (click)="clearStudent()">×</button>
           </div>
-          
+
           <!-- Clearance Alert for Off-Campus Activities -->
           <div class="clearance-alert" *ngIf="selectedStudent && selectedStudent.clearance && selectedStudent.clearance.level === 'red'">
             <div class="alert-header">
@@ -346,7 +346,7 @@ import { AuthService } from '../../../../core/services/auth.service';
       .student-info { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
       .student-name { font-weight: 600; color: #2c3e50; font-size: 1.1rem; }
       .student-details { font-size: 0.9rem; color: #7f8c8d; }
-      
+
       .student-allergies {
         margin-top: 0.5rem;
         .allergy-label { color: #856404; font-weight: 500; font-size: 0.85rem; }
@@ -372,7 +372,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
     .clearance-status {
       margin-top: 0.5rem;
-      
+
       .clearance-badge {
         display: inline-flex;
         align-items: center;
@@ -381,32 +381,32 @@ import { AuthService } from '../../../../core/services/auth.service';
         border-radius: 6px;
         font-size: 0.85rem;
         font-weight: 500;
-        
+
         &.clearance-green {
           background: #d4edda;
           color: #155724;
           border: 1px solid #c3e6cb;
         }
-        
+
         &.clearance-yellow {
           background: #fff3cd;
           color: #856404;
           border: 1px solid #ffeaa7;
         }
-        
+
         &.clearance-red {
           background: #f8d7da;
           color: #721c24;
           border: 1px solid #f5c6cb;
         }
       }
-      
+
       .clearance-warnings {
         margin-top: 0.5rem;
         display: flex;
         flex-wrap: wrap;
         gap: 0.25rem;
-        
+
         .warning-tag {
           background: #fff3cd;
           color: #856404;
@@ -424,26 +424,26 @@ import { AuthService } from '../../../../core/services/auth.service';
       border-radius: 8px;
       padding: 1rem;
       margin-top: 1rem;
-      
+
       .alert-header {
         display: flex;
         align-items: center;
         gap: 0.5rem;
         margin-bottom: 0.75rem;
-        
+
         .alert-icon { font-size: 1.2rem; }
-        .alert-title { 
-          font-weight: 700; 
-          color: #721c24; 
+        .alert-title {
+          font-weight: 700;
+          color: #721c24;
           font-size: 0.95rem;
         }
       }
-      
+
       .alert-body {
         color: #721c24;
-        
+
         p { margin: 0 0 0.5rem; font-size: 0.9rem; }
-        
+
         .emergency-contact {
           margin-top: 0.75rem;
           padding: 0.5rem;
@@ -461,13 +461,13 @@ import { AuthService } from '../../../../core/services/auth.service';
         gap: 0.5rem;
         cursor: pointer;
 
-        input[type="checkbox"] { 
-          width: 18px; 
+        input[type="checkbox"] {
+          width: 18px;
           height: 18px;
           &:disabled { cursor: not-allowed; opacity: 0.6; }
         }
         span { color: #2c3e50; }
-        
+
         .auto-checked-badge {
           background: #dc3545;
           color: white;
@@ -485,21 +485,21 @@ import { AuthService } from '../../../../core/services/auth.service';
         background: #d4edda;
         border-radius: 4px;
         small { color: #155724; }
-        
+
         &.warning {
           background: #fff3cd;
           small { color: #856404; }
         }
       }
-      
+
       .emergency-notice {
         margin-top: 0.5rem;
         padding: 0.75rem;
         background: #f8d7da;
         border: 1px solid #f5c6cb;
         border-radius: 4px;
-        small { 
-          color: #721c24; 
+        small {
+          color: #721c24;
           font-weight: 500;
         }
       }
@@ -688,8 +688,8 @@ export class VisitFormComponent implements OnInit {
 
     // Debounce - wait 300ms before making API call
     this.searchTimeout = setTimeout(() => {
-      const searchUrl = `${environment.apiUrl}/students/search/query?q=${encodeURIComponent(this.studentSearch)}`;
-      
+      const searchUrl = `${environment.apiUrl}/students/search?q=${encodeURIComponent(this.studentSearch)}`;
+
       this.http.get<any>(searchUrl)
         .subscribe({
           next: (response) => {
@@ -803,7 +803,7 @@ export class VisitFormComponent implements OnInit {
         unit: 'bpm'
       });
     }
-    
+
     const visitData = {
       student_id: this.selectedStudent.student_id,
       clinic_staff_id: clinicStaffId,

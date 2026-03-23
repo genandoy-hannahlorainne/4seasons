@@ -47,6 +47,7 @@ class Student extends Model
     {
         return [
             'birth_date' => 'date',
+            'created_at' => 'datetime',
             'promotion_date' => 'datetime',
             'last_promotion_date' => 'datetime',
             'last_physical_update' => 'datetime',
@@ -127,9 +128,9 @@ class Student extends Model
     public function getBmiCategoryAttribute()
     {
         $bmi = $this->bmi ?? $this->calculateBmi();
-        
+
         if (!$bmi) return null;
-        
+
         if ($bmi < 18.5) return 'Underweight';
         if ($bmi < 25) return 'Normal weight';
         if ($bmi < 30) return 'Overweight';

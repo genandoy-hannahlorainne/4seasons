@@ -20,7 +20,7 @@ Route::get('/health', function () {
         'timestamp' => now(),
         'database' => 'connected'
     ]);
-}); 
+});
 
 // Debug route to test authentication
 Route::get('/debug/auth', function (Request $request) {
@@ -52,7 +52,7 @@ Route::post('/force-change-password', [AuthController::class, 'forceChangePasswo
 Route::middleware('auth:sanctum')->group(function () {
     // Legacy route for compatibility - redirects to admin/users logic
     Route::get('/get-all-users', [AdminController::class, 'getAllUsers'])->middleware('role:admin');
-    
+
     // Admin routes
     Route::prefix('admin')->middleware('role:admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard']);
@@ -74,11 +74,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users/{id}/reset-password', [AdminController::class, 'resetPassword']);
         Route::post('/users/{id}/deactivate', [AdminController::class, 'deactivateUser']);
         Route::post('/users/{id}/activate', [AdminController::class, 'activateUser']);
-        
+
         // Reports routes
         Route::get('/reports', [AdminController::class, 'getReports']);
         Route::get('/reports/principal-health-trends', [AdminController::class, 'getPrincipalHealthTrendReport']);
-        
+
         // Settings routes
         Route::get('/settings', [AdminController::class, 'getSettings']);
         Route::put('/settings', [AdminController::class, 'updateSettings']);
@@ -90,7 +90,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/backup/create', [AdminController::class, 'createBackup']);
         Route::post('/backup/restore', [AdminController::class, 'restoreBackup']);
         Route::delete('/backup/{filename}', [AdminController::class, 'deleteBackup']);
-        
+
         // Grade Promotion
         Route::get('/promotion/summary', [GradePromotionController::class, 'summary']);
         Route::post('/promotion/bulk', [GradePromotionController::class, 'bulk']);
@@ -106,8 +106,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Adviser routes
     Route::prefix('adviser')->middleware('role:adviser')->group(function () {
-        Route::get('/dashboard', [AdviserController::class, 'dashboard']);
-        Route::get('/students', [AdviserController::class, 'getStudents']);
+        Route::get('/dashboard', [AdviserController::class, 'getDashboard']);
+        Route::get('/students', [AdviserController::class, 'getAdvisoryStudents']);
+        Route::get('/advisory-students', [AdviserController::class, 'getAdvisoryStudents']);
+        Route::get('/profile', [AdviserController::class, 'getProfile']);
+        Route::put('/profile', [AdviserController::class, 'updateProfile']);
+        Route::get('/health-heatmap', [AdviserController::class, 'getHealthHeatmap']);
+        Route::get('/class-roster', [AdviserController::class, 'getClassRoster']);
+        Route::get('/notifications', [AdviserController::class, 'getNotifications']);
     });
 
     // Staff routes
@@ -119,9 +125,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Student routes
     Route::prefix('students')->group(function () {
         Route::get('/', [StudentController::class, 'index']);
+        Route::get('/search', [StudentController::class, 'search']);
         Route::get('/medical-data', [StudentController::class, 'getMedicalDataByUserId']);
         Route::get('/{student}', [StudentController::class, 'show']);
         Route::get('/{student}/medical-data', [StudentController::class, 'getMedicalData']);
+        Route::put('/{student}/medical-data', [StudentController::class, 'updateMedicalData']);
         Route::post('/', [StudentController::class, 'store']);
         Route::put('/{student}', [StudentController::class, 'update']);
     });

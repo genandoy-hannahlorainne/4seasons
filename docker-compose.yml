@@ -43,6 +43,7 @@ services:
              php artisan db:seed --force --class=RoleSeeder || true &&
              php artisan db:seed --force --class=AdminSeeder || true &&
              php artisan db:seed --force --class=SectionSeeder || true &&
+             php artisan db:seed --force --class=DevSeeder || true &&
              apache2-foreground"
 
   frontend:
