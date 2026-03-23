@@ -243,11 +243,11 @@ jobs:
         echo "DB_USERNAME=root" >> backend-laravel/.env
         echo "DB_PASSWORD=secret" >> backend-laravel/.env
         docker compose -f docker-compose.yml up -d
-        sleep 30
+        sleep 10
     
     - name: Wait for services
       run: |
-        timeout 60 bash -c 'until curl -f http://localhost:8000/api/health 2>/dev/null; do sleep 2; done'
+        timeout 120 bash -c 'until curl -f http://localhost:8082/api/health 2>/dev/null; do sleep 2; done'
         timeout 60 bash -c 'until curl -f http://localhost:4200 2>/dev/null; do sleep 2; done'
     
     - name: Run E2E tests
