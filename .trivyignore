@@ -1,0 +1,5 @@
+# xlsx (SheetJS) - no fixed version available on npm registry
+# SheetJS stopped publishing to npm after v0.18.5
+# See: https://github.com/SheetJS/sheetjs
+CVE-2023-30533
+CVE-2024-22363
