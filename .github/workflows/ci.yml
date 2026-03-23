@@ -44,10 +44,16 @@ jobs:
     
     - name: Setup environment
       working-directory: ./backend-laravel
+      env:
+        DB_CONNECTION: mysql
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_DATABASE: testing
+        DB_USERNAME: root
+        DB_PASSWORD: password
       run: |
         cp .env.example .env
         php artisan key:generate
-        php artisan config:cache
     
     - name: Run migrations
       working-directory: ./backend-laravel
@@ -60,7 +66,8 @@ jobs:
         DB_PASSWORD: password
       run: |
         php artisan migrate --force
-        php artisan db:seed --force
+        php artisan db:seed --force --class=RoleSeeder
+        php artisan db:seed --force --class=AdminSeeder
     
     - name: Run PHPUnit tests
       working-directory: ./backend-laravel
@@ -71,7 +78,7 @@ jobs:
         DB_DATABASE: testing
         DB_USERNAME: root
         DB_PASSWORD: password
-      run: php artisan test --coverage-clover coverage.xml || echo "Some tests failed but continuing..."
+      run: php artisan test --coverage-clover coverage.xml
     
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
@@ -102,7 +109,7 @@ jobs:
     
     - name: Run unit tests
       working-directory: ./frontend
-      run: npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage
+      run: npm run test:ci
     
     - name: Build production
       working-directory: ./frontend

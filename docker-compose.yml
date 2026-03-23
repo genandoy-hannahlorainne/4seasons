@@ -31,10 +31,10 @@ services:
         condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/api/health"]
-      interval: 20s
-      timeout: 10s
-      retries: 20
-      start_period: 300s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60ss
     volumes:
       - ./backend-laravel:/var/www/html
     command: >
