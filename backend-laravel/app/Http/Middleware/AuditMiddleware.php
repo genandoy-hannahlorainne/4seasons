@@ -58,8 +58,19 @@ class AuditMiddleware
         $params = $request->route()?->parameters() ?? [];
 
         foreach (['student', 'studentId', 'id', 'visit'] as $key) {
-            if (isset($params[$key])) {
-                return is_numeric($params[$key]) ? (int)$params[$key] : null;
+            if (!isset($params[$key])) {
+                continue;
+            }
+
+            $value = $params[$key];
+
+            // Handle route model binding (resolved to a model instance)
+            if (is_object($value) && method_exists($value, 'getKey')) {
+                return (int) $value->getKey();
+            }
+
+            if (is_numeric($value)) {
+                return (int) $value;
             }
         }
 
