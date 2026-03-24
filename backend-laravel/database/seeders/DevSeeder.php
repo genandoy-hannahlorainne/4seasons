@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
  * DevSeeder — shared test accounts for local development.
  * All accounts have password_must_change = true to simulate the force-change-password flow.
  *
- * Credentials (temp password for all): Dev@1234
+ * Credentials (temp password for all): devpassword
  *
  * | Role         | Username          |
  * |--------------|-------------------|
@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Hash;
  */
 class DevSeeder extends Seeder
 {
-    private const TEMP_PASSWORD  = 'Dev@1234';
+    private const TEMP_PASSWORD  = 'devpassword';
     private const GRADE_NAME     = 'Grade 7';
     private const SECTION_NAME   = 'Dev Section';
     private const SCHOOL_YEAR    = '2025-2026';
