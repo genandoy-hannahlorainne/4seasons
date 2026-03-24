@@ -1,14 +1,15 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn, ActivatedRouteSnapshot } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { map, catchError, of } from 'rxjs';
 
 export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  const currentUser = authService.currentUserValue;
 
-  // Check if user is authenticated
-  if (!currentUser) {
+  // First check: Local authentication state
+  if (!authService.isAuthenticated()) {
+    console.warn('🔒 Role Guard: No valid local authentication');
     router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
     return false;
   }
@@ -16,31 +17,55 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
   // Get required roles from route data
   const requiredRoles = route.data['roles'] as string[];
 
-  // If no specific roles required, allow access
+  // If no specific roles required, just verify authentication
   if (!requiredRoles || requiredRoles.length === 0) {
-    return true;
+    return authService.getCurrentUser().pipe(
+      map(user => !!user),
+      catchError(() => {
+        router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+        return of(false);
+      })
+    );
   }
 
-  // STRICT VALIDATION: Check if user's role matches required roles (exact match, case-sensitive)
-  const userRole = currentUser.role_name;
-  const hasRequiredRole = requiredRoles.some(role => role === userRole);
+  // Second check: Verify with backend and check role
+  return authService.getCurrentUser().pipe(
+    map(user => {
+      if (!user) {
+        console.warn('🔒 Role Guard: Backend verification failed');
+        router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+        return false;
+      }
 
-  if (hasRequiredRole) {
-    return true;
-  }
+      // STRICT VALIDATION: Check if user's role matches required roles (exact match, case-sensitive)
+      const userRole = user.role_name;
+      const hasRequiredRole = requiredRoles.some(role => role === userRole);
 
-  // User doesn't have required role - DENY ACCESS and log security violation
-  console.error(`🔒 SECURITY VIOLATION: User '${currentUser.username}' with role '${userRole}' attempted unauthorized access to route requiring [${requiredRoles.join(', ')}]`);
-  
-  // Redirect based on user's actual role
-  const roleRoutes: { [key: string]: string } = {
-    'Student': '/dashboard/student',
-    'Adviser': '/dashboard/adviser',
-    'Clinic Staff': '/dashboard/staff',
-    'Admin': '/dashboard/admin'
-  };
+      if (hasRequiredRole) {
+        console.log(`✅ Role Guard: Access granted for role '${userRole}'`);
+        return true;
+      }
 
-  const redirectUrl = roleRoutes[userRole || ''] || '/role-selection';
-  router.navigate([redirectUrl]);
-  return false;
+      // User doesn't have required role - DENY ACCESS and log security violation
+      console.error(`🔒 SECURITY VIOLATION: User '${user.username}' with role '${userRole}' attempted unauthorized access to route requiring [${requiredRoles.join(', ')}]`);
+
+      // Redirect based on user's actual role
+      const roleRoutes: { [key: string]: string } = {
+        'Student': '/dashboard/student',
+        'Adviser': '/dashboard/adviser',
+        'Clinic Staff': '/dashboard/staff',
+        'Admin': '/dashboard/admin'
+      };
+
+      const redirectUrl = roleRoutes[userRole || ''] || '/role-selection';
+      router.navigate([redirectUrl]);
+      return false;
+    }),
+    catchError(error => {
+      console.error('🔒 Role Guard: Backend verification error:', error);
+      authService.logout().subscribe();
+      router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+      return of(false);
+    })
+  );
 };

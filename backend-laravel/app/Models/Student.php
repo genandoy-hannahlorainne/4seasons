@@ -40,7 +40,8 @@ class Student extends Model
         'bmi',
         'bmi_category',
         'last_physical_update',
-        'is_active'
+        'is_active',
+        'parent_guardian_name',
     ];
 
     protected function casts(): array
@@ -100,6 +101,42 @@ class Student extends Model
     public function medicalHistory()
     {
         return $this->hasOne(MedicalHistory::class, 'student_id', 'student_id');
+    }
+
+    public function philhealth()
+    {
+        return $this->hasOne(StudentPhilhealth::class, 'student_id', 'student_id');
+    }
+
+    public function immunization()
+    {
+        return $this->hasOne(StudentImmunization::class, 'student_id', 'student_id');
+    }
+
+    public function familyHistory()
+    {
+        return $this->hasOne(StudentFamilyHistory::class, 'student_id', 'student_id');
+    }
+
+    public function parentalConsents()
+    {
+        return $this->hasMany(StudentParentalConsent::class, 'student_id', 'student_id');
+    }
+
+    public function shdfStatus()
+    {
+        return $this->hasOne(StudentSHDFStatus::class, 'student_id', 'student_id');
+    }
+
+    /**
+     * Get current school year SHDF status
+     */
+    public function currentShdfStatus()
+    {
+        return $this->hasOne(StudentSHDFStatus::class, 'student_id', 'student_id')
+            ->whereHas('schoolYear', function ($query) {
+                $query->where('is_current', true);
+            });
     }
 
     /**

@@ -119,7 +119,8 @@ export class AdviserService {
 
   // Grade Promotion & Class Management
   getSchoolYears(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/school-years`);
+    // Use non-admin endpoint that's accessible to all authenticated users
+    return this.http.get<any>(`${environment.apiUrl}/school-years`);
   }
 
   getClassRoster(schoolYearId: number): Observable<any> {

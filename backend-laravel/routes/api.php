@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\SchoolYearController;
 use App\Http\Controllers\Api\StudentBadgeController;
 use App\Http\Controllers\Api\GradePromotionController;
+use App\Http\Controllers\Api\SHDFController;
 
 // Health check route for CI/CD
 Route::get('/health', function () {
@@ -120,6 +121,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('staff')->group(function () {
         Route::get('/students', [StudentController::class, 'index']);
         Route::get('/sections', [AdminController::class, 'getSections']);
+        Route::get('/dashboard', [DashboardController::class, 'getClinicOverview']);
+        Route::get('/reports', [DashboardController::class, 'getStaffReportsAnalytics']);
     });
 
     // Student routes
@@ -130,6 +133,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{student}', [StudentController::class, 'show']);
         Route::get('/{student}/medical-data', [StudentController::class, 'getMedicalData']);
         Route::put('/{student}/medical-data', [StudentController::class, 'updateMedicalData']);
+        Route::get('/{student}/visits', [MedicalVisitController::class, 'getStudentVisits']);
+        Route::get('/{student}/visit-history', [MedicalVisitController::class, 'getStudentVisitHistory']);
         Route::post('/', [StudentController::class, 'store']);
         Route::put('/{student}', [StudentController::class, 'update']);
     });
@@ -177,5 +182,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Student badges
     Route::prefix('student-badges')->group(function () {
         Route::get('/{studentId}', [StudentBadgeController::class, 'getStudentBadges']);
+    });
+
+    // SHDF — Student Health Data Form
+    Route::prefix('shdf')->group(function () {
+        Route::get('/{studentId}', [SHDFController::class, 'show']);
+        Route::get('/{studentId}/status', [SHDFController::class, 'status']);
+        Route::post('/', [SHDFController::class, 'store']); // Full form (legacy)
+        Route::post('/basic', [SHDFController::class, 'storeBasic']); // Stage 1
+        Route::post('/comprehensive', [SHDFController::class, 'storeComprehensive']); // Stage 2
+        Route::get('/{studentId}/{schoolYearId}', [SHDFController::class, 'showByYear']);
     });
 });

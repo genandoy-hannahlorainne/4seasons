@@ -477,14 +477,6 @@ class StudentController extends BaseController
             }
 
             $students = Student::with(['currentSection.gradeLevel', 'allergies'])
-                             ->select('students.*')
-                             ->selectSub(function($sub) {
-                                 $sub->from('parents')
-                                     ->select('parents.phone')
-                                     ->join('student_parent as sp', 'parents.parent_id', '=', 'sp.parent_id')
-                                     ->whereColumn('sp.student_id', 'students.student_id')
-                                     ->limit(1);
-                             }, 'parent_phone')
                              ->where('is_active', true)
                              ->whereNull('deleted_at')
                              ->where(function($q) use ($query) {
@@ -515,7 +507,7 @@ class StudentController extends BaseController
                     'section' => $gradeData['section'],
                     'emergency_contact' => $student->emergency_contact,
                     'emergency_contact_phone' => $student->emergency_contact_phone,
-                    'parentPhone' => $this->resolveParentPhone($student),
+                    'parentPhone' => $student->emergency_contact_phone,
                     'allergies' => $allergyList,
                     'avatar' => $student->gender === 'Female' ? 'assets/user-female.png' : 'assets/user-male.png'
                 ];
@@ -550,15 +542,7 @@ class StudentController extends BaseController
                 $q->where('visit_type', 'emergency')
                   ->where('visit_datetime', '>=', now()->subDays(30))
                   ->orderBy('visit_datetime', 'desc');
-            }])
-            ->select('students.*')
-            ->selectSub(function($sub) {
-                $sub->from('parents')
-                    ->select('parents.phone')
-                    ->join('student_parent as sp', 'parents.parent_id', '=', 'sp.parent_id')
-                    ->whereColumn('sp.student_id', 'students.student_id')
-                    ->limit(1);
-            }, 'parent_phone');
+            }]);
 
             if ($studentId) {
                 $query->where('student_id', $studentId);
@@ -595,7 +579,7 @@ class StudentController extends BaseController
                 'section' => $gradeData['section'],
                 'emergency_contact' => $student->emergency_contact,
                 'emergency_contact_phone' => $student->emergency_contact_phone,
-                'parentPhone' => $this->resolveParentPhone($student),
+                'parentPhone' => $student->emergency_contact_phone,
                 'allergies' => $allergyList,
                 'avatar' => $student->gender === 'Female' ? 'assets/user-female.png' : 'assets/user-male.png',
                 'clearance' => $clearanceStatus,

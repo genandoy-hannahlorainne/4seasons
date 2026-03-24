@@ -60,6 +60,18 @@ return [
             'report' => false,
         ],
 
+        'signatures' => [
+            'driver' => env('SIGNATURES_DRIVER', 'local'),
+            'root' => storage_path('app/signatures'),
+            'visibility' => 'private',
+            'throw' => false,
+            // S3 configuration (used when SIGNATURES_DRIVER=s3)
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('SIGNATURES_BUCKET', env('AWS_BUCKET')),
+        ],
+
     ],
 
     /*
