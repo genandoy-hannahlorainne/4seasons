@@ -50,7 +50,7 @@ Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:sa
 Route::post('/force-change-password', [AuthController::class, 'forceChangePassword'])->middleware('auth:sanctum');
 
 // Protected routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function () {
     // Legacy route for compatibility - redirects to admin/users logic
     Route::get('/get-all-users', [AdminController::class, 'getAllUsers'])->middleware('role:admin');
 
@@ -130,13 +130,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [StudentController::class, 'index']);
         Route::get('/search', [StudentController::class, 'search']);
         Route::get('/medical-data', [StudentController::class, 'getMedicalDataByUserId']);
-        Route::get('/{student}', [StudentController::class, 'show']);
+        Route::get('/{student}', [StudentController::class, 'show'])->name('students.show');
         Route::get('/{student}/medical-data', [StudentController::class, 'getMedicalData']);
         Route::put('/{student}/medical-data', [StudentController::class, 'updateMedicalData']);
         Route::get('/{student}/visits', [MedicalVisitController::class, 'getStudentVisits']);
         Route::get('/{student}/visit-history', [MedicalVisitController::class, 'getStudentVisitHistory']);
         Route::post('/', [StudentController::class, 'store']);
-        Route::put('/{student}', [StudentController::class, 'update']);
+        Route::put('/{student}', [StudentController::class, 'update'])->name('students.update');
     });
 
     // Student badge routes
@@ -158,8 +158,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Medical visits
     Route::prefix('medical-visits')->group(function () {
         Route::get('/', [MedicalVisitController::class, 'index']);
-        Route::post('/', [MedicalVisitController::class, 'store']);
-        Route::get('/{id}', [MedicalVisitController::class, 'show']);
+        Route::post('/', [MedicalVisitController::class, 'store'])->name('medical-visits.store');
+        Route::get('/{id}', [MedicalVisitController::class, 'show'])->name('medical-visits.show');
     });
 
     // Emergency drills
@@ -186,9 +186,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // SHDF — Student Health Data Form
     Route::prefix('shdf')->group(function () {
-        Route::get('/{studentId}', [SHDFController::class, 'show']);
+        Route::get('/{studentId}', [SHDFController::class, 'show'])->name('shdf.show');
         Route::get('/{studentId}/status', [SHDFController::class, 'status']);
-        Route::post('/', [SHDFController::class, 'store']); // Full form (legacy)
+        Route::post('/', [SHDFController::class, 'store'])->name('shdf.store'); // Full form (legacy)
         Route::post('/basic', [SHDFController::class, 'storeBasic']); // Stage 1
         Route::post('/comprehensive', [SHDFController::class, 'storeComprehensive']); // Stage 2
         Route::get('/{studentId}/{schoolYearId}', [SHDFController::class, 'showByYear']);

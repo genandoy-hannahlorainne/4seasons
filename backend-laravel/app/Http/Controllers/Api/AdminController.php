@@ -2012,27 +2012,37 @@ class AdminController extends BaseController
     public function getActivityLogs(Request $request)
     {
         try {
-            $limit = $request->get('limit', 10);
+            $limit = $request->get('limit', 50);
+            $page = $request->get('page', 1);
 
-            // Mock activity logs - implement with real activity logging
-            $activities = [
-                [
-                    'activity_type' => 'user',
-                    'action' => 'New student registered',
-                    'username' => 'admin',
-                    'full_name' => 'System Administrator',
-                    'created_at' => now()->subMinutes(5)->toISOString()
-                ],
-                [
-                    'activity_type' => 'record',
-                    'action' => 'Medical visit recorded',
-                    'username' => 'nurse_jane',
-                    'full_name' => 'Jane Doe',
-                    'created_at' => now()->subMinutes(15)->toISOString()
+            // Get real audit logs from database
+            $logs = \App\Models\AuditLog::with('user:user_id,full_name,username')
+                ->orderBy('created_at', 'desc')
+                ->paginate($limit);
+
+            $activities = $logs->map(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'activity_type' => strtolower($log->resource_type),
+                    'action' => $log->description ?? "{$log->action} {$log->resource_type}",
+                    'username' => $log->user?->username ?? 'system',
+                    'full_name' => $log->user?->full_name ?? 'System',
+                    'resource_type' => $log->resource_type,
+                    'resource_id' => $log->resource_id,
+                    'ip_address' => $log->ip_address,
+                    'created_at' => $log->created_at->toISOString()
+                ];
+            });
+
+            return $this->sendResponse([
+                'activities' => $activities,
+                'pagination' => [
+                    'total' => $logs->total(),
+                    'per_page' => $logs->perPage(),
+                    'current_page' => $logs->currentPage(),
+                    'last_page' => $logs->lastPage(),
                 ]
-            ];
-
-            return $this->sendResponse(['activities' => array_slice($activities, 0, $limit)], 'Activity logs retrieved successfully');
+            ], 'Activity logs retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve activity logs', $e->getMessage());
         }

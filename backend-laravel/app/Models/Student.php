@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HasHashid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
-    use HasFactory;
+    use HasFactory, HasHashid;
 
     protected $primaryKey = 'student_id';
     public $timestamps = false; // Disable timestamps since table doesn't have created_at/updated_at
