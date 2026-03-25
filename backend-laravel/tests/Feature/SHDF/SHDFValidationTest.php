@@ -197,7 +197,8 @@ class SHDFValidationTest extends TestCase
     /** @test */
     public function it_does_not_require_wifa_consent_for_male_students()
     {
-        $student = Student::factory()->create(['gender' => 'M']);
+        // Use Grade 8 to avoid MRTD consent requirement (which is only for Grade 7)
+        $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 8']);
         $user = User::factory()->create();
         $student->update(['user_id' => $user->user_id]);
 
