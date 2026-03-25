@@ -33,7 +33,7 @@ class SHDFAccessControlTest extends TestCase
     /** @test */
     public function clinic_staff_can_view_any_student_shdf()
     {
-        $clinicRole = Role::factory()->create(['role_name' => 'clinic_staff']);
+        $clinicRole = Role::where('role_name', 'Clinic Staff')->first();
         $clinicUser = User::factory()->create(['role_id' => $clinicRole->role_id]);
         $student = Student::factory()->create();
 
@@ -45,7 +45,7 @@ class SHDFAccessControlTest extends TestCase
     /** @test */
     public function adviser_can_view_own_section_student()
     {
-        $adviserRole = Role::factory()->create(['role_name' => 'adviser']);
+        $adviserRole = Role::where('role_name', 'Adviser')->first();
         $adviserUser = User::factory()->create(['role_id' => $adviserRole->role_id]);
         $student = Student::factory()->create(['current_adviser_id' => $adviserUser->user_id]);
 
@@ -57,7 +57,7 @@ class SHDFAccessControlTest extends TestCase
     /** @test */
     public function adviser_cannot_view_other_section_student()
     {
-        $adviserRole = Role::factory()->create(['role_name' => 'adviser']);
+        $adviserRole = Role::where('role_name', 'Adviser')->first();
         $adviserUser = User::factory()->create(['role_id' => $adviserRole->role_id]);
         $otherAdviser = User::factory()->create(['role_id' => $adviserRole->role_id]);
         $student = Student::factory()->create(['current_adviser_id' => $otherAdviser->user_id]);
@@ -70,7 +70,7 @@ class SHDFAccessControlTest extends TestCase
     /** @test */
     public function student_can_view_own_shdf()
     {
-        $studentRole = Role::factory()->create(['role_name' => 'student']);
+        $studentRole = Role::where('role_name', 'Student')->first();
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $student = Student::factory()->create(['user_id' => $user->user_id]);
 
@@ -82,7 +82,7 @@ class SHDFAccessControlTest extends TestCase
     /** @test */
     public function student_cannot_view_another_students_shdf()
     {
-        $studentRole = Role::factory()->create(['role_name' => 'student']);
+        $studentRole = Role::where('role_name', 'Student')->first();
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $ownStudent = Student::factory()->create(['user_id' => $user->user_id]);
         $otherStudent = Student::factory()->create();

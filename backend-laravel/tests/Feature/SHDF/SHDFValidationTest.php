@@ -25,9 +25,9 @@ class SHDFValidationTest extends TestCase
     /** @test */
     public function it_rejects_missing_required_fields()
     {
+        $clinicRole = Role::where('role_name', 'Clinic Staff')->first();
+        $user = User::factory()->create(['role_id' => $clinicRole->role_id]);
         $student = Student::factory()->create();
-        $user = User::factory()->create();
-        $student->update(['user_id' => $user->user_id]);
 
         $requiredFields = [
             'student_id',
