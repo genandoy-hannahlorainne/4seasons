@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { StaffService } from '../../../../core/services/staff.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import { Workbook } from 'exceljs';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-reports',
@@ -316,7 +317,7 @@ export class ReportsComponent implements OnInit {
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - 30);
-    
+
     this.endDate = end.toISOString().split('T')[0];
     this.startDate = start.toISOString().split('T')[0];
 
@@ -343,7 +344,7 @@ export class ReportsComponent implements OnInit {
           this.uniqueStudents = data.uniqueStudents;
           this.emergencyCases = data.emergencyCases;
           this.referrals = data.referrals;
-          
+
           // Map illness data with null check
           this.casesByIllness = (data.casesByIllness || []).map((item: any) => ({
             illness: item.illness || 'Unknown',
@@ -372,31 +373,31 @@ export class ReportsComponent implements OnInit {
 
   exportPDF(): void {
     const doc = new jsPDF();
-    
+
     // Header
     doc.setFontSize(18);
     doc.setTextColor(40, 62, 80);
     doc.text('PDMHS Clinic Report', 14, 20);
-    
+
     doc.setFontSize(10);
     doc.setTextColor(127, 140, 141);
     doc.text(`Date Range: ${this.startDate} to ${this.endDate}`, 14, 28);
     if (this.gradeFilter) {
       doc.text(`Grade Level: ${this.gradeFilter}`, 14, 34);
     }
-    
+
     // Summary Section
     doc.setFontSize(14);
     doc.setTextColor(40, 62, 80);
     doc.text('Summary', 14, this.gradeFilter ? 44 : 38);
-    
+
     const summaryData = [
       ['Total Visits', this.totalVisits.toString()],
       ['Unique Students', this.uniqueStudents.toString()],
       ['Emergency Cases', this.emergencyCases.toString()],
       ['Hospital Referrals', this.referrals.toString()]
     ];
-    
+
     autoTable(doc, {
       startY: this.gradeFilter ? 48 : 42,
       head: [['Metric', 'Count']],
@@ -404,14 +405,14 @@ export class ReportsComponent implements OnInit {
       theme: 'grid',
       headStyles: { fillColor: [0, 123, 255] }
     });
-    
+
     // Cases by Illness
     const illnessY = (doc as any).lastAutoTable.finalY + 10;
     doc.setFontSize(14);
     doc.text('Cases by Illness', 14, illnessY);
-    
+
     const illnessData = this.casesByIllness.map(item => [item.illness, item.count.toString()]);
-    
+
     autoTable(doc, {
       startY: illnessY + 4,
       head: [['Illness', 'Count']],
@@ -419,14 +420,14 @@ export class ReportsComponent implements OnInit {
       theme: 'striped',
       headStyles: { fillColor: [0, 123, 255] }
     });
-    
+
     // Cases by Grade
     const gradeY = (doc as any).lastAutoTable.finalY + 10;
     doc.setFontSize(14);
     doc.text('Cases by Grade Level', 14, gradeY);
-    
+
     const gradeData = this.casesByGrade.map(item => [`Grade ${item.grade}`, item.count.toString()]);
-    
+
     autoTable(doc, {
       startY: gradeY + 4,
       head: [['Grade Level', 'Count']],
@@ -434,7 +435,7 @@ export class ReportsComponent implements OnInit {
       theme: 'striped',
       headStyles: { fillColor: [0, 123, 255] }
     });
-    
+
     // Footer
     const pageCount = (doc as any).internal.getNumberOfPages();
     doc.setFontSize(8);
@@ -447,49 +448,48 @@ export class ReportsComponent implements OnInit {
         doc.internal.pageSize.height - 10
       );
     }
-    
+
     // Save
     const fileName = `clinic-report-${this.startDate}-to-${this.endDate}.pdf`;
     doc.save(fileName);
   }
 
   exportExcel(): void {
-    // Summary Sheet
-    const summaryData = [
-      ['PDMHS Clinic Report'],
-      ['Date Range:', `${this.startDate} to ${this.endDate}`],
-      this.gradeFilter ? ['Grade Level:', this.gradeFilter] : [],
-      [],
-      ['Summary Metrics'],
-      ['Metric', 'Count'],
-      ['Total Visits', this.totalVisits],
-      ['Unique Students', this.uniqueStudents],
-      ['Emergency Cases', this.emergencyCases],
-      ['Hospital Referrals', this.referrals],
-      [],
-      ['Cases by Illness'],
-      ['Illness', 'Count'],
-      ...this.casesByIllness.map(item => [item.illness, item.count]),
-      [],
-      ['Cases by Grade Level'],
-      ['Grade Level', 'Count'],
-      ...this.casesByGrade.map(item => [`Grade ${item.grade}`, item.count])
-    ].filter(row => row.length > 0);
-    
-    const ws = XLSX.utils.aoa_to_sheet(summaryData);
-    
-    // Set column widths
-    ws['!cols'] = [
-      { wch: 25 },
-      { wch: 15 }
-    ];
-    
-    // Create workbook
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Clinic Report');
-    
-    // Save file
-    const fileName = `clinic-report-${this.startDate}-to-${this.endDate}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-  }
+      const wb = new Workbook();
+      const ws = wb.addWorksheet('Clinic Report');
+
+      ws.columns = [
+        { width: 25 },
+        { width: 15 },
+      ];
+
+      const rows = [
+        ['PDMHS Clinic Report'],
+        ['Date Range:', `${this.startDate} to ${this.endDate}`],
+        ...(this.gradeFilter ? [['Grade Level:', this.gradeFilter]] : []),
+        [],
+        ['Summary Metrics'],
+        ['Metric', 'Count'],
+        ['Total Visits', this.totalVisits],
+        ['Unique Students', this.uniqueStudents],
+        ['Emergency Cases', this.emergencyCases],
+        ['Hospital Referrals', this.referrals],
+        [],
+        ['Cases by Illness'],
+        ['Illness', 'Count'],
+        ...this.casesByIllness.map(item => [item.illness, item.count]),
+        [],
+        ['Cases by Grade Level'],
+        ['Grade Level', 'Count'],
+        ...this.casesByGrade.map(item => [`Grade ${item.grade}`, item.count]),
+      ];
+
+      rows.forEach(row => ws.addRow(row));
+
+      const fileName = `clinic-report-${this.startDate}-to-${this.endDate}.xlsx`;
+      wb.xlsx.writeBuffer().then(buffer => {
+        saveAs(new Blob([buffer], { type: 'application/octet-stream' }), fileName);
+      });
+    }
+
 }

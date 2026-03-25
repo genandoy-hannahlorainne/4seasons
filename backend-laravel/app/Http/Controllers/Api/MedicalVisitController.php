@@ -119,25 +119,34 @@ class MedicalVisitController extends BaseController
                 // Create medical visit
                 $visitPayload = $this->buildMedicalVisitInsertPayload($request, $medicalVisitColumns);
 
-                $visitId = DB::table('medical_visits')->insertGetId($visitPayload, 'visit_id');
+                // visit_id is not auto-increment, so generate it manually
+                if (in_array('visit_id', $medicalVisitColumns, true) && !isset($visitPayload['visit_id'])) {
+                    $nextId = ((int) DB::table('medical_visits')->max('visit_id')) + 1;
+                    $visitPayload['visit_id'] = $nextId > 0 ? $nextId : 1;
+                }
+
+                DB::table('medical_visits')->insert($visitPayload);
+                $visitId = $visitPayload['visit_id'];
                 $visit = MedicalVisit::find($visitId);
 
-                // Create notification for emergency visits
-                if (strtolower($request->input('visit_type', '')) === 'emergency') {
-                    $student = Student::find($request->student_id);
-                    $studentName = $student
-                        ? trim($student->first_name . ' ' . $student->last_name)
-                        : 'Unknown Student';
+                // Create notification for all visits (adviser + admin visibility)
+                $student = Student::find($request->student_id);
+                $studentName = $student
+                    ? trim($student->first_name . ' ' . $student->last_name)
+                    : 'Unknown Student';
 
-                    Notification::create([
-                        'student_id' => $request->student_id,
-                        'visit_id'   => $visitId,
-                        'channel'    => 'System',
-                        'message'    => "Emergency visit: {$studentName} requires immediate attention",
-                        'priority'   => 'urgent',
-                        'status'     => 'Pending',
-                    ]);
-                }
+                $isEmergency = strtolower($request->input('visit_type', '')) === 'emergency';
+
+                Notification::create([
+                    'student_id' => $request->student_id,
+                    'visit_id'   => $visitId,
+                    'channel'    => 'System',
+                    'message'    => $isEmergency
+                        ? "Emergency visit: {$studentName} requires immediate attention"
+                        : "Clinic visit: {$studentName} visited the clinic — {$request->chief_complaint}",
+                    'priority'   => $isEmergency ? 'urgent' : 'normal',
+                    'status'     => 'Pending',
+                ]);
 
                 // Add vitals if provided
                 if ($request->has('vitals') && is_array($request->vitals)) {
@@ -584,7 +593,7 @@ class MedicalVisitController extends BaseController
                         'visit_type' => $lastVisit->visit_type,
                         'chief_complaint' => $lastVisit->chief_complaint,
                         'status' => $lastVisit->status,
-                        'days_ago' => $lastVisit->visit_datetime->diffInDays(now())
+                        'days_ago' => (int) $lastVisit->visit_datetime->diffInDays(now())
                     ] : null
                 ],
                 'recent_visits' => $recentVisits,

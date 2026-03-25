@@ -39,6 +39,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'shdf',
+    loadChildren: () => import('./features/shdf/shdf.routes').then(m => m.SHDF_ROUTES),
+    canActivate: [authGuard]
+  },
+  {
     path: '**',
     redirectTo: ''
   }

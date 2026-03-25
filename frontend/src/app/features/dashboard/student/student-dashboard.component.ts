@@ -23,28 +23,28 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   studentGender = '';
   adviserName = 'Not assigned';
   adviserContact = 'N/A';
-  
+
   // Info cards data
   bmi = '--';
   bloodType = '--';
   allergiesCount = '0';
   lastVisit = '--';
-  
+
   // Medical information
   height = '--';
   weight = '--';
   age = '--';
   bmiPercentage = '--';
-  
+
   // Known allergies
   knownAllergies: string[] = [];
-  
+
   // Recent activities instead of immunization records
   recentActivities: any[] = [];
-  
+
   loading = true;
   error = '';
-  
+
   // Medical form completion status
   showIncompleteFormNotification = false;
   incompleteFormMessage = '';
@@ -58,7 +58,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Load data initially
     this.loadStudentData();
-    
+
     // Reload data whenever we navigate back to this route
     this.routerSubscription = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
@@ -80,7 +80,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
   loadStudentData(): void {
     const currentUser = this.authService.currentUserValue;
-    
+
     if (!currentUser || !currentUser.user_id) {
       this.error = 'User not logged in';
       this.loading = false;
@@ -94,10 +94,10 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
       next: (response) => {
         console.log('📋 Profile response:', response);
         console.log('📋 Profile response keys:', Object.keys(response));
-        
+
         // Handle multiple response formats for compatibility
         let profile = null;
-        
+
         if (response.success && response.profile) {
           profile = response.profile;
           console.log('📋 Using response.profile');
@@ -111,26 +111,26 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
           profile = response.data.profile;
           console.log('📋 Using response.data.profile (no success check)');
         }
-        
+
         console.log('📋 Selected profile:', profile);
         console.log('📋 Profile keys:', profile ? Object.keys(profile) : 'null');
-        
+
         if (profile && profile.first_name) {
           console.log('✅ Profile data found:', profile);
-          
+
           // Set basic info
           this.studentName = `${profile.first_name} ${profile.last_name}`;
           this.studentId = profile.student_number || '';
-          this.gradeLevel = profile.grade_level && profile.section 
-            ? `Grade ${profile.grade_level} - ${profile.section}` 
+          this.gradeLevel = profile.grade_level && profile.section
+            ? `Grade ${profile.grade_level} - ${profile.section}`
             : profile.grade_level ? `Grade ${profile.grade_level}` : 'Not assigned';
-          
+
           // Set gender
           this.studentGender = profile.gender || '';
-          
+
           // Set blood type
           this.bloodType = profile.blood_type || '--';
-          
+
           // Set adviser information from profile (if available)
           if (profile.adviser_name) {
             this.adviserName = profile.adviser_name;
@@ -139,12 +139,12 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
           } else {
             console.warn('⚠️ No adviser_name found in profile:', profile);
           }
-          
+
           // Calculate age from birth_date
           if (profile.birth_date) {
             this.age = this.calculateAge(profile.birth_date) + ' y/o';
           }
-          
+
           console.log('✅ Basic profile info set:', {
             name: this.studentName,
             id: this.studentId,
@@ -154,7 +154,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
             adviser: this.adviserName,
             age: this.age
           });
-          
+
           // Fetch medical data using user_id (not student_id)
           this.loadMedicalData(currentUser.user_id);
         } else {
@@ -170,9 +170,9 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
           error: error.error,
           url: error.url
         });
-        
+
         let errorMessage = 'Failed to load student data';
-        
+
         if (error.status === 401) {
           errorMessage = 'Authentication failed. Please login again.';
         } else if (error.status === 404) {
@@ -182,7 +182,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
         } else if (error.error?.message) {
           errorMessage = error.error.message;
         }
-        
+
         this.error = errorMessage;
         this.loading = false;
       }
@@ -191,28 +191,28 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
   loadMedicalData(userId: number): void {
     console.log('🔄 Loading medical data for user:', userId);
-    
+
     this.studentService.getStudentMedicalData(userId).subscribe({
       next: (response) => {
         console.log('🏥 Medical data response:', response);
-        
+
         if (response.success && response.data) {
           const data = response.data;
-          
+
           console.log('✅ Medical data found:', data);
-          
+
           // Check if medical form is incomplete
           this.checkFormCompletion(data);
-          
+
           // Set vitals data from personal_info
           if (data.personal_info) {
             this.height = data.personal_info.height_cm ? `${data.personal_info.height_cm} cm` : '--';
             this.weight = data.personal_info.weight_kg ? `${data.personal_info.weight_kg} kg` : '--';
-            
+
             // Use BMI utility for safe formatting
             this.bmi = BMIUtils.formatBMI(data.personal_info.bmi);
             this.bmiPercentage = BMIUtils.formatBMI(data.personal_info.bmi);
-            
+
             console.log('✅ Vitals set:', {
               height: this.height,
               weight: this.weight,
@@ -228,7 +228,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
             this.bmi = '--';
             this.bmiPercentage = '--';
           }
-          
+
           // Set allergies
           if (data.allergies && data.allergies.length > 0) {
             this.knownAllergies = data.allergies.map((a: any) => a.allergy_name || a.allergy_text);
@@ -238,14 +238,14 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
             this.knownAllergies = ['No known allergies'];
             this.allergiesCount = '0';
           }
-          
+
           // Set adviser information (only if not already set from profile)
           if (data.personal_info && (!this.adviserName || this.adviserName === 'Not assigned')) {
             this.adviserName = data.personal_info.adviser_name || 'Not assigned';
             this.adviserContact = data.personal_info.adviser_contact || 'N/A';
             console.log('✅ Adviser info set from medical data:', this.adviserName);
           }
-          
+
           // Set recent activities (medical visits)
           if (data.recent_visits && data.recent_visits.length > 0) {
             this.recentActivities = data.recent_visits.map((visit: any) => ({
@@ -260,13 +260,13 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
               { activity: 'No recent activities', date: '--', type: 'Info', status: 'N/A' }
             ];
           }
-          
+
           // Set last visit
           if (data.last_visit) {
             this.lastVisit = this.formatDate(data.last_visit.visit_datetime);
             console.log('✅ Last visit set:', this.lastVisit);
           }
-          
+
           this.loading = false;
           console.log('✅ All student data loaded successfully');
         } else {
@@ -281,7 +281,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
           error: error.error,
           url: error.url
         });
-        
+
         // Don't set error state here - medical data is secondary
         // Dashboard should still show basic student info
         console.warn('⚠️ Medical data failed to load, but continuing with basic profile');
@@ -309,11 +309,11 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
       age--;
     }
-    
+
     return age;
   }
 
@@ -328,15 +328,15 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
   checkFormCompletion(data: any): void {
     const missingFields: string[] = [];
-    
+
     if (data.personal_info) {
       const info = data.personal_info;
-      
+
       // Check Physical Information
       if (!info.height_cm || !info.weight_kg) {
         missingFields.push('Physical Information (Height & Weight)');
       }
-      
+
       // Check Contact Information
       const emergencyContactName = (info.emergency_contact || info.emergency_contact_person || '').toString().trim();
       const emergencyContactPhone = (info.emergency_contact_phone || '').toString().trim();
@@ -344,17 +344,17 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
       if (!emergencyContactName || !emergencyContactPhone) {
         missingFields.push('Contact Information (Emergency Contact)');
       }
-      
+
       if (!info.address) {
         missingFields.push('Contact Information (Address)');
       }
     }
-    
+
     // Check Medical History - if no medical_history data exists, it's incomplete
     if (!data.medical_history) {
       missingFields.push('Medical History');
     }
-    
+
     // Show notification if any fields are missing
     if (missingFields.length > 0) {
       this.showIncompleteFormNotification = true;
@@ -370,6 +370,35 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
   goToMedicalForm(): void {
     this.router.navigate(['/dashboard/student/medical-records/personal-info']);
+  }
+
+  goToSHDFForm(): void {
+    const currentUser = this.authService.currentUserValue;
+    if (currentUser && currentUser.user_id) {
+      // Get student_id from the loaded profile
+      this.studentService.getStudentProfile(currentUser.user_id).subscribe({
+        next: (response) => {
+          let profile = null;
+          if (response.success && response.profile) {
+            profile = response.profile;
+          } else if (response.profile) {
+            profile = response.profile;
+          }
+
+          if (profile && profile.student_id) {
+            // Navigate to basic form (Stage 1)
+            this.router.navigate(['/shdf', profile.student_id, 'basic']);
+          } else {
+            console.error('Student ID not found');
+            this.error = 'Unable to load SHDF form. Student ID not found.';
+          }
+        },
+        error: (error) => {
+          console.error('Error loading student profile for SHDF:', error);
+          this.error = 'Unable to load SHDF form.';
+        }
+      });
+    }
   }
 
 }

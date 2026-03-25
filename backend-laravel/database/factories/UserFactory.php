@@ -17,7 +17,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'role_id'              => Role::where('role_name', 'Admin')->value('role_id') ?? 1,
+            'role_id'              => 2,  // Default to Student role (from RoleSeeder)
             'username'             => fake()->unique()->userName(),
             'email'                => fake()->unique()->safeEmail(),
             'full_name'            => fake()->name(),
@@ -29,9 +29,7 @@ class UserFactory extends Factory
 
     public function admin(): static
     {
-        return $this->state(fn () => [
-            'role_id' => Role::where('role_name', 'Admin')->value('role_id') ?? 1,
-        ]);
+        return $this->state(fn () => ['role_id' => 1]);  // Admin role from RoleSeeder
     }
 
     public function mustChangePassword(): static

@@ -25,6 +25,7 @@
             <td>{{ student.section }}</td>
             <td>
               <a [routerLink]="['/students', student.student_id]" class="btn btn-sm">View</a>
+              <a [routerLink]="['/shdf', student.student_id]" class="btn btn-sm btn-shdf">SHDF</a>
             </td>
           </tr>
         }

@@ -25,7 +25,30 @@ class MedicalHistory extends Model
         'other_conditions',
         'current_medications',
         'family_medical_history',
-        'notes'
+        'notes',
+        // SHDF fields
+        'menarche_age',
+        'menarche_age_other',
+        'allergy_status',
+        'condition_error_of_refraction',
+        'condition_anemia',
+        'condition_gastric_ulcer',
+        'condition_anxiety_depression',
+        'condition_g6pd',
+        'condition_none',
+        'condition_other_text',
+        'medications_paracetamol',
+        'medications_mefenamic',
+        'medications_anti_allergy',
+        'medications_anti_asthma',
+        'medications_loperamide',
+        'medications_antacids',
+        'medications_or_solution',
+        'medications_none',
+        'medications_other_text',
+        'pwd_status',
+        'pwd_congenital_detail',
+        'surgery_history',
     ];
 
     protected function casts(): array
@@ -40,7 +63,23 @@ class MedicalHistory extends Model
             'condition_kidney_disease' => 'boolean',
             'condition_mental_health' => 'boolean',
             'created_at' => 'datetime',
-            'updated_at' => 'datetime'
+            'updated_at' => 'datetime',
+            // SHDF booleans
+            'condition_error_of_refraction' => 'boolean',
+            'condition_anemia'              => 'boolean',
+            'condition_gastric_ulcer'       => 'boolean',
+            'condition_anxiety_depression'  => 'boolean',
+            'condition_g6pd'                => 'boolean',
+            'condition_none'                => 'boolean',
+            'medications_paracetamol'       => 'boolean',
+            'medications_mefenamic'         => 'boolean',
+            'medications_anti_allergy'      => 'boolean',
+            'medications_anti_asthma'       => 'boolean',
+            'medications_loperamide'        => 'boolean',
+            'medications_antacids'          => 'boolean',
+            'medications_or_solution'       => 'boolean',
+            'medications_none'              => 'boolean',
+            'surgery_history'               => 'boolean',
         ];
     }
 
