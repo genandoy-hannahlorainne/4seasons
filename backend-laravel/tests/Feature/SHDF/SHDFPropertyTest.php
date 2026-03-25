@@ -36,11 +36,12 @@ class SHDFPropertyTest extends TestCase
     /**
      * Property 1: Required field rejection
      * Validates: Requirements 1.3, 1.4, 1.5, 6.1, 6.10
+     * Note: student_id is excluded because unsetting it causes 403 (authorization failure)
+     * before validation runs. student_id validation is tested elsewhere.
      */
     public function test_property_required_field_rejection(): void
     {
         $requiredFields = [
-            'student_id',
             'parent_guardian_name',
             'emergency_contact',
             'emergency_contact_relation',
