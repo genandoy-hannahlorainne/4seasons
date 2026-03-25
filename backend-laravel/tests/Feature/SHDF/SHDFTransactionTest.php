@@ -24,6 +24,7 @@ class SHDFTransactionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(\Database\Seeders\RoleSeeder::class);
         Storage::fake('signatures');
     }
 

@@ -18,12 +18,8 @@ class SHDFFileUploadTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(\Database\Seeders\RoleSeeder::class);
         Storage::fake('signatures');
-
-        // Create roles
-        \App\Models\Role::factory()->create(['role_name' => 'student']);
-        \App\Models\Role::factory()->create(['role_name' => 'clinic_staff']);
-
         SchoolYear::factory()->create(['is_current' => true]);
     }
 

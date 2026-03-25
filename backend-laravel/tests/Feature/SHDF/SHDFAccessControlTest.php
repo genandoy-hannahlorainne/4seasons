@@ -16,6 +16,7 @@ class SHDFAccessControlTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(\Database\Seeders\RoleSeeder::class);
         SchoolYear::factory()->create(['is_current' => true]);
     }
 

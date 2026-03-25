@@ -26,12 +26,8 @@ class SHDFPropertyTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(\Database\Seeders\RoleSeeder::class);
         Storage::fake('signatures');
-
-        // Create roles
-        Role::factory()->create(['role_name' => 'clinic_staff']);
-        Role::factory()->create(['role_name' => 'student']);
-        Role::factory()->create(['role_name' => 'adviser']);
 
         // Create current school year
         SchoolYear::factory()->create(['is_current' => true]);
