@@ -16,14 +16,8 @@ class UserFactory extends Factory
 
     public function definition(): array
     {
-        // Try to find an existing role, or create one using the factory
-        $role = Role::first();
-        if (!$role) {
-            $role = Role::factory()->create(['role_name' => 'Admin']);
-        }
-
         return [
-            'role_id'              => $role->role_id,
+            'role_id'              => Role::factory(),  // Use factory relationship
             'username'             => fake()->unique()->userName(),
             'email'                => fake()->unique()->safeEmail(),
             'full_name'            => fake()->name(),
@@ -36,11 +30,9 @@ class UserFactory extends Factory
     public function admin(): static
     {
         return $this->state(function () {
-            $role = Role::where('role_name', 'Admin')->first();
-            if (!$role) {
-                $role = Role::factory()->create(['role_name' => 'Admin']);
-            }
-            return ['role_id' => $role->role_id];
+            return [
+                'role_id' => Role::factory()->create(['role_name' => 'Admin'])->role_id
+            ];
         });
     }
 
