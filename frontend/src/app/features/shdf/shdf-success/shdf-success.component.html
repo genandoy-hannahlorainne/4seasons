@@ -1,0 +1,68 @@
+<div class="success-container">
+  <div class="success-card" *ngIf="stage === 'basic'">
+    <div class="success-icon">✅</div>
+    <h1>QR Code Ready!</h1>
+    <p class="success-message">
+      Your basic information has been saved successfully.
+      You can now generate and use your QR code.
+    </p>
+
+    <div class="qr-preview">
+      <div class="qr-placeholder">
+        <span class="qr-icon">📱</span>
+        <p>Your QR code is now active</p>
+      </div>
+    </div>
+
+    <div class="deadline-warning">
+      <div class="warning-icon">⚠️</div>
+      <div class="warning-content">
+        <strong>Complete Your Full SHDF Form</strong>
+        <p>Please complete the comprehensive health form within <strong>{{ daysLeft }} days</strong></p>
+        <p class="deadline-date">Deadline: {{ deadline | date:'medium' }}</p>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn-primary" (click)="completeNow()">
+        📋 Complete Full Form Now
+      </button>
+      <button class="btn-secondary" (click)="remindLater()">
+        🔔 Remind Me Later
+      </button>
+    </div>
+
+    <div class="info-box">
+      <h3>What's Next?</h3>
+      <ul>
+        <li>✅ Your QR code is ready for clinic visits</li>
+        <li>📋 Complete the full SHDF form for full compliance</li>
+        <li>📧 We'll send you reminder emails</li>
+        <li>⏰ Don't miss the deadline to avoid restrictions</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="success-card" *ngIf="stage === 'comprehensive'">
+    <div class="success-icon">🎉</div>
+    <h1>Fully Compliant!</h1>
+    <p class="success-message">
+      Congratulations! Your Student Health Data Form is now complete.
+      You have full access to all school health services.
+    </p>
+
+    <div class="compliance-badge">
+      <span class="badge-icon">✓</span>
+      <span class="badge-text">SHDF Complete</span>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn-primary" [routerLink]="['/shdf', studentId]">
+        📄 View My SHDF
+      </button>
+      <button class="btn-secondary" (click)="goToDashboard()">
+        🏠 Back to Dashboard
+      </button>
+    </div>
+  </div>
+</div>

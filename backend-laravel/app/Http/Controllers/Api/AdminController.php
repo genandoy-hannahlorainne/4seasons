@@ -146,6 +146,9 @@ class AdminController extends BaseController
             $sections = Section::where('grade_level_id', $gradeLevel->id)
                 ->where('is_active', true)
                 ->when($currentSchoolYearId, fn($q) => $q->where('school_year_id', $currentSchoolYearId))
+                ->withCount(['students' => function($q) {
+                    $q->where('is_active', true);
+                }])
                 ->orderBy('section_name')
                 ->get()
                 ->map(function($section) {
@@ -153,7 +156,7 @@ class AdminController extends BaseController
                         'id' => $section->id,
                         'section_name' => $section->section_name,
                         'capacity' => $section->capacity,
-                        'current_enrollment' => $section->current_enrollment ?? 0
+                        'current_enrollment' => $section->students_count ?? 0
                     ];
                 });
 
@@ -315,6 +318,9 @@ class AdminController extends BaseController
             $gradeLevels = GradeLevel::with(['sections' => function($query) use ($currentSchoolYearId) {
                 $query->where('is_active', true)
                       ->when($currentSchoolYearId, fn($q) => $q->where('school_year_id', $currentSchoolYearId))
+                      ->withCount(['students' => function($q) {
+                          $q->where('is_active', true);
+                      }])
                       ->orderBy('section_number');
             }])
             ->where('is_active', true)
@@ -332,7 +338,7 @@ class AdminController extends BaseController
                             'adviser_id'         => $section->adviser_id,
                             'adviser_name'       => $section->adviser_id ? ($adviserNames[$section->adviser_id] ?? null) : null,
                             'capacity'           => $section->capacity,
-                            'current_enrollment' => $section->current_enrollment ?? 0,
+                            'current_enrollment' => $section->students_count ?? 0,
                             'grade_level_id'     => $section->grade_level_id,
                         ];
                     })
@@ -379,6 +385,9 @@ class AdminController extends BaseController
     {
         try {
             $query = Section::with(['gradeLevel', 'schoolYear'])
+                ->withCount(['students' => function($q) {
+                    $q->where('is_active', true);
+                }])
                 ->where('is_active', true);
 
             if ($request->has('school_year_id')) {
@@ -401,7 +410,7 @@ class AdminController extends BaseController
                         'adviser_id'         => $section->adviser_id,
                         'adviser_name'       => $adviser,
                         'capacity'           => $section->capacity,
-                        'current_enrollment' => $section->attributes['current_enrollment'] ?? 0,
+                        'current_enrollment' => $section->students_count ?? 0,
                         'is_active'          => $section->is_active,
                         'level_name'         => $section->gradeLevel->level_name ?? null,
                         'level_number'       => $section->gradeLevel->level_number ?? null,
@@ -610,7 +619,7 @@ class AdminController extends BaseController
                     'school_year'      => $section->schoolYear->year_name ?? null,
                     'adviser_name'     => $adviserName,
                     'capacity'         => $section->capacity,
-                    'current_enrollment' => $section->attributes['current_enrollment'] ?? $students->count(),
+                    'current_enrollment' => $students->count(),
                 ],
                 'students' => $students,
                 'stats'    => $stats,
@@ -2012,27 +2021,37 @@ class AdminController extends BaseController
     public function getActivityLogs(Request $request)
     {
         try {
-            $limit = $request->get('limit', 10);
+            $limit = $request->get('limit', 50);
+            $page = $request->get('page', 1);
 
-            // Mock activity logs - implement with real activity logging
-            $activities = [
-                [
-                    'activity_type' => 'user',
-                    'action' => 'New student registered',
-                    'username' => 'admin',
-                    'full_name' => 'System Administrator',
-                    'created_at' => now()->subMinutes(5)->toISOString()
-                ],
-                [
-                    'activity_type' => 'record',
-                    'action' => 'Medical visit recorded',
-                    'username' => 'nurse_jane',
-                    'full_name' => 'Jane Doe',
-                    'created_at' => now()->subMinutes(15)->toISOString()
+            // Get real audit logs from database
+            $logs = \App\Models\AuditLog::with('user:user_id,full_name,username')
+                ->orderBy('created_at', 'desc')
+                ->paginate($limit);
+
+            $activities = $logs->map(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'activity_type' => strtolower($log->resource_type),
+                    'action' => $log->description ?? "{$log->action} {$log->resource_type}",
+                    'username' => $log->user?->username ?? 'system',
+                    'full_name' => $log->user?->full_name ?? 'System',
+                    'resource_type' => $log->resource_type,
+                    'resource_id' => $log->resource_id,
+                    'ip_address' => $log->ip_address,
+                    'created_at' => $log->created_at->toISOString()
+                ];
+            });
+
+            return $this->sendResponse([
+                'activities' => $activities,
+                'pagination' => [
+                    'total' => $logs->total(),
+                    'per_page' => $logs->perPage(),
+                    'current_page' => $logs->currentPage(),
+                    'last_page' => $logs->lastPage(),
                 ]
-            ];
-
-            return $this->sendResponse(['activities' => array_slice($activities, 0, $limit)], 'Activity logs retrieved successfully');
+            ], 'Activity logs retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve activity logs', $e->getMessage());
         }

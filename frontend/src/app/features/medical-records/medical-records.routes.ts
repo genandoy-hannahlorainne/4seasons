@@ -7,7 +7,7 @@ export const medicalRecordsRoutes: Routes = [
   },
   {
     path: 'personal-info',
-    loadComponent: () => import('./personal-info/personal-info.component').then(m => m.PersonalInfoComponent)
+    loadComponent: () => import('./personal-info-redirect.component').then(m => m.PersonalInfoRedirectComponent)
   },
   {
     path: 'visits-history',

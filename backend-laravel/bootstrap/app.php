@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register role middleware
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'audit' => \App\Http\Middleware\AuditMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

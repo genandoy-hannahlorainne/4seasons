@@ -1,0 +1,149 @@
+<div class="shdf-basic-container">
+  <div class="header">
+    <h1>Student Health Data Form - Basic Information</h1>
+    <p class="subtitle">Complete this quick form to generate your QR code (5 minutes)</p>
+    <div class="progress-indicator">
+      <div class="step active">1. Basic Info</div>
+      <div class="step">2. Comprehensive Form</div>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-card">
+      <h2>Parent/Guardian Information</h2>
+
+      <div class="form-group">
+        <label for="parent_guardian_name">Parent/Guardian Full Name *</label>
+        <input
+          type="text"
+          id="parent_guardian_name"
+          formControlName="parent_guardian_name"
+          [class.error]="submitted && form.get('parent_guardian_name')?.invalid"
+        />
+        <span class="error-message" *ngIf="submitted && form.get('parent_guardian_name')?.invalid">
+          Parent/Guardian name is required
+        </span>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h2>Emergency Contact</h2>
+
+      <div class="form-group">
+        <label for="emergency_contact">Emergency Contact Name *</label>
+        <input
+          type="text"
+          id="emergency_contact"
+          formControlName="emergency_contact"
+          [class.error]="submitted && form.get('emergency_contact')?.invalid"
+        />
+        <span class="error-message" *ngIf="submitted && form.get('emergency_contact')?.invalid">
+          Emergency contact name is required
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="emergency_contact_relation">Relationship *</label>
+        <select
+          id="emergency_contact_relation"
+          formControlName="emergency_contact_relation"
+          [class.error]="submitted && form.get('emergency_contact_relation')?.invalid"
+        >
+          <option value="">Select relationship</option>
+          <option value="mother">Mother</option>
+          <option value="father">Father</option>
+          <option value="guardian">Guardian</option>
+          <option value="sibling">Sibling</option>
+          <option value="other">Other</option>
+        </select>
+        <span class="error-message" *ngIf="submitted && form.get('emergency_contact_relation')?.invalid">
+          Relationship is required
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="emergency_contact_phone">Contact Number *</label>
+        <input
+          type="tel"
+          id="emergency_contact_phone"
+          formControlName="emergency_contact_phone"
+          placeholder="09171234567"
+          [class.error]="submitted && form.get('emergency_contact_phone')?.invalid"
+        />
+        <span class="error-message" *ngIf="submitted && form.get('emergency_contact_phone')?.invalid">
+          Contact number is required
+        </span>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h2>Physical Information (Optional)</h2>
+      <p class="info-text">You can skip this now and complete it later</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="height_cm">Height (cm)</label>
+          <input
+            type="number"
+            id="height_cm"
+            formControlName="height_cm"
+            placeholder="165"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="weight_kg">Weight (kg)</label>
+          <input
+            type="number"
+            id="weight_kg"
+            formControlName="weight_kg"
+            placeholder="55"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="blood_type">Blood Type</label>
+          <select id="blood_type" formControlName="blood_type">
+            <option value="">Select blood type</option>
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-banner" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <div class="success-banner" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" [disabled]="loading">
+        <span *ngIf="!loading">💾 Save & Generate QR Code</span>
+        <span *ngIf="loading">Saving...</span>
+      </button>
+
+      <button type="button" class="btn-secondary" (click)="onCompleteFullForm()" [disabled]="loading">
+        📋 Complete Full Form Now
+      </button>
+    </div>
+
+    <div class="info-box">
+      <strong>What happens next?</strong>
+      <ul>
+        <li>✅ Your QR code will be generated immediately</li>
+        <li>📅 You'll have 7 days to complete the comprehensive form</li>
+        <li>📧 We'll send you reminders before the deadline</li>
+      </ul>
+    </div>
+  </form>
+</div>
