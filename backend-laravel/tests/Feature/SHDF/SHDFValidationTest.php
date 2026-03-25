@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\SHDF;
 
+use App\Models\Role;
 use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\User;
@@ -165,9 +166,9 @@ class SHDFValidationTest extends TestCase
     /** @test */
     public function it_does_not_require_mrtd_consent_for_other_grades()
     {
-        $student = Student::factory()->create(['grade_level' => 'Grade 8']);
-        $user = User::factory()->create();
-        $student->update(['user_id' => $user->user_id]);
+        $student = Student::factory()->create(['grade_level' => 'Grade 8', 'gender' => 'M']);
+        $clinicRole = Role::where('role_name', 'Clinic Staff')->first();
+        $user = User::factory()->create(['role_id' => $clinicRole->role_id]);
 
         $payload = $this->validPayload($student->student_id);
         unset($payload['mrtd_consent']);

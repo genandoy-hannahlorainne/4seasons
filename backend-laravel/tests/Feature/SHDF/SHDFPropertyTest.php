@@ -332,7 +332,7 @@ class SHDFPropertyTest extends TestCase
      */
     public function test_property_student_access(): void
     {
-        $studentRole = Role::where('role_name', 'student')->first();
+        $studentRole = Role::where('role_name', 'Student')->first();
 
         for ($i = 0; $i < 20; $i++) {
             $user = User::factory()->create(['role_id' => $studentRole->role_id]);
@@ -343,7 +343,8 @@ class SHDFPropertyTest extends TestCase
             $this->assertTrue($user->can('submit', $ownStudent));
 
             // Other student's record
-            $otherStudent = Student::factory()->create(['user_id' => 999]);
+            $otherUser = User::factory()->create(['role_id' => $studentRole->role_id]);
+            $otherStudent = Student::factory()->create(['user_id' => $otherUser->user_id]);
             $this->assertFalse($user->can('view', $otherStudent));
             $this->assertFalse($user->can('submit', $otherStudent));
         }
