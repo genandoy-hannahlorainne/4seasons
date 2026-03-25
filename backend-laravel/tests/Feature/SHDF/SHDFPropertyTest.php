@@ -61,8 +61,10 @@ class SHDFPropertyTest extends TestCase
         ];
 
         for ($i = 0; $i < min(self::ITERATIONS, count($requiredFields) * 5); $i++) {
-            $student = Student::factory()->create();
-            $user = User::factory()->create(['role_id' => Role::where('role_name', 'Clinic Staff')->first()->role_id]);
+            // Create student with user account so authorization passes
+            $studentRole = Role::where('role_name', 'Student')->first();
+            $user = User::factory()->create(['role_id' => $studentRole->role_id]);
+            $student = Student::factory()->create(['user_id' => $user->user_id]);
 
             $payload = $this->generateValidPayload($student);
 
