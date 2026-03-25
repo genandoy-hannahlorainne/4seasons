@@ -146,6 +146,9 @@ class AdminController extends BaseController
             $sections = Section::where('grade_level_id', $gradeLevel->id)
                 ->where('is_active', true)
                 ->when($currentSchoolYearId, fn($q) => $q->where('school_year_id', $currentSchoolYearId))
+                ->withCount(['students' => function($q) {
+                    $q->where('is_active', true);
+                }])
                 ->orderBy('section_name')
                 ->get()
                 ->map(function($section) {
@@ -153,7 +156,7 @@ class AdminController extends BaseController
                         'id' => $section->id,
                         'section_name' => $section->section_name,
                         'capacity' => $section->capacity,
-                        'current_enrollment' => $section->current_enrollment ?? 0
+                        'current_enrollment' => $section->students_count ?? 0
                     ];
                 });
 
@@ -315,6 +318,9 @@ class AdminController extends BaseController
             $gradeLevels = GradeLevel::with(['sections' => function($query) use ($currentSchoolYearId) {
                 $query->where('is_active', true)
                       ->when($currentSchoolYearId, fn($q) => $q->where('school_year_id', $currentSchoolYearId))
+                      ->withCount(['students' => function($q) {
+                          $q->where('is_active', true);
+                      }])
                       ->orderBy('section_number');
             }])
             ->where('is_active', true)
@@ -332,7 +338,7 @@ class AdminController extends BaseController
                             'adviser_id'         => $section->adviser_id,
                             'adviser_name'       => $section->adviser_id ? ($adviserNames[$section->adviser_id] ?? null) : null,
                             'capacity'           => $section->capacity,
-                            'current_enrollment' => $section->current_enrollment ?? 0,
+                            'current_enrollment' => $section->students_count ?? 0,
                             'grade_level_id'     => $section->grade_level_id,
                         ];
                     })
@@ -379,6 +385,9 @@ class AdminController extends BaseController
     {
         try {
             $query = Section::with(['gradeLevel', 'schoolYear'])
+                ->withCount(['students' => function($q) {
+                    $q->where('is_active', true);
+                }])
                 ->where('is_active', true);
 
             if ($request->has('school_year_id')) {
@@ -401,7 +410,7 @@ class AdminController extends BaseController
                         'adviser_id'         => $section->adviser_id,
                         'adviser_name'       => $adviser,
                         'capacity'           => $section->capacity,
-                        'current_enrollment' => $section->attributes['current_enrollment'] ?? 0,
+                        'current_enrollment' => $section->students_count ?? 0,
                         'is_active'          => $section->is_active,
                         'level_name'         => $section->gradeLevel->level_name ?? null,
                         'level_number'       => $section->gradeLevel->level_number ?? null,
@@ -610,7 +619,7 @@ class AdminController extends BaseController
                     'school_year'      => $section->schoolYear->year_name ?? null,
                     'adviser_name'     => $adviserName,
                     'capacity'         => $section->capacity,
-                    'current_enrollment' => $section->attributes['current_enrollment'] ?? $students->count(),
+                    'current_enrollment' => $students->count(),
                 ],
                 'students' => $students,
                 'stats'    => $stats,
