@@ -32,7 +32,8 @@ class SHDFTransactionTest extends TestCase
     {
         $schoolYear = SchoolYear::factory()->create(['is_current' => true]);
         $student = Student::factory()->create();
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         // Mock a DB failure by forcing an exception during transaction
         DB::shouldReceive('transaction')

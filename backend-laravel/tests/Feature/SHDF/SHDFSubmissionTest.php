@@ -30,7 +30,8 @@ class SHDFSubmissionTest extends TestCase
     {
         $schoolYear = SchoolYear::factory()->create(['is_current' => true]);
         $student = Student::factory()->create(['gender' => 'F', 'grade_level' => 'Grade 7']);
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $payload = $this->validPayload($student->student_id);
         $payload['signature'] = UploadedFile::fake()->create('signature.pdf', 100);
@@ -84,7 +85,8 @@ class SHDFSubmissionTest extends TestCase
     {
         $schoolYear = SchoolYear::factory()->create(['is_current' => true]);
         $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 8']);
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         // First submission
         $payload1 = $this->validPayload($student->student_id);

@@ -66,7 +66,7 @@ class SHDFPropertyTest extends TestCase
 
         for ($i = 0; $i < min(self::ITERATIONS, count($requiredFields) * 5); $i++) {
             $student = Student::factory()->create();
-            $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->id]);
+            $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->role_id]);
 
             $payload = $this->generateValidPayload($student);
 
@@ -88,7 +88,7 @@ class SHDFPropertyTest extends TestCase
     public function test_property_philhealth_id_format(): void
     {
         $student = Student::factory()->create();
-        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->id]);
+        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->role_id]);
 
         for ($i = 0; $i < self::ITERATIONS; $i++) {
             $payload = $this->generateValidPayload($student);
@@ -125,7 +125,7 @@ class SHDFPropertyTest extends TestCase
     public function test_property_immunization_enum(): void
     {
         $student = Student::factory()->create();
-        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->id]);
+        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->role_id]);
 
         $vaccines = ['bcg', 'diphtheria_pertussis', 'oral_polio', 'mmr', 'chicken_pox',
                      'hepatitis_b', 'tetanus_toxoid', 'flu', 'pneumococcal'];
@@ -153,7 +153,7 @@ class SHDFPropertyTest extends TestCase
     public function test_property_none_exclusivity(): void
     {
         $student = Student::factory()->create();
-        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->id]);
+        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->role_id]);
 
         $testCases = [
             'medical_conditions' => [
@@ -194,7 +194,7 @@ class SHDFPropertyTest extends TestCase
     public function test_property_signature_file_validation(): void
     {
         $student = Student::factory()->create();
-        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->id]);
+        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->role_id]);
 
         $validMimes = ['pdf', 'jpeg', 'png'];
         $invalidMimes = ['txt', 'doc', 'gif', 'bmp'];
@@ -234,7 +234,7 @@ class SHDFPropertyTest extends TestCase
      */
     public function test_property_submission_round_trip(): void
     {
-        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->id]);
+        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->role_id]);
 
         for ($i = 0; $i < 20; $i++) {
             $student = Student::factory()->create();
@@ -263,7 +263,7 @@ class SHDFPropertyTest extends TestCase
      */
     public function test_property_upsert_uniqueness(): void
     {
-        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->id]);
+        $user = User::factory()->create(['role_id' => Role::where('role_name', 'clinic_staff')->first()->role_id]);
 
         for ($i = 0; $i < 20; $i++) {
             $student = Student::factory()->create();
@@ -301,7 +301,7 @@ class SHDFPropertyTest extends TestCase
         $clinicRole = Role::where('role_name', 'clinic_staff')->first();
 
         for ($i = 0; $i < 20; $i++) {
-            $clinicUser = User::factory()->create(['role_id' => $clinicRole->id]);
+            $clinicUser = User::factory()->create(['role_id' => $clinicRole->role_id]);
             $student = Student::factory()->create();
 
             $this->assertTrue($clinicUser->can('view', $student));
@@ -318,7 +318,7 @@ class SHDFPropertyTest extends TestCase
         $adviserRole = Role::where('role_name', 'adviser')->first();
 
         for ($i = 0; $i < 20; $i++) {
-            $adviser = User::factory()->create(['role_id' => $adviserRole->id]);
+            $adviser = User::factory()->create(['role_id' => $adviserRole->role_id]);
 
             // Own section student
             $ownStudent = Student::factory()->create(['current_adviser_id' => $adviser->user_id]);
@@ -339,7 +339,7 @@ class SHDFPropertyTest extends TestCase
         $studentRole = Role::where('role_name', 'student')->first();
 
         for ($i = 0; $i < 20; $i++) {
-            $user = User::factory()->create(['role_id' => $studentRole->id]);
+            $user = User::factory()->create(['role_id' => $studentRole->role_id]);
 
             // Own record
             $ownStudent = Student::factory()->create(['user_id' => $user->user_id]);

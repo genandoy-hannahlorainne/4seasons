@@ -25,7 +25,8 @@ class SHDFValidationTest extends TestCase
     public function it_rejects_missing_required_fields()
     {
         $student = Student::factory()->create();
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $requiredFields = [
             'student_id',
@@ -53,7 +54,8 @@ class SHDFValidationTest extends TestCase
     public function it_rejects_medical_condition_none_with_other_conditions()
     {
         $student = Student::factory()->create();
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $payload = $this->validPayload($student->student_id);
         $payload['condition_none'] = true;
@@ -68,7 +70,8 @@ class SHDFValidationTest extends TestCase
     public function it_rejects_medication_none_with_other_medications()
     {
         $student = Student::factory()->create();
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $payload = $this->validPayload($student->student_id);
         $payload['medications_none'] = true;
@@ -83,7 +86,8 @@ class SHDFValidationTest extends TestCase
     public function it_rejects_family_condition_none_with_other_conditions()
     {
         $student = Student::factory()->create();
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $payload = $this->validPayload($student->student_id);
         $payload['family']['condition_none'] = true;
@@ -98,7 +102,8 @@ class SHDFValidationTest extends TestCase
     public function it_rejects_emergency_contact_other_without_free_text()
     {
         $student = Student::factory()->create();
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $payload = $this->validPayload($student->student_id);
         $payload['emergency_contact_relation'] = 'other';
@@ -113,7 +118,8 @@ class SHDFValidationTest extends TestCase
     public function it_rejects_pwd_congenital_without_detail()
     {
         $student = Student::factory()->create();
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $payload = $this->validPayload($student->student_id);
         $payload['pwd_status'] = 'congenital';
@@ -128,7 +134,8 @@ class SHDFValidationTest extends TestCase
     public function it_rejects_deworming_hindi_without_refusal_reason()
     {
         $student = Student::factory()->create();
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $payload = $this->validPayload($student->student_id);
         $payload['deworming_consent'] = 'hindi';
@@ -143,7 +150,8 @@ class SHDFValidationTest extends TestCase
     public function it_requires_mrtd_consent_for_grade_7()
     {
         $student = Student::factory()->create(['grade_level' => 'Grade 7']);
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $payload = $this->validPayload($student->student_id);
         unset($payload['mrtd_consent']);
@@ -157,7 +165,8 @@ class SHDFValidationTest extends TestCase
     public function it_does_not_require_mrtd_consent_for_other_grades()
     {
         $student = Student::factory()->create(['grade_level' => 'Grade 8']);
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $payload = $this->validPayload($student->student_id);
         unset($payload['mrtd_consent']);
@@ -170,7 +179,8 @@ class SHDFValidationTest extends TestCase
     public function it_requires_wifa_consent_for_female_students()
     {
         $student = Student::factory()->create(['gender' => 'F']);
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $payload = $this->validPayload($student->student_id);
         unset($payload['wifa_consent']);
@@ -184,7 +194,8 @@ class SHDFValidationTest extends TestCase
     public function it_does_not_require_wifa_consent_for_male_students()
     {
         $student = Student::factory()->create(['gender' => 'M']);
-        $user = User::factory()->create(['user_id' => $student->user_id]);
+        $user = User::factory()->create();
+        $student->update(['user_id' => $user->user_id]);
 
         $payload = $this->validPayload($student->student_id);
         unset($payload['wifa_consent']);

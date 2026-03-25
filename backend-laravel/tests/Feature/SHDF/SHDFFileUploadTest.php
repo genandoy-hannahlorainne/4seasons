@@ -31,14 +31,14 @@ class SHDFFileUploadTest extends TestCase
     public function it_accepts_valid_pdf_upload()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();
-        $student = Student::factory()->create();
+        $student = Student::factory()->create(['gender' => 'F', 'grade_level' => 'Grade 8']);
         $user = User::factory()->create([
             'user_id' => $student->user_id,
             'role_id' => $studentRole->role_id
         ]);
         $student->update(['user_id' => $user->user_id]);
 
-        $payload = $this->validPayload($student->student_id);
+        $payload = $this->validPayload($student);
         $payload['signature'] = UploadedFile::fake()->create('signature.pdf', 100);
 
         $response = $this->actingAs($user)->postJson('/api/shdf', $payload);
@@ -54,11 +54,11 @@ class SHDFFileUploadTest extends TestCase
     public function it_accepts_valid_png_upload()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();
-        $student = Student::factory()->create();
+        $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 8']);
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $student->update(['user_id' => $user->user_id]);
 
-        $payload = $this->validPayload($student->student_id);
+        $payload = $this->validPayload($student);
         $payload['signature'] = UploadedFile::fake()->image('signature.png');
 
         $response = $this->actingAs($user)->postJson('/api/shdf', $payload);
@@ -74,11 +74,11 @@ class SHDFFileUploadTest extends TestCase
     public function it_accepts_valid_jpeg_upload()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();
-        $student = Student::factory()->create();
+        $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 7']);
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $student->update(['user_id' => $user->user_id]);
 
-        $payload = $this->validPayload($student->student_id);
+        $payload = $this->validPayload($student);
         $payload['signature'] = UploadedFile::fake()->image('signature.jpeg');
 
         $response = $this->actingAs($user)->postJson('/api/shdf', $payload);
@@ -90,11 +90,11 @@ class SHDFFileUploadTest extends TestCase
     public function it_rejects_oversized_file()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();
-        $student = Student::factory()->create();
+        $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 8']);
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $student->update(['user_id' => $user->user_id]);
 
-        $payload = $this->validPayload($student->student_id);
+        $payload = $this->validPayload($student);
         // 102400 KB = 100 MB, so 102401 should fail
         $payload['signature'] = UploadedFile::fake()->create('signature.pdf', 102401);
 
@@ -108,11 +108,11 @@ class SHDFFileUploadTest extends TestCase
     public function it_rejects_wrong_mime_type()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();
-        $student = Student::factory()->create();
+        $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 8']);
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $student->update(['user_id' => $user->user_id]);
 
-        $payload = $this->validPayload($student->student_id);
+        $payload = $this->validPayload($student);
         $payload['signature'] = UploadedFile::fake()->create('signature.txt', 100);
 
         $response = $this->actingAs($user)->postJson('/api/shdf', $payload);
@@ -125,11 +125,11 @@ class SHDFFileUploadTest extends TestCase
     public function it_rejects_missing_signature()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();
-        $student = Student::factory()->create();
+        $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 8']);
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $student->update(['user_id' => $user->user_id]);
 
-        $payload = $this->validPayload($student->student_id);
+        $payload = $this->validPayload($student);
         unset($payload['signature']);
 
         $response = $this->actingAs($user)->postJson('/api/shdf', $payload);
@@ -138,10 +138,10 @@ class SHDFFileUploadTest extends TestCase
         $response->assertJsonValidationErrors('signature');
     }
 
-    protected function validPayload(int $studentId): array
+    protected function validPayload(Student $student): array
     {
-        return [
-            'student_id' => $studentId,
+        $payload = [
+            'student_id' => $student->student_id,
             'parent_guardian_name' => 'Juan Dela Cruz',
             'emergency_contact' => 'Maria Dela Cruz',
             'emergency_contact_relation' => 'mother',
@@ -171,5 +171,18 @@ class SHDFFileUploadTest extends TestCase
             'information_certified' => true,
             'deworming_consent' => 'oo',
         ];
+
+        // Add MRTD consent for Grade 7 students
+        if ($student->grade_level === 'Grade 7') {
+            $payload['mrtd_consent'] = 'yes';
+        }
+
+        // Add WIFA consent for female students
+        if ($student->gender === 'F') {
+            $payload['wifa_consent'] = 'yes';
+            $payload['menarche_age'] = 12;
+        }
+
+        return $payload;
     }
 }
