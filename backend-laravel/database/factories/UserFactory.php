@@ -16,10 +16,10 @@ class UserFactory extends Factory
 
     public function definition(): array
     {
-        // Try to find an existing role, or create a default one
+        // Try to find an existing role, or create one using the factory
         $role = Role::first();
         if (!$role) {
-            $role = Role::create(['role_name' => 'Admin']);
+            $role = Role::factory()->create(['role_name' => 'Admin']);
         }
 
         return [
@@ -38,7 +38,7 @@ class UserFactory extends Factory
         return $this->state(function () {
             $role = Role::where('role_name', 'Admin')->first();
             if (!$role) {
-                $role = Role::create(['role_name' => 'Admin']);
+                $role = Role::factory()->create(['role_name' => 'Admin']);
             }
             return ['role_id' => $role->role_id];
         });

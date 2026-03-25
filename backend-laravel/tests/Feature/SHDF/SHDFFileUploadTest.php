@@ -174,13 +174,13 @@ class SHDFFileUploadTest extends TestCase
 
         // Add MRTD consent for Grade 7 students
         if ($student->grade_level === 'Grade 7') {
-            $payload['mrtd_consent'] = 'yes';
+            $payload['mrtd_consent'] = 'oo';
         }
 
         // Add WIFA consent for female students
         if ($student->gender === 'F') {
-            $payload['wifa_consent'] = 'yes';
-            $payload['menarche_age'] = 12;
+            $payload['wifa_consent'] = 'oo';
+            $payload['menarche_age'] = '12';
         }
 
         return $payload;
