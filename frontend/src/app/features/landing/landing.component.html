@@ -1,13 +1,148 @@
-<div class="landing-container">
-  <div class="hero-section">
-    <div class="overlay"></div>
-    <div class="content">
-      <h1 class="title">PDMHS Student Medical System</h1>
-      <p class="subtitle">Sign in to start your session</p>
+﻿<div class="landing-container">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <img src="../../assets/pdmhs-logo.png" alt="PDMHS Logo" class="logo">
+      <button class="btn-login-header" (click)="navigateToLogin()">Login</button>
     </div>
-  </div>
-  
-  <div class="button-group">
-    <button class="btn btn-login" (click)="navigateToLogin()">Log In</button>
-  </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1 class="hero-title">PDMHS Medical Record System</h1>
+        <p class="hero-subtitle">Comprehensive Healthcare Management for Students</p>
+        <p class="hero-description">
+          Streamline health information management with our secure, efficient, and user-friendly 
+          medical record system designed specifically for President Diosdado Macapagal High School.
+        </p>
+        <div class="hero-features">
+          <div class="feature-item">
+            <span class="feature-icon"></span>
+            <span class="feature-text">Digital Health Records</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon"></span>
+            <span class="feature-text">Secure & Private</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon"></span>
+            <span class="feature-text">Real-time Monitoring</span>
+          </div>
+        </div>
+        <button class="btn-get-started" (click)="navigateToLogin()">Get Started</button>
+      </div>
+      <div class="hero-image-container">
+        <img src="../../assets/pdmhs-hero-staff.png" alt="PDMHS Healthcare Staff" class="hero-character">
+      </div>
+    </div>
+  </section>
+
+  <!-- About PDMHS Section -->
+  <section class="about-section">
+    <div class="about-content">
+      <h2 class="section-title">About PDMHS</h2>
+      <div class="about-details">
+        <img src="../../assets/pdmhs-background.png" alt="PDMHS Cover" class="about-image">
+        <div class="about-text">
+          <p>
+            President Diosdado Macapagal High School (PDMHS) is committed to providing quality education
+            and comprehensive healthcare services to our students. Our Medical Record System
+            streamlines health information management, ensuring efficient and secure access to
+            student medical records.
+          </p>
+          <p>
+            This system enables our clinic staff, advisers, and administrators to maintain
+            accurate health records, track medical visits, manage emergency drills, and ensure
+            the well-being of every student in our care.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Developers Section -->
+  <section class="developers-section">
+    <div class="developers-content">
+      <h2 class="section-title">Meet the Developers</h2>
+      <div class="developers-grid">
+        <div class="developer-card">
+          <img src="../../assets/developers/genandoy.jpg" alt="Hannah Lorainne M. Genandoy" class="developer-image">
+          <h3 class="developer-name">Hannah Lorainne M. Genandoy</h3>
+          <p class="developer-role">Project Manager/Developer</p>
+        </div>
+        <div class="developer-card">
+          <img src="../../assets/developers/villas.jpg" alt="Clarence F. Villas" class="developer-image">
+          <h3 class="developer-name">Clarence F. Villas</h3>
+          <p class="developer-role">Tech Lead/Developer</p>
+        </div>
+        <div class="developer-card">
+          <img src="../../assets/developers/esparagoza.jpg" alt="Mikka Esparagoza" class="developer-image">
+          <h3 class="developer-name">Mikka Esparagoza</h3>
+          <p class="developer-role">UI/UX Designer/Developer</p>
+        </div>
+        <div class="developer-card">
+          <img src="../../assets/developers/francisco.jpg" alt="Krislyn Janelle Francisco" class="developer-image">
+          <h3 class="developer-name">Krislyn Janelle Francisco</h3>
+          <p class="developer-role">System Analyst/Document Analyst</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3 class="footer-title">Contact Us</h3>
+        <p class="footer-text">
+          <strong>Email:</strong> sdotapat.pdmhs&#64;deped.gov.ph
+        </p>
+      </div>
+
+      <div class="footer-section">
+        <h3 class="footer-title">Opening Hours</h3>
+        <div class="hours-list">
+          <div class="hours-item">
+            <span>Monday</span>
+            <span>8:00 AM - 5:00 PM</span>
+          </div>
+          <div class="hours-item">
+            <span>Tuesday</span>
+            <span>8:00 AM - 5:00 PM</span>
+          </div>
+          <div class="hours-item">
+            <span>Wednesday</span>
+            <span>8:00 AM - 5:00 PM</span>
+          </div>
+          <div class="hours-item">
+            <span>Thursday</span>
+            <span>8:00 AM - 5:00 PM</span>
+          </div>
+          <div class="hours-item">
+            <span>Friday</span>
+            <span>8:00 AM - 5:00 PM</span>
+          </div>
+          <div class="hours-item">
+            <span>Saturday</span>
+            <span>CLOSED</span>
+          </div>
+          <div class="hours-item">
+            <span>Sunday</span>
+            <span>CLOSED</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-links">
+        <a href="#" class="footer-link">Terms of Use</a>
+        <span class="separator">|</span>
+        <a href="#" class="footer-link">Privacy Policy</a>
+      </div>
+      <p class="footer-copyright"> 2026 PDMHS Medical Record System. All rights reserved.</p>
+    </div>
+  </footer>
 </div>

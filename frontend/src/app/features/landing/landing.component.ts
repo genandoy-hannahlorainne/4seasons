@@ -16,3 +16,4 @@ export class LandingComponent {
     this.router.navigate(['/role-selection']);
   }
 }
+ 
