@@ -36,15 +36,25 @@ interface UsersResponse {
   };
 }
 
+// Admin Dashboard Component - Updated with PDMHS blue branding
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
   imports: [CommonModule, HealthRiskVisualizationComponent],
+  styleUrls: ['./admin-dashboard.component.scss'],
   template: `
     <div class="admin-dashboard">
-      <div class="dashboard-header">
-        <h1>Admin Dashboard</h1>
-        <p>System overview and management</p>
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="hero-content">
+          <div class="hero-text">
+            <h1>Welcome to PDMHS Admin Dashboard</h1>
+            <p>Manage your school's medical records system efficiently and securely</p>
+          </div>
+          <div class="hero-image-container">
+            <img src="../../../assets/pdmhs-hero.png" alt="PDMHS Hero" class="hero-image">
+          </div>
+        </div>
       </div>
 
       <!-- Loading State -->
@@ -58,9 +68,9 @@ interface UsersResponse {
         <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
           <strong>📊 Current Stats:</strong>
           <div style="margin-top: 10px; font-family: monospace;">
-            Total Users: {{ systemStats.totalUsers }} | 
-            Students: {{ systemStats.totalStudents }} | 
-            Faculty: {{ systemStats.totalAdvisers }} | 
+            Total Users: {{ systemStats.totalUsers }} |
+            Students: {{ systemStats.totalStudents }} |
+            Faculty: {{ systemStats.totalAdvisers }} |
             Clinic Staff: {{ systemStats.totalStaff }}
           </div>
           <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
@@ -296,7 +306,7 @@ interface UsersResponse {
       padding: 3rem;
       background: white;
       border-radius: 12px;
-      
+
       .spinner {
         width: 50px;
         height: 50px;
@@ -306,7 +316,7 @@ interface UsersResponse {
         border-radius: 50%;
         animation: spin 1s linear infinite;
       }
-      
+
       p { color: #7f8c8d; }
     }
 
@@ -334,7 +344,7 @@ interface UsersResponse {
         margin-bottom: 1rem;
 
         i { font-size: 1.25rem; }
-        
+
         .mark-all-read {
           background: rgba(255, 255, 255, 0.2);
           border: 1px solid rgba(255, 255, 255, 0.3);
@@ -695,7 +705,7 @@ interface UsersResponse {
           align-items: center;
           justify-content: center;
           font-size: 1rem;
-          
+
           &.user { background: #e3f2fd; }
           &.record { background: #e8f5e9; }
           &.report { background: #fff3e0; }
@@ -781,13 +791,13 @@ interface UsersResponse {
         &:last-child { border-bottom: none; }
 
         .user-name { font-weight: 500; color: #2c3e50; }
-        
+
         .role-badge {
           padding: 0.25rem 0.75rem;
           border-radius: 20px;
           font-size: 0.75rem;
           font-weight: 500;
-          
+
           &.student { background: #e8f5e9; color: #2e7d32; }
           &.clinic.staff, &.clinic-staff { background: #ffebee; color: #c62828; }
           &.adviser { background: #f3e5f5; color: #7b1fa2; }
@@ -800,7 +810,7 @@ interface UsersResponse {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          
+
           .status-dot {
             width: 8px;
             height: 8px;
@@ -897,22 +907,22 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.router.navigate(['/login']);
       return;
     }
-    
+
     const currentUser = this.authService.currentUserValue;
-    
+
     console.log('🔐 Admin Dashboard - Authentication verified');
     console.log('Current user:', currentUser);
-    
+
     if (currentUser?.role_name?.toLowerCase() !== 'admin') {
       console.error('❌ Not admin user, redirecting');
       alert('Access denied. Admin privileges required.');
       this.router.navigate(['/dashboard']);
       return;
     }
-    
+
     console.log('✅ Authenticated as admin, loading dashboard');
     this.loadDashboardData();
-    
+
     // Auto-refresh dashboard data every 30 seconds
     interval(this.refreshInterval)
       .pipe(
@@ -950,14 +960,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   loadDashboardData(): void {
     this.loading = true;
     console.log('📊 Loading dashboard data...');
-    
+
     // Load dashboard statistics first
     this.adminService.getDashboard().subscribe({
       next: (response) => {
         console.log('✅ Dashboard response:', response);
         if (response?.success && response.data) {
           const dashboardData = response.data;
-          
+
           // Update system stats from dashboard API
           if (dashboardData.current_stats) {
             this.systemStats = {
@@ -974,12 +984,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         console.error('❌ Error loading dashboard:', err);
       }
     });
-    
+
     // Load users data for recent users display
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
         console.log('✅ getAllUsers full response:', response);
-        
+
         if (response?.success && response.data?.users) {
           this.usersData$.next(response);
           this.updateRecentUsersData(response.data);
@@ -1034,17 +1044,17 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
               timeAgo: this.formatTimestamp(notif?.created_at || '')
             };
           });
-          
+
           // Emergency notifications (urgent + pending)
           this.emergencyNotifications = allNotifications.filter(
             (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending'
           );
-          
+
           // Notification history (all read/sent notifications, or normal priority)
           this.notificationHistory = allNotifications.filter(
             (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
           ).slice(0, 10); // Show last 10
-          
+
           console.log('✅ Emergency notifications loaded:', this.emergencyNotifications.length);
           console.log('✅ Notification history loaded:', this.notificationHistory.length);
         } else if (response?.success && Array.isArray(response.notifications)) {
@@ -1057,17 +1067,17 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
               timeAgo: this.formatTimestamp(notif?.created_at || '')
             };
           });
-          
+
           // Emergency notifications (urgent + pending)
           this.emergencyNotifications = allNotifications.filter(
             (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending'
           );
-          
+
           // Notification history (all read/sent notifications, or normal priority)
           this.notificationHistory = allNotifications.filter(
             (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
           ).slice(0, 10); // Show last 10
-          
+
           console.log('✅ Emergency notifications loaded:', this.emergencyNotifications.length);
           console.log('✅ Notification history loaded:', this.notificationHistory.length);
         }
@@ -1080,7 +1090,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   private updateRecentUsersData(data: any): void {
     console.log('📊 Updating recent users with data:', data);
-    
+
     if (!data || !data.users) {
       console.error('❌ Invalid data structure');
       return;
@@ -1090,10 +1100,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const advisers = Array.isArray(data.users?.adviser) ? data.users.adviser : [];
     const clinicStaff = Array.isArray(data.users?.clinic_staff) ? data.users.clinic_staff : [];
     const admins = Array.isArray(data.users?.admin) ? data.users.admin : [];
-    
+
     // Combine all users for recent users display
     const allUsers: User[] = [...students, ...advisers, ...clinicStaff, ...admins];
-    
+
     // Get recent users (last 10, sorted by creation date)
     this.recentUsers = allUsers
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -1116,7 +1126,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       'clinic staff': 'Clinic Staff',
       'admin': 'Admin'
     };
-    
+
     return roleMap[roleName.toLowerCase()] || roleName;
   }
 
@@ -1126,10 +1136,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       if (isNaN(date.getTime())) {
         return 'N/A';
       }
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit' 
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
       });
     } catch (error) {
       console.error('Error formatting date:', error);
@@ -1143,7 +1153,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       if (isNaN(date.getTime())) {
         return 'Unknown';
       }
-      
+
       const now = new Date();
       const diffMs = now.getTime() - date.getTime();
       const diffMins = Math.floor(diffMs / 60000);
@@ -1154,7 +1164,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       if (diffMins < 60) return `${diffMins}m ago`;
       if (diffHours < 24) return `${diffHours}h ago`;
       if (diffDays < 7) return `${diffDays}d ago`;
-      
+
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } catch (error) {
       console.error('Error formatting timestamp:', error);
@@ -1191,7 +1201,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   viewEmergencyDetails(notification: any): void {
     // Navigate to detailed view or show modal
     console.log('Viewing emergency details:', notification);
-    
+
     // Create a detailed modal or alert
     const details = `
 Emergency Details:
@@ -1208,7 +1218,7 @@ Time: ${notification?.timeAgo || 'N/A'}
 Staff: ${notification?.staff?.name || 'N/A'}
 Position: ${notification?.staff?.position || 'N/A'}
     `.trim();
-    
+
     if (confirm(details + '\n\nMark this notification as read?')) {
       this.markNotificationAsRead(notification?.notification_id);
     }
@@ -1232,7 +1242,7 @@ Position: ${notification?.staff?.position || 'N/A'}
 
   markAllNotificationsAsRead(): void {
     if (this.emergencyNotifications.length === 0) return;
-    
+
     if (confirm(`Mark all ${this.emergencyNotifications.length} emergency notifications as read?`)) {
       this.adminService.markAllNotificationsAsRead().subscribe({
         next: (response) => {
@@ -1242,10 +1252,10 @@ Position: ${notification?.staff?.position || 'N/A'}
               ...this.emergencyNotifications.map(n => ({ ...n, status: 'Read' })),
               ...this.notificationHistory
             ].slice(0, 10);
-            
+
             // Clear emergency notifications
             this.emergencyNotifications = [];
-            
+
             alert('All emergency notifications marked as read');
           }
         },
@@ -1259,13 +1269,13 @@ Position: ${notification?.staff?.position || 'N/A'}
   sendSMSToParent(notification: any): void {
     const studentName = notification?.student?.full_name || 'the student';
     const visitId = notification?.visit?.visit_id || notification?.visit_id;
-    
+
     if (!visitId) {
       alert('Error: Visit ID not found in notification');
       console.error('Notification object:', notification);
       return;
     }
-    
+
     if (confirm(`Send SMS notification to ${studentName}'s parent/guardian about this emergency visit?`)) {
       this.adminService.sendParentSMS(visitId).subscribe({
         next: (response) => {
@@ -1302,7 +1312,7 @@ Created: ${notification.timeAgo || 'N/A'}
 Message:
 ${notification.message || 'N/A'}
     `.trim();
-    
+
     alert(details);
   }
 }

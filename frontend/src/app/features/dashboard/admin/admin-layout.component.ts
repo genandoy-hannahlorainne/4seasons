@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet } from '@angular/router';
 
+// Admin Layout Component with PDMHS Background
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
@@ -11,8 +12,8 @@ import { RouterModule, RouterOutlet } from '@angular/router';
     <div class="admin-layout">
       <nav class="top-nav">
         <div class="nav-brand">
-          <span class="brand-icon">🛡️</span>
-          <span class="brand-text">Admin Panel</span>
+          <img src="../../../assets/pdmhs-logo.png" alt="PDMHS Logo" class="brand-logo">
+          <span class="brand-text">PDMHS Admin Panel</span>
         </div>
         <div class="nav-links">
           <a routerLink="/dashboard/admin" class="nav-link" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
@@ -31,7 +32,7 @@ import { RouterModule, RouterOutlet } from '@angular/router';
           </button>
         </div>
       </nav>
-      
+
       <div class="content-area">
         <router-outlet></router-outlet>
       </div>
