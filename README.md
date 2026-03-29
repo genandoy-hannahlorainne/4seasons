@@ -24,7 +24,7 @@
 
 <br/>
 
-> A web-based medical record management system for PDMHS, designed to streamline student health data, medical visits, emergency drills, and health monitoring across multiple user roles.
+> StudentCare+: A Digital Clinic Management System with QR Scanning for Students and SMS Alerts for Parents at President Diosdado Macapagal High School (PDMHS), designed to streamline student health data, medical visits, emergency drills, and health monitoring across multiple user roles.
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=8bfde4&height=4&section=header" width="100%"/>
 
@@ -46,7 +46,7 @@
 ## ✨ Features
 
 <details>
-<summary><b>🔐 Admin</b></summary>
+<summary><b> ADMIN </b></summary>
 
 - User management (create, update, deactivate, bulk CSV import)
 - Section and class management with adviser assignment
@@ -58,7 +58,7 @@
 </details>
 
 <details>
-<summary><b>🏥 Clinic Staff</b></summary>
+<summary><b> CLINIC STAFF </b></summary>
 
 - Student record search and management
 - Medical visit recording (vitals, diagnosis, treatment, chief complaint)
@@ -68,7 +68,7 @@
 </details>
 
 <details>
-<summary><b>📋 Adviser (Teacher)</b></summary>
+<summary><b> ADVISER/ FACULTY/ TEACHER </b></summary>
 
 - Class roster and advisory student management
 - Health monitoring dashboard and heatmap
@@ -77,7 +77,7 @@
 </details>
 
 <details>
-<summary><b>🎓 Student</b></summary>
+<summary><b> STUDENT </b></summary>
 
 - Personal medical records and visit history
 - SHDF (Student Health Data Form) submission
@@ -229,7 +229,7 @@ See [USER_MANUAL.md](./USER_MANUAL.md) for detailed usage instructions per role.
 
 ## 📄 License
 
-For academic and institutional use only.
+For capstone project, 2026. 
 
 <div align="center">
 <br/>
