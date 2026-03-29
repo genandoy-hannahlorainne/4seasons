@@ -42,7 +42,7 @@ class AdminController extends BaseController
 
             // Get recent users count (last 30 days)
             $recentUsersCount = DB::table('users')
-                ->where('created_at', '>=', now()->subDays(30))
+                ->where('created_at', '>=', now()->subDays(30)) 
                 ->count();
 
             // Get BMI statistics for health insights
