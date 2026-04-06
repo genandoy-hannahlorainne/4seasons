@@ -33,7 +33,9 @@ interface AdviserAssignmentStatus {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="promotion-container">
-      <h2>Grade Promotion Management</h2>
+      <div class="page-header">
+        <h2>Grade Promotion Management</h2>
+      </div>
 
       <!-- Important Notice -->
       <div class="notice-banner">
@@ -202,9 +204,24 @@ interface AdviserAssignmentStatus {
   `,
   styles: [`
     .promotion-container {
-      padding: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
+      padding: 2rem;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      padding: 2rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+
+      h2 {
+        font-size: 2rem;
+        color: #ffffff;
+        margin: 0;
+        font-weight: 700;
+      }
     }
 
     .notice-banner {
