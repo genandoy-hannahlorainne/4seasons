@@ -430,7 +430,16 @@ export class EmergencyDrillsComponent implements OnInit {
     }
 
     this.creating = true;
-    this.drillService.createDrill(this.newDrill).subscribe({
+
+    // Send datetime-local value as-is (no UTC conversion) to preserve local time
+    const payload = {
+      ...this.newDrill,
+      scheduled_at: this.newDrill.scheduled_at
+        ? this.newDrill.scheduled_at + ':00'
+        : null
+    };
+
+    this.drillService.createDrill(payload).subscribe({
       next: (response) => {
         this.drills.unshift(response.data);
         this.showCreateModal = false;

@@ -51,7 +51,7 @@ class EmergencyDrillController extends BaseController
                 'drill_name' => 'required|string|max:255',
                 'drill_type' => 'required|in:earthquake,fire,lockdown,medical,evacuation',
                 'description' => 'nullable|string',
-                'scheduled_at' => 'nullable|date|after:now',
+                'scheduled_at' => 'nullable|date',
                 'settings' => 'nullable|array'
             ]);
 
