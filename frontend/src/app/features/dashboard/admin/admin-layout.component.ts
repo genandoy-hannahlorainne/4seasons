@@ -1,42 +1,100 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+import { Router } from '@angular/router';
 
-// Admin Layout Component with PDMHS Background
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
   imports: [CommonModule, RouterModule, RouterOutlet],
   styleUrls: ['./admin-layout.component.scss'],
   template: `
-    <div class="admin-layout">
-      <nav class="top-nav">
-        <div class="nav-brand">
-          <img src="../../../assets/pdmhs-logo.png" alt="PDMHS Logo" class="brand-logo">
-          <span class="brand-text">PDMHS Admin Panel</span>
-        </div>
-        <div class="nav-links">
-          <a routerLink="/dashboard/admin" class="nav-link" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
-          <a routerLink="/dashboard/admin/manage-users" class="nav-link" routerLinkActive="active">Users</a>
-          <a routerLink="/dashboard/admin/manage-sections" class="nav-link" routerLinkActive="active">Sections</a>
-          <a routerLink="/dashboard/admin/school-year-management" class="nav-link" routerLinkActive="active">School Years</a>
-          <a routerLink="/dashboard/admin/grade-promotion" class="nav-link" routerLinkActive="active">Grade Promotion</a>
-          <a routerLink="/dashboard/admin/emergency-drills" class="nav-link" routerLinkActive="active">Emergency Drills</a>
-          <a routerLink="/dashboard/admin/settings" class="nav-link" routerLinkActive="active">Settings</a>
-          <a routerLink="/dashboard/admin/backup-recovery" class="nav-link" routerLinkActive="active">Backup</a>
-          <a routerLink="/dashboard/admin/reports" class="nav-link" routerLinkActive="active">Reports</a>
-        </div>
-        <div class="nav-icons">
-          <button class="icon-btn profile" routerLink="/dashboard/admin/profile" title="Profile">
-            <img src="assets/user-male.png" alt="Profile" class="icon-img">
+    <div class="admin-shell" [class.collapsed]="isCollapsed">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <img src="assets/pdmhs-logo.png" alt="PDMHS Logo" class="brand-logo" (click)="toggleSidebar()" style="cursor:pointer">
+          <span class="brand-text">PDMHS<br><small>Admin Panel</small></span>
+          <button class="hamburger" (click)="toggleSidebar()" title="Toggle sidebar">
+            <span></span><span></span><span></span>
           </button>
         </div>
-      </nav>
 
-      <div class="content-area">
+        <nav class="sidebar-nav">
+          <a routerLink="/dashboard/admin" routerLinkActive="active"
+             [routerLinkActiveOptions]="{exact: true}" class="nav-item" title="Dashboard">
+            <img src="assets/icons/dashboard.png" class="nav-icon" alt="Dashboard">
+            <span class="nav-label">Dashboard</span>
+          </a>
+          <a routerLink="/dashboard/admin/manage-users" routerLinkActive="active" class="nav-item" title="Users">
+            <img src="assets/icons/users.jpg" class="nav-icon" alt="Users">
+            <span class="nav-label">Users</span>
+          </a>
+          <a routerLink="/dashboard/admin/manage-sections" routerLinkActive="active" class="nav-item" title="Sections">
+            <img src="assets/icons/sections.png" class="nav-icon" alt="Sections">
+            <span class="nav-label">Sections</span>
+          </a>
+          <a routerLink="/dashboard/admin/school-year-management" routerLinkActive="active" class="nav-item" title="School Years">
+            <img src="assets/icons/school-years.png" class="nav-icon" alt="School Years">
+            <span class="nav-label">School Years</span>
+          </a>
+          <a routerLink="/dashboard/admin/grade-promotion" routerLinkActive="active" class="nav-item" title="Grade Promotion">
+            <img src="assets/icons/grade-promotion.png" class="nav-icon" alt="Grade Promotion">
+            <span class="nav-label">Grade Promotion</span>
+          </a>
+          <a routerLink="/dashboard/admin/emergency-drills" routerLinkActive="active" class="nav-item" title="Emergency Drills">
+            <img src="assets/icons/emergency-drills.png" class="nav-icon" alt="Emergency Drills">
+            <span class="nav-label">Emergency Drills</span>
+          </a>
+          <a routerLink="/dashboard/admin/settings" routerLinkActive="active" class="nav-item" title="Settings">
+            <img src="assets/icons/settings.png" class="nav-icon" alt="Settings">
+            <span class="nav-label">Settings</span>
+          </a>
+          <a routerLink="/dashboard/admin/backup-recovery" routerLinkActive="active" class="nav-item" title="Backup">
+            <img src="assets/icons/backup.png" class="nav-icon" alt="Backup">
+            <span class="nav-label">Backup</span>
+          </a>
+          <a routerLink="/dashboard/admin/reports" routerLinkActive="active" class="nav-item" title="Reports">
+            <img src="assets/icons/reports.png" class="nav-icon" alt="Reports">
+            <span class="nav-label">Reports</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <a routerLink="/dashboard/admin/profile" routerLinkActive="active" class="nav-item" title="Profile">
+            <img src="assets/icons/profile.png" class="nav-icon" alt="Profile">
+            <span class="nav-label">Profile</span>
+          </a>
+          <button class="nav-item logout-btn" (click)="logout()" title="Logout">
+            <img src="assets/icons/logout.jpg" class="nav-icon" alt="Logout">
+            <span class="nav-label">Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <main class="main-content">
         <router-outlet></router-outlet>
-      </div>
+      </main>
+
     </div>
   `,
 })
-export class AdminLayoutComponent {}
+export class AdminLayoutComponent {
+  isCollapsed = false;
+
+  constructor(private authService: AuthService, private router: Router) {}
+
+  toggleSidebar(): void {
+    this.isCollapsed = !this.isCollapsed;
+  }
+
+  logout(): void {
+    this.authService.logout().subscribe({
+      complete: () => this.router.navigate(['/login']),
+      error: () => this.router.navigate(['/login'])
+    });
+  }
+}

@@ -51,9 +51,6 @@ interface UsersResponse {
             <h1>Welcome to PDMHS Admin Dashboard</h1>
             <p>Manage your school's medical records system efficiently and securely</p>
           </div>
-          <div class="hero-image-container">
-            <img src="../../../assets/pdmhs-hero.png" alt="PDMHS Hero" class="hero-image">
-          </div>
         </div>
       </div>
 
