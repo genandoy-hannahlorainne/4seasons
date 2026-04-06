@@ -1183,11 +1183,11 @@ class AdminController extends BaseController
     {
         $allergyStats = DB::table('allergies')
             ->select(
-                'allergy_text as allergy',
+                'allergy_name as allergy',
                 'severity',
                 DB::raw('COUNT(*) as count')
             )
-            ->groupBy('allergy_text', 'severity')
+            ->groupBy('allergy_name', 'severity')
             ->orderBy('count', 'desc')
             ->limit(20)
             ->get()
