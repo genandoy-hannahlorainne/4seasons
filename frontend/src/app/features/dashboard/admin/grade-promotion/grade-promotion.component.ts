@@ -225,18 +225,18 @@ interface AdviserAssignmentStatus {
     }
 
     .notice-banner {
-      background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-      border-left: 4px solid #ffc107;
-      border-radius: 8px;
+      background: linear-gradient(135deg, #eef4ff, #dce8ff);
+      border-left: 4px solid #052355;
+      border-radius: 12px;
       padding: 20px;
       margin-bottom: 20px;
       display: flex;
       gap: 15px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 12px rgba(5, 35, 85, 0.1);
     }
 
     .notice-icon {
-      font-size: 2rem;
+      font-size: 1.8rem;
       line-height: 1;
     }
 
@@ -246,13 +246,14 @@ interface AdviserAssignmentStatus {
 
     .notice-content h3 {
       margin: 0 0 8px 0;
-      color: #856404;
-      font-size: 1.2rem;
+      color: #052355;
+      font-size: 1rem;
+      font-weight: 700;
     }
 
     .notice-content p {
       margin: 0 0 12px 0;
-      color: #856404;
+      color: #1a2744;
       line-height: 1.5;
     }
 
