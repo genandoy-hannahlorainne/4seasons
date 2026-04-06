@@ -193,7 +193,9 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
   `,
   styles: [`
     .emergency-drills-container {
-      padding: 20px;
+      padding: 2rem;
+      background: #f5f7fa;
+      min-height: 100vh;
     }
 
     .tabs {
@@ -247,7 +249,18 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      padding: 2rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+
+      h2 {
+        font-size: 2rem;
+        color: #ffffff;
+        margin: 0;
+        font-weight: 700;
+      }
     }
 
     .filters {
