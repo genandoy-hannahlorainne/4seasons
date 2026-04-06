@@ -1,5 +1,5 @@
 $sidebar-expanded: 220px;
-$sidebar-collapsed: 62px;
+$sidebar-collapsed: 56px;
 $sidebar-bg: #f8f9fa;
 $sidebar-active: rgba(5, 35, 85, 0.1);
 $sidebar-hover: rgba(5, 35, 85, 0.06);
@@ -31,7 +31,6 @@ $transition: 0.25s ease;
   transition: width $transition;
 }
 
-/* collapsed state */
 .admin-shell.collapsed .sidebar {
   width: $sidebar-collapsed;
 }
@@ -41,20 +40,27 @@ $transition: 0.25s ease;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 12px;
+  padding: 10px 16px;
   border-bottom: 1px solid rgba(5, 35, 85, 0.1);
-  min-height: 68px;
   overflow: hidden;
+  transition: padding $transition;
+}
+
+.admin-shell.collapsed .sidebar-brand {
+  justify-content: center;
+  padding: 10px 0;
+  gap: 0;
 }
 
 .brand-logo {
-  width: 36px;
-  height: 36px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #fff;
-  padding: 3px;
+  padding: 2px;
   object-fit: contain;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .brand-text {
@@ -65,7 +71,8 @@ $transition: 0.25s ease;
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
-  transition: opacity $transition, width $transition;
+  transition: opacity $transition, max-width $transition;
+  max-width: 160px;
 
   small {
     font-weight: 400;
@@ -76,7 +83,7 @@ $transition: 0.25s ease;
 
 .admin-shell.collapsed .brand-text {
   opacity: 0;
-  width: 0;
+  max-width: 0;
 }
 
 /* ── Hamburger button ────────────────────────────────── */
@@ -92,14 +99,14 @@ $transition: 0.25s ease;
   border-radius: 6px;
   flex-shrink: 0;
   margin-left: auto;
+  transition: opacity $transition, max-width $transition;
+  max-width: 40px;
 
-  &:hover {
-    background: $sidebar-hover;
-  }
+  &:hover { background: $sidebar-hover; }
 
   span {
     display: block;
-    width: 20px;
+    width: 18px;
     height: 2px;
     background: #1a2744;
     border-radius: 2px;
@@ -107,17 +114,14 @@ $transition: 0.25s ease;
   }
 }
 
-/* animate to X when collapsed */
 .admin-shell.collapsed .hamburger {
-  span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-  span:nth-child(2) { opacity: 0; }
-  span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  display: none;
 }
 
 /* ── Nav items ───────────────────────────────────────── */
 .sidebar-nav {
   flex: 1;
-  padding: 10px 0;
+  padding: 8px 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -129,47 +133,48 @@ $transition: 0.25s ease;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 18px;
+  padding: 10px 16px;
   color: $text-color;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
-  transition: background $transition, color $transition, padding $transition;
+  transition: background $transition, color $transition;
   cursor: pointer;
   border: none;
+  border-left: 3px solid transparent;
   background: transparent;
   width: 100%;
   text-align: left;
   white-space: nowrap;
+  box-sizing: border-box;
 
   &:hover {
     background: $sidebar-hover;
-    color: #fff;
   }
 
   &.active {
     background: $sidebar-active;
     color: #052355;
     font-weight: 700;
-    border-left: 3px solid #052355;
-    padding-left: 15px;
+    border-left-color: #052355;
   }
 }
 
-/* center icons when collapsed */
+/* collapsed nav items — centered icons */
 .admin-shell.collapsed .nav-item {
-  padding: 11px 0;
   justify-content: center;
+  padding: 10px 0;
+  border-left: none;
+  border-right: 3px solid transparent;
 
   &.active {
-    border-left: 3px solid #052355;
-    padding-left: 0;
+    border-right-color: #052355;
   }
 }
 
 .nav-icon {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -178,11 +183,13 @@ $transition: 0.25s ease;
   font-size: 18px;
   width: 22px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .nav-label {
   overflow: hidden;
-  transition: opacity $transition, width $transition, max-width $transition;
+  white-space: nowrap;
+  transition: opacity $transition, max-width $transition;
   max-width: 160px;
 }
 
@@ -193,7 +200,7 @@ $transition: 0.25s ease;
 
 /* ── Footer ──────────────────────────────────────────── */
 .sidebar-footer {
-  padding: 8px 0 12px;
+  padding: 6px 0 10px;
   border-top: 1px solid rgba(5, 35, 85, 0.1);
   display: flex;
   flex-direction: column;
@@ -205,7 +212,6 @@ $transition: 0.25s ease;
 
   &:hover {
     background: rgba(192, 57, 43, 0.08);
-    color: #a93226;
   }
 }
 
