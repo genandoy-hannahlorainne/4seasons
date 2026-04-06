@@ -1,7 +1,13 @@
 <div class="backup-recovery-page">
   <div class="page-header">
-    <h1>Backup & Recovery</h1>
-    <p>Manage database backups and system recovery</p>
+    <div class="header-left">
+      <h1>Backup & Recovery</h1>
+      <p>Manage database backups and system recovery</p>
+    </div>
+    <button class="btn btn-create-backup" (click)="createBackup()" [disabled]="creating">
+      <span *ngIf="!creating"><i class="fa-solid fa-box-archive"></i> Create Backup</span>
+      <span *ngIf="creating"><i class="fa-solid fa-hourglass-half"></i> Creating Backup...</span>
+    </button>
   </div>
 
   <!-- Success/Error Messages -->
@@ -10,16 +16,6 @@
   </div>
   <div class="alert alert-error" *ngIf="error">
     <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
-  </div>
-
-  <!-- Create Backup Section -->
-  <div class="card">
-    <h2>Create New Backup</h2>
-    <p>Create a complete backup of the database. This may take a few moments.</p>
-    <button class="btn btn-primary" (click)="createBackup()" [disabled]="creating">
-      <span *ngIf="!creating"><i class="fa-solid fa-box-archive"></i> Create Backup</span>
-      <span *ngIf="creating"><i class="fa-solid fa-hourglass-half"></i> Creating Backup...</span>
-    </button>
   </div>
 
   <!-- Backup History -->

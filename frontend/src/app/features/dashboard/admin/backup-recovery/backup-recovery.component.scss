@@ -6,8 +6,44 @@
 
 .page-header {
   margin-bottom: 2rem;
-  h1 { font-size: 1.8rem; color: #2c3e50; margin-bottom: 0.5rem; font-weight: 600; }
-  p { color: #7f8c8d; font-size: 1rem; margin: 0; }
+  background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .header-left {
+    h1 { font-size: 1.8rem; color: #ffffff; margin-bottom: 0.5rem; font-weight: 700; }
+    p { color: rgba(255, 255, 255, 0.8); font-size: 1rem; margin: 0; }
+  }
+}
+
+.btn-create-backup {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: #ffffff;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .alert {
