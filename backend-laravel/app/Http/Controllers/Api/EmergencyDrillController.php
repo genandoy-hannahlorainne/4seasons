@@ -10,6 +10,7 @@ use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
@@ -264,22 +265,47 @@ class EmergencyDrillController extends BaseController
             $participant = null;
             
             if ($request->user_id) {
-                // Search by user_id directly
                 $participant = DrillParticipant::where('drill_id', $drill->id)
                     ->where('user_id', $request->user_id)
                     ->first();
             } elseif ($request->student_number) {
-                // Search by student_number - need to find user_id first
                 $student = \App\Models\Student::where('student_number', $request->student_number)->first();
                 if ($student) {
                     $participant = DrillParticipant::where('drill_id', $drill->id)
                         ->where('user_id', $student->user_id)
                         ->first();
+
+                    // Auto-add if not found
+                    if (!$participant) {
+                        $participant = DrillParticipant::create([
+                            'drill_id'    => $drill->id,
+                            'user_id'     => $student->user_id,
+                            'student_id'  => $student->student_id,
+                            'status'      => 'assigned',
+                            'assigned_at' => now(),
+                        ]);
+                    }
+                } else {
+                    return $this->sendError('Student not found', 'No student found with that student number');
                 }
             }
 
             if (!$participant) {
-                return $this->sendError('Participant not found', 'User is not part of this drill or student number not found');
+                // Auto-add participant if not pre-registered in this drill
+                $user = \App\Models\User::find($request->user_id);
+                if (!$user) {
+                    return $this->sendError('User not found', 'No user found with the provided ID');
+                }
+
+                $student = \App\Models\Student::where('user_id', $user->user_id)->first();
+
+                $participant = DrillParticipant::create([
+                    'drill_id'    => $drill->id,
+                    'user_id'     => $user->user_id,
+                    'student_id'  => $student?->student_id,
+                    'status'      => 'assigned',
+                    'assigned_at' => now(),
+                ]);
             }
 
             DB::beginTransaction();
@@ -453,7 +479,7 @@ class EmergencyDrillController extends BaseController
     {
         // In a real implementation, this would send actual SMS
         // For simulation, we just log it
-        \Log::info('Simulated SMS sent', [
+        Log::info('Simulated SMS sent', [
             'student' => $participant->student->full_name,
             'student_number' => $participant->student->student_number,
             'scan_time' => $scan->scanned_at,
