@@ -5,6 +5,7 @@ $sidebar-active: rgba(5, 35, 85, 0.1);
 $sidebar-hover: rgba(5, 35, 85, 0.06);
 $text-color: #1a2744;
 $transition: 0.25s ease;
+$mobile-bp: 768px;
 
 /* ── Shell ───────────────────────────────────────────── */
 .admin-shell {
@@ -24,11 +25,11 @@ $transition: 0.25s ease;
   top: 0;
   left: 0;
   bottom: 0;
-  z-index: 200;
+  z-index: 300;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
   border-right: 1px solid rgba(5, 35, 85, 0.1);
   overflow: hidden;
-  transition: width $transition;
+  transition: width $transition, transform $transition;
 }
 
 .admin-shell.collapsed .sidebar {
@@ -53,8 +54,8 @@ $transition: 0.25s ease;
 }
 
 .brand-logo {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: #fff;
   padding: 2px;
@@ -99,8 +100,6 @@ $transition: 0.25s ease;
   border-radius: 6px;
   flex-shrink: 0;
   margin-left: auto;
-  transition: opacity $transition, max-width $transition;
-  max-width: 40px;
 
   &:hover { background: $sidebar-hover; }
 
@@ -142,15 +141,14 @@ $transition: 0.25s ease;
   cursor: pointer;
   border: none;
   border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
   background: transparent;
   width: 100%;
   text-align: left;
   white-space: nowrap;
   box-sizing: border-box;
 
-  &:hover {
-    background: $sidebar-hover;
-  }
+  &:hover { background: $sidebar-hover; }
 
   &.active {
     background: $sidebar-active;
@@ -160,7 +158,6 @@ $transition: 0.25s ease;
   }
 }
 
-/* collapsed nav items — centered icons */
 .admin-shell.collapsed .nav-item {
   justify-content: center;
   padding: 10px 0;
@@ -181,7 +178,7 @@ $transition: 0.25s ease;
 
 .logout-icon {
   font-size: 18px;
-  width: 22px;
+  width: 18px;
   text-align: center;
   flex-shrink: 0;
 }
@@ -209,10 +206,17 @@ $transition: 0.25s ease;
 
 .logout-btn {
   color: #c0392b;
+  &:hover { background: rgba(192, 57, 43, 0.08); }
+}
 
-  &:hover {
-    background: rgba(192, 57, 43, 0.08);
-  }
+/* ── Mobile topbar ───────────────────────────────────── */
+.mobile-topbar {
+  display: none;
+}
+
+/* ── Overlay ─────────────────────────────────────────── */
+.sidebar-overlay {
+  display: none;
 }
 
 /* ── Main content ────────────────────────────────────── */
@@ -226,4 +230,75 @@ $transition: 0.25s ease;
 
 .admin-shell.collapsed .main-content {
   margin-left: $sidebar-collapsed;
+}
+
+/* ── Mobile ──────────────────────────────────────────── */
+@media (max-width: $mobile-bp) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: $sidebar-expanded !important;
+  }
+
+  .admin-shell.mobile-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .admin-shell.mobile-open .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 299;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    background: $sidebar-bg;
+    border-bottom: 1px solid rgba(5, 35, 85, 0.1);
+    padding: 0 16px;
+    z-index: 200;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+
+    span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: #1a2744;
+      border-radius: 2px;
+    }
+  }
+
+  .mobile-brand {
+    font-weight: 700;
+    font-size: 15px;
+    color: #1a2744;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    padding-top: 52px;
+  }
+
+  /* hide desktop hamburger on mobile */
+  .hamburger { display: none; }
+  .brand-text { display: block !important; opacity: 1 !important; max-width: 160px !important; }
+  .nav-label { display: block !important; opacity: 1 !important; max-width: 160px !important; }
 }

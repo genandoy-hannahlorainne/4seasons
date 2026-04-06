@@ -184,3 +184,53 @@
 }
 
 .loading { text-align: center; padding: 40px; color: #666; }
+
+@media (max-width: 768px) {
+  .manage-sections {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.25rem;
+    gap: 1rem;
+
+    h1 { font-size: 1.3rem; }
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+
+    select { width: 100%; }
+  }
+
+  .sections-table {
+    th, td { padding: 8px 10px; font-size: 0.8rem; }
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 4px;
+
+    .btn { width: 100%; justify-content: center; }
+  }
+
+  .modal-content {
+    padding: 20px;
+    margin: 1rem;
+    max-width: calc(100% - 2rem);
+  }
+
+  .modal-actions {
+    flex-direction: column;
+
+    .btn { width: 100%; justify-content: center; }
+  }
+}

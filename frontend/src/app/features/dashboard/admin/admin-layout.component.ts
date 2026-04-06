@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,7 +10,10 @@ import { Router } from '@angular/router';
   imports: [CommonModule, RouterModule, RouterOutlet],
   styleUrls: ['./admin-layout.component.scss'],
   template: `
-    <div class="admin-shell" [class.collapsed]="isCollapsed">
+    <div class="admin-shell" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen">
+
+      <!-- Mobile overlay -->
+      <div class="sidebar-overlay" (click)="closeMobile()"></div>
 
       <!-- Sidebar -->
       <aside class="sidebar">
@@ -24,46 +27,46 @@ import { Router } from '@angular/router';
 
         <nav class="sidebar-nav">
           <a routerLink="/dashboard/admin" routerLinkActive="active"
-             [routerLinkActiveOptions]="{exact: true}" class="nav-item" title="Dashboard">
+             [routerLinkActiveOptions]="{exact: true}" class="nav-item" title="Dashboard" (click)="closeMobile()">
             <img src="assets/icons/dashboard.png" class="nav-icon" alt="Dashboard">
             <span class="nav-label">Dashboard</span>
           </a>
-          <a routerLink="/dashboard/admin/manage-users" routerLinkActive="active" class="nav-item" title="Users">
+          <a routerLink="/dashboard/admin/manage-users" routerLinkActive="active" class="nav-item" title="Users" (click)="closeMobile()">
             <img src="assets/icons/users.jpg" class="nav-icon" alt="Users">
             <span class="nav-label">Users</span>
           </a>
-          <a routerLink="/dashboard/admin/manage-sections" routerLinkActive="active" class="nav-item" title="Sections">
+          <a routerLink="/dashboard/admin/manage-sections" routerLinkActive="active" class="nav-item" title="Sections" (click)="closeMobile()">
             <img src="assets/icons/sections.png" class="nav-icon" alt="Sections">
             <span class="nav-label">Sections</span>
           </a>
-          <a routerLink="/dashboard/admin/school-year-management" routerLinkActive="active" class="nav-item" title="School Years">
+          <a routerLink="/dashboard/admin/school-year-management" routerLinkActive="active" class="nav-item" title="School Years" (click)="closeMobile()">
             <img src="assets/icons/school-years.png" class="nav-icon" alt="School Years">
             <span class="nav-label">School Years</span>
           </a>
-          <a routerLink="/dashboard/admin/grade-promotion" routerLinkActive="active" class="nav-item" title="Grade Promotion">
+          <a routerLink="/dashboard/admin/grade-promotion" routerLinkActive="active" class="nav-item" title="Grade Promotion" (click)="closeMobile()">
             <img src="assets/icons/grade-promotion.png" class="nav-icon" alt="Grade Promotion">
             <span class="nav-label">Grade Promotion</span>
           </a>
-          <a routerLink="/dashboard/admin/emergency-drills" routerLinkActive="active" class="nav-item" title="Emergency Drills">
+          <a routerLink="/dashboard/admin/emergency-drills" routerLinkActive="active" class="nav-item" title="Emergency Drills" (click)="closeMobile()">
             <img src="assets/icons/emergency-drills.png" class="nav-icon" alt="Emergency Drills">
             <span class="nav-label">Emergency Drills</span>
           </a>
-          <a routerLink="/dashboard/admin/settings" routerLinkActive="active" class="nav-item" title="Settings">
+          <a routerLink="/dashboard/admin/settings" routerLinkActive="active" class="nav-item" title="Settings" (click)="closeMobile()">
             <img src="assets/icons/settings.png" class="nav-icon" alt="Settings">
             <span class="nav-label">Settings</span>
           </a>
-          <a routerLink="/dashboard/admin/backup-recovery" routerLinkActive="active" class="nav-item" title="Backup">
+          <a routerLink="/dashboard/admin/backup-recovery" routerLinkActive="active" class="nav-item" title="Backup" (click)="closeMobile()">
             <img src="assets/icons/backup.png" class="nav-icon" alt="Backup">
             <span class="nav-label">Backup</span>
           </a>
-          <a routerLink="/dashboard/admin/reports" routerLinkActive="active" class="nav-item" title="Reports">
+          <a routerLink="/dashboard/admin/reports" routerLinkActive="active" class="nav-item" title="Reports" (click)="closeMobile()">
             <img src="assets/icons/reports.png" class="nav-icon" alt="Reports">
             <span class="nav-label">Reports</span>
           </a>
         </nav>
 
         <div class="sidebar-footer">
-          <a routerLink="/dashboard/admin/profile" routerLinkActive="active" class="nav-item" title="Profile">
+          <a routerLink="/dashboard/admin/profile" routerLinkActive="active" class="nav-item" title="Profile" (click)="closeMobile()">
             <img src="assets/icons/profile.png" class="nav-icon" alt="Profile">
             <span class="nav-label">Profile</span>
           </a>
@@ -73,6 +76,14 @@ import { Router } from '@angular/router';
           </button>
         </div>
       </aside>
+
+      <!-- Mobile topbar -->
+      <header class="mobile-topbar">
+        <button class="mobile-menu-btn" (click)="openMobile()">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="mobile-brand">PDMHS Admin</span>
+      </header>
 
       <!-- Main content -->
       <main class="main-content">
@@ -84,11 +95,20 @@ import { Router } from '@angular/router';
 })
 export class AdminLayoutComponent {
   isCollapsed = false;
+  mobileOpen = false;
 
   constructor(private authService: AuthService, private router: Router) {}
 
   toggleSidebar(): void {
     this.isCollapsed = !this.isCollapsed;
+  }
+
+  openMobile(): void {
+    this.mobileOpen = true;
+  }
+
+  closeMobile(): void {
+    this.mobileOpen = false;
   }
 
   logout(): void {
