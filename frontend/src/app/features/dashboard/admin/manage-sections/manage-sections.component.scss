@@ -1,7 +1,7 @@
 .manage-sections {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 2rem;
+  background: #f5f7fa;
+  min-height: 100vh;
 }
 
 .page-header {
@@ -9,8 +9,17 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
+  background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
 
-  h1 { font-size: 1.6rem; font-weight: 700; margin: 0; }
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ffffff;
+  }
 }
 
 .filter-bar {
