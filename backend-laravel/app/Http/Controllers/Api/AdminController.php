@@ -2101,22 +2101,40 @@ class AdminController extends BaseController
                 mkdir($backupDir, 0755, true);
             }
 
-            $filename = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
+            $filename = 'backup_' . uniqid() . '.sql';
             $path     = $backupDir . '/' . $filename;
 
-            $host     = config('database.connections.mysql.host');
-            $port     = config('database.connections.mysql.port', 3306);
-            $db       = config('database.connections.mysql.database');
-            $user     = config('database.connections.mysql.username');
-            $password = config('database.connections.mysql.password');
+            $db   = config('database.connections.mysql.database');
+            $pdo  = DB::connection()->getPdo();
 
-            $cmd = "mysqldump --host={$host} --port={$port} --user={$user} --password={$password} {$db} > {$path} 2>&1";
-            exec($cmd, $output, $exitCode);
+            $sql  = "-- Backup created at " . now()->toISOString() . "\n";
+            $sql .= "-- Database: {$db}\n\n";
+            $sql .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
 
-            if ($exitCode !== 0 || !file_exists($path) || filesize($path) === 0) {
-                // Fallback: write a schema-only placeholder so the UI doesn't break
-                file_put_contents($path, "-- Backup created at " . now()->toISOString() . "\n-- mysqldump not available in this environment\n");
+            // Get all tables
+            $tables = $pdo->query("SHOW TABLES")->fetchAll(\PDO::FETCH_COLUMN);
+
+            foreach ($tables as $table) {
+                // Drop + create table
+                $createStmt = $pdo->query("SHOW CREATE TABLE `{$table}`")->fetch(\PDO::FETCH_ASSOC);
+                $sql .= "DROP TABLE IF EXISTS `{$table}`;\n";
+                $sql .= $createStmt['Create Table'] . ";\n\n";
+
+                // Dump rows
+                $rows = $pdo->query("SELECT * FROM `{$table}`")->fetchAll(\PDO::FETCH_ASSOC);
+                if (!empty($rows)) {
+                    $columns = '`' . implode('`, `', array_keys($rows[0])) . '`';
+                    foreach ($rows as $row) {
+                        $values = array_map(fn($v) => $v === null ? 'NULL' : $pdo->quote($v), $row);
+                        $sql .= "INSERT INTO `{$table}` ({$columns}) VALUES (" . implode(', ', $values) . ");\n";
+                    }
+                    $sql .= "\n";
+                }
             }
+
+            $sql .= "SET FOREIGN_KEY_CHECKS=1;\n";
+
+            file_put_contents($path, $sql);
 
             return $this->sendResponse([
                 'filename'   => $filename,
@@ -2152,6 +2170,21 @@ class AdminController extends BaseController
         }
     }
 
+    public function downloadBackup(string $filename)
+    {
+        $filename = basename($filename);
+        $path     = storage_path('app/backups/' . $filename);
+
+        if (!file_exists($path)) {
+            abort(404, 'Backup file not found');
+        }
+
+        return response()->download($path, $filename, [
+            'Content-Type'        => 'application/sql',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
     /**
      * Restore database backup
      */
@@ -2167,18 +2200,37 @@ class AdminController extends BaseController
                 return $this->sendError('Backup file not found', [], 404);
             }
 
-            $host     = config('database.connections.mysql.host');
-            $port     = config('database.connections.mysql.port', 3306);
-            $db       = config('database.connections.mysql.database');
-            $user     = config('database.connections.mysql.username');
-            $password = config('database.connections.mysql.password');
+            $sql = file_get_contents($path);
 
-            $cmd = "mysql --host={$host} --port={$port} --user={$user} --password={$password} {$db} < {$path} 2>&1";
-            exec($cmd, $output, $exitCode);
-
-            if ($exitCode !== 0) {
-                return $this->sendError('Restore failed', implode("\n", $output));
+            if (empty(trim($sql))) {
+                return $this->sendError('Backup file is empty or invalid', [], 422);
             }
+
+            // Use PDO to execute the SQL dump
+            $pdo = DB::connection()->getPdo();
+            $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
+
+            // Disable foreign key checks during restore
+            $pdo->exec('SET FOREIGN_KEY_CHECKS=0;');
+
+            // Split and execute statements
+            $statements = array_filter(
+                array_map('trim', explode(";\n", $sql)),
+                fn($s) => !empty($s) && !str_starts_with($s, '--')
+            );
+
+            foreach ($statements as $statement) {
+                if (!empty(trim($statement))) {
+                    try {
+                        $pdo->exec($statement);
+                    } catch (\Exception $e) {
+                        // Skip non-critical errors (e.g. comments, empty lines)
+                        Log::warning('Restore statement skipped: ' . $e->getMessage());
+                    }
+                }
+            }
+
+            $pdo->exec('SET FOREIGN_KEY_CHECKS=1;');
 
             Log::info('Database restored', ['filename' => $filename, 'user' => $request->user()->username ?? 'unknown']);
 

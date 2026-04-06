@@ -90,6 +90,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::get('/backup/history', [AdminController::class, 'getBackupHistory']);
         Route::post('/backup/create', [AdminController::class, 'createBackup']);
         Route::post('/backup/restore', [AdminController::class, 'restoreBackup']);
+        Route::get('/backup/download/{filename}', [AdminController::class, 'downloadBackup']);
         Route::delete('/backup/{filename}', [AdminController::class, 'deleteBackup']);
 
         // Grade Promotion

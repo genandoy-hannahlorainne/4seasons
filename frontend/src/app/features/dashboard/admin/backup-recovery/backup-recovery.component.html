@@ -52,8 +52,8 @@
         <tbody>
           <tr *ngFor="let backup of backups">
             <td>{{ backup.filename }}</td>
-            <td>{{ backup.size }}</td>
-            <td>{{ backup.created }}</td>
+            <td>{{ formatSize(backup.size) }}</td>
+            <td>{{ backup.created_at }}</td>
             <td>
               <div class="action-buttons">
                 <button class="btn btn-sm btn-success" (click)="restoreBackup(backup.filename)" title="Restore this backup">
@@ -77,28 +77,20 @@
   <div class="card info-card">
     <h3><i class="fa-solid fa-circle-info"></i> Backup Information</h3>
     <ul>
-      <li>Backups are stored securely on the server</li>
-      <li>Download backups to keep an offline copy</li>
-      <li>Old backups are automatically cleaned up after 30 days</li>
+      <li>Backups are stored on the server inside the application storage folder</li>
+      <li>Download backups regularly to keep an offline copy</li>
       <li>Backups include all database tables and data</li>
-      <li><strong><i class="fa-solid fa-triangle-exclamation"></i> Restore will replace ALL current data with backup data</strong></li>
+      <li><strong><i class="fa-solid fa-triangle-exclamation"></i> Restore will replace ALL current data with backup data and cannot be undone</strong></li>
     </ul>
   </div>
 
   <!-- Restore Warning -->
   <div class="card warning-card">
-    <h3><i class="fa-solid fa-triangle-exclamation"></i> Important: About Restore</h3>
-    <p><strong>Restoring a backup will:</strong></p>
-    <ul>
-      <li>Replace ALL current database data with the backup data</li>
-      <li>Delete any changes made after the backup date</li>
-      <li>Cannot be undone once completed</li>
-    </ul>
-    <p><strong>Before restoring:</strong></p>
+    <h3><i class="fa-solid fa-triangle-exclamation"></i> Before Restoring</h3>
     <ul>
       <li>Create a new backup of current data first</li>
-      <li>Ensure you selected the correct backup file</li>
-      <li>Notify all users that the system will be temporarily unavailable</li>
+      <li>Make sure you selected the correct backup file</li>
+      <li>All data created after the backup date will be permanently lost</li>
     </ul>
   </div>
 </div>
