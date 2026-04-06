@@ -311,7 +311,7 @@ class EmergencyDrillController extends BaseController
             DB::beginTransaction();
 
             $scanTime = now();
-            $secondsFromStart = $drill->started_at->diffInSeconds($scanTime);
+            $secondsFromStart = max(0, (int) $drill->started_at->diffInSeconds($scanTime));
 
             // Create scan record
             $scan = DrillScan::create([
