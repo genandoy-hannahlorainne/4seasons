@@ -52,12 +52,12 @@ import { DrillDashboard, EmergencyDrill } from '../../../../core/models/emergenc
         </div>
         
         <div class="stat-card response-time" *ngIf="dashboardData.average_response_time">
-          <div class="stat-value">{{ dashboardData.average_response_time | number:'1.0-1' }}s</div>
+          <div class="stat-value">{{ formatTime(dashboardData.average_response_time) }}</div>
           <div class="stat-label">Avg Response Time</div>
         </div>
         
-        <div class="stat-card fastest" *ngIf="dashboardData.fastest_response">
-          <div class="stat-value">{{ dashboardData.fastest_response | number:'1.0-1' }}s</div>
+        <div class="stat-card fastest" *ngIf="dashboardData.fastest_response && dashboardData.fastest_response > 0">
+          <div class="stat-value">{{ formatTime(dashboardData.fastest_response) }}</div>
           <div class="stat-label">Fastest Response</div>
         </div>
       </div>
@@ -87,7 +87,7 @@ import { DrillDashboard, EmergencyDrill } from '../../../../core/models/emergenc
               </div>
               <div class="scan-details">
                 <span class="scan-time">{{ scan.scanned_at | date:'HH:mm:ss' }}</span>
-                <span class="response-time">{{ scan.seconds_from_start }}s response</span>
+                <span class="response-time" *ngIf="scan.seconds_from_start > 0">{{ formatTime(scan.seconds_from_start) }} response</span>
                 <span class="scanner">by {{ scan.scanner?.full_name || 'Unknown' }}</span>
               </div>
             </div>
@@ -668,9 +668,10 @@ export class DrillDashboardComponent implements OnInit, OnDestroy {
   }
 
   formatTime(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const totalSecs = Math.max(0, Math.floor(seconds));
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    return `${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
   }
 
   getCompletionPercentage(): number {

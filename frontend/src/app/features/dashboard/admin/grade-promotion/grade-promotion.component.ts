@@ -33,7 +33,9 @@ interface AdviserAssignmentStatus {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="promotion-container">
-      <h2>Grade Promotion Management</h2>
+      <div class="page-header">
+        <h2>Grade Promotion Management</h2>
+      </div>
 
       <!-- Important Notice -->
       <div class="notice-banner">
@@ -202,24 +204,39 @@ interface AdviserAssignmentStatus {
   `,
   styles: [`
     .promotion-container {
-      padding: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
+      padding: 2rem;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      padding: 2rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+
+      h2 {
+        font-size: 2rem;
+        color: #ffffff;
+        margin: 0;
+        font-weight: 700;
+      }
     }
 
     .notice-banner {
-      background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-      border-left: 4px solid #ffc107;
-      border-radius: 8px;
+      background: linear-gradient(135deg, #eef4ff, #dce8ff);
+      border-left: 4px solid #052355;
+      border-radius: 12px;
       padding: 20px;
       margin-bottom: 20px;
       display: flex;
       gap: 15px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 12px rgba(5, 35, 85, 0.1);
     }
 
     .notice-icon {
-      font-size: 2rem;
+      font-size: 1.8rem;
       line-height: 1;
     }
 
@@ -229,13 +246,14 @@ interface AdviserAssignmentStatus {
 
     .notice-content h3 {
       margin: 0 0 8px 0;
-      color: #856404;
-      font-size: 1.2rem;
+      color: #052355;
+      font-size: 1rem;
+      font-weight: 700;
     }
 
     .notice-content p {
       margin: 0 0 12px 0;
-      color: #856404;
+      color: #1a2744;
       line-height: 1.5;
     }
 

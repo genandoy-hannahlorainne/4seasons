@@ -4,6 +4,8 @@ FROM php:8.2-apache
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git unzip libzip-dev curl \
     && docker-php-ext-install pdo pdo_mysql mysqli \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && a2enmod rewrite headers \
     && rm -rf /var/lib/apt/lists/*
 
