@@ -214,7 +214,16 @@ export class AdminService {
   }
 
   downloadBackup(filename: string): void {
-    window.open(`${environment.apiUrl}/admin/backup/download/${filename}`, '_blank');
+    this.http.get(`${environment.apiUrl}/admin/backup/download/${filename}`, {
+      responseType: 'blob'
+    }).subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
   }
 
   deleteBackup(filename: string): Observable<any> {

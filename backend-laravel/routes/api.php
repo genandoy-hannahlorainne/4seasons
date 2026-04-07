@@ -90,6 +90,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::get('/backup/history', [AdminController::class, 'getBackupHistory']);
         Route::post('/backup/create', [AdminController::class, 'createBackup']);
         Route::post('/backup/restore', [AdminController::class, 'restoreBackup']);
+        Route::get('/backup/download/{filename}', [AdminController::class, 'downloadBackup']);
         Route::delete('/backup/{filename}', [AdminController::class, 'deleteBackup']);
 
         // Grade Promotion
@@ -167,6 +168,12 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::get('/', [EmergencyDrillController::class, 'index']);
         Route::post('/', [EmergencyDrillController::class, 'store']);
         Route::get('/{id}', [EmergencyDrillController::class, 'show']);
+        Route::post('/{id}/start', [EmergencyDrillController::class, 'start']);
+        Route::post('/{id}/end', [EmergencyDrillController::class, 'end']);
+        Route::post('/{id}/participants', [EmergencyDrillController::class, 'addParticipants']);
+        Route::post('/{id}/scan', [EmergencyDrillController::class, 'scanParticipant']);
+        Route::get('/{id}/dashboard', [EmergencyDrillController::class, 'dashboard']);
+        Route::get('/{id}/search-users', [EmergencyDrillController::class, 'searchUsers']);
     });
 
     // Dashboard

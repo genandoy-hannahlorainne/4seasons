@@ -18,16 +18,20 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
         </button>
       </div>
 
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn" [class.active]="activeTab === 'active'" (click)="switchTab('active')">
+          Active Drills
+          <span class="tab-count" *ngIf="activeDrills.length > 0">{{ activeDrills.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'completed'" (click)="switchTab('completed')">
+          Completed Drills
+          <span class="tab-count completed" *ngIf="completedDrills.length > 0">{{ completedDrills.length }}</span>
+        </button>
+      </div>
+
       <!-- Filters -->
       <div class="filters">
-        <select [(ngModel)]="statusFilter" (change)="loadDrills()" class="form-control">
-          <option value="">All Status</option>
-          <option value="planned">Planned</option>
-          <option value="active">Active</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-        
         <select [(ngModel)]="typeFilter" (change)="loadDrills()" class="form-control">
           <option value="">All Types</option>
           <option value="earthquake">Earthquake</option>
@@ -40,72 +44,97 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
 
       <!-- Drills List -->
       <div class="drills-grid" *ngIf="!loading">
-        <div class="drill-card" *ngFor="let drill of drills" [class.active]="drill.status === 'active'">
-          <div class="drill-header">
-            <h3>{{ drill.drill_name }}</h3>
-            <span class="status-badge" [class]="'status-' + drill.status">
-              {{ drill.status | titlecase }}
-            </span>
-          </div>
-          
-          <div class="drill-info">
-            <p><strong>Type:</strong> {{ drill.drill_type | titlecase }}</p>
-            <p><strong>Created:</strong> {{ drill.created_at | date:'short' }}</p>
-            <p *ngIf="drill.started_at"><strong>Started:</strong> {{ drill.started_at | date:'short' }}</p>
-            <p *ngIf="drill.description">{{ drill.description }}</p>
-          </div>
-
-          <div class="drill-stats" *ngIf="drill.statistics">
-            <div class="stat">
-              <span class="stat-value">{{ drill.statistics.total_participants || 0 }}</span>
-              <span class="stat-label">Participants</span>
+        <ng-container *ngIf="activeTab === 'active'">
+          <div class="drill-card" *ngFor="let drill of activeDrills" [class.active]="drill.status === 'active'">
+            <div class="drill-header">
+              <h3>{{ drill.drill_name }}</h3>
+              <span class="status-badge" [class]="'status-' + drill.status">
+                {{ drill.status | titlecase }}
+              </span>
             </div>
-            <div class="stat" *ngIf="drill.statistics.scanned_participants">
-              <span class="stat-value">{{ drill.statistics.scanned_participants }}</span>
-              <span class="stat-label">Scanned</span>
+            <div class="drill-info">
+              <p><strong>Type:</strong> {{ drill.drill_type | titlecase }}</p>
+              <p><strong>Created:</strong> {{ drill.created_at | date:'short' }}</p>
+              <p *ngIf="drill.started_at"><strong>Started:</strong> {{ drill.started_at | date:'short' }}</p>
+              <p *ngIf="drill.description">{{ drill.description }}</p>
             </div>
-            <div class="stat" *ngIf="drill.statistics.average_response_time">
-              <span class="stat-value">{{ drill.statistics.average_response_time | number:'1.0-1' }}s</span>
-              <span class="stat-label">Avg Response</span>
+            <div class="drill-stats" *ngIf="drill.statistics">
+              <div class="stat">
+                <span class="stat-value">{{ drill.statistics.total_participants || 0 }}</span>
+                <span class="stat-label">Participants</span>
+              </div>
+              <div class="stat" *ngIf="drill.statistics.scanned_participants">
+                <span class="stat-value">{{ drill.statistics.scanned_participants }}</span>
+                <span class="stat-label">Scanned</span>
+              </div>
+              <div class="stat" *ngIf="drill.statistics.average_response_time">
+                <span class="stat-value">{{ drill.statistics.average_response_time | number:'1.0-1' }}s</span>
+                <span class="stat-label">Avg Response</span>
+              </div>
+            </div>
+            <div class="drill-actions">
+              <button class="btn btn-sm btn-outline" (click)="viewDrill(drill.id)">
+                <i class="fas fa-eye"></i> View
+              </button>
+              <button *ngIf="drill.status === 'planned'" class="btn btn-sm btn-success" (click)="startDrill(drill.id)">
+                <i class="fas fa-play"></i> Start
+              </button>
+              <button *ngIf="drill.status === 'active'" class="btn btn-sm btn-warning" (click)="viewDashboard(drill.id)">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+              </button>
+              <button *ngIf="drill.status === 'active'" class="btn btn-sm btn-danger" (click)="endDrill(drill.id)">
+                <i class="fas fa-stop"></i> End
+              </button>
             </div>
           </div>
-
-          <div class="drill-actions">
-            <button class="btn btn-sm btn-outline" (click)="viewDrill(drill.id)">
-              <i class="fas fa-eye"></i> View
-            </button>
-            
-            <button *ngIf="drill.status === 'planned'" 
-                    class="btn btn-sm btn-success" 
-                    (click)="startDrill(drill.id)">
-              <i class="fas fa-play"></i> Start
-            </button>
-            
-            <button *ngIf="drill.status === 'active'" 
-                    class="btn btn-sm btn-warning" 
-                    (click)="viewDashboard(drill.id)">
-              <i class="fas fa-tachometer-alt"></i> Dashboard
-            </button>
-            
-            <button *ngIf="drill.status === 'active'" 
-                    class="btn btn-sm btn-danger" 
-                    (click)="endDrill(drill.id)">
-              <i class="fas fa-stop"></i> End
-            </button>
+          <div class="empty-state" *ngIf="activeDrills.length === 0">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>No Active Drills</h3>
+            <p>Create a new drill to get started.</p>
           </div>
-        </div>
-      </div>
+        </ng-container>
 
-      <!-- Loading -->
-      <div class="loading" *ngIf="loading">
-        <i class="fas fa-spinner fa-spin"></i> Loading drills...
-      </div>
-
-      <!-- Empty State -->
-      <div class="empty-state" *ngIf="!loading && drills.length === 0">
-        <i class="fas fa-clipboard-list"></i>
-        <h3>No Emergency Drills Found</h3>
-        <p>Create your first emergency drill to get started.</p>
+        <ng-container *ngIf="activeTab === 'completed'">
+          <div class="drill-card completed-card" *ngFor="let drill of completedDrills">
+            <div class="drill-header">
+              <h3>{{ drill.drill_name }}</h3>
+              <span class="status-badge" [class]="'status-' + drill.status">
+                {{ drill.status | titlecase }}
+              </span>
+            </div>
+            <div class="drill-info">
+              <p><strong>Type:</strong> {{ drill.drill_type | titlecase }}</p>
+              <p><strong>Created:</strong> {{ drill.created_at | date:'short' }}</p>
+              <p *ngIf="drill.started_at"><strong>Started:</strong> {{ drill.started_at | date:'short' }}</p>
+              <p *ngIf="drill.ended_at"><strong>Ended:</strong> {{ drill.ended_at | date:'short' }}</p>
+              <p *ngIf="drill.description">{{ drill.description }}</p>
+            </div>
+            <div class="drill-stats" *ngIf="drill.statistics">
+              <div class="stat">
+                <span class="stat-value">{{ drill.statistics.total_participants || 0 }}</span>
+                <span class="stat-label">Participants</span>
+              </div>
+              <div class="stat" *ngIf="drill.statistics.scanned_participants">
+                <span class="stat-value">{{ drill.statistics.scanned_participants }}</span>
+                <span class="stat-label">Scanned</span>
+              </div>
+              <div class="stat" *ngIf="drill.statistics.average_response_time">
+                <span class="stat-value">{{ drill.statistics.average_response_time | number:'1.0-1' }}s</span>
+                <span class="stat-label">Avg Response</span>
+              </div>
+            </div>
+            <div class="drill-actions">
+              <button class="btn btn-sm btn-outline" (click)="viewDrill(drill.id)">
+                <i class="fas fa-eye"></i> View
+              </button>
+            </div>
+          </div>
+          <div class="empty-state" *ngIf="completedDrills.length === 0">
+            <i class="fas fa-check-circle"></i>
+            <h3>No Completed Drills</h3>
+            <p>Completed drills will appear here.</p>
+          </div>
+        </ng-container>
       </div>
 
       <!-- Create Drill Modal -->
@@ -164,14 +193,74 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
   `,
   styles: [`
     .emergency-drills-container {
-      padding: 20px;
+      padding: 2rem;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover { color: #007bff; }
+
+    .tab-btn.active {
+      color: #007bff;
+      border-bottom-color: #007bff;
+    }
+
+    .tab-count {
+      background: #007bff;
+      color: white;
+      border-radius: 12px;
+      padding: 1px 7px;
+      font-size: 11px;
+    }
+
+    .tab-count.completed {
+      background: #7b1fa2;
+    }
+
+    .completed-card {
+      border-left-color: #7b1fa2 !important;
+      background: #fdf8ff;
     }
 
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      padding: 2rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+
+      h2 {
+        font-size: 2rem;
+        color: #ffffff;
+        margin: 0;
+        font-weight: 700;
+      }
     }
 
     .filters {
@@ -380,8 +469,10 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
 })
 export class EmergencyDrillsComponent implements OnInit {
   drills: EmergencyDrill[] = [];
+  activeDrills: EmergencyDrill[] = [];
+  completedDrills: EmergencyDrill[] = [];
+  activeTab: 'active' | 'completed' = 'active';
   loading = false;
-  statusFilter = '';
   typeFilter = '';
   showCreateModal = false;
   creating = false;
@@ -409,12 +500,13 @@ export class EmergencyDrillsComponent implements OnInit {
   loadDrills() {
     this.loading = true;
     const params: any = {};
-    if (this.statusFilter) params.status = this.statusFilter;
     if (this.typeFilter) params.drill_type = this.typeFilter;
 
     this.drillService.getDrills(params).subscribe({
       next: (response) => {
         this.drills = response.data.data || response.data;
+        this.activeDrills = this.drills.filter(d => d.status === 'planned' || d.status === 'active');
+        this.completedDrills = this.drills.filter(d => d.status === 'completed' || d.status === 'cancelled');
         this.loading = false;
       },
       error: (error) => {
@@ -424,13 +516,26 @@ export class EmergencyDrillsComponent implements OnInit {
     });
   }
 
+  switchTab(tab: 'active' | 'completed') {
+    this.activeTab = tab;
+  }
+
   createDrill() {
     if (!this.newDrill.drill_name || !this.newDrill.drill_type) {
       return;
     }
 
     this.creating = true;
-    this.drillService.createDrill(this.newDrill).subscribe({
+
+    // Send datetime-local value as-is (no UTC conversion) to preserve local time
+    const payload = {
+      ...this.newDrill,
+      scheduled_at: this.newDrill.scheduled_at
+        ? this.newDrill.scheduled_at + ':00'
+        : undefined
+    };
+
+    this.drillService.createDrill(payload).subscribe({
       next: (response) => {
         this.drills.unshift(response.data);
         this.showCreateModal = false;
@@ -462,6 +567,7 @@ export class EmergencyDrillsComponent implements OnInit {
       this.drillService.endDrill(id).subscribe({
         next: () => {
           this.loadDrills();
+          this.activeTab = 'completed';
         },
         error: (error) => {
           console.error('Error ending drill:', error);

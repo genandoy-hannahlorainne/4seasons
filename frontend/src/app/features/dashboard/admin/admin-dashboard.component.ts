@@ -51,9 +51,6 @@ interface UsersResponse {
             <h1>Welcome to PDMHS Admin Dashboard</h1>
             <p>Manage your school's medical records system efficiently and securely</p>
           </div>
-          <div class="hero-image-container">
-            <img src="../../../assets/pdmhs-hero.png" alt="PDMHS Hero" class="hero-image">
-          </div>
         </div>
       </div>
 
@@ -64,20 +61,6 @@ interface UsersResponse {
       </div>
 
       <div class="dashboard-content" *ngIf="!loading">
-        <!-- Debug Info (Remove in production) -->
-        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
-          <strong>📊 Current Stats:</strong>
-          <div style="margin-top: 10px; font-family: monospace;">
-            Total Users: {{ systemStats.totalUsers }} |
-            Students: {{ systemStats.totalStudents }} |
-            Faculty: {{ systemStats.totalAdvisers }} |
-            Clinic Staff: {{ systemStats.totalStaff }}
-          </div>
-          <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
-            Recent Users Count: {{ recentUsers.length }}
-          </div>
-        </div>
-
         <!-- Emergency Notifications (if any) -->
         <div class="emergency-banner" *ngIf="emergencyNotifications.length > 0">
           <div class="emergency-header">

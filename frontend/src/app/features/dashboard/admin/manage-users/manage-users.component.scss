@@ -6,22 +6,53 @@
 
 .page-header {
   margin-bottom: 2rem;
-  background: white;
-  padding: 1.5rem;
+  background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+  padding: 2rem 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
 
   h1 {
     font-size: 2rem;
-    color: #2c3e50;
+    color: #ffffff;
     margin-bottom: 0.5rem;
     font-weight: 700;
   }
 
   p {
-    color: #7f8c8d;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 1.1rem;
     margin: 0;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.25rem;
+
+    h1 { font-size: 1.5rem; }
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
   }
 }
 

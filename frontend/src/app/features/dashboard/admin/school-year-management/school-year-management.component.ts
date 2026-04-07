@@ -124,6 +124,7 @@ interface GradeLevel {
         </div>
 
         <div class="sections-table">
+          <div class="sections-table-wrapper">
           <table>
             <thead>
               <tr>
@@ -167,6 +168,7 @@ interface GradeLevel {
               </tr>
             </tbody>
           </table>
+          </div>
 
           <div *ngIf="sections.length === 0" class="no-sections">
             <p>No sections found for this school year.</p>
@@ -475,13 +477,13 @@ interface GradeLevel {
 
     .page-header {
       margin-bottom: 2rem;
-      background: white;
-      padding: 1.5rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      padding: 2rem 1.5rem;
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
 
-      h1 { font-size: 2rem; color: #2c3e50; margin-bottom: 0.5rem; font-weight: 700; }
-      p { color: #7f8c8d; font-size: 1.1rem; margin: 0; }
+      h1 { font-size: 2rem; color: #ffffff; margin-bottom: 0.5rem; font-weight: 700; }
+      p { color: rgba(255, 255, 255, 0.8); font-size: 1.1rem; margin: 0; }
     }
 
     .school-year-selector {
@@ -1339,6 +1341,72 @@ interface GradeLevel {
           color: #7f8c8d;
           margin-right: 0.5rem;
         }
+      }
+    }
+
+    @media (max-width: 768px) {
+      .school-year-management { padding: 1rem; }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.25rem;
+        gap: 0.75rem;
+        h1 { font-size: 1.4rem; }
+      }
+
+      .selector-header {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .selector-left {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+
+        .form-select, .btn-create-year { width: 100%; }
+      }
+
+      .selector-right {
+        width: 100%;
+        .btn-set-current { width: 100%; justify-content: center; }
+      }
+
+      .sections-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+
+        .header-actions {
+          width: 100%;
+          flex-direction: column;
+          .btn-create-section { width: 100%; justify-content: center; }
+        }
+
+        .stats { flex-wrap: wrap; }
+      }
+
+      .sections-table {
+        font-size: 0.8rem;
+        th, td { padding: 8px 10px; }
+      }
+
+      .sections-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        gap: 4px;
+        button { width: 100%; justify-content: center; }
+      }
+
+      .modal-content {
+        padding: 20px;
+        margin: 1rem;
+        max-width: calc(100% - 2rem);
       }
     }
   `]
