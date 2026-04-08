@@ -16,7 +16,7 @@ WORKDIR /var/www/html
 
 # Copy composer files first for better layer caching
 COPY composer.json composer.lock ./
-RUN composer install --no-interaction --no-dev --optimize-autoloader --no-scripts
+RUN composer install --no-interaction --optimize-autoloader --no-scripts
 
 # Copy the rest of the app
 COPY . /var/www/html
@@ -28,6 +28,7 @@ RUN composer run-script post-autoload-dump || true
 RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf /etc/apache2/apache2.conf
 
 # Ensure writable directories are owned by Apache user
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 80

@@ -1,15 +1,38 @@
-<div class="role-selection-container">
-  <div class="hero-section">
-    <div class="overlay"></div>
-    <div class="content">
-      <h1 class="title">PDMHS Student Medical System</h1>
-      <p class="subtitle">Sign in to start your session</p>
+<div class="role-selection-container" [style.backgroundImage]="'url(assets/pdmhs-background.png)'" [style.backgroundSize]="'cover'" [style.backgroundPosition]="'center'">
+  <div class="card">
+    <div class="card-header">
+      <h1>PDMHS</h1>
+      <p>Student Medical Record System</p>
+      <span class="divider"></span>
+      <p class="prompt">Select your role to continue</p>
     </div>
-  </div>
-  
-  <div class="button-group">
-    <button class="btn btn-role" (click)="selectRole('student')">Student</button>
-    <button class="btn btn-role" (click)="selectRole('adviser')">Adviser</button>
-    <button class="btn btn-role" (click)="selectRole('clinic-staff')">Clinic Staff</button>
+
+    <div class="role-buttons">
+      <button class="role-btn" (click)="selectRole('student')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+        Student
+      </button>
+
+      <button class="role-btn" (click)="selectRole('adviser')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Adviser
+      </button>
+
+      <button class="role-btn" (click)="selectRole('clinic-staff')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        Clinic Staff
+      </button>
+    </div>
+
+    <div class="admin-link">
+      <a href="/admin/login">Admin access</a>
+    </div>
   </div>
 </div>
