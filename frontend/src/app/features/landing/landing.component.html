@@ -56,7 +56,7 @@
       <div class="section-header">
         <span class="section-tag">School Clinic</span>
         <h2 class="section-title">Contact &amp; School Opening Hours</h2>
-        <p class="section-sub">Visit us at the school clinic for health concerns and medical assistance</p>
+        <p class="section-sub">Visit us at the school clinic for health concerns</p>
       </div>
       <div class="info-grid">
 
@@ -105,7 +105,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
             <div>
-              <div class="hours-title">School Clinic Hours</div>
+              <div class="hours-title">School Opening Hours</div>
               <div class="hours-status open"><span class="status-dot"></span> Open Today</div>
             </div>
           </div>
@@ -144,7 +144,9 @@
 <div class="modal-backdrop" *ngIf="activeModal === 'role-features'" (click)="closeModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <button class="modal-close" (click)="closeModal()">✕</button>
-    <div class="modal-icon" [innerHTML]="selectedRole?.icon"></div>
+    <div class="modal-icon-wrap">
+      <div class="modal-icon" [innerHTML]="selectedRole?.icon"></div>
+    </div>
     <h2>{{ selectedRole?.title }} Features</h2>
     <ul class="feature-list">
       <li *ngFor="let f of selectedRole?.features">
