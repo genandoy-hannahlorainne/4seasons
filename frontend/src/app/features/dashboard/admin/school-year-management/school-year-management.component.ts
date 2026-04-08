@@ -509,7 +509,7 @@ interface GradeLevel {
       }
 
       .btn-create-year {
-        background: #2ecc71;
+        background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
         color: white;
         border: none;
         padding: 0.75rem 1.5rem;
@@ -521,16 +521,15 @@ interface GradeLevel {
         gap: 0.5rem;
         transition: all 0.2s ease;
         white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
 
         &:hover {
-          background: #27ae60;
+          opacity: 0.9;
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+          box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
         }
 
-        i {
-          font-size: 1rem;
-        }
+        i { font-size: 1rem; }
       }
 
       .selector-right {
@@ -559,7 +558,7 @@ interface GradeLevel {
       }
 
       .btn-set-current {
-        background: #28a745;
+        background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
         color: white;
         border: none;
         padding: 0.75rem 1.5rem;
@@ -571,6 +570,7 @@ interface GradeLevel {
         gap: 0.5rem;
         transition: all 0.2s ease;
         white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
 
         &:hover:not(:disabled) {
           background: #218838;

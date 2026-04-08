@@ -37,7 +37,7 @@ import { takeUntil } from 'rxjs/operators';
           <div class="insights-grid">
             <div class="insight-card highest-risk" *ngIf="topRisk">
               <div class="insight-icon">
-                <i class="fas fa-exclamation-circle"></i>
+                <img src="assets/icons/warning.png" alt="Warning" class="insight-icon-img">
               </div>
               <div class="insight-content">
                 <div class="insight-title">Highest Risk Grade</div>
@@ -46,10 +46,22 @@ import { takeUntil } from 'rxjs/operators';
                 <div class="insight-students">{{ topRisk.total_students }} students</div>
               </div>
             </div>
+
+            <div class="insight-card highest-risk no-data-card" *ngIf="!topRisk">
+              <div class="insight-icon">
+                <img src="assets/icons/warning.png" alt="No Data" class="insight-icon-img">
+              </div>
+              <div class="insight-content">
+                <div class="insight-title">Highest Risk Grade</div>
+                <div class="insight-value">No Data</div>
+                <div class="insight-detail">0% normal</div>
+                <div class="insight-students">0 students</div>
+              </div>
+            </div>
             
             <div class="insight-card total-students">
               <div class="insight-icon">
-                <i class="fas fa-users"></i>
+                <img src="assets/icons/total-users.png" alt="Total Students" class="insight-icon-img">
               </div>
               <div class="insight-content">
                 <div class="insight-title">Total Students Analyzed</div>
@@ -60,7 +72,7 @@ import { takeUntil } from 'rxjs/operators';
             
             <div class="insight-card average-bmi">
               <div class="insight-icon">
-                <i class="fas fa-balance-scale"></i>
+                <img src="assets/icons/average.jpg" alt="Average BMI" class="insight-icon-img">
               </div>
               <div class="insight-content">
                 <div class="insight-title">School Average BMI</div>
@@ -71,7 +83,7 @@ import { takeUntil } from 'rxjs/operators';
             
             <div class="insight-card overweight-total">
               <div class="insight-icon">
-                <i class="fas fa-weight"></i>
+                <img src="assets/icons/bmi.jpg" alt="BMI" class="insight-icon-img">
               </div>
               <div class="insight-content">
                 <div class="insight-title">Students Overweight/Obese</div>
@@ -85,7 +97,75 @@ import { takeUntil } from 'rxjs/operators';
         <!-- BMI Distribution Chart -->
         <div class="chart-section">
           <h3>BMI Distribution by Grade Level</h3>
-          <div class="chart-container">
+          
+          <!-- Pie Chart View (when data exists) -->
+          <div class="pie-chart-container" *ngIf="healthData.grade_statistics && healthData.grade_statistics.length > 0">
+            <div class="chart-legend">
+              <div class="legend-item underweight">
+                <span class="legend-color"></span>
+                <span class="legend-label">Underweight</span>
+              </div>
+              <div class="legend-item normal">
+                <span class="legend-color"></span>
+                <span class="legend-label">Normal Weight</span>
+              </div>
+              <div class="legend-item overweight">
+                <span class="legend-color"></span>
+                <span class="legend-label">Overweight</span>
+              </div>
+              <div class="legend-item obese">
+                <span class="legend-color"></span>
+                <span class="legend-label">Obese</span>
+              </div>
+            </div>
+
+            <div class="pie-charts-grid">
+              <div *ngFor="let grade of healthData.grade_statistics" class="pie-chart-item">
+                <h4 class="grade-title">{{ grade.grade_name }}</h4>
+                <div class="pie-chart-wrapper">
+                  <svg class="pie-chart" viewBox="0 0 200 200">
+                    <circle cx="100" cy="100" r="90" fill="none" stroke="#17a2b8" 
+                            [attr.stroke-dasharray]="calculateStrokeDasharray(grade.underweight_percentage, 0)"
+                            stroke-width="40" transform="rotate(-90 100 100)"></circle>
+                    <circle cx="100" cy="100" r="90" fill="none" stroke="#28a745" 
+                            [attr.stroke-dasharray]="calculateStrokeDasharray(grade.normal_percentage, grade.underweight_percentage)"
+                            stroke-width="40" transform="rotate(-90 100 100)"></circle>
+                    <circle cx="100" cy="100" r="90" fill="none" stroke="#ffc107" 
+                            [attr.stroke-dasharray]="calculateStrokeDasharray(grade.overweight_percentage, grade.underweight_percentage + grade.normal_percentage)"
+                            stroke-width="40" transform="rotate(-90 100 100)"></circle>
+                    <circle cx="100" cy="100" r="90" fill="none" stroke="#dc3545" 
+                            [attr.stroke-dasharray]="calculateStrokeDasharray(grade.obese_percentage, grade.underweight_percentage + grade.normal_percentage + grade.overweight_percentage)"
+                            stroke-width="40" transform="rotate(-90 100 100)"></circle>
+                  </svg>
+                  <div class="pie-chart-center">
+                    <div class="total-count">{{ grade.total_students }}</div>
+                    <div class="total-label">Students</div>
+                  </div>
+                </div>
+                <div class="pie-chart-stats">
+                  <div class="stat-row">
+                    <span class="stat-color underweight"></span>
+                    <span class="stat-text">{{ grade.underweight_count }} ({{ grade.underweight_percentage }}%)</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-color normal"></span>
+                    <span class="stat-text">{{ grade.normal_count }} ({{ grade.normal_percentage }}%)</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-color overweight"></span>
+                    <span class="stat-text">{{ grade.overweight_count }} ({{ grade.overweight_percentage }}%)</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-color obese"></span>
+                    <span class="stat-text">{{ grade.obese_count }} ({{ grade.obese_percentage }}%)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bar Chart View (legacy/fallback) -->
+          <div class="chart-container" *ngIf="!healthData.grade_statistics || healthData.grade_statistics.length === 0">
             <div class="chart-legend">
               <div class="legend-item underweight">
                 <span class="legend-color"></span>
@@ -332,6 +412,16 @@ import { takeUntil } from 'rxjs/operators';
       .insight-icon {
         font-size: 2rem;
         flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .insight-icon-img {
+          width: 32px;
+          height: 32px;
+          object-fit: contain;
+          display: block;
+        }
       }
       
       .insight-content {
@@ -377,6 +467,101 @@ import { takeUntil } from 'rxjs/operators';
       background: #f8f9fa;
       border-radius: 8px;
       padding: 1.5rem;
+    }
+
+    .pie-chart-container {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .pie-charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .pie-chart-item {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      text-align: center;
+
+      .grade-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+      }
+
+      .pie-chart-wrapper {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto 1rem;
+
+        .pie-chart {
+          width: 100%;
+          height: 100%;
+        }
+
+        .pie-chart-center {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-align: center;
+
+          .total-count {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            line-height: 1;
+          }
+
+          .total-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 0.25rem;
+          }
+        }
+      }
+
+      .pie-chart-stats {
+        text-align: left;
+
+        .stat-row {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.5rem 0;
+          border-bottom: 1px solid #f1f3f4;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          .stat-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            flex-shrink: 0;
+
+            &.underweight { background: #17a2b8; }
+            &.normal { background: #28a745; }
+            &.overweight { background: #ffc107; }
+            &.obese { background: #dc3545; }
+          }
+
+          .stat-text {
+            font-size: 0.9rem;
+            color: #2c3e50;
+            font-weight: 500;
+          }
+        }
+      }
     }
 
     .chart-legend {
@@ -851,5 +1036,13 @@ export class HealthRiskVisualizationComponent implements OnInit, OnDestroy {
     } catch {
       return dateString;
     }
+  }
+
+  calculateStrokeDasharray(percentage: number, offset: number): string {
+    const circumference = 2 * Math.PI * 90; // radius = 90
+    const percentageOffset = (offset / 100) * circumference;
+    const segmentLength = (percentage / 100) * circumference;
+    const gapLength = circumference - segmentLength;
+    return `${segmentLength} ${gapLength}`;
   }
 }

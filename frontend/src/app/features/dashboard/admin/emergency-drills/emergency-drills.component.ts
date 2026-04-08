@@ -261,6 +261,32 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
         margin: 0;
         font-weight: 700;
       }
+
+      .btn-primary {
+        background: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.25);
+          border-color: #ffffff;
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
     }
 
     .filters {

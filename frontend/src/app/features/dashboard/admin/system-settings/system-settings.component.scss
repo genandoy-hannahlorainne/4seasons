@@ -203,16 +203,19 @@
     font-size: 0.95rem;
 
     &.btn-primary {
-      background: #3498db;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       color: white;
+      box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
 
       &:hover:not(:disabled) {
-        background: #2980b9;
+        background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
+        box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
       }
 
       &:disabled {
         background: #bdc3c7;
         cursor: not-allowed;
+        box-shadow: none;
       }
     }
 

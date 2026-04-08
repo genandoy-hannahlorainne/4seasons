@@ -118,7 +118,7 @@ interface UsersResponse {
         <!-- Statistics Cards -->
         <div class="stats-grid">
           <div class="stat-card users">
-            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-icon"><img src="assets/icons/total-users.png" alt="Total Users" class="stat-icon-img"></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalUsers }}</div>
               <div class="stat-label">Total Users</div>
