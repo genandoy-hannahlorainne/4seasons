@@ -229,39 +229,6 @@ interface UsersResponse {
               <span>👤</span> No users registered yet
             </div>
           </div>
-
-          <!-- Quick Actions -->
-          <div class="card actions-card">
-            <div class="card-header">
-              <h2>Quick Actions</h2>
-            </div>
-            <div class="actions-grid">
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/manage-users')">
-                <span class="action-icon"><i class="fa-solid fa-users-gear"></i></span>
-                <span class="action-label">Manage Users</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/settings')">
-                <span class="action-icon"><i class="fa-solid fa-gear"></i></span>
-                <span class="action-label">System Settings</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/reports')">
-                <span class="action-icon"><i class="fa-solid fa-chart-column"></i></span>
-                <span class="action-label">View Reports</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/backup-recovery')">
-                <span class="action-icon"><i class="fa-solid fa-database"></i></span>
-                <span class="action-label">Database Backup</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/audit-logs')">
-                <span class="action-icon"><i class="fa-solid fa-clipboard-list"></i></span>
-                <span class="action-label">Audit Logs</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/security')">
-                <span class="action-icon"><i class="fa-solid fa-shield-halved"></i></span>
-                <span class="action-label">Security</span>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -294,8 +261,8 @@ interface UsersResponse {
         width: 50px;
         height: 50px;
         margin: 0 auto 1rem;
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #2c3e50;
+        border: 4px solid #e8f0f8;
+        border-top: 4px solid #052355;
         border-radius: 50%;
         animation: spin 1s linear infinite;
       }

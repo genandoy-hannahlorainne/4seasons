@@ -206,12 +206,20 @@
   width: 100%;
   margin-top: 8px;
   height: 44px;
-  background: #4f7ea9;
+  background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
   border-radius: 10px;
-}
+  box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+  transition: all 0.2s ease;
 
-.save-btn:hover {
-  background: #45759f;
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
+    box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .other-link {
@@ -436,11 +444,11 @@
   }
 
   &.btn-secondary {
-    background: #0f172a;
+    background: #6c757d;
     color: #fff;
 
     &:hover {
-      background: #111827;
+      background: #545b62;
     }
   }
 
@@ -558,8 +566,8 @@
     width: 44px;
     height: 44px;
     margin: 0 auto 10px;
-    border: 4px solid #e5e7eb;
-    border-top: 4px solid var(--brand);
+    border: 4px solid #e8f0f8;
+    border-top: 4px solid #052355;
     border-radius: 999px;
     animation: spin 1s linear infinite;
   }

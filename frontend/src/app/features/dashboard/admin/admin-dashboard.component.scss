@@ -116,8 +116,8 @@
     width: 60px;
     height: 60px;
     margin: 0 auto 1.5rem;
-    border: 5px solid #e0f7f4;
-    border-top: 5px solid #4db8a8;
+    border: 5px solid #e8f0f8;
+    border-top: 5px solid #052355;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -487,6 +487,11 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.users-card {
+  grid-column: 1 / -1; /* Span full width */
 }
 
 .card {
@@ -737,42 +742,6 @@
   }
 }
 
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
-
-  .action-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1.75rem;
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    border: 2px solid #e8f0f8;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      color: white;
-      border-color: #052355;
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(5, 35, 85, 0.25);
-    }
-
-    .action-icon {
-      font-size: 2rem;
-    }
-
-    .action-label {
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
-  }
-}
-
 @media (max-width: 1200px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -828,10 +797,6 @@
 
   .stats-grid {
     grid-template-columns: 1fr;
-  }
-
-  .actions-grid {
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .users-table .table-header,
