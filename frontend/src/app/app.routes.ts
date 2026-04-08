@@ -8,6 +8,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent)
   },
   {
+    path: 'developers',
+    loadComponent: () => import('./features/developers/developers.component').then(m => m.DevelopersComponent)
+  },
+  {
     path: 'role-selection',
     loadComponent: () => import('./features/auth/role-selection/role-selection').then(m => m.RoleSelection)
   },

@@ -1,148 +1,197 @@
 ﻿<div class="landing-container">
-  <!-- Header -->
+
   <header class="header">
     <div class="header-content">
-      <img src="../../assets/pdmhs-logo.png" alt="PDMHS Logo" class="logo">
-      <button class="btn-login-header" (click)="navigateToLogin()">Login</button>
+      <img src="assets/pdmhs-logo.png" alt="PDMHS Logo" class="logo">
+      <nav class="nav">
+        <button class="nav-link" (click)="scrollTo('home')">Home</button>
+        <button class="nav-link" routerLink="/developers">Developers</button>
+      </nav>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero-section">
+  <section class="hero-section" id="home"
+    [style.backgroundImage]="'url(assets/pdmhs-background.png)'"
+    [style.backgroundSize]="'cover'"
+    [style.backgroundPosition]="'center'">
+    <div class="hero-overlay"></div>
     <div class="hero-content">
       <div class="hero-text">
-        <h1 class="hero-title">PDMHS Medical Record System</h1>
-        <p class="hero-subtitle">Comprehensive Healthcare Management for Students</p>
-        <p class="hero-description">
-          Streamline health information management with our secure, efficient, and user-friendly 
-          medical record system designed specifically for President Diosdado Macapagal High School.
-        </p>
-        <div class="hero-features">
-          <div class="feature-item">
-            <span class="feature-icon"></span>
-            <span class="feature-text">Digital Health Records</span>
-          </div>
-          <div class="feature-item">
-            <span class="feature-icon"></span>
-            <span class="feature-text">Secure & Private</span>
-          </div>
-          <div class="feature-item">
-            <span class="feature-icon"></span>
-            <span class="feature-text">Real-time Monitoring</span>
-          </div>
+        <div class="hero-badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+          PDMHS Medical Record System
         </div>
-        <button class="btn-get-started" (click)="navigateToLogin()">Get Started</button>
+        <h1 class="hero-title">Student Health<br><span>Made Simple</span></h1>
+        <p class="hero-subtitle">A secure and efficient platform for managing student health records at President Diosdado Macapagal High School.</p>
+        <div class="hero-actions">
+          <button class="btn-get-started" (click)="navigateToLogin()">Get Started →</button>
+        </div>
       </div>
       <div class="hero-image-container">
-        <img src="../../assets/pdmhs-hero-staff.png" alt="PDMHS Healthcare Staff" class="hero-character">
+        <img src="assets/pdmhs-hero-staff.png" alt="PDMHS Healthcare Staff" class="hero-character">
       </div>
     </div>
   </section>
 
-  <!-- About PDMHS Section -->
-  <section class="about-section">
-    <div class="about-content">
-      <h2 class="section-title">About PDMHS</h2>
-      <div class="about-details">
-        <img src="../../assets/pdmhs-background.png" alt="PDMHS Cover" class="about-image">
-        <div class="about-text">
-          <p>
-            President Diosdado Macapagal High School (PDMHS) is committed to providing quality education
-            and comprehensive healthcare services to our students. Our Medical Record System
-            streamlines health information management, ensuring efficient and secure access to
-            student medical records.
-          </p>
-          <p>
-            This system enables our clinic staff, advisers, and administrators to maintain
-            accurate health records, track medical visits, manage emergency drills, and ensure
-            the well-being of every student in our care.
-          </p>
+  <section class="features-section" id="features">
+    <div class="section-inner">
+      <div class="section-header">
+        <span class="section-tag">System Features</span>
+        <h2 class="section-title">Built for Every Role</h2>
+        <p class="section-sub">Click a card to explore what each role can do in the system</p>
+      </div>
+      <div class="roles-grid">
+        <div class="role-card" *ngFor="let role of roles" (click)="openRoleModal(role)">
+          <div class="role-icon-wrap" [innerHTML]="role.icon"></div>
+          <h3>{{ role.title }}</h3>
+          <p>Manage and access health records tailored for {{ role.title }} users.</p>
+          <span class="view-more">View Features →</span>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Developers Section -->
-  <section class="developers-section">
-    <div class="developers-content">
-      <h2 class="section-title">Meet the Developers</h2>
-      <div class="developers-grid">
-        <div class="developer-card">
-          <img src="../../assets/developers/genandoy.jpg" alt="Hannah Lorainne M. Genandoy" class="developer-image">
-          <h3 class="developer-name">Hannah Lorainne M. Genandoy</h3>
-          <p class="developer-role">Project Manager/Developer</p>
+  <section class="info-section" id="contact">
+    <div class="section-inner">
+      <div class="section-header">
+        <span class="section-tag">School Clinic</span>
+        <h2 class="section-title">Contact &amp; School Opening Hours</h2>
+        <p class="section-sub">Visit us at the school clinic for health concerns</p>
+      </div>
+      <div class="info-grid">
+
+        <div class="info-card">
+          <div class="clinic-banner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <div>
+              <div class="clinic-label">PDMHS School Clinic</div>
+              <div class="clinic-sub">Medical &amp; Health Services</div>
+            </div>
+          </div>
+          <div class="contact-items">
+            <div class="contact-item">
+              <div class="contact-item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <div>
+                <div class="contact-item-label">Email Address</div>
+                <div class="contact-item-value">sdotapat.pdmhs&#64;deped.gov.ph</div>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <div>
+                <div class="contact-item-label">Location</div>
+                <div class="contact-item-value">President Diosdado Macapagal High School, Manila</div>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <div>
+                <div class="contact-item-label">Emergency</div>
+                <div class="contact-item-value">Contact school administration for emergencies</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="developer-card">
-          <img src="../../assets/developers/villas.jpg" alt="Clarence F. Villas" class="developer-image">
-          <h3 class="developer-name">Clarence F. Villas</h3>
-          <p class="developer-role">Tech Lead/Developer</p>
+
+        <div class="info-card">
+          <div class="hours-header">
+            <div class="hours-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <div class="hours-title">School Opening Hours</div>
+              <div class="hours-status open"><span class="status-dot"></span> Open Today</div>
+            </div>
+          </div>
+          <div class="hours-list">
+            <div class="hours-item" *ngFor="let day of hours">
+              <span class="day-name">{{ day.day }}</span>
+              <span class="day-hours" [class.closed]="day.hours === 'CLOSED'">
+                <span class="hours-dot" *ngIf="day.hours !== 'CLOSED'"></span>
+                {{ day.hours }}
+              </span>
+            </div>
+          </div>
+          <div class="hours-note">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Hours may vary during school holidays and special events.
+          </div>
         </div>
-        <div class="developer-card">
-          <img src="../../assets/developers/esparagoza.jpg" alt="Mikka Esparagoza" class="developer-image">
-          <h3 class="developer-name">Mikka Esparagoza</h3>
-          <p class="developer-role">UI/UX Designer/Developer</p>
-        </div>
-        <div class="developer-card">
-          <img src="../../assets/developers/francisco.jpg" alt="Krislyn Janelle Francisco" class="developer-image">
-          <h3 class="developer-name">Krislyn Janelle Francisco</h3>
-          <p class="developer-role">System Analyst/Document Analyst</p>
-        </div>
+
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
   <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-section">
-        <h3 class="footer-title">Contact Us</h3>
-        <p class="footer-text">
-          <strong>Email:</strong> sdotapat.pdmhs&#64;deped.gov.ph
-        </p>
-      </div>
-
-      <div class="footer-section">
-        <h3 class="footer-title">Opening Hours</h3>
-        <div class="hours-list">
-          <div class="hours-item">
-            <span>Monday</span>
-            <span>8:00 AM - 5:00 PM</span>
-          </div>
-          <div class="hours-item">
-            <span>Tuesday</span>
-            <span>8:00 AM - 5:00 PM</span>
-          </div>
-          <div class="hours-item">
-            <span>Wednesday</span>
-            <span>8:00 AM - 5:00 PM</span>
-          </div>
-          <div class="hours-item">
-            <span>Thursday</span>
-            <span>8:00 AM - 5:00 PM</span>
-          </div>
-          <div class="hours-item">
-            <span>Friday</span>
-            <span>8:00 AM - 5:00 PM</span>
-          </div>
-          <div class="hours-item">
-            <span>Saturday</span>
-            <span>CLOSED</span>
-          </div>
-          <div class="hours-item">
-            <span>Sunday</span>
-            <span>CLOSED</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="footer-bottom">
       <div class="footer-links">
-        <a href="#" class="footer-link">Terms of Use</a>
+        <button class="footer-link" (click)="openModal('terms')">Terms of Use</button>
         <span class="separator">|</span>
-        <a href="#" class="footer-link">Privacy Policy</a>
+        <button class="footer-link" (click)="openModal('privacy')">Privacy Policy</button>
       </div>
-      <p class="footer-copyright"> 2026 PDMHS Medical Record System. All rights reserved.</p>
+      <p class="footer-copyright">© 2026 PDMHS Medical Record System. All rights reserved.</p>
     </div>
   </footer>
+
+</div>
+
+<div class="modal-backdrop" *ngIf="activeModal === 'role-features'" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeModal()">✕</button>
+    <div class="modal-icon-wrap">
+      <div class="modal-icon" [innerHTML]="selectedRole?.icon"></div>
+    </div>
+    <h2>{{ selectedRole?.title }} Features</h2>
+    <ul class="feature-list">
+      <li *ngFor="let f of selectedRole?.features">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        {{ f }}
+      </li>
+    </ul>
+    <button class="btn-modal-login" (click)="navigateToLogin(); closeModal()">Login as {{ selectedRole?.title }}</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="activeModal === 'terms'" (click)="closeModal()">
+  <div class="modal modal-text" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeModal()">✕</button>
+    <h2>Terms of Use</h2>
+    <div class="modal-body">
+      <p>By accessing and using the PDMHS Medical Record System, you agree to the following terms:</p>
+      <h4>1. Authorized Use</h4>
+      <p>This system is exclusively for authorized personnel of PDMHS including students, advisers, clinic staff, and administrators.</p>
+      <h4>2. Confidentiality</h4>
+      <p>All health information is strictly confidential. Users must not share student health data with unauthorized parties.</p>
+      <h4>3. Account Security</h4>
+      <p>Users are responsible for maintaining the security of their login credentials.</p>
+      <h4>4. Acceptable Use</h4>
+      <p>The system must only be used for legitimate school health management purposes.</p>
+      <h4>5. Compliance</h4>
+      <p>All users must comply with the Data Privacy Act of 2012 (RA 10173).</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="activeModal === 'privacy'" (click)="closeModal()">
+  <div class="modal modal-text" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeModal()">✕</button>
+    <h2>Privacy Policy</h2>
+    <div class="modal-body">
+      <p>PDMHS Medical Record System is committed to protecting privacy in accordance with the Data Privacy Act of 2012.</p>
+      <h4>Information We Collect</h4>
+      <p>We collect student health information, medical visit records, immunization data, and other health-related information.</p>
+      <h4>How We Use Your Information</h4>
+      <p>Data is used solely for health monitoring and student well-being within the school premises.</p>
+      <h4>Data Security</h4>
+      <p>We implement appropriate measures to protect personal health information against unauthorized access.</p>
+      <h4>Your Rights</h4>
+      <p>Students and guardians have the right to access, correct, and request deletion of personal health data.</p>
+    </div>
+  </div>
 </div>
