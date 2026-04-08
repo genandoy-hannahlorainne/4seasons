@@ -1,0 +1,44 @@
+<div class="developers-page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <img src="assets/pdmhs-logo.png" alt="PDMHS Logo" class="logo">
+      <nav class="nav">
+        <button class="nav-link" routerLink="/">Home</button>
+        <button class="nav-link active">Developers</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="dev-hero"
+    [style.backgroundImage]="'url(assets/pdmhs-background.png)'"
+    [style.backgroundSize]="'cover'"
+    [style.backgroundPosition]="'center'">
+    <div class="dev-hero-overlay"></div>
+    <div class="dev-hero-content">
+      <h1>Meet the Developers</h1>
+      <p>The team behind the PDMHS Medical Record System</p>
+    </div>
+  </section>
+
+  <!-- Developers Grid -->
+  <section class="developers-section">
+    <div class="section-inner">
+      <div class="developers-grid">
+        <div class="developer-card" *ngFor="let dev of developers">
+          <img [src]="dev.image" [alt]="dev.name" class="developer-image">
+          <h3 class="developer-name">{{ dev.name }}</h3>
+          <p class="developer-role">{{ dev.role }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>© 2026 PDMHS Medical Record System. All rights reserved.</p>
+  </footer>
+
+</div>
