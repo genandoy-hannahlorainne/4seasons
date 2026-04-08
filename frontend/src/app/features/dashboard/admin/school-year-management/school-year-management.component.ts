@@ -524,7 +524,7 @@ interface GradeLevel {
         box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
 
         &:hover {
-          opacity: 0.9;
+          background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
         }
@@ -573,9 +573,9 @@ interface GradeLevel {
         box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
 
         &:hover:not(:disabled) {
-          background: #218838;
+          background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+          box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
         }
 
         &:disabled {
@@ -1123,11 +1123,13 @@ interface GradeLevel {
       }
 
       .btn-save {
-        background: #3498db;
+        background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
         color: white;
+        box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
 
         &:hover:not(:disabled) {
-          background: #2980b9;
+          background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
+          box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
         }
       }
     }

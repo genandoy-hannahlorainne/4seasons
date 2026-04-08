@@ -18,7 +18,7 @@ export class ManageSectionsComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  // Selected grade for filtering
+  // Selected grade for viewing details
   selectedGradeId: number | null = null;
 
   // Add/Edit modal
@@ -54,9 +54,16 @@ export class ManageSectionsComponent implements OnInit {
     });
   }
 
-  get filteredGradeLevels(): any[] {
-    if (!this.selectedGradeId) return this.gradeLevels;
-    return this.gradeLevels.filter(g => g.id === this.selectedGradeId);
+  selectGrade(gradeId: number): void {
+    this.selectedGradeId = gradeId;
+  }
+
+  backToCards(): void {
+    this.selectedGradeId = null;
+  }
+
+  get selectedGrade(): any {
+    return this.gradeLevels.find(g => g.id === this.selectedGradeId);
   }
 
   emptyForm() {
@@ -159,6 +166,11 @@ export class ManageSectionsComponent implements OnInit {
   getAdviserName(adviserId: number): string {
     const adviser = this.advisers.find(a => a.user_id === adviserId);
     return adviser ? adviser.full_name : '—';
+  }
+
+  getTotalEnrollment(grade: any): number {
+    if (!grade.sections || grade.sections.length === 0) return 0;
+    return grade.sections.reduce((sum: number, section: any) => sum + (section.current_enrollment || 0), 0);
   }
 
   private getCurrentSchoolYearId(): number | null {
