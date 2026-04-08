@@ -625,15 +625,22 @@ interface UsersResponse {
         }
 
         .view-all-btn {
-          background: none;
-          border: 1px solid #3498db;
-          color: #3498db;
-          padding: 0.4rem 1rem;
+          background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+          border: none;
+          color: #ffffff;
+          padding: 0.5rem 1.2rem;
           border-radius: 6px;
           cursor: pointer;
           font-size: 0.85rem;
+          font-weight: 600;
           transition: all 0.2s ease;
-          &:hover { background: #3498db; color: white; }
+          box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+          
+          &:hover { 
+            background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
+            box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
+            transform: translateY(-2px);
+          }
         }
       }
     }

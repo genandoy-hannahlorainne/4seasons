@@ -606,8 +606,8 @@ interface GradeLevel {
       }
 
       .current-year-info {
-        background: #e3f2fd;
-        border-left: 4px solid #2196f3;
+        background: linear-gradient(135deg, rgba(5, 35, 85, 0.05) 0%, rgba(83, 129, 178, 0.05) 100%);
+        border-left: 4px solid #052355;
         padding: 1rem;
         border-radius: 6px;
         display: flex;
@@ -615,7 +615,7 @@ interface GradeLevel {
         align-items: flex-start;
 
         i {
-          color: #2196f3;
+          color: #052355;
           font-size: 1.2rem;
           margin-top: 2px;
         }
@@ -997,8 +997,8 @@ interface GradeLevel {
       }
 
       .info-box {
-        background: #e3f2fd;
-        border-left: 4px solid #2196f3;
+        background: linear-gradient(135deg, rgba(5, 35, 85, 0.05) 0%, rgba(83, 129, 178, 0.05) 100%);
+        border-left: 4px solid #052355;
         padding: 1rem;
         border-radius: 6px;
         display: flex;
@@ -1007,19 +1007,19 @@ interface GradeLevel {
         margin-top: 1rem;
 
         i {
-          color: #2196f3;
+          color: #052355;
           font-size: 1.2rem;
           margin-top: 2px;
         }
 
         div {
           flex: 1;
-          color: #1565c0;
+          color: #2c3e50;
           font-size: 0.95rem;
           line-height: 1.5;
 
           strong {
-            color: #0d47a1;
+            color: #052355;
           }
         }
       }

@@ -79,7 +79,7 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
               <button *ngIf="drill.status === 'planned'" class="btn btn-sm btn-success" (click)="startDrill(drill.id)">
                 <i class="fas fa-play"></i> Start
               </button>
-              <button *ngIf="drill.status === 'active'" class="btn btn-sm btn-warning" (click)="viewDashboard(drill.id)">
+              <button *ngIf="drill.status === 'active'" class="btn btn-sm btn-primary" (click)="viewDashboard(drill.id)">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
               </button>
               <button *ngIf="drill.status === 'active'" class="btn btn-sm btn-danger" (click)="endDrill(drill.id)">
@@ -491,12 +491,41 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       gap: 5px;
     }
 
-    .btn-primary { background: #007bff; color: white; }
-    .btn-success { background: #28a745; color: white; }
-    .btn-warning { background: #ffc107; color: #212529; }
+    .btn-primary { 
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+      font-weight: 600;
+      
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
+        box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
+        transform: translateY(-1px);
+      }
+    }
     .btn-danger { background: #dc3545; color: white; }
-    .btn-secondary { background: #6c757d; color: white; }
-    .btn-outline { background: white; color: #007bff; border: 1px solid #007bff; }
+    .btn-secondary { 
+      background: #e9ecef; 
+      color: #2c3e50;
+      font-weight: 600;
+      
+      &:hover {
+        background: #dee2e6;
+        transform: translateY(-1px);
+      }
+    }
+    .btn-outline { 
+      background: white; 
+      color: #052355; 
+      border: 2px solid #052355;
+      font-weight: 600;
+      
+      &:hover {
+        background: #052355;
+        color: white;
+        transform: translateY(-1px);
+      }
+    }
     .btn-sm { padding: 4px 8px; font-size: 12px; }
 
     .btn:hover {

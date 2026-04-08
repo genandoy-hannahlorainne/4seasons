@@ -199,7 +199,7 @@
 }
 
 .info-card {
-  background: linear-gradient(135deg, #eef4ff, #dce8ff);
+  background: linear-gradient(135deg, rgba(5, 35, 85, 0.05) 0%, rgba(83, 129, 178, 0.05) 100%);
   border-left: 4px solid #052355;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(5, 35, 85, 0.1);
@@ -217,7 +217,7 @@
   ul {
     margin: 0;
     padding-left: 1.5rem;
-    color: #1a2744;
+    color: #2c3e50;
 
     li {
       margin-bottom: 0.5rem;
@@ -228,8 +228,8 @@
 }
 
 .warning-card {
-  background: linear-gradient(135deg, #eef4ff, #dce8ff);
-  border-left: 4px solid #5381b2;
+  background: linear-gradient(135deg, rgba(5, 35, 85, 0.05) 0%, rgba(83, 129, 178, 0.05) 100%);
+  border-left: 4px solid #052355;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(5, 35, 85, 0.1);
 
@@ -246,7 +246,7 @@
   ul {
     margin: 0;
     padding-left: 1.5rem;
-    color: #1a2744;
+    color: #2c3e50;
 
     li {
       margin-bottom: 0.5rem;

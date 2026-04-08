@@ -5,7 +5,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { EmergencyDrillService } from '../../../../core/services/emergency-drill.service';
 import { StudentService } from '../../../../core/services/student.service';
+import { AdminService } from '../../../../core/services/admin.service';
 import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emergency-drill.model';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-drill-detail',
@@ -179,14 +182,22 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
           <div class="modal-body">
             <!-- Search Students -->
             <div class="search-section">
-              <input type="text" 
-                     [(ngModel)]="searchTerm" 
-                     (input)="searchStudents()"
-                     (keyup)="searchStudents()"
-                     class="form-control" 
-                     placeholder="Search users by name, ID, or username..."
-                     [disabled]="searchLoading">
-              <small class="search-help">Search for students, advisers, clinic staff, or admin users</small>
+              <div class="search-input-group">
+                <input type="text" 
+                       [(ngModel)]="searchTerm" 
+                       (keyup.enter)="searchStudents()"
+                       class="form-control" 
+                       placeholder="Search users by name, ID, or username..."
+                       [disabled]="searchLoading">
+                <button class="btn btn-primary search-btn" 
+                        (click)="searchStudents()" 
+                        [disabled]="searchLoading || searchTerm.length < 2">
+                  <i class="fas fa-search" *ngIf="!searchLoading"></i>
+                  <i class="fas fa-spinner fa-spin" *ngIf="searchLoading"></i>
+                  Search
+                </button>
+              </div>
+              <small class="search-help">Type at least 2 characters and click Search or press Enter</small>
               <div class="search-loading" *ngIf="searchLoading">
                 <i class="fas fa-spinner fa-spin"></i> Searching...
               </div>
@@ -196,10 +207,9 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
             <div class="students-list" *ngIf="availableStudents.length">
               <div class="student-item" 
                    *ngFor="let student of availableStudents"
-                   (click)="selectStudent(student)"
                    [class.selected]="isStudentSelected(student.user_id)">
                 
-                <div class="student-info">
+                <div class="student-info" (click)="selectStudent(student)">
                   <div class="student-name">{{ student.full_name || (student.first_name + ' ' + (student.last_name || '')) }}</div>
                   <div class="student-details">
                     Role: {{ student.role_name }} | 
@@ -210,20 +220,21 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
                   </div>
                 </div>
                 
-                <div class="student-actions" *ngIf="isStudentSelected(student.user_id)">
-                  <select [(ngModel)]="getSelectedStudent(student.user_id).role" class="form-control">
+                <div class="student-actions" *ngIf="isStudentSelected(student.user_id)" (click)="$event.stopPropagation()">
+                  <select [(ngModel)]="getSelectedStudent(student.user_id).role" class="form-control" (click)="$event.stopPropagation()">
                     <option value="injured">Injured</option>
                     <option value="rescuer">Rescuer</option>
                     <option value="evacuee">Evacuee</option>
                     <option value="observer">Observer</option>
                   </select>
                   
-                  <div *ngIf="getSelectedStudent(student.user_id).role === 'injured'" class="injury-details">
+                  <div *ngIf="getSelectedStudent(student.user_id).role === 'injured'" class="injury-details" (click)="$event.stopPropagation()">
                     <input type="text" 
                            [(ngModel)]="getSelectedStudent(student.user_id).injury_simulation"
                            class="form-control" 
-                           placeholder="Injury simulation">
-                    <select [(ngModel)]="getSelectedStudent(student.user_id).severity" class="form-control">
+                           placeholder="Injury simulation"
+                           (click)="$event.stopPropagation()">
+                    <select [(ngModel)]="getSelectedStudent(student.user_id).severity" class="form-control" (click)="$event.stopPropagation()">
                       <option value="minor">Minor</option>
                       <option value="moderate">Moderate</option>
                       <option value="severe">Severe</option>
@@ -257,6 +268,22 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
                 Add {{ selectedStudents.length }} Participants
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmation Modal -->
+      <div class="modal confirm-modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
+        <div class="confirm-modal-content" (click)="$event.stopPropagation()">
+          <div class="confirm-modal-header">
+            <h3>{{ confirmTitle }}</h3>
+          </div>
+          <div class="confirm-modal-body">
+            <p>{{ confirmMessage }}</p>
+          </div>
+          <div class="confirm-modal-actions">
+            <button class="btn btn-confirm" (click)="confirmYes()">OK</button>
+            <button class="btn btn-cancel-confirm" (click)="closeConfirmModal()">Cancel</button>
           </div>
         </div>
       </div>
@@ -528,6 +555,21 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
       margin-bottom: 20px;
     }
 
+    .search-input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+
+      .form-control {
+        flex: 1;
+      }
+
+      .search-btn {
+        white-space: nowrap;
+        padding: 8px 20px;
+      }
+    }
+
     .search-help {
       display: block;
       margin-top: 5px;
@@ -612,9 +654,29 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
       gap: 5px;
     }
 
-    .btn-primary { background: #007bff; color: white; }
+    .btn-primary { 
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+      font-weight: 600;
+      
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
+        box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
+        transform: translateY(-1px);
+      }
+    }
     .btn-success { background: #28a745; color: white; }
-    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary { 
+      background: #e9ecef; 
+      color: #2c3e50;
+      font-weight: 600;
+      
+      &:hover {
+        background: #dee2e6;
+        transform: translateY(-1px);
+      }
+    }
 
     .btn:hover {
       opacity: 0.9;
@@ -638,6 +700,116 @@ import { EmergencyDrill, DrillParticipant } from '../../../../core/models/emerge
       padding: 40px;
       color: #666;
     }
+
+    /* Confirmation Modal Styles */
+    .confirm-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .confirm-modal-content {
+      background: #ffffff;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 0 10px 40px rgba(5, 35, 85, 0.3);
+      animation: slideUp 0.3s ease;
+      overflow: hidden;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .confirm-modal-header {
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      border-bottom: none;
+
+      h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        color: #ffffff;
+        font-weight: 700;
+      }
+    }
+
+    .confirm-modal-body {
+      padding: 2rem 1.5rem;
+      background: #ffffff;
+
+      p {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+    }
+
+    .confirm-modal-actions {
+      padding: 1rem 1.5rem 1.5rem;
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      background: #ffffff;
+    }
+
+    .btn-confirm {
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+
+      &:hover {
+        background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
+      }
+    }
+
+    .btn-cancel-confirm {
+      background: #e9ecef;
+      color: #2c3e50;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+
+      &:hover {
+        background: #dee2e6;
+        transform: translateY(-2px);
+      }
+    }
   `]
 })
 export class DrillDetailComponent implements OnInit {
@@ -647,9 +819,18 @@ export class DrillDetailComponent implements OnInit {
   adding = false;
   searchLoading = false;
   
+  // Confirmation modal
+  showConfirmModal = false;
+  confirmAction: (() => void) | null = null;
+  confirmMessage = '';
+  confirmTitle = '';
+  
   searchTerm = '';
   availableStudents: any[] = [];
   selectedStudents: any[] = [];
+  
+  // Debounce search
+  private searchSubject = new Subject<string>();
 
   private drillId: number = 0;
 
@@ -658,12 +839,21 @@ export class DrillDetailComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private drillService: EmergencyDrillService,
-    private studentService: StudentService
+    private studentService: StudentService,
+    private adminService: AdminService
   ) {}
 
   ngOnInit() {
     this.drillId = Number(this.route.snapshot.paramMap.get('id'));
     this.loadDrillDetails();
+    
+    // Setup debounced search
+    this.searchSubject.pipe(
+      debounceTime(500), // Wait 500ms after user stops typing
+      distinctUntilChanged() // Only search if the value changed
+    ).subscribe(searchTerm => {
+      this.performSearch(searchTerm);
+    });
   }
 
   loadDrillDetails() {
@@ -695,16 +885,21 @@ export class DrillDetailComponent implements OnInit {
   }
 
   startDrill() {
-    if (confirm('Are you sure you want to start this drill?')) {
+    this.confirmTitle = 'Start Drill';
+    this.confirmMessage = 'Are you sure you want to start this drill?';
+    this.confirmAction = () => {
       this.drillService.startDrill(this.drillId).subscribe({
         next: () => {
           this.loadDrillDetails();
+          this.closeConfirmModal();
         },
         error: (error) => {
           console.error('Error starting drill:', error);
+          this.closeConfirmModal();
         }
       });
-    }
+    };
+    this.showConfirmModal = true;
   }
 
   viewDashboard() {
@@ -716,43 +911,27 @@ export class DrillDetailComponent implements OnInit {
   }
 
   searchStudents() {
-    console.log('🔍 Searching for:', this.searchTerm);
+    // Direct search without debounce
+    this.performSearch(this.searchTerm);
+  }
+
+  performSearch(searchTerm: string) {
+    console.log('🔍 Searching for:', searchTerm);
     
-    if (this.searchTerm.length >= 2) {
+    if (searchTerm.length >= 2) {
       this.searchLoading = true;
       
-      // Search all users (students, advisers, staff, admin)
-      this.http.get<any>('/backend/api/get-all-users.php').subscribe({
+      // Use the drill-specific search endpoint
+      this.drillService.searchUsers(this.drillId, searchTerm).subscribe({
         next: (response: any) => {
-          console.log('📡 API Response:', response);
+          console.log('📡 Search Response:', response);
           this.searchLoading = false;
           
-          if (response.success) {
-            // Flatten all user types into a single array
-            const allUsers = [
-              ...(response.users.student || []),
-              ...(response.users.adviser || []),
-              ...(response.users.clinic_staff || []),
-              ...(response.users.admin || [])
-            ];
-            
-            console.log('👥 All users found:', allUsers.length);
-            
-            // Filter by search term
-            this.availableStudents = allUsers.filter((user: any) => {
-              const searchLower = this.searchTerm.toLowerCase();
-              return (
-                user.full_name?.toLowerCase().includes(searchLower) ||
-                user.username?.toLowerCase().includes(searchLower) ||
-                user.email?.toLowerCase().includes(searchLower) ||
-                user.student_number?.includes(this.searchTerm) ||
-                (user.first_name + ' ' + (user.last_name || '')).toLowerCase().includes(searchLower)
-              );
-            });
-            
-            console.log('🎯 Filtered users:', this.availableStudents.length);
+          if (response.success && response.data) {
+            this.availableStudents = response.data;
+            console.log('🎯 Found users:', this.availableStudents.length);
           } else {
-            console.error('❌ API returned error:', response);
+            console.error('❌ Search returned error:', response);
             this.availableStudents = [];
           }
         },
@@ -760,6 +939,41 @@ export class DrillDetailComponent implements OnInit {
           console.error('❌ Error searching users:', error);
           this.searchLoading = false;
           this.availableStudents = [];
+          
+          // Fallback to AdminService if drill search fails
+          console.log('⚠️ Falling back to AdminService...');
+          this.adminService.getAllUsers().subscribe({
+            next: (response: any) => {
+              console.log('📡 Fallback API Response:', response);
+              
+              if (response.success && response.data) {
+                const allUsers = [
+                  ...(response.data.users?.student || []),
+                  ...(response.data.users?.adviser || []),
+                  ...(response.data.users?.clinic_staff || []),
+                  ...(response.data.users?.admin || [])
+                ];
+                
+                this.availableStudents = allUsers.filter((user: any) => {
+                  const searchLower = searchTerm.toLowerCase();
+                  return (
+                    user.full_name?.toLowerCase().includes(searchLower) ||
+                    user.username?.toLowerCase().includes(searchLower) ||
+                    user.email?.toLowerCase().includes(searchLower) ||
+                    user.student_number?.includes(searchTerm) ||
+                    (user.first_name + ' ' + (user.last_name || '')).toLowerCase().includes(searchLower)
+                  );
+                });
+                
+                console.log('🎯 Filtered users (fallback):', this.availableStudents.length);
+              }
+              this.searchLoading = false;
+            },
+            error: (err: any) => {
+              console.error('❌ Fallback also failed:', err);
+              this.searchLoading = false;
+            }
+          });
         }
       });
     } else {
@@ -820,5 +1034,18 @@ export class DrillDetailComponent implements OnInit {
     if (event.target === event.currentTarget) {
       this.showAddParticipants = false;
     }
+  }
+
+  confirmYes() {
+    if (this.confirmAction) {
+      this.confirmAction();
+    }
+  }
+
+  closeConfirmModal() {
+    this.showConfirmModal = false;
+    this.confirmAction = null;
+    this.confirmMessage = '';
+    this.confirmTitle = '';
   }
 }
