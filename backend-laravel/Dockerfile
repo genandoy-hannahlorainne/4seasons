@@ -16,7 +16,7 @@ WORKDIR /var/www/html
 
 # Copy composer files first for better layer caching
 COPY composer.json composer.lock ./
-RUN composer install --no-interaction --no-dev --optimize-autoloader --no-scripts
+RUN composer install --no-interaction --optimize-autoloader --no-scripts
 
 # Copy the rest of the app
 COPY . /var/www/html

@@ -37,6 +37,7 @@ services:
       start_period: 90s
     volumes:
       - ./backend-laravel:/var/www/html
+      - backend_vendor:/var/www/html/vendor
     command: >
       sh -c "php artisan config:clear &&
              php artisan migrate --force &&
@@ -118,3 +119,4 @@ volumes:
   mysql_test_data:
   redis_data:
   frontend_node_modules:
+  backend_vendor:
