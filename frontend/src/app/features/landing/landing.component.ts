@@ -37,17 +37,17 @@ export class LandingComponent {
   roles = [
     {
       id: 'student', title: 'Student',
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+      icon: `<img src="assets/icons/student.png" alt="Student" style="width:52px;height:52px;object-fit:contain;display:block;">`,
       features: ['View personal health records','Access SHDF (Student Health Data Form)','View medical visit history','Track immunization records','View allergy information','Access family medical history']
     },
     {
       id: 'clinic-staff', title: 'Clinic Staff',
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`,
+      icon: `<img src="assets/icons/clinic-staff.png" alt="Clinic Staff" style="width:52px;height:52px;object-fit:contain;display:block;">`,
       features: ['Manage student medical visits','Record vital signs and diagnoses','Manage student health records','Handle emergency drill participation','Generate health reports','Manage parental consent forms']
     },
     {
       id: 'adviser', title: 'Adviser',
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+      icon: `<img src="assets/icons/adviser-faculty.png" alt="Adviser" style="width:52px;height:52px;object-fit:contain;display:block;">`,
       features: ['View section student health records','Monitor student medical visits','Track SHDF submission status','Manage emergency drill records','View student health summaries','Coordinate with clinic staff']
     }
   ];
