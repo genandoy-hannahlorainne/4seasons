@@ -55,10 +55,6 @@ import { Router } from '@angular/router';
             <img src="assets/icons/settings.png" class="nav-icon" alt="Settings">
             <span class="nav-label">Settings</span>
           </a>
-          <a routerLink="/dashboard/admin/backup-recovery" routerLinkActive="active" class="nav-item" title="Backup" (click)="closeMobile()">
-            <img src="assets/icons/backup.png" class="nav-icon" alt="Backup">
-            <span class="nav-label">Backup</span>
-          </a>
           <a routerLink="/dashboard/admin/reports" routerLinkActive="active" class="nav-item" title="Reports" (click)="closeMobile()">
             <img src="assets/icons/reports.png" class="nav-icon" alt="Reports">
             <span class="nav-label">Reports</span>
