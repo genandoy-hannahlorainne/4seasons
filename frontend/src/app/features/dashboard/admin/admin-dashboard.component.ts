@@ -118,7 +118,7 @@ interface UsersResponse {
         <!-- Statistics Cards -->
         <div class="stats-grid">
           <div class="stat-card users">
-            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-icon"><img src="assets/icons/total-users.png" alt="Total Users" class="stat-icon-img"></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalUsers }}</div>
               <div class="stat-label">Total Users</div>
@@ -229,39 +229,6 @@ interface UsersResponse {
               <span>👤</span> No users registered yet
             </div>
           </div>
-
-          <!-- Quick Actions -->
-          <div class="card actions-card">
-            <div class="card-header">
-              <h2>Quick Actions</h2>
-            </div>
-            <div class="actions-grid">
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/manage-users')">
-                <span class="action-icon"><i class="fa-solid fa-users-gear"></i></span>
-                <span class="action-label">Manage Users</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/settings')">
-                <span class="action-icon"><i class="fa-solid fa-gear"></i></span>
-                <span class="action-label">System Settings</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/reports')">
-                <span class="action-icon"><i class="fa-solid fa-chart-column"></i></span>
-                <span class="action-label">View Reports</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/backup-recovery')">
-                <span class="action-icon"><i class="fa-solid fa-database"></i></span>
-                <span class="action-label">Database Backup</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/audit-logs')">
-                <span class="action-icon"><i class="fa-solid fa-clipboard-list"></i></span>
-                <span class="action-label">Audit Logs</span>
-              </button>
-              <button class="action-btn" (click)="navigateTo('/dashboard/admin/security')">
-                <span class="action-icon"><i class="fa-solid fa-shield-halved"></i></span>
-                <span class="action-label">Security</span>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -294,8 +261,8 @@ interface UsersResponse {
         width: 50px;
         height: 50px;
         margin: 0 auto 1rem;
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #2c3e50;
+        border: 4px solid #e8f0f8;
+        border-top: 4px solid #052355;
         border-radius: 50%;
         animation: spin 1s linear infinite;
       }
@@ -658,15 +625,22 @@ interface UsersResponse {
         }
 
         .view-all-btn {
-          background: none;
-          border: 1px solid #3498db;
-          color: #3498db;
-          padding: 0.4rem 1rem;
+          background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+          border: none;
+          color: #ffffff;
+          padding: 0.5rem 1.2rem;
           border-radius: 6px;
           cursor: pointer;
           font-size: 0.85rem;
+          font-weight: 600;
           transition: all 0.2s ease;
-          &:hover { background: #3498db; color: white; }
+          box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+          
+          &:hover { 
+            background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
+            box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
+            transform: translateY(-2px);
+          }
         }
       }
     }

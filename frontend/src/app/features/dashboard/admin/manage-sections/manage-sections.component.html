@@ -1,7 +1,12 @@
 <div class="manage-sections">
   <div class="page-header">
-    <h1>Manage Sections</h1>
-    <button class="btn btn-primary" (click)="openAdd()">
+    <div class="header-left">
+      <button class="btn btn-back" *ngIf="selectedGradeId" (click)="backToCards()">
+        <i class="fa-solid fa-arrow-left"></i> Back
+      </button>
+      <h1>{{ selectedGradeId ? selectedGrade?.level_name + ' Sections' : 'Manage Sections' }}</h1>
+    </div>
+    <button class="btn btn-primary" *ngIf="selectedGradeId" (click)="openAdd(selectedGradeId)">
       <i class="fa-solid fa-plus"></i> Add Section
     </button>
   </div>
@@ -9,28 +14,36 @@
   <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
   <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-  <!-- Grade filter -->
-  <div class="filter-bar">
-    <label>Filter by Grade:</label>
-    <select [(ngModel)]="selectedGradeId">
-      <option [ngValue]="null">All Grades</option>
-      <option *ngFor="let g of gradeLevels" [ngValue]="g.id">{{ g.level_name }}</option>
-    </select>
-  </div>
-
   <div class="loading" *ngIf="loading">Loading...</div>
 
-  <!-- Grade level blocks -->
-  <div class="grade-block" *ngFor="let grade of filteredGradeLevels">
-    <div class="grade-header">
-      <h2>{{ grade.level_name }}</h2>
-      <span class="section-count">{{ grade.sections?.length || 0 }} sections</span>
-      <button class="btn btn-sm btn-outline" (click)="openAdd(grade.id)">
-        <i class="fa-solid fa-plus"></i> Add Section
-      </button>
+  <!-- Grade Level Cards View -->
+  <div class="grade-cards" *ngIf="!selectedGradeId && !loading">
+    <div class="grade-card" *ngFor="let grade of gradeLevels" (click)="selectGrade(grade.id)">
+      <div class="card-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="card-content">
+        <h3>{{ grade.level_name }}</h3>
+        <div class="card-stats">
+          <div class="stat">
+            <span class="stat-value">{{ grade.sections?.length || 0 }}</span>
+            <span class="stat-label">Sections</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ getTotalEnrollment(grade) }}</span>
+            <span class="stat-label">Students</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-arrow">
+        <i class="fa-solid fa-chevron-right"></i>
+      </div>
     </div>
+  </div>
 
-    <div class="sections-table-wrap" *ngIf="grade.sections?.length > 0; else noSections">
+  <!-- Grade Level Table View -->
+  <div class="grade-detail" *ngIf="selectedGradeId && selectedGrade && !loading">
+    <div class="sections-table-wrap" *ngIf="selectedGrade.sections?.length > 0; else noSections">
       <table class="sections-table">
         <thead>
           <tr>
@@ -43,7 +56,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let section of grade.sections; let i = index">
+          <tr *ngFor="let section of selectedGrade.sections; let i = index">
             <td>{{ i + 1 }}</td>
             <td>{{ section.section_name }}</td>
             <td>{{ section.adviser_name || (section.adviser_id ? getAdviserName(section.adviser_id) : '—') }}</td>
@@ -62,7 +75,13 @@
       </table>
     </div>
     <ng-template #noSections>
-      <p class="no-data">No sections yet for this grade level.</p>
+      <div class="no-data-card">
+        <i class="fa-solid fa-inbox"></i>
+        <p>No sections yet for this grade level.</p>
+        <button class="btn btn-primary" (click)="openAdd(selectedGradeId)">
+          <i class="fa-solid fa-plus"></i> Add First Section
+        </button>
+      </div>
     </ng-template>
   </div>
 </div>

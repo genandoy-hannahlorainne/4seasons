@@ -140,28 +140,115 @@
       </div>
 
       <!-- Backup Settings -->
-      <div *ngIf="activeTab === 'backup'" class="panel-content">
-        <h2>Backup Configuration</h2>
-        <div class="form-group checkbox">
-          <input type="checkbox" [(ngModel)]="settings.backup.auto_backup_enabled" id="autoBackup">
-          <label for="autoBackup">Enable automatic backups</label>
+      <div *ngIf="activeTab === 'backup'" class="panel-content backup-panel">
+        <div class="backup-header">
+          <div>
+            <h2>Database Backup & Recovery</h2>
+            <p>Create, manage, and restore database backups</p>
+          </div>
+          <button class="btn btn-create-backup" (click)="createBackup()" [disabled]="creating">
+            <i class="fas fa-plus"></i>
+            {{ creating ? 'Creating...' : 'Create Backup' }}
+          </button>
         </div>
-        <div class="form-group">
-          <label>Backup Frequency</label>
-          <select [(ngModel)]="settings.backup.backup_frequency" class="form-control">
-            <option value="hourly">Hourly</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
+
+        <!-- Info Cards -->
+        <div class="info-cards-grid">
+          <div class="info-card">
+            <h3><i class="fas fa-info-circle"></i> Backup Information</h3>
+            <ul>
+              <li>Backups are stored on the server inside the application storage folder</li>
+              <li>Download backups regularly to keep an offline copy</li>
+              <li>Backups include all database tables and data</li>
+              <li><i class="fas fa-exclamation-triangle"></i> <strong>Restore will replace ALL current data with backup data and cannot be undone</strong></li>
+            </ul>
+          </div>
+
+          <div class="warning-card">
+            <h3><i class="fas fa-exclamation-triangle"></i> Before Restoring</h3>
+            <ul>
+              <li>Create a new backup of current data first</li>
+              <li>Make sure you selected the correct backup file</li>
+              <li>All data created after the backup date will be permanently lost</li>
+            </ul>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Backup Time (HH:MM)</label>
-          <input type="time" [(ngModel)]="settings.backup.backup_time" class="form-control">
+
+        <!-- Backup List -->
+        <div class="backup-list-section">
+          <h3>Available Backups</h3>
+          
+          <div *ngIf="loadingBackups" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading backups...</p>
+          </div>
+
+          <div *ngIf="!loadingBackups && backups.length === 0" class="empty-state">
+            <i class="fas fa-database"></i>
+            <p>No backups available. Create your first backup to get started.</p>
+          </div>
+
+          <div *ngIf="!loadingBackups && backups.length > 0" class="backup-table-wrapper">
+            <table class="backup-table">
+              <thead>
+                <tr>
+                  <th>Filename</th>
+                  <th>Date Created</th>
+                  <th>Size</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let backup of backups">
+                  <td>{{ backup.filename }}</td>
+                  <td>{{ backup.created_at | date:'medium' }}</td>
+                  <td>{{ formatSize(backup.size) }}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <button class="btn btn-sm btn-primary" (click)="downloadBackup(backup.filename)" title="Download">
+                        <i class="fas fa-download"></i>
+                      </button>
+                      <button class="btn btn-sm btn-success" (click)="restoreBackup(backup.filename)" title="Restore">
+                        <i class="fas fa-undo"></i>
+                      </button>
+                      <button class="btn btn-sm btn-danger" (click)="deleteBackup(backup.filename)" title="Delete">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Backup Retention (days)</label>
-          <input type="number" [(ngModel)]="settings.backup.backup_retention_days" class="form-control">
+
+        <!-- Automatic Backup Settings -->
+        <div class="auto-backup-settings">
+          <h3>Automatic Backup Settings</h3>
+          <div class="form-group checkbox">
+            <input type="checkbox" [(ngModel)]="settings.backup.auto_backup_enabled" id="autoBackup">
+            <label for="autoBackup">Enable automatic backups</label>
+          </div>
+          <div class="form-group">
+            <label>Backup Frequency</label>
+            <select [(ngModel)]="settings.backup.backup_frequency" class="form-control">
+              <option value="hourly">Hourly</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Backup Time (HH:MM)</label>
+            <input type="time" [(ngModel)]="settings.backup.backup_time" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Backup Retention (days)</label>
+            <input type="number" [(ngModel)]="settings.backup.backup_retention_days" class="form-control">
+          </div>
+          <button class="btn btn-primary" (click)="saveSettings()" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save Backup Settings' }}
+          </button>
         </div>
       </div>
     </div>

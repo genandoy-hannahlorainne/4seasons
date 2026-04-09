@@ -509,7 +509,7 @@ interface GradeLevel {
       }
 
       .btn-create-year {
-        background: #2ecc71;
+        background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
         color: white;
         border: none;
         padding: 0.75rem 1.5rem;
@@ -521,16 +521,15 @@ interface GradeLevel {
         gap: 0.5rem;
         transition: all 0.2s ease;
         white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
 
         &:hover {
-          background: #27ae60;
+          background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+          box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
         }
 
-        i {
-          font-size: 1rem;
-        }
+        i { font-size: 1rem; }
       }
 
       .selector-right {
@@ -559,7 +558,7 @@ interface GradeLevel {
       }
 
       .btn-set-current {
-        background: #28a745;
+        background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
         color: white;
         border: none;
         padding: 0.75rem 1.5rem;
@@ -571,11 +570,12 @@ interface GradeLevel {
         gap: 0.5rem;
         transition: all 0.2s ease;
         white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
 
         &:hover:not(:disabled) {
-          background: #218838;
+          background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+          box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
         }
 
         &:disabled {
@@ -606,8 +606,8 @@ interface GradeLevel {
       }
 
       .current-year-info {
-        background: #e3f2fd;
-        border-left: 4px solid #2196f3;
+        background: linear-gradient(135deg, rgba(5, 35, 85, 0.05) 0%, rgba(83, 129, 178, 0.05) 100%);
+        border-left: 4px solid #052355;
         padding: 1rem;
         border-radius: 6px;
         display: flex;
@@ -615,7 +615,7 @@ interface GradeLevel {
         align-items: flex-start;
 
         i {
-          color: #2196f3;
+          color: #052355;
           font-size: 1.2rem;
           margin-top: 2px;
         }
@@ -656,8 +656,8 @@ interface GradeLevel {
         width: 50px;
         height: 50px;
         margin: 0 auto 1rem;
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #3498db;
+        border: 4px solid #e8f0f8;
+        border-top: 4px solid #052355;
         border-radius: 50%;
         animation: spin 1s linear infinite;
       }
@@ -997,8 +997,8 @@ interface GradeLevel {
       }
 
       .info-box {
-        background: #e3f2fd;
-        border-left: 4px solid #2196f3;
+        background: linear-gradient(135deg, rgba(5, 35, 85, 0.05) 0%, rgba(83, 129, 178, 0.05) 100%);
+        border-left: 4px solid #052355;
         padding: 1rem;
         border-radius: 6px;
         display: flex;
@@ -1007,19 +1007,19 @@ interface GradeLevel {
         margin-top: 1rem;
 
         i {
-          color: #2196f3;
+          color: #052355;
           font-size: 1.2rem;
           margin-top: 2px;
         }
 
         div {
           flex: 1;
-          color: #1565c0;
+          color: #2c3e50;
           font-size: 0.95rem;
           line-height: 1.5;
 
           strong {
-            color: #0d47a1;
+            color: #052355;
           }
         }
       }
@@ -1123,11 +1123,13 @@ interface GradeLevel {
       }
 
       .btn-save {
-        background: #3498db;
+        background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
         color: white;
+        box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
 
         &:hover:not(:disabled) {
-          background: #2980b9;
+          background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
+          box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
         }
       }
     }
