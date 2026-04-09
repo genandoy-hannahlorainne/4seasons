@@ -258,8 +258,8 @@ interface AdviserAssignmentStatus {
     }
 
     .btn-link {
-      background: #ffc107;
-      color: #856404;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      color: #ffffff;
       border: none;
       padding: 8px 16px;
       border-radius: 4px;
@@ -269,11 +269,13 @@ interface AdviserAssignmentStatus {
       align-items: center;
       gap: 8px;
       transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
     }
 
     .btn-link:hover {
-      background: #ffb300;
+      opacity: 0.9;
       transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
     }
 
     .adviser-check {
@@ -462,8 +464,9 @@ interface AdviserAssignmentStatus {
     }
 
     .btn-primary {
-      background: #1976d2;
-      color: white;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
     }
 
     .btn-success {

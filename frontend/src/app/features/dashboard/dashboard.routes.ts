@@ -25,7 +25,6 @@ import { ManageUsersComponent } from './admin/manage-users/manage-users.componen
 import { ManageSectionsComponent } from './admin/manage-sections/manage-sections.component';
 import { SystemSettingsComponent } from './admin/system-settings/system-settings.component';
 import { ViewReportsComponent } from './admin/view-reports/view-reports.component';
-import { BackupRecoveryComponent } from './admin/backup-recovery/backup-recovery.component';
 import { GradePromotionComponent } from './admin/grade-promotion/grade-promotion.component';
 import { SchoolYearManagementComponent } from './admin/school-year-management/school-year-management.component';
 import { EmergencyDrillsComponent } from './admin/emergency-drills/emergency-drills.component';
@@ -97,7 +96,6 @@ export const dashboardRoutes: Routes = [
       { path: 'school-year-management', component: SchoolYearManagementComponent },
       { path: 'settings', component: SystemSettingsComponent },
       { path: 'reports', component: ViewReportsComponent },
-      { path: 'backup-recovery', component: BackupRecoveryComponent },
       { path: 'grade-promotion', component: GradePromotionComponent },
       { path: 'emergency-drills', component: EmergencyDrillsComponent },
       { path: 'emergency-drills/:id', component: DrillDetailComponent },

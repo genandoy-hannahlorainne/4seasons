@@ -25,6 +25,11 @@ export class SystemSettingsComponent implements OnInit {
     backup: {}
   };
 
+  // Backup management properties
+  backups: any[] = [];
+  creating = false;
+  loadingBackups = false;
+
   constructor(private adminService: AdminService) {}
 
   ngOnInit(): void {
@@ -52,6 +57,11 @@ export class SystemSettingsComponent implements OnInit {
     this.activeTab = tab;
     this.successMessage = '';
     this.errorMessage = '';
+    
+    // Load backups when switching to backup tab
+    if (tab === 'backup') {
+      this.loadBackups();
+    }
   }
 
   saveSettings(): void {
@@ -80,5 +90,106 @@ export class SystemSettingsComponent implements OnInit {
 
   testEmailConnection(): void {
     alert('Email connection test initiated. Check your email for a test message.');
+  }
+
+  // Backup management methods
+  loadBackups(): void {
+    this.loadingBackups = true;
+    this.errorMessage = '';
+    
+    this.adminService.getBackupHistory().subscribe({
+      next: (response: any) => {
+        this.loadingBackups = false;
+        this.backups = response.data?.backups || response.backups || [];
+      },
+      error: (err: any) => {
+        this.loadingBackups = false;
+        this.errorMessage = 'Failed to load backup history';
+        console.error('Error loading backups:', err);
+      }
+    });
+  }
+
+  createBackup(): void {
+    if (this.creating) return;
+    
+    this.creating = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    
+    this.adminService.createBackup().subscribe({
+      next: (response: any) => {
+        this.creating = false;
+        this.successMessage = 'Backup created successfully!';
+        this.loadBackups();
+        setTimeout(() => this.successMessage = '', 5000);
+      },
+      error: (err: any) => {
+        this.creating = false;
+        this.errorMessage = 'Failed to create backup. Please try again.';
+        console.error('Error creating backup:', err);
+      }
+    });
+  }
+
+  downloadBackup(filename: string): void {
+    this.adminService.downloadBackup(filename);
+  }
+
+  deleteBackup(filename: string): void {
+    if (!confirm(`Are you sure you want to delete backup: ${filename}?`)) {
+      return;
+    }
+    
+    this.adminService.deleteBackup(filename).subscribe({
+      next: (response: any) => {
+        this.successMessage = 'Backup deleted successfully';
+        this.loadBackups();
+        setTimeout(() => this.successMessage = '', 3000);
+      },
+      error: (err: any) => {
+        this.errorMessage = 'Failed to delete backup';
+        console.error('Error deleting backup:', err);
+      }
+    });
+  }
+
+  restoreBackup(filename: string): void {
+    const confirmMsg = `⚠️ WARNING: This will restore the database to the state of this backup.\n\n` +
+                       `All current data will be replaced with data from:\n${filename}\n\n` +
+                       `This action CANNOT be undone!\n\n` +
+                       `Are you absolutely sure you want to continue?`;
+    
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+    
+    // Double confirmation for safety
+    if (!confirm('Final confirmation: Restore database from backup?')) {
+      return;
+    }
+    
+    this.loadingBackups = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    
+    this.adminService.restoreBackup(filename).subscribe({
+      next: (response: any) => {
+        this.loadingBackups = false;
+        this.successMessage = '✅ Database restored successfully! The page will reload in 3 seconds...';
+        setTimeout(() => window.location.reload(), 3000);
+      },
+      error: (err: any) => {
+        this.loadingBackups = false;
+        this.errorMessage = 'Failed to restore backup. Please try again or restore manually.';
+        console.error('Error restoring backup:', err);
+      }
+    });
+  }
+
+  formatSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
 }
