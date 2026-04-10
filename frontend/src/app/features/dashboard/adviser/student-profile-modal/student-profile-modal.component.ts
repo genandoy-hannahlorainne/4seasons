@@ -164,7 +164,7 @@ import { BMIUtils } from '../../../../shared/utils/bmi-utils';
       align-items: center;
       gap: 1.1rem;
       padding: 1.5rem 1.5rem 1.75rem;
-      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       border-radius: 16px 16px 0 0;
       color: #fff;
 

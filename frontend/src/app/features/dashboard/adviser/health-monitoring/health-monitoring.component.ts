@@ -188,24 +188,29 @@ interface Alert {
     }
 
     .page-header {
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      color: white;
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 2rem;
+      align-items: center;
       gap: 1rem;
     }
 
     .page-title {
-      font-size: 2rem;
-      font-weight: 800;
-      color: #0b2a4a;
-      margin: 0 0 0.5rem 0;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0 0 0.3rem 0;
     }
 
     .page-subtitle {
-      color: #4f7ea9;
-      font-weight: 600;
+      color: rgba(255,255,255,0.8);
+      font-weight: 500;
       margin: 0;
+      font-size: 0.9rem;
     }
 
     .header-actions {
@@ -215,16 +220,17 @@ interface Alert {
 
     .days-select {
       padding: 0.5rem 1rem;
-      border: 1px solid #e5e7eb;
+      border: 1px solid rgba(255,255,255,0.3);
       border-radius: 8px;
-      background: white;
-      font-size: 0.9rem;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-size: 0.875rem;
       cursor: pointer;
       outline: none;
-      
-      &:hover {
-        border-color: #007bff;
-      }
+
+      option { background: #052355; color: white; }
+
+      &:hover { border-color: rgba(255,255,255,0.6); }
     }
 
     .loading-state, .error-state {
@@ -238,7 +244,7 @@ interface Alert {
         width: 40px;
         height: 40px;
         border: 4px solid #e5e7eb;
-        border-top-color: #007bff;
+        border-top-color: #052355;
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin: 0 auto 1rem;
@@ -248,10 +254,7 @@ interface Alert {
       
       .btn-retry {
         padding: 0.5rem 1.5rem;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 6px;
+        background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
         cursor: pointer;
         
         &:hover { background: #0056b3; }
@@ -485,7 +488,7 @@ interface Alert {
     .trending-rank {
       width: 32px;
       height: 32px;
-      background: #007bff;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       color: white;
       border-radius: 50%;
       display: flex;
@@ -522,7 +525,7 @@ interface Alert {
 
     .bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #007bff, #0056b3);
+      background: linear-gradient(90deg, #052355, #5381b2);
       transition: width 0.3s;
     }
 
