@@ -11,46 +11,65 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
   imports: [CommonModule, RouterModule, StudentProfileModalComponent],
   template: `
     <div class="adviser-dashboard">
+
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="hero-content">
+          <div class="hero-text">
+            <h1>Welcome, {{ adviserName }}</h1>
+            <p>{{ advisoryClass || 'Advisory Class' }} &mdash; Manage and monitor your students' health records</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Loading State -->
       <div *ngIf="loading" class="loading-state">
-        <p>Loading students...</p>
+        <div class="spinner"></div>
+        <p>Loading dashboard...</p>
       </div>
 
       <!-- Error State -->
-      <div *ngIf="error" class="error-state">
-        <p>{{ error }}</p>
-        <button (click)="loadStudents()">Retry</button>
+      <div *ngIf="error" class="dashboard-content">
+        <div class="error-state">
+          <p>{{ error }}</p>
+          <button (click)="loadStudents()">Retry</button>
+        </div>
       </div>
 
-      <div *ngIf="!loading && !error" class="dashboard-wrap">
-        <div class="overview-card">
-          <div class="overview-title">Dashboard Overview</div>
-          <div class="overview-sub">Welcome back, {{ adviserName }}!</div>
-          <div class="overview-meta">{{ advisoryClass || 'Advisory Class' }} • {{ totalStudents }} Students</div>
+      <div *ngIf="!loading && !error" class="dashboard-content">
 
-          <div class="stats-row">
-            <div class="stat-tile tile-total">
-              <div class="tile-value">{{ totalStudents }}</div>
-              <div class="tile-label">Total Students</div>
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card students">
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-info">
+              <div class="stat-value">{{ totalStudents }}</div>
+              <div class="stat-label">Total Students</div>
             </div>
-            <div class="stat-tile tile-visits">
-              <div class="tile-value">{{ clinicVisitsThisMonth }}</div>
-              <div class="tile-label">Clinic Visits (This Month)</div>
+          </div>
+          <div class="stat-card visits">
+            <div class="stat-icon"><i class="fa-solid fa-notes-medical"></i></div>
+            <div class="stat-info">
+              <div class="stat-value">{{ clinicVisitsThisMonth }}</div>
+              <div class="stat-label">Clinic Visits This Month</div>
             </div>
-            <div class="stat-tile tile-allergies">
-              <div class="tile-value">{{ studentsWithAllergies }}</div>
-              <div class="tile-label">With Allergies</div>
+          </div>
+          <div class="stat-card allergies">
+            <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-info">
+              <div class="stat-value">{{ studentsWithAllergies }}</div>
+              <div class="stat-label">Students With Allergies</div>
             </div>
           </div>
         </div>
 
         <!-- Students Under Advisory -->
-        <div class="card students-section">
+        <div class="card">
           <div class="card-header">
-            <h2>Students Under Your Advisory</h2>
-            <span class="student-count">{{ advisoryStudents.length }} students</span>
+            <h2><i class="fa-solid fa-user-graduate"></i> Students Under Your Advisory</h2>
+            <span class="badge">{{ advisoryStudents.length }} students</span>
           </div>
-          
+
           <div class="students-grid" *ngIf="advisoryStudents.length > 0">
             <div *ngFor="let student of advisoryStudents" class="student-card">
               <div class="student-avatar">
@@ -61,20 +80,21 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
                 <div class="student-number">{{ student.student_number }}</div>
                 <div class="student-section">{{ student.grade_section }}</div>
               </div>
-              <div class="student-actions">
-                <button class="btn-view" (click)="viewStudent(student)">View Profile</button>
-              </div>
+              <button class="btn-view" (click)="viewStudent(student)">View Profile</button>
             </div>
           </div>
 
-          <div class="no-students" *ngIf="advisoryStudents.length === 0">
+          <div class="no-data" *ngIf="advisoryStudents.length === 0">
+            <span><i class="fa-solid fa-users-slash"></i></span>
             <p>No students registered in your advisory class yet.</p>
           </div>
         </div>
 
         <!-- Recent Activity -->
-        <div class="card recent-activity" *ngIf="recentActivity.length > 0">
-          <h2>Recent Clinic Activity</h2>
+        <div class="card" *ngIf="recentActivity.length > 0">
+          <div class="card-header">
+            <h2><i class="fa-solid fa-clock-rotate-left"></i> Recent Clinic Activity</h2>
+          </div>
           <div class="activity-list">
             <div *ngFor="let activity of recentActivity" class="activity-item">
               <div class="activity-icon" [ngClass]="activity.type">
@@ -82,37 +102,35 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
                 <i *ngIf="activity.type === 'alert'" class="fa-solid fa-triangle-exclamation"></i>
                 <i *ngIf="activity.type === 'checkup'" class="fa-solid fa-circle-check"></i>
               </div>
-              <div class="activity-content">
-                <div class="activity-text">{{ activity.message }}</div>
-                <div class="activity-time">{{ activity.time }}</div>
+              <div class="activity-details">
+                <div class="activity-action">{{ activity.message }}</div>
+                <div class="activity-meta"><span class="activity-time">{{ activity.time }}</span></div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Health Monitoring Quick Link -->
+        <!-- Health Monitoring -->
         <div class="card health-monitor-card">
           <div class="monitor-content">
-            <div class="monitor-icon">
-              <i class="fa-solid fa-chart-line"></i>
-            </div>
+            <div class="monitor-icon"><i class="fa-solid fa-chart-line"></i></div>
             <div class="monitor-info">
               <h3>Class Health Monitoring</h3>
               <p>View health trends and clinic visit patterns for your class</p>
             </div>
             <button class="btn-monitor" routerLink="/dashboard/adviser/health-monitoring">
-              View Heat Map
-              <i class="fa-solid fa-arrow-right"></i>
+              View Heat Map <i class="fa-solid fa-arrow-right"></i>
             </button>
           </div>
         </div>
+
       </div>
     </div>
 
     <!-- Student Profile Modal -->
-    <app-student-profile-modal 
-      *ngIf="selectedStudent" 
-      [student]="selectedStudent" 
+    <app-student-profile-modal
+      *ngIf="selectedStudent"
+      [student]="selectedStudent"
       (close)="closeModal()">
     </app-student-profile-modal>
   `,
@@ -123,83 +141,47 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
       min-height: 100vh;
     }
 
-    .dashboard-wrap {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-
-    .overview-card {
-      background: #fff;
+    /* ── Hero ── */
+    .hero-section {
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      color: white;
+
+      h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0 0 0.4rem;
+      }
+      p {
+        margin: 0;
+        opacity: 0.85;
+        font-size: 0.95rem;
+      }
     }
 
-    .overview-title {
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: #0b2a4a;
-      margin-bottom: 0.25rem;
-    }
-
-    .overview-sub {
-      color: #4f7ea9;
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-      font-size: 0.95rem;
-    }
-
-    .overview-meta {
-      color: #0b2a4a;
-      font-weight: 700;
-      font-size: 0.85rem;
-      margin-bottom: 1rem;
-    }
-
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1rem;
-    }
-
-    .stat-tile {
-      border-radius: 10px;
-      padding: 1rem 1.1rem;
-      color: #fff;
-      min-height: 72px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    .tile-value {
-      font-size: 1.4rem;
-      font-weight: 900;
-      line-height: 1;
-    }
-
-    .tile-label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      opacity: 0.95;
-    }
-
-    .tile-total { background: linear-gradient(135deg, #5b8cff, #a1b7ff); }
-    .tile-visits { background: linear-gradient(135deg, #ff7e5f, #feb47b); }
-    .tile-allergies { background: linear-gradient(135deg, #f9a826, #ffd194); }
-
+    /* ── Loading / Error ── */
     .loading-state, .error-state {
       text-align: center;
       padding: 3rem;
       background: white;
       border-radius: 12px;
-      
-      p { color: #7f8c8d; margin-bottom: 1rem; }
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+      .spinner {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 1rem;
+        border: 4px solid #e8f0f8;
+        border-top: 4px solid #052355;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      p { color: #7f8c8d; }
       button {
         padding: 0.5rem 1.5rem;
-        background: #007bff;
+        background: #052355;
         color: white;
         border: none;
         border-radius: 6px;
@@ -207,179 +189,241 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
       }
     }
 
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Stats Grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-left: 4px solid;
+
+      &.students  { border-color: #2ecc71; .stat-icon { color: #2ecc71; } }
+      &.visits    { border-color: #3498db; .stat-icon { color: #3498db; } }
+      &.allergies { border-color: #e67e22; .stat-icon { color: #e67e22; } }
+
+      .stat-icon { font-size: 2rem; opacity: 0.9; }
+
+      .stat-info {
+        .stat-value { font-size: 2rem; font-weight: 700; color: #2c3e50; line-height: 1; }
+        .stat-label { color: #7f8c8d; font-size: 0.875rem; margin-top: 0.25rem; }
+      }
+    }
+
+    /* ── Cards ── */
     .card {
       background: white;
       border-radius: 12px;
       padding: 1.5rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       margin-bottom: 1.5rem;
-      
+
       .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.5rem;
-        
-        h2 { font-size: 1.3rem; color: #2c3e50; margin: 0; }
-        .student-count {
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+
+        h2 {
+          font-size: 1.1rem;
+          color: #2c3e50;
+          margin: 0;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          i { color: #3498db; font-size: 1rem; }
+        }
+
+        .badge {
           background: #e3f2fd;
           color: #1976d2;
-          padding: 0.5rem 1rem;
+          padding: 0.25rem 0.75rem;
           border-radius: 20px;
-          font-size: 0.9rem;
+          font-size: 0.8rem;
           font-weight: 600;
         }
       }
-      
-      h2 { font-size: 1.3rem; color: #2c3e50; margin-bottom: 1rem; }
     }
 
+    /* ── Students Grid ── */
     .students-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       gap: 1rem;
     }
 
     .student-card {
       background: #f8f9fa;
+      border: 1px solid #e9ecef;
       border-radius: 10px;
-      padding: 1rem;
+      padding: 1.25rem 1rem;
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      align-items: center;
+      gap: 0.6rem;
       transition: all 0.2s ease;
-      border: 1px solid #e9ecef;
-      
+
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-color: #d0e4f7;
       }
-      
+
       .student-avatar {
-        width: 60px;
-        height: 60px;
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
         overflow: hidden;
-        margin: 0 auto;
-        
+        border: 2px solid #e9ecef;
         img { width: 100%; height: 100%; object-fit: cover; }
       }
-      
+
       .student-info {
         text-align: center;
-        .student-name { font-weight: 600; color: #2c3e50; font-size: 1rem; }
-        .student-number { color: #7f8c8d; font-size: 0.85rem; }
-        .student-section { color: #95a5a6; font-size: 0.8rem; }
+        .student-name  { font-weight: 600; color: #2c3e50; font-size: 0.9rem; }
+        .student-number { color: #7f8c8d; font-size: 0.78rem; font-family: monospace; }
+        .student-section { color: #95a5a6; font-size: 0.78rem; }
       }
-      
-      .student-actions {
-        .btn-view {
-          width: 100%;
-          padding: 0.5rem;
-          background: #007bff;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 0.85rem;
-          transition: background 0.2s;
-          &:hover { background: #0056b3; }
+
+      .btn-view {
+        width: 100%;
+        padding: 0.45rem;
+        background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        box-shadow: 0 2px 6px rgba(5,35,85,0.2);
+
+        &:hover {
+          background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
+          box-shadow: 0 4px 10px rgba(5,35,85,0.3);
         }
       }
     }
 
-    .no-students {
+    /* ── No Data ── */
+    .no-data {
       text-align: center;
-      padding: 2rem;
+      padding: 2.5rem;
       color: #7f8c8d;
+
+      span { font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5; }
+      p { margin: 0; font-size: 0.9rem; }
     }
 
+    /* ── Activity ── */
     .activity-list {
       .activity-item {
         display: flex;
+        align-items: flex-start;
         gap: 1rem;
-        padding: 1rem 0;
-        border-bottom: 1px solid #e9ecef;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f1f3f4;
         &:last-child { border-bottom: none; }
-        
+
         .activity-icon {
-          width: 40px;
-          height: 40px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.2rem;
-          &.visit { background: #e3f2fd; }
-          &.alert { background: #fff3cd; }
-          &.checkup { background: #d4edda; }
+          font-size: 0.95rem;
+          flex-shrink: 0;
+
+          &.visit   { background: #e3f2fd; color: #1976d2; }
+          &.alert   { background: #fff8e1; color: #f57c00; }
+          &.checkup { background: #e8f5e9; color: #388e3c; }
         }
-        
-        .activity-content {
+
+        .activity-details {
           flex: 1;
-          .activity-text { color: #2c3e50; font-size: 0.95rem; }
-          .activity-time { color: #95a5a6; font-size: 0.8rem; margin-top: 0.25rem; }
+          .activity-action { font-weight: 500; color: #2c3e50; font-size: 0.9rem; margin-bottom: 0.2rem; }
+          .activity-meta   { font-size: 0.8rem; color: #95a5a6; }
         }
       }
     }
 
+    /* ── Health Monitor Banner ── */
     .health-monitor-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       color: white;
-      
+
       .monitor-content {
         display: flex;
         align-items: center;
         gap: 1.5rem;
       }
-      
+
       .monitor-icon {
-        width: 60px;
-        height: 60px;
-        background: rgba(255, 255, 255, 0.2);
+        width: 56px;
+        height: 56px;
+        background: rgba(255,255,255,0.15);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         flex-shrink: 0;
       }
-      
+
       .monitor-info {
         flex: 1;
-        
-        h3 {
-          font-size: 1.2rem;
-          font-weight: 700;
-          margin: 0 0 0.5rem 0;
-        }
-        
-        p {
-          margin: 0;
-          opacity: 0.9;
-          font-size: 0.9rem;
-        }
+        h3 { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.3rem; }
+        p  { margin: 0; opacity: 0.85; font-size: 0.875rem; }
       }
-      
+
       .btn-monitor {
-        padding: 0.75rem 1.5rem;
+        padding: 0.65rem 1.25rem;
         background: white;
-        color: #667eea;
+        color: #052355;
         border: none;
         border-radius: 8px;
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 0.875rem;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        transition: all 0.2s;
         flex-shrink: 0;
-        
+        transition: all 0.2s;
+
         &:hover {
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
       }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      .adviser-dashboard { padding: 1rem; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .monitor-content { flex-direction: column; text-align: center; }
     }
   `]
 })
