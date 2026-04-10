@@ -12,82 +12,103 @@ import { AdviserService } from '../../../../core/services/adviser.service';
   styleUrls: ['./adviser-profile.component.scss'],
   template: `
     <div class="adviser-profile">
+
+      <!-- Toast notification -->
+      <div class="toast" *ngIf="toastMessage" [class.toast-error]="toastType === 'error'">
+        <i class="fa-solid" [class.fa-circle-check]="toastType === 'success'" [class.fa-circle-exclamation]="toastType === 'error'"></i>
+        {{ toastMessage }}
+      </div>
+
+      <!-- Hero Header -->
       <div class="profile-header">
         <h1>Profile Settings</h1>
+        <p>Manage your account information and security</p>
       </div>
 
       <div class="profile-content">
-        <div class="profile-settings card" role="region" aria-label="Profile Settings">
-          <div class="profile-settings-left">
-            <div class="profile-avatar">
-              <img [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
-            </div>
+
+        <!-- Identity Card -->
+        <div class="identity-card card">
+          <div class="identity-avatar">
+            <img [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
           </div>
-
-          <div class="profile-settings-main">
-            <div class="profile-grid">
-              <div class="profile-item">
-                <div class="profile-label">Full Name</div>
-                <div class="profile-value">{{ profileData.fullName }}</div>
-                <div class="profile-label">Advisory Class</div>
-                <div class="profile-value">{{ profileData.advisoryClass }}</div>
-              </div>
-
-              <div class="profile-item">
-                <div class="profile-label">Email Address</div>
-                <div class="profile-value">{{ profileData.email }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="profile-settings-actions">
-            
+          <div class="identity-info">
+            <div class="identity-name">{{ profileData.fullName }}</div>
+            <div class="identity-meta">{{ profileData.advisoryClass || 'Advisory Class not assigned' }}</div>
+            <div class="identity-email">{{ profileData.email }}</div>
           </div>
         </div>
 
-        <div class="profile-bottom-grid">
-          <div class="contact-card card">
-            <div class="contact-header">
-              <div class="card-title">Contact Information</div>
-              <div class="contact-actions">
-                <button *ngIf="!editMode" type="button" class="btn btn-outline edit-btn" (click)="enableEdit()">
-                  <img src="assets/edit-icon.png" alt="" class="edit-btn-icon">
-                  <span>Edit</span>
-                </button>
-                <button *ngIf="editMode" type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancel</button>
-              </div>
-            </div>
+        <div class="two-col">
 
-            <div class="field">
-              <label for="email">Email Address</label>
-              <div class="input-with-icon">
-                <span class="input-icon" aria-hidden="true">
-                  <img src="assets/message-icon.png" alt="" class="input-icon-img">
-                </span>
-                <input type="email" id="email" [(ngModel)]="profileData.email" class="form-control" [disabled]="!editMode">
-              </div>
+          <!-- Contact Information (read-only display) -->
+          <div class="card contact-card">
+            <div class="card-head">
+              <span class="card-title">Contact Information</span>
             </div>
-
-            <div class="field">
-              <label for="phone">Phone Number</label>
-              <div class="input-with-icon">
-                <span class="input-icon" aria-hidden="true">
-                  <img src="assets/contact-icon.png" alt="" class="input-icon-img">
-                </span>
-                <input type="tel" id="phone" [(ngModel)]="profileData.phone" class="form-control" [disabled]="!editMode">
-              </div>
+            <div class="info-row">
+              <span class="info-label">Email</span>
+              <span class="info-value">{{ profileData.email || '—' }}</span>
             </div>
-
-            <button type="button" class="btn btn-primary save-btn" (click)="saveProfile()" [disabled]="!editMode">Save Changes</button>
+            <div class="info-row">
+              <span class="info-label">Phone</span>
+              <span class="info-value">{{ profileData.phone || 'Not set' }}</span>
+            </div>
           </div>
 
-          <div class="others-card card">
-            <div class="card-title">Others</div>
-            <button type="button" class="other-link" (click)="changePassword()">Change Password</button>
-            <button type="button" class="other-link" (click)="enableEdit()">Update Information</button>
-            <div class="others-sep"></div>
-            <button type="button" class="other-link danger" (click)="logout()">Logout</button>
+          <!-- Account Actions -->
+          <div class="card actions-card">
+            <span class="card-title">Account</span>
+
+            <button type="button" class="action-item" (click)="changePassword()">
+              <span class="action-icon"><i class="fa-solid fa-lock"></i></span>
+              <div class="action-text">
+                <span class="action-label">Change Password</span>
+                <span class="action-sub">Update your login password</span>
+              </div>
+              <i class="fa-solid fa-chevron-right action-arrow"></i>
+            </button>
+
+            <button type="button" class="action-item" (click)="openEditModal()">
+              <span class="action-icon"><i class="fa-solid fa-user-pen"></i></span>
+              <div class="action-text">
+                <span class="action-label">Update Information</span>
+                <span class="action-sub">Edit your contact details</span>
+              </div>
+              <i class="fa-solid fa-chevron-right action-arrow"></i>
+            </button>
           </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Update Information Modal -->
+    <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="closeEditModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3>Update Information</h3>
+        <p class="modal-sub">Edit your contact details below</p>
+
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" [(ngModel)]="editForm.email" class="form-control" placeholder="Enter email address">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" [(ngModel)]="editForm.phone" class="form-control" placeholder="Enter phone number">
+        </div>
+
+        <div class="modal-error" *ngIf="editError">{{ editError }}</div>
+
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="closeEditModal()" [disabled]="saving">Cancel</button>
+          <button class="btn btn-primary" (click)="saveProfile()" [disabled]="saving">
+            <i class="fa-solid fa-spinner fa-spin" *ngIf="saving"></i>
+            {{ saving ? 'Saving...' : 'Save Changes' }}
+          </button>
         </div>
       </div>
     </div>
@@ -95,9 +116,12 @@ import { AdviserService } from '../../../../core/services/adviser.service';
     <!-- Change Password Modal -->
     <div class="modal-overlay" *ngIf="showPasswordModal" (click)="closePasswordModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
-        <button class="close-btn" (click)="closePasswordModal()">×</button>
+        <button class="close-btn" (click)="closePasswordModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
         <h3>Change Password</h3>
-        
+        <p class="modal-sub">Choose a strong password for your account</p>
+
         <div class="form-group">
           <label>Current Password *</label>
           <input type="password" [(ngModel)]="passwordForm.currentPassword" class="form-control" placeholder="Enter current password">
@@ -110,30 +134,30 @@ import { AdviserService } from '../../../../core/services/adviser.service';
           <label>Confirm Password *</label>
           <input type="password" [(ngModel)]="passwordForm.confirmPassword" class="form-control" placeholder="Re-enter new password">
         </div>
+
+        <div class="modal-error" *ngIf="passwordError">{{ passwordError }}</div>
+
         <div class="modal-actions">
           <button class="btn btn-secondary" (click)="closePasswordModal()">Cancel</button>
           <button class="btn btn-primary" (click)="submitPasswordChange()">Change Password</button>
         </div>
       </div>
     </div>
-
-    <!-- Logout Modal -->
-    <div class="modal-overlay" *ngIf="showLogoutModal">
-      <div class="modal-content logout-modal">
-        <div class="spinner"></div>
-        <p>Logging out...</p>
-      </div>
-    </div>
   `,
 })
 export class AdviserProfileComponent implements OnInit {
   editMode = false;
+  showEditModal = false;
   showPasswordModal = false;
   showLogoutModal = false;
+  saving = false;
   passwordLoading = false;
   passwordError = '';
   passwordSuccess = '';
-  originalProfileData: any = {};
+  editError = '';
+  toastMessage = '';
+  toastType: 'success' | 'error' = 'success';
+  private toastTimer: any;
 
   profileData = {
     fullName: '',
@@ -142,6 +166,8 @@ export class AdviserProfileComponent implements OnInit {
     advisoryClass: '',
     avatar: 'assets/user-female.png'
   };
+
+  editForm = { email: '', phone: '' };
 
   passwordForm = {
     currentPassword: '',
@@ -165,8 +191,7 @@ export class AdviserProfileComponent implements OnInit {
       this.profileData.fullName = currentUser.full_name || 'Adviser';
       this.profileData.email = currentUser.email || '';
       this.profileData.phone = currentUser.phone || '';
-      
-      // Fetch advisory class and updated info from Laravel API
+
       this.adviserService.getAdviserProfile().subscribe({
         next: (response: any) => {
           if (response.success && response.data) {
@@ -177,91 +202,114 @@ export class AdviserProfileComponent implements OnInit {
             this.profileData.phone = profile.phone || this.profileData.phone;
           }
         },
-        error: (err) => {
-          console.error('Error loading adviser profile:', err);
-          this.profileData.advisoryClass = 'Not assigned';
-        }
+        error: () => { this.profileData.advisoryClass = 'Not assigned'; }
       });
     }
   }
 
-  enableEdit(): void {
-    this.editMode = true;
-    this.originalProfileData = { ...this.profileData };
+  openEditModal(): void {
+    this.editForm = { email: this.profileData.email, phone: this.profileData.phone };
+    this.editError = '';
+    this.showEditModal = true;
   }
 
+  closeEditModal(): void {
+    this.showEditModal = false;
+    this.editError = '';
+  }
+
+  // kept for backward compat
+  enableEdit(): void { this.openEditModal(); }
+  cancelEdit(): void { this.closeEditModal(); }
+
   saveProfile(): void {
-    if (!this.profileData.fullName || !this.profileData.email) {
-      alert('Full name and email are required');
+    if (!this.editForm.email) {
+      this.editError = 'Email address is required.';
       return;
     }
 
     const currentUser = this.authService.currentUserValue;
-    if (!currentUser) {
-      alert('User not found');
-      return;
-    }
+    if (!currentUser) { this.editError = 'User not found.'; return; }
+
+    this.saving = true;
+    this.editError = '';
 
     const updates = {
       full_name: this.profileData.fullName,
-      email: this.profileData.email,
-      phone: this.profileData.phone || null
+      email: this.editForm.email,
+      phone: this.editForm.phone || null
     };
 
-    // Call API to update profile
     this.adviserService.updateAdviserProfile(currentUser.user_id, updates).subscribe({
       next: (response) => {
+        this.saving = false;
         if (response.success) {
-          alert('Profile updated successfully');
-          this.editMode = false;
-          
-          // Update the auth service with new data (convert null to undefined for User type)
-          const updatedUser = { 
-            ...currentUser, 
+          this.profileData.email = this.editForm.email;
+          this.profileData.phone = this.editForm.phone;
+          this.closeEditModal();
+          this.showToast('Profile updated successfully', 'success');
+          this.authService.updateCurrentUser({
+            ...currentUser,
             full_name: updates.full_name,
             email: updates.email,
             phone: updates.phone || undefined
-          };
-          this.authService.updateCurrentUser(updatedUser);
+          });
         } else {
-          alert(response.message || 'Failed to update profile');
+          this.editError = response.message || 'Failed to update profile.';
         }
       },
       error: (err) => {
-        console.error('Profile update error:', err);
-        alert(err.error?.message || 'Error updating profile');
+        this.saving = false;
+        this.editError = err.error?.message || 'Error updating profile.';
       }
     });
   }
 
-  cancelEdit(): void {
-    this.profileData = { ...this.originalProfileData };
-    this.editMode = false;
-  }
-
   changePassword(): void {
+    this.passwordError = '';
     this.showPasswordModal = true;
   }
 
   closePasswordModal(): void {
     this.showPasswordModal = false;
     this.passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+    this.passwordError = '';
   }
 
   submitPasswordChange(): void {
-    if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
-      alert('Passwords do not match');
+    if (!this.passwordForm.currentPassword || !this.passwordForm.newPassword) {
+      this.passwordError = 'All fields are required.';
       return;
     }
-    console.log('Changing password');
-    this.closePasswordModal();
+    if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
+      this.passwordError = 'Passwords do not match.';
+      return;
+    }
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser) return;
+
+    this.authService.changePassword(currentUser.user_id, this.passwordForm.currentPassword, this.passwordForm.newPassword).subscribe({
+      next: () => {
+        this.closePasswordModal();
+        this.showToast('Password changed successfully', 'success');
+      },
+      error: (err) => {
+        this.passwordError = err.error?.message || 'Failed to change password.';
+      }
+    });
+  }
+
+  private showToast(message: string, type: 'success' | 'error'): void {
+    this.toastMessage = message;
+    this.toastType = type;
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => { this.toastMessage = ''; }, 3500);
   }
 
   logout(): void {
-    this.showLogoutModal = true;
-    setTimeout(() => {
-      this.authService.logout();
-      this.router.navigate(['/login']);
-    }, 1500);
+    this.authService.logout().subscribe({
+      complete: () => this.router.navigate(['/login']),
+      error: () => this.router.navigate(['/login'])
+    });
   }
 }
