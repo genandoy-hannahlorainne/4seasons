@@ -52,8 +52,8 @@ $font-size-4xl: 2.9rem;
 $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
 .student-dashboard {
-  padding: 2rem;
-  background: #f8f9fa;
+  padding: 0;
+  background: transparent;
   min-height: 100vh;
   position: relative;
 
@@ -64,26 +64,31 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(248, 249, 250, 0.95);
+    background: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 9999;
-    backdrop-filter: blur(2px);
+    pointer-events: all;
   }
 
   .loading-spinner {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+    min-width: 180px;
   }
 
   .spinner {
     width: 50px;
     height: 50px;
     border: 4px solid #e3f2fd;
-    border-top: 4px solid $color-primary;
+    border-top: 4px solid #2563eb;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -94,20 +99,19 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   .loading-text {
-    font-family: $font-primary;
     font-size: 1.1rem;
     font-weight: 600;
-    color: $color-primary;
+    color: #2563eb;
     text-align: center;
   }
 
   .notification-banner {
     background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
     border: 2px solid #ffc107;
-    border-radius: $radius-lg;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 24px rgba(255, 193, 7, 0.25);
     animation: slideDown 0.3s ease-out;
 
     @keyframes slideDown {
@@ -211,6 +215,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   .dashboard-wrap {
+    padding: 0 2.5rem 2.5rem 2.5rem;
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -218,9 +223,10 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
   .overview-card {
     background: $color-white;
-    padding: 1.5rem;
-    border-radius: $radius-lg;
-    box-shadow: $shadow-card;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(5, 35, 85, 0.1);
   }
 
   .overview-title {
@@ -295,25 +301,53 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
   }
 
+  @media (max-width: 768px) {
+    padding: 0;
+
+    .welcome-section {
+      padding: 2rem 1.5rem;
+      border-radius: 0 0 16px 16px;
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      .student-info {
+        font-size: 1rem;
+      }
+    }
+
+    .dashboard-wrap {
+      padding: 0 1.5rem 1.5rem 1.5rem;
+    }
+
+    .overview-card,
+    .card {
+      padding: 1.5rem;
+    }
+  }
+
   .welcome-section {
-    margin-bottom: 1rem;
-    background: $color-white;
-    padding: 1.5rem;
-    border-radius: $radius-lg;
-    box-shadow: $shadow-card;
+    background: linear-gradient(135deg, rgba(5, 35, 85, 0.95) 0%, rgba(83, 129, 178, 0.95) 100%);
+    padding: 3rem 2.5rem;
+    margin-bottom: 2.5rem;
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    color: white;
 
     h1 {
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-family: $font-secondary;
-      color: $color-text-dark;
-      margin-bottom: 0.25rem;
-      font-weight: 1000;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+      color: white;
     }
 
     .student-info {
-      color: $color-text-muted;
-      font-size: $font-size-base;
+      font-size: 1.2rem;
       font-family: $font-primary;
+      opacity: 0.95;
+      color: white;
     }
   }
 
@@ -403,9 +437,10 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
   .card {
     background: $color-white;
-    border-radius: $radius-lg;
-    padding: 1rem;
-    box-shadow: $shadow-card;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(5, 35, 85, 0.1);
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -413,7 +448,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     h2 {
       font-size: 1.3rem;
       font-family: $font-secondary;
-      color: $color-text-dark;
+      color: #052355;
       margin-bottom: 1rem;
       font-weight: 700;
     }

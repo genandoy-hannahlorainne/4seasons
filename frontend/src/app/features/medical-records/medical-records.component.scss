@@ -1,49 +1,82 @@
 .medical-records-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  background: #f8f9fa;
+  padding: 0;
+  background: transparent;
   min-height: 100vh;
+  position: relative;
 }
 
 .header {
+  background: linear-gradient(135deg, rgba(5, 35, 85, 0.95) 0%, rgba(83, 129, 178, 0.95) 100%);
+  padding: 3rem 2.5rem;
+  margin-bottom: 2.5rem;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   text-align: center;
-  margin-bottom: 3rem;
+  color: white;
 
   h1 {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: white;
     margin-bottom: 0.5rem;
   }
 
   .subtitle {
-    font-size: 1.1rem;
-    color: #6c757d;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.95);
     margin: 0;
   }
 }
 
 .loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem;
+  z-index: 9999;
+  gap: 1rem;
 
   .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #e9ecef;
-    border-top: 4px solid #007bff;
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e3f2fd;
+    border-top: 4px solid #2563eb;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
+    position: relative;
+    z-index: 2;
   }
 
   p {
-    color: #6c757d;
+    color: #2563eb;
     font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  // White container background
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 16px;
+    padding: 3rem 4rem;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+    min-width: 300px;
+    min-height: 200px;
+    z-index: 1;
   }
 }
 
@@ -63,6 +96,7 @@
 }
 
 .overview-cards {
+  padding: 0 2.5rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
@@ -72,8 +106,9 @@
 .overview-card {
   background: white;
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(5, 35, 85, 0.1);
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -81,7 +116,7 @@
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   }
 
   .card-icon {
@@ -123,6 +158,7 @@
 }
 
 .action-cards {
+  padding: 0 2.5rem 2.5rem 2.5rem;
   display: grid;
   gap: 1.5rem;
 }
@@ -130,8 +166,9 @@
 .action-card {
   background: white;
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(5, 35, 85, 0.1);
   display: flex;
   align-items: center;
   gap: 2rem;
@@ -142,7 +179,7 @@
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     background: #f8f9fa;
   }
 
@@ -187,11 +224,24 @@
 
 @media (max-width: 768px) {
   .medical-records-container {
-    padding: 1rem;
+    .header {
+      padding: 2rem 1.5rem;
+      border-radius: 0 0 16px 16px;
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+      }
+    }
   }
 
-  .header h1 {
-    font-size: 2rem;
+  .overview-cards,
+  .action-cards {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 
   .overview-cards {
