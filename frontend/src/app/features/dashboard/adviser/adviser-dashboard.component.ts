@@ -16,7 +16,7 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
       <div class="hero-section">
         <div class="hero-content">
           <div class="hero-text">
-            <h1>Welcome, {{ adviserName }}</h1>
+            <h1>Welcome, {{ adviserTitle ? adviserTitle + ' ' : '' }}{{ adviserName }}</h1>
             <p>{{ advisoryClass || 'Advisory Class' }} &mdash; Manage and monitor your students' health records</p>
           </div>
         </div>
@@ -429,6 +429,7 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
 })
 export class AdviserDashboardComponent implements OnInit {
   adviserName = '';
+  adviserTitle = '';  // Ma'am or Sir
   advisoryClass = '';
   selectedStudent: any = null;
   loading = true;
@@ -453,9 +454,22 @@ export class AdviserDashboardComponent implements OnInit {
   ngOnInit(): void {
     const currentUser = this.authService.currentUserValue;
     if (currentUser) {
-      this.adviserName = currentUser.full_name || 'Adviser';
+      const fullName = currentUser.full_name || 'Adviser';
+      // Extract last name (last word of full name)
+      const parts = fullName.trim().split(/\s+/);
+      this.adviserName = parts[parts.length - 1];
       this.loadStudents();
     }
+
+    // Fetch gender from adviser profile to set title
+    this.adviserService.getAdviserProfile().subscribe({
+      next: (response: any) => {
+        if (response.success && response.data?.gender) {
+          this.adviserTitle = response.data.gender === 'F' ? "Ma'am" : response.data.gender === 'M' ? 'Sir' : '';
+        }
+      },
+      error: () => {}
+    });
   }
 
   loadStudents(): void {
@@ -478,6 +492,12 @@ export class AdviserDashboardComponent implements OnInit {
           this.totalStudents = response.data.stats.total_students;
           this.clinicVisitsThisMonth = response.data.stats.clinic_visits_this_month;
           this.studentsWithAllergies = response.data.stats.students_with_allergies;
+
+          // Set title based on gender from profile
+          const gender = response.data.adviser?.gender;
+          if (gender) {
+            this.adviserTitle = gender === 'F' ? "Ma'am" : gender === 'M' ? 'Sir' : '';
+          }
           
           // Generate recent activity from student visits
           this.generateRecentActivity();

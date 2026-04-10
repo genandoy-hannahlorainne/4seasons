@@ -153,7 +153,8 @@ class AdviserController extends BaseController
                 'section_id' => $section ? $section->id : null,
                 'grade_level' => $section && $section->gradeLevel ? $section->gradeLevel->level_name : null,
                 'section_name' => $section ? $section->section_name : null,
-                'school_year' => $section && $section->schoolYear ? $section->schoolYear->year_name : null
+                'school_year' => $section && $section->schoolYear ? $section->schoolYear->year_name : null,
+                'gender' => $user->gender ?? null,
             ];
 
             return $this->sendResponse($profileData, 'Adviser profile retrieved successfully');
@@ -236,7 +237,8 @@ class AdviserController extends BaseController
                     'full_name' => $user->full_name,
                     'email' => $user->email,
                     'phone' => $user->phone,
-                    'employee_number' => $user->employee_number
+                    'employee_number' => $user->employee_number,
+                    'gender' => $user->gender ?? null,
                 ],
                 'section' => null,
                 'students' => [],
