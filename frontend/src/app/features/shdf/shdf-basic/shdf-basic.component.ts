@@ -26,6 +26,10 @@ export class SHDFBasicComponent implements OnInit {
     private shdService: SHDFService
   ) {}
 
+  goToDashboard(): void {
+    this.router.navigate(['/dashboard/student']);
+  }
+
   ngOnInit(): void {
     this.studentId = Number(this.route.snapshot.paramMap.get('studentId'));
     this.buildForm();
