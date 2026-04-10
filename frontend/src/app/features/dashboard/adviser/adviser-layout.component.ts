@@ -11,6 +11,14 @@ import { AuthService } from '../../../core/services/auth.service';
   template: `
     <div class="adviser-shell" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen">
 
+      <!-- Logout overlay -->
+      <div class="logout-overlay" *ngIf="loggingOut">
+        <div class="logout-box">
+          <div class="logout-spinner"></div>
+          <p>Logging out...</p>
+        </div>
+      </div>
+
       <!-- Mobile overlay -->
       <div class="sidebar-overlay" (click)="closeMobile()"></div>
 
@@ -76,6 +84,7 @@ export class AdviserLayoutComponent implements OnInit {
   adviserName = 'Adviser';
   isCollapsed = false;
   mobileOpen = false;
+  loggingOut = false;
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -86,19 +95,12 @@ export class AdviserLayoutComponent implements OnInit {
     }
   }
 
-  toggleSidebar(): void {
-    this.isCollapsed = !this.isCollapsed;
-  }
-
-  openMobile(): void {
-    this.mobileOpen = true;
-  }
-
-  closeMobile(): void {
-    this.mobileOpen = false;
-  }
+  toggleSidebar(): void { this.isCollapsed = !this.isCollapsed; }
+  openMobile(): void { this.mobileOpen = true; }
+  closeMobile(): void { this.mobileOpen = false; }
 
   logout(): void {
+    this.loggingOut = true;
     this.authService.logout().subscribe({
       complete: () => this.router.navigate(['/login']),
       error: () => this.router.navigate(['/login'])
