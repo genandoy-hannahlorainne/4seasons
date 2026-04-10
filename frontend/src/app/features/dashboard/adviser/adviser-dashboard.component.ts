@@ -547,20 +547,58 @@ export class AdviserDashboardComponent implements OnInit {
   }
 
   viewStudent(student: AdvisedStudent): void {
-    // Fetch complete student profile from backend
     this.adviserService.getStudentCompleteProfile(student.student_id).subscribe({
       next: (response: any) => {
-        if (response.success) {
-          this.selectedStudent = response.data;
+        const profile = response?.data?.profile || response?.data?.personal_info || response?.profile;
+        if (profile) {
+          const birthDate = profile.birth_date ? new Date(profile.birth_date) : null;
+          const age = birthDate
+            ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+            : null;
+
+          const allergies = (response?.data?.allergies || []).map((a: any) =>
+            a.allergy_name || a.name || a
+          );
+
+          const visits = (response?.data?.medical_visits || []).map((v: any) => ({
+            date: v.visit_datetime
+              ? new Date(v.visit_datetime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : 'N/A',
+            reason: v.reason || v.chief_complaint || 'N/A',
+            status: (v.status || 'resolved').toLowerCase(),
+            statusText: v.status || 'Completed'
+          }));
+
+          this.selectedStudent = {
+            name: profile.full_name || `${profile.first_name} ${profile.last_name}`,
+            studentNumber: profile.student_number,
+            gradeSection: `${profile.grade_level || ''} - ${profile.section || ''}`.trim().replace(/^-\s*|-\s*$/, ''),
+            avatar: (profile.gender === 'F' || profile.gender === 'Female') ? 'assets/user-female.png' : 'assets/user-male.png',
+            gender: profile.gender === 'F' ? 'Female' : (profile.gender === 'M' ? 'Male' : profile.gender || 'N/A'),
+            birthday: birthDate
+              ? birthDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : 'N/A',
+            age,
+            contact: profile.phone || profile.contact_number || 'N/A',
+            vitals: {
+              bloodType: profile.blood_type || 'N/A',
+              height: profile.height_cm ? `${profile.height_cm} cm` : 'N/A',
+              weight: profile.weight_kg ? `${profile.weight_kg} kg` : 'N/A',
+              bmi: profile.bmi || null,
+            },
+            allergies,
+            emergencyContact: profile.emergency_contact ? {
+              name: profile.emergency_contact,
+              relation: profile.emergency_contact_relation || 'Guardian',
+              phone: profile.emergency_contact_phone || 'N/A'
+            } : null,
+            recentVisits: visits,
+          };
         } else {
-          console.error('Failed to load student profile:', response.message);
-          // Fallback to basic data
           this.selectedStudent = this.buildBasicStudentData(student);
         }
       },
-      error: (err: any) => {
-        console.error('Error loading student profile:', err);
-        // Fallback to basic data
+      error: () => {
         this.selectedStudent = this.buildBasicStudentData(student);
       }
     });

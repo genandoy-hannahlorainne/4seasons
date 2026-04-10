@@ -457,36 +457,79 @@ export class AdviserHealthStatusComponent implements OnInit {
   }
 
   viewFullRecord(student: AdvisedStudent): void {
+    this.adviserService.getStudentCompleteProfile(student.student_id).subscribe({
+      next: (response: any) => {
+        const profile = response?.data?.profile || response?.data?.personal_info || response?.profile;
+        if (profile) {
+          const birthDate = profile.birth_date ? new Date(profile.birth_date) : null;
+          const age = birthDate
+            ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+            : null;
+
+          const allergies = (response?.data?.allergies || []).map((a: any) =>
+            a.allergy_name || a.name || a
+          );
+
+          const visits = (response?.data?.medical_visits || []).map((v: any) => ({
+            date: v.visit_datetime
+              ? new Date(v.visit_datetime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : 'N/A',
+            reason: v.reason || v.chief_complaint || 'N/A',
+            status: (v.status || 'resolved').toLowerCase(),
+            statusText: v.status || 'Completed'
+          }));
+
+          this.selectedStudent = {
+            name: profile.full_name || `${profile.first_name} ${profile.last_name}`,
+            studentNumber: profile.student_number,
+            gradeSection: `${profile.grade_level || ''} - ${profile.section || ''}`.trim().replace(/^-\s*|-\s*$/, ''),
+            avatar: (profile.gender === 'F' || profile.gender === 'Female') ? 'assets/user-female.png' : 'assets/user-male.png',
+            gender: profile.gender === 'F' ? 'Female' : (profile.gender === 'M' ? 'Male' : profile.gender || 'N/A'),
+            birthday: birthDate
+              ? birthDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : 'N/A',
+            age,
+            contact: profile.phone || profile.contact_number || 'N/A',
+            vitals: {
+              bloodType: profile.blood_type || 'N/A',
+              height: profile.height_cm ? `${profile.height_cm} cm` : 'N/A',
+              weight: profile.weight_kg ? `${profile.weight_kg} kg` : 'N/A',
+              bmi: profile.bmi || null,
+            },
+            allergies,
+            emergencyContact: profile.emergency_contact ? {
+              name: profile.emergency_contact,
+              relation: profile.emergency_contact_relation || 'Guardian',
+              phone: profile.emergency_contact_phone || 'N/A'
+            } : null,
+            recentVisits: visits,
+          };
+        } else {
+          this.selectedStudent = this.buildFallback(student);
+        }
+      },
+      error: () => {
+        this.selectedStudent = this.buildFallback(student);
+      }
+    });
+  }
+
+  private buildFallback(student: AdvisedStudent): any {
     const birthDate = student.birth_date ? new Date(student.birth_date) : null;
     const age = birthDate ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null;
-    
-    this.selectedStudent = {
+    return {
       name: student.full_name,
       studentNumber: student.student_number,
       gradeSection: student.grade_section,
       avatar: this.getAvatarUrl(student),
       gender: student.gender === 'F' ? 'Female' : (student.gender === 'M' ? 'Male' : 'Other'),
       birthday: birthDate ? birthDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A',
-      age: age,
+      age,
       contact: student.phone || 'N/A',
-      vitals: {
-        height: 'N/A',
-        weight: 'N/A',
-        bmi: 'N/A',
-        bloodType: student.blood_type || 'N/A'
-      },
+      vitals: { bloodType: student.blood_type || 'N/A', height: 'N/A', weight: 'N/A', bmi: null },
       allergies: student.allergies || [],
-      emergencyContact: student.emergency_contact ? {
-        name: student.emergency_contact,
-        relation: 'Guardian',
-        phone: 'N/A'
-      } : null,
-      lastVisit: student.last_visit ? {
-        date: new Date(student.last_visit.visit_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        reason: student.last_visit.reason,
-        status: student.last_visit.status?.toLowerCase() || 'resolved',
-        statusText: student.last_visit.status || 'Completed'
-      } : null
+      emergencyContact: student.emergency_contact ? { name: student.emergency_contact, relation: 'Guardian', phone: 'N/A' } : null,
+      recentVisits: [],
     };
   }
 
