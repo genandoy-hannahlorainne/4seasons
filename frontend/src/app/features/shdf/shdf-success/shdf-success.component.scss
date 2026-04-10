@@ -8,191 +8,263 @@
 }
 
 .success-card {
-  background: white;
+  background: #fff;
   border-radius: 16px;
-  padding: 3rem;
-  max-width: 600px;
+  padding: 2.5rem;
+  max-width: 520px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+}
+
+// ── Header ──────────────────────────────────────────
+.status-header {
   text-align: center;
-}
+  margin-bottom: 1.5rem;
 
-.success-icon {
-  font-size: 5rem;
-  margin-bottom: 1rem;
-  animation: bounce 1s ease-in-out;
-}
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 1rem 0 0.4rem;
+  }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
-}
-
-h1 {
-  font-size: 2rem;
-  color: #2c3e50;
-  margin-bottom: 1rem;
-}
-
-.success-message {
-  font-size: 1.1rem;
-  color: #7f8c8d;
-  line-height: 1.6;
-  margin-bottom: 2rem;
-}
-
-.qr-preview {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-
-  .qr-placeholder {
-    .qr-icon {
-      font-size: 4rem;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-
-    p {
-      color: #5b8db8;
-      font-weight: 500;
-    }
+  .subtitle {
+    font-size: 0.95rem;
+    color: #6b7280;
+    line-height: 1.6;
+    margin: 0;
   }
 }
 
-.deadline-warning {
-  background: #fff3cd;
-  border: 2px solid #ffc107;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  display: flex;
-  gap: 1rem;
-  text-align: left;
+.check-circle {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
 
-  .warning-icon {
-    font-size: 2rem;
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .check-path {
+    stroke-dasharray: 40;
+    stroke-dashoffset: 40;
+    animation: draw-check 0.5s ease forwards 0.3s;
+  }
+
+  &.large {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+@keyframes draw-check {
+  to { stroke-dashoffset: 0; }
+}
+
+// ── Divider ──────────────────────────────────────────
+.divider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 1.5rem 0;
+}
+
+// ── QR Status ────────────────────────────────────────
+.qr-status-block {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #f8faff;
+  border: 1px solid #e0e7ff;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+
+  .qr-status-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .qr-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0 0 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.badge-active {
+  display: inline-block;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+}
+
+// ── Deadline Card ─────────────────────────────────────
+.deadline-card {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+
+  .deadline-left {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .deadline-icon {
+    margin-top: 2px;
     flex-shrink: 0;
   }
 
-  .warning-content {
-    flex: 1;
+  .deadline-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #92400e;
+    margin: 0 0 0.25rem;
+  }
 
-    strong {
-      display: block;
-      color: #856404;
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-    }
+  .deadline-sub {
+    font-size: 0.875rem;
+    color: #92400e;
+    margin: 0 0 0.25rem;
 
-    p {
-      color: #856404;
-      margin: 0.25rem 0;
-    }
+    strong { font-weight: 700; }
+  }
 
-    .deadline-date {
-      font-weight: 600;
-      margin-top: 0.5rem;
-    }
+  .deadline-date {
+    font-size: 0.8rem;
+    color: #b45309;
+    margin: 0;
+    font-weight: 500;
   }
 }
 
-.compliance-badge {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  color: white;
-  padding: 1.5rem;
-  border-radius: 50px;
-  display: inline-flex;
-  align-items: center;
-  gap: 1rem;
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin-bottom: 2rem;
-
-  .badge-icon {
-    background: white;
-    color: #28a745;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-  }
-}
-
+// ── Buttons ───────────────────────────────────────────
 .action-buttons {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 
   button {
     flex: 1;
-    padding: 1rem;
-    border: none;
+    padding: 0.75rem 1rem;
     border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: 0.9rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    border: none;
+    transition: all 0.2s ease;
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #5b8db8 0%, #7ba5c9 100%);
-    color: white;
+    background: #3b82f6;
+    color: #fff;
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(91, 141, 184, 0.3);
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
     }
   }
 
   .btn-secondary {
-    background: white;
-    color: #5b8db8;
-    border: 2px solid #5b8db8;
+    background: #fff;
+    color: #374151;
+    border: 1.5px solid #d1d5db;
 
     &:hover {
-      background: #f8f9fa;
+      background: #f9fafb;
+      border-color: #9ca3af;
     }
   }
 }
 
-.info-box {
-  background: #e8f4f8;
-  border-radius: 8px;
-  padding: 1.5rem;
-  text-align: left;
+// ── Next Steps ────────────────────────────────────────
+.next-steps {
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 1.25rem;
 
-  h3 {
-    color: #2c3e50;
-    margin-bottom: 1rem;
-  }
-
-  ul {
-    margin: 0;
-    padding-left: 1.5rem;
-    color: #34495e;
-
-    li {
-      margin-bottom: 0.75rem;
-      line-height: 1.5;
-    }
+  .next-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    margin: 0 0 0.875rem;
   }
 }
 
-@media (max-width: 768px) {
+.step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.green  { background: #22c55e; }
+  &.blue   { background: #3b82f6; }
+  &.purple { background: #8b5cf6; }
+  &.red    { background: #ef4444; }
+}
+
+// ── Compliance Badge ──────────────────────────────────
+.compliance-row {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.compliance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid #bbf7d0;
+}
+
+// ── Responsive ────────────────────────────────────────
+@media (max-width: 480px) {
   .success-card {
-    padding: 2rem 1.5rem;
+    padding: 1.75rem 1.25rem;
   }
 
   .action-buttons {
     flex-direction: column;
   }
 
-  h1 {
-    font-size: 1.5rem;
+  .status-header h1 {
+    font-size: 1.35rem;
   }
 }
