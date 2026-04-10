@@ -20,8 +20,8 @@ services:
       - MAIL_MAILER=smtp
       - MAIL_HOST=sandbox.smtp.mailtrap.io
       - MAIL_PORT=2525
-      - MAIL_USERNAME=${MAIL_USERNAME}
-      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_USERNAME=ab4c924e1d95b4
+      - MAIL_PASSWORD=e40a4824b94e5c
       - MAIL_ENCRYPTION=tls
       - MAIL_FROM_ADDRESS=noreply@medicalrecord.system
     depends_on:
