@@ -53,7 +53,9 @@ interface VisitHistoryData {
       <div *ngIf="visitHistory && !loading" class="content">
         <div class="visits-summary">
           <div class="summary-card">
-            <div class="summary-icon">📋</div>
+            <div class="summary-icon">
+              <img src="assets/icons/visit.png" alt="Total Visits">
+            </div>
             <div class="summary-content">
               <div class="summary-value">{{ visitHistory.statistics.total_visits }}</div>
               <div class="summary-label">Total Visits</div>
@@ -61,7 +63,9 @@ interface VisitHistoryData {
           </div>
           
           <div class="summary-card">
-            <div class="summary-icon">📅</div>
+            <div class="summary-icon">
+              <img src="assets/icons/recent-visit.png" alt="This Month">
+            </div>
             <div class="summary-content">
               <div class="summary-value">{{ visitHistory.statistics.this_month_visits }}</div>
               <div class="summary-label">This Month</div>
@@ -69,7 +73,9 @@ interface VisitHistoryData {
           </div>
           
           <div class="summary-card">
-            <div class="summary-icon">🩺</div>
+            <div class="summary-icon">
+              <img src="assets/icons/my-medical.png" alt="Last Visit">
+            </div>
             <div class="summary-content">
               <div class="summary-value">{{ getLastVisitText() }}</div>
               <div class="summary-label">Last Visit</div>
@@ -124,14 +130,19 @@ interface VisitHistoryData {
             <div class="detail-grid">
               <div class="detail-item">
                 <label>Date & Time</label>
-                <div class="detail-value">
-                  {{ formatDate(selectedVisit.visit_datetime) }} at {{ formatTime(selectedVisit.visit_datetime) }}
+                <div class="detail-value date-time-value">
+                  <span class="date-part">{{ formatDate(selectedVisit.visit_datetime) }}</span>
+                  <span class="time-part">{{ formatTime(selectedVisit.visit_datetime) }}</span>
                 </div>
               </div>
               
               <div class="detail-item">
                 <label>Visit Type</label>
-                <div class="detail-value">{{ selectedVisit.visit_type }}</div>
+                <div class="detail-value visit-type-value">
+                  <span class="type-badge-large" [class]="'type-' + selectedVisit.visit_type">
+                    {{ selectedVisit.visit_type }}
+                  </span>
+                </div>
               </div>
               
               <div class="detail-item">
@@ -145,16 +156,21 @@ interface VisitHistoryData {
               
               <div class="detail-item full-width">
                 <label>Diagnosis</label>
-                <div class="detail-value">{{ selectedVisit.diagnosis }}</div>
+                <div class="detail-value diagnosis-value">{{ selectedVisit.diagnosis }}</div>
               </div>
               
               <div *ngIf="selectedVisit.clinic_staff" class="detail-item full-width">
                 <label>Attended By</label>
-                <div class="detail-value staff-info">
-                  <div class="staff-name">{{ selectedVisit.clinic_staff.name }}</div>
-                  <div class="staff-position">{{ selectedVisit.clinic_staff.position }}</div>
-                  <div *ngIf="selectedVisit.clinic_staff.contact" class="staff-contact">
-                    Contact: {{ selectedVisit.clinic_staff.contact }}
+                <div class="detail-value">
+                  <div class="staff-info">
+                    <div class="staff-avatar">👨‍⚕️</div>
+                    <div class="staff-details">
+                      <div class="staff-name">{{ selectedVisit.clinic_staff.name }}</div>
+                      <div class="staff-position">{{ selectedVisit.clinic_staff.position }}</div>
+                      <div *ngIf="selectedVisit.clinic_staff.contact" class="staff-contact">
+                        {{ selectedVisit.clinic_staff.contact }}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

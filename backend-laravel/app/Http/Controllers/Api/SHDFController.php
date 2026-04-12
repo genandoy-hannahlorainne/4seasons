@@ -117,9 +117,11 @@ class SHDFController extends Controller
         $student = Student::where('student_id', $studentId)->firstOrFail();
         $this->authorize('view', $student);
 
-        return response()->json(
-            $this->shdService->getStatus($studentId)
-        );
+        $status = $this->shdService->getStatus($studentId);
+        
+        \Log::info('[SHDF Status] Student: ' . $studentId . ' | Status: ' . json_encode($status));
+
+        return response()->json($status);
     }
 
     /**

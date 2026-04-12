@@ -645,14 +645,15 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
     // Role-specific validation
     if (this.newUser.role === 'student') {
+      const validStudentNumber = /^13\d{10}$/.test(this.newUser.student_number);
       return !!(
-        this.newUser.student_number &&
+        validStudentNumber &&
         this.newUser.first_name &&
         this.newUser.last_name &&
         this.newUser.gender &&
         this.newUser.birth_date &&
         this.newUser.grade_level &&
-        this.newUser.section_id // Changed from section to section_id
+        this.newUser.section_id
       );
     } else if (this.newUser.role === 'adviser') {
       return !!(
@@ -688,28 +689,24 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
     // For students, use Laravel API
     if (this.newUser.role === 'student') {
+      console.log('📤 Sending student payload:', JSON.stringify(this.newUser));
       this.adminService.createUser(this.newUser).subscribe({
         next: (response) => {
           this.creatingUser = false;
           if (response.success && response.data) {
             const userData = response.data;
             this.createSuccessMessage = `Student account created successfully! Username: ${userData.username || 'N/A'}. An email has been sent with login credentials.`;
-            
-            // Reload users list
             this.loadUsers();
-            
-            // Close modal after 5 seconds
-            setTimeout(() => {
-              this.closeCreateUserModal();
-            }, 5000);
+            setTimeout(() => { this.closeCreateUserModal(); }, 5000);
           } else {
             this.createErrorMessage = response.message || 'Failed to create student account';
           }
         },
         error: (err) => {
           this.creatingUser = false;
-          console.error('Error creating student:', err);
-          this.createErrorMessage = err.error?.message || 'Failed to create student account. Please try again.';
+          console.error('Full error response:', err.error);
+          const errDetail = err.error?.errors || err.error?.message || 'Failed to create student account.';
+          this.createErrorMessage = typeof errDetail === 'string' ? errDetail : JSON.stringify(errDetail);
         }
       });
     } else {

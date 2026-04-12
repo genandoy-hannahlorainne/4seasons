@@ -50,6 +50,7 @@ class User extends Authenticatable
         'username',
         'email',
         'full_name',
+        'gender',
         'password_hash',
         'role_id',
         'phone',

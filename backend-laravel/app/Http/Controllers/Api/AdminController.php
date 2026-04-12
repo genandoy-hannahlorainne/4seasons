@@ -196,7 +196,7 @@ class AdminController extends BaseController
             ]);
 
             if ($validator->fails()) {
-                return $this->sendError('Validation Error', $validator->errors()->first());
+                return $this->sendError('Validation Error', $validator->errors()->toJson());
             }
 
             DB::beginTransaction();
@@ -1492,7 +1492,12 @@ class AdminController extends BaseController
     private function createStudentUser(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'student_number' => ['required', 'string', 'unique:students,student_number', 'digits:12', 'regex:/^13/'],
+            // Only block if student_number exists AND already has a linked user_id
+            'student_number' => [
+                'required', 'string', 'digits:12', 'regex:/^13/',
+                \Illuminate\Validation\Rule::unique('students', 'student_number')
+                    ->where(fn ($q) => $q->whereNotNull('user_id')),
+            ],
             'first_name'     => 'required|string|max:80',
             'last_name'      => 'required|string|max:80',
             'middle_name'    => 'nullable|string|max:80',
@@ -1505,7 +1510,7 @@ class AdminController extends BaseController
         ]);
 
         if ($validator->fails()) {
-            return $this->sendError('Validation Error', $validator->errors()->first());
+            return $this->sendError('Validation Error', $validator->errors()->toJson());
         }
 
         DB::beginTransaction();
@@ -1539,22 +1544,43 @@ class AdminController extends BaseController
                 'is_active'            => true,
             ]);
 
-            $student = Student::create([
-                'user_id'                => $user->user_id,
-                'student_number'         => $request->student_number,
-                'first_name'             => $request->first_name,
-                'middle_name'            => $request->middle_name,
-                'last_name'              => $request->last_name,
-                'birth_date'             => $request->birth_date,
-                'gender'                 => $request->gender,
-                'grade_level'            => $section->gradeLevel->level_name,
-                'section'                => $section->section_name,
-                'current_grade_level_id' => $section->grade_level_id,
-                'current_section_id'     => $section->id,
-                'current_school_year_id' => $currentSchoolYear->id,
-                'phone'                  => $request->phone,
-                'is_active'              => true,
-            ]);
+            // Reuse orphaned student record if it exists without a user
+            $orphan = Student::where('student_number', $request->student_number)->whereNull('user_id')->first();
+            if ($orphan) {
+                $orphan->update([
+                    'user_id'                => $user->user_id,
+                    'first_name'             => $request->first_name,
+                    'middle_name'            => $request->middle_name,
+                    'last_name'              => $request->last_name,
+                    'birth_date'             => $request->birth_date,
+                    'gender'                 => $request->gender,
+                    'grade_level'            => $section->gradeLevel->level_name,
+                    'section'                => $section->section_name,
+                    'current_grade_level_id' => $section->grade_level_id,
+                    'current_section_id'     => $section->id,
+                    'current_school_year_id' => $currentSchoolYear->id,
+                    'phone'                  => $request->phone,
+                    'is_active'              => true,
+                ]);
+                $student = $orphan->fresh();
+            } else {
+                $student = Student::create([
+                    'user_id'                => $user->user_id,
+                    'student_number'         => $request->student_number,
+                    'first_name'             => $request->first_name,
+                    'middle_name'            => $request->middle_name,
+                    'last_name'              => $request->last_name,
+                    'birth_date'             => $request->birth_date,
+                    'gender'                 => $request->gender,
+                    'grade_level'            => $section->gradeLevel->level_name,
+                    'section'                => $section->section_name,
+                    'current_grade_level_id' => $section->grade_level_id,
+                    'current_section_id'     => $section->id,
+                    'current_school_year_id' => $currentSchoolYear->id,
+                    'phone'                  => $request->phone,
+                    'is_active'              => true,
+                ]);
+            }
 
             if ($section->adviser_id) {
                 $student->update(['current_adviser_id' => $section->adviser_id]);
@@ -1562,14 +1588,17 @@ class AdminController extends BaseController
 
             $section->increment('current_enrollment');
 
-            // Generate QR code record for the student
+            // Generate QR code record for the student (skip if one already exists)
             try {
-                DB::table('qr_codes')->insert([
-                    'student_id'      => $student->student_id,
-                    'qr_token'        => \Illuminate\Support\Str::uuid()->toString(),
-                    'qr_generated_at' => now(),
-                    'qr_expires_at'   => null,
-                ]);
+                $hasQr = DB::table('qr_codes')->where('student_id', $student->student_id)->exists();
+                if (!$hasQr) {
+                    DB::table('qr_codes')->insert([
+                        'student_id'      => $student->student_id,
+                        'qr_token'        => \Illuminate\Support\Str::uuid()->toString(),
+                        'qr_generated_at' => now(),
+                        'qr_expires_at'   => null,
+                    ]);
+                }
             } catch (\Exception $e) {
                 Log::warning('Failed to generate QR code for student: ' . $e->getMessage());
             }

@@ -1,15 +1,15 @@
-// Fonts
-$font-primary: 'Poppins', sans-serif;
-$font-secondary: 'Albert Sans', sans-serif;
+// Fonts (matching admin)
+$font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+$font-secondary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-// Colors
-$color-primary: #5b8db8;
-$color-primary-light: #7ba5c9;
-$color-text-dark: #2c3e50;
-$color-text-muted: #7f8c8d;
-$color-background: #f5f7fa;
+// Colors (matching admin)
+$color-primary: #052355;
+$color-primary-light: #5381b2;
+$color-text-dark: #0f172a;
+$color-text-muted: #64748b;
+$color-background: #f0f4f8;
 $color-white: #ffffff;
-$color-border: #ecf0f1;
+$color-border: #e8f0f8;
 $color-light-bg: #f8f9fa;
 
 // Card Gradients
@@ -37,23 +37,23 @@ $radius-md: 8px;
 $radius-lg: 12px;
 $radius-xl: 20px;
 
-// Font Sizes
-$font-size-xs: 0.9rem;
-$font-size-sm: 1rem;
-$font-size-base: 1.05rem;
-$font-size-md: 1.15rem;
+// Font Sizes (matching admin)
+$font-size-xs: 0.8rem;
+$font-size-sm: 0.9rem;
+$font-size-base: 0.95rem;
+$font-size-md: 1.1rem;
 $font-size-lg: 1.2rem;
-$font-size-xl: 1.35rem;
+$font-size-xl: 1.3rem;
 $font-size-2xl: 1.5rem;
-$font-size-3xl: 2.4rem;
-$font-size-4xl: 2.9rem;
+$font-size-3xl: 2.2rem;
+$font-size-4xl: 2.5rem;
 
 // Shadows
 $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
 .student-dashboard {
-  padding: 2rem;
-  background: #f8f9fa;
+  padding: 0;
+  background: transparent;
   min-height: 100vh;
   position: relative;
 
@@ -64,26 +64,31 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(248, 249, 250, 0.95);
+    background: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 9999;
-    backdrop-filter: blur(2px);
+    pointer-events: all;
   }
 
   .loading-spinner {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+    min-width: 180px;
   }
 
   .spinner {
     width: 50px;
     height: 50px;
     border: 4px solid #e3f2fd;
-    border-top: 4px solid $color-primary;
+    border-top: 4px solid #2563eb;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -94,123 +99,14 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   .loading-text {
-    font-family: $font-primary;
     font-size: 1.1rem;
     font-weight: 600;
-    color: $color-primary;
+    color: #2563eb;
     text-align: center;
   }
 
-  .notification-banner {
-    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-    border: 2px solid #ffc107;
-    border-radius: $radius-lg;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
-    animation: slideDown 0.3s ease-out;
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .notification-content {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-
-      .notification-icon {
-        font-size: 2rem;
-        flex-shrink: 0;
-      }
-
-      .notification-text {
-        flex: 1;
-
-        .notification-title {
-          font-size: 1.1rem;
-          font-weight: 700;
-          font-family: $font-secondary;
-          color: #856404;
-          margin-bottom: 0.25rem;
-        }
-
-        .notification-message {
-          font-size: 0.9rem;
-          font-family: $font-primary;
-          color: #856404;
-          line-height: 1.4;
-        }
-      }
-
-      .notification-actions {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-
-        .btn-complete {
-          background: #ffc107;
-          color: #856404;
-          border: none;
-          padding: 0.6rem 1.2rem;
-          border-radius: $radius-md;
-          font-size: 0.9rem;
-          font-weight: 600;
-          font-family: $font-primary;
-          cursor: pointer;
-          transition: all 0.3s;
-          white-space: nowrap;
-
-          &:hover {
-            background: #ffb300;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
-          }
-        }
-
-        .btn-dismiss {
-          background: transparent;
-          border: none;
-          color: #856404;
-          font-size: 1.5rem;
-          cursor: pointer;
-          padding: 0.25rem 0.5rem;
-          line-height: 1;
-          transition: all 0.3s;
-          border-radius: $radius-sm;
-
-          &:hover {
-            background: rgba(133, 100, 4, 0.1);
-          }
-        }
-      }
-    }
-
-    @media (max-width: 768px) {
-      .notification-content {
-        flex-direction: column;
-        align-items: flex-start;
-
-        .notification-actions {
-          width: 100%;
-          justify-content: space-between;
-
-          .btn-complete {
-            flex: 1;
-          }
-        }
-      }
-    }
-  }
-
   .dashboard-wrap {
+    padding: 0 2.5rem 2.5rem 2.5rem;
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -218,32 +114,33 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
   .overview-card {
     background: $color-white;
-    padding: 1.5rem;
-    border-radius: $radius-lg;
-    box-shadow: $shadow-card;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(5, 35, 85, 0.1);
   }
 
   .overview-title {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
     font-family: $font-secondary;
-    font-weight: 1000;
-    color: #0b2a4a;
+    font-weight: 700;
+    color: #052355;
     margin-bottom: 0.25rem;
   }
 
   .overview-sub {
-    color: $color-primary;
-    font-weight: 400;
+    color: $color-text-muted;
+    font-weight: 500;
     font-family: $font-primary;
     margin-bottom: 0.25rem;
     font-size: 0.95rem;
   }
 
   .overview-meta {
-    color: #0b2a4a;
-    font-weight: 700;
+    color: $color-text-dark;
+    font-weight: 600;
     font-family: $font-primary;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     margin-bottom: 1rem;
   }
 
@@ -267,14 +164,14 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   .tile-value {
     font-size: 1.4rem;
     font-family: $font-secondary;
-    font-weight: 900;
+    font-weight: 700;
     line-height: 1;
   }
 
   .tile-label {
     font-size: 0.8rem;
     font-family: $font-primary;
-    font-weight: 700;
+    font-weight: 600;
     opacity: 0.95;
   }
 
@@ -295,25 +192,55 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
   }
 
+  @media (max-width: 768px) {
+    padding: 0;
+
+    .welcome-section {
+      padding: 2rem 1.5rem;
+      border-radius: 0 0 16px 16px;
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      .student-info {
+        font-size: 1rem;
+      }
+    }
+
+    .dashboard-wrap {
+      padding: 0 1.5rem 1.5rem 1.5rem;
+    }
+
+    .overview-card,
+    .card {
+      padding: 1.5rem;
+    }
+  }
+
   .welcome-section {
-    margin-bottom: 1rem;
-    background: $color-white;
-    padding: 1.5rem;
-    border-radius: $radius-lg;
-    box-shadow: $shadow-card;
+    background: linear-gradient(135deg, rgba(5, 35, 85, 0.95) 0%, rgba(83, 129, 178, 0.95) 100%);
+    padding: 3rem 2.5rem;
+    margin-bottom: 2.5rem;
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    color: white;
 
     h1 {
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-family: $font-secondary;
-      color: $color-text-dark;
-      margin-bottom: 0.25rem;
-      font-weight: 1000;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+      color: white;
+      line-height: 1.2;
     }
 
     .student-info {
-      color: $color-text-muted;
-      font-size: $font-size-base;
+      font-size: 1.2rem;
       font-family: $font-primary;
+      opacity: 0.95;
+      color: white;
+      line-height: 1.6;
     }
   }
 
@@ -363,20 +290,22 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
       }
 
       .card-value {
-        font-size: 2.25rem;
+        font-size: 2rem;
         font-family: $font-secondary;
         font-weight: 700;
         margin-bottom: 0.25rem;
         position: relative;
         z-index: 1;
+        line-height: 1;
       }
 
       .card-label {
-        font-size: $font-size-base;
+        font-size: 0.95rem;
         font-family: $font-primary;
         opacity: 0.9;
         position: relative;
         z-index: 1;
+        font-weight: 500;
       }
     }
   }
@@ -403,9 +332,10 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
   .card {
     background: $color-white;
-    border-radius: $radius-lg;
-    padding: 1rem;
-    box-shadow: $shadow-card;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(5, 35, 85, 0.1);
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -413,7 +343,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     h2 {
       font-size: 1.3rem;
       font-family: $font-secondary;
-      color: $color-text-dark;
+      color: #052355;
       margin-bottom: 1rem;
       font-weight: 700;
     }
@@ -427,7 +357,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
         .info-item {
           .info-label {
             color: $color-text-muted;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-family: $font-primary;
             font-weight: 500;
             margin-bottom: 0.25rem;
@@ -437,7 +367,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
             color: $color-text-dark;
             font-size: 0.95rem;
             font-family: $font-secondary;
-            font-weight: 700;
+            font-weight: 600;
           }
         }
       }
@@ -463,7 +393,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
           .activity-info {
             .activity-name {
-              font-weight: 700;
+              font-weight: 600;
               font-family: $font-secondary;
               font-size: 0.95rem;
               color: $color-text-dark;
@@ -471,7 +401,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
             }
 
             .activity-date {
-              font-size: 0.8rem;
+              font-size: 0.9rem;
               font-family: $font-primary;
               font-weight: 500;
               color: $color-text-muted;
@@ -479,11 +409,11 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
           }
 
           .activity-badge {
-            padding: 0.35rem 0.75rem;
+            padding: 0.4rem 1rem;
             border-radius: $radius-xl;
-            font-size: $font-size-xs;
+            font-size: 0.8rem;
             font-family: $font-primary;
-            font-weight: 500;
+            font-weight: 600;
 
             &.activity-routine {
               background: #e8f5e9;
@@ -529,7 +459,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
           .immunization-info {
             .immunization-name {
-              font-weight: 700;
+              font-weight: 600;
               font-family: $font-secondary;
               font-size: 0.95rem;
               color: $color-text-dark;
@@ -537,7 +467,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
             }
 
             .immunization-date {
-              font-size: 0.8rem;
+              font-size: 0.9rem;
               font-family: $font-primary;
               font-weight: 500;
               color: $color-text-muted;
@@ -545,11 +475,11 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
           }
 
           .status-badge {
-            padding: 0.35rem 0.75rem;
+            padding: 0.4rem 1rem;
             border-radius: $radius-xl;
-            font-size: $font-size-xs;
+            font-size: 0.8rem;
             font-family: $font-primary;
-            font-weight: 500;
+            font-weight: 600;
 
             &.updated {
               background: $status-success-bg;
@@ -578,21 +508,23 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
         .edit-btn {
           background: transparent;
-          border: 1px solid $color-primary;
+          border: 2px solid $color-primary;
           color: $color-primary;
-          padding: 0.4rem 0.75rem;
-          border-radius: $radius-sm;
+          padding: 0.6rem 1.25rem;
+          border-radius: 8px;
           cursor: pointer;
-          font-size: $font-size-xs;
+          font-size: 0.9rem;
           font-family: $font-primary;
+          font-weight: 600;
           display: flex;
           align-items: center;
           gap: 0.35rem;
-          transition: all 0.3s;
+          transition: all 0.2s ease;
 
           &:hover {
             background: $color-primary;
             color: $color-white;
+            transform: translateY(-2px);
 
             .edit-icon-img {
               filter: brightness(0) invert(1);
@@ -610,7 +542,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
       .allergies-list {
         .allergy-item {
-          padding: 0.75rem;
+          padding: 1rem;
           background: $color-light-bg;
           border-radius: $radius-md;
           margin-bottom: 0.65rem;
@@ -618,6 +550,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
           font-size: 0.95rem;
           font-family: $font-primary;
           font-weight: 600;
+          border: 1px solid $color-border;
 
           &:last-child {
             margin-bottom: 0;
@@ -646,14 +579,14 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     .btn-shdf {
       width: 100%;
       padding: $spacing-sm $spacing-md;
-      background: linear-gradient(135deg, #5b8db8 0%, #7ba5c9 100%);
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       color: $color-white;
       border: none;
       border-radius: $radius-md;
-      font-size: $font-size-base;
-      font-weight: 500;
+      font-size: 0.95rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -661,12 +594,122 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(91, 141, 184, 0.3);
+        box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
       }
 
       &:active {
         transform: translateY(0);
       }
     }
+  }
+}
+
+
+// Comprehensive Form Modal
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #052355 0%, #0a3a7a 100%);
+  border-radius: 16px 16px 0 0;
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: white;
+  }
+}
+
+.modal-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.modal-body {
+  padding: 32px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .modal-container {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .modal-header {
+    border-radius: 0;
+    padding: 20px;
+
+    h2 {
+      font-size: 20px;
+    }
+  }
+
+  .modal-body {
+    padding: 20px;
   }
 }

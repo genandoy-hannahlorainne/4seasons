@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -548,7 +548,7 @@ import { AuthService } from '../../../../core/services/auth.service';
     }
   `]
 })
-export class VisitFormComponent implements OnInit {
+export class VisitFormComponent implements OnInit, OnDestroy {
   isEditMode = false;
   loading = false;
   showScanner = false;
@@ -558,6 +558,7 @@ export class VisitFormComponent implements OnInit {
   searchLoading = false;
   searchDone = false;
   private searchTimeout: any = null;
+  private clockInterval: any = null;
 
   visit = {
     dateTime: '',
@@ -593,9 +594,13 @@ export class VisitFormComponent implements OnInit {
       // Load visit data
     }
 
-    // Set default datetime to now
-    const now = new Date();
-    this.visit.dateTime = now.toISOString().slice(0, 16);
+    // Set default datetime to now (local time) and keep it live
+    this.visit.dateTime = this.getLocalDateTimeString();
+    this.clockInterval = setInterval(() => {
+      if (!this.isEditMode) {
+        this.visit.dateTime = this.getLocalDateTimeString();
+      }
+    }, 1000);
 
     // Check if studentId is passed via query params
     const studentId = this.route.snapshot.queryParamMap.get('studentId');
@@ -606,6 +611,16 @@ export class VisitFormComponent implements OnInit {
 
   openScanner(): void {
     this.showScanner = true;
+  }
+
+  ngOnDestroy(): void {
+    if (this.clockInterval) clearInterval(this.clockInterval);
+  }
+
+  private getLocalDateTimeString(): string {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
   }
 
   closeScanner(): void {

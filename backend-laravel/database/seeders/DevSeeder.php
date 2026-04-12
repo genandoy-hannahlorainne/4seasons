@@ -187,7 +187,7 @@ class DevSeeder extends Seeder
         DB::table('students')->insert([
             'student_id'             => $studentId,
             'user_id'                => $userId,
-            'student_number'         => 'DEV-STU-001',
+            'student_number'         => '130000000001',
             'first_name'             => 'Dev',
             'last_name'              => 'Student',
             'gender'                 => 'M',
