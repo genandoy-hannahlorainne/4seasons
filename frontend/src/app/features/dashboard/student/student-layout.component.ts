@@ -124,19 +124,58 @@ import { AuthService } from '../../../core/services/auth.service';
       </div>
 
       <!-- Badges Panel -->
-      <div *ngIf="showBadgesPanel" class="notifications-panel" (click)="$event.stopPropagation()">
-        <div class="panel-title">Earned Badges</div>
+      <div *ngIf="showBadgesPanel" class="notifications-panel-overlay" (click)="showBadgesPanel = false">
+        <div class="notifications-panel" (click)="$event.stopPropagation()">
+          <div class="panel-header">
+            <div class="panel-title-row">
+              <h3 class="panel-title">Earned Badges</h3>
+              <span *ngIf="badgeNotifications.length > 0" class="notif-badge badge-count">{{ badgeNotifications.length }}</span>
+            </div>
+            <button class="panel-close" (click)="showBadgesPanel = false" title="Close">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          
+          <div class="panel-body">
+            <!-- Loading State -->
+            <div *ngIf="notificationsLoading" class="loading-state">
+              <div class="loading-spinner-small"></div>
+              <p>Loading badges...</p>
+            </div>
 
-        <div *ngIf="notificationsLoading" class="panel-state">Loading badges...</div>
-        <div *ngIf="notificationsError" class="panel-state error">{{ notificationsError }}</div>
-        <div *ngIf="!notificationsLoading && !notificationsError && badgeNotifications.length === 0" class="panel-state">No badges earned yet. Keep staying healthy!</div>
+            <!-- Error State -->
+            <div *ngIf="notificationsError && !notificationsLoading" class="error-state">
+              <div class="error-icon">
+                <i class="fa-solid fa-circle-exclamation"></i>
+              </div>
+              <p>{{ notificationsError }}</p>
+            </div>
 
-        <div *ngIf="!notificationsLoading && badgeNotifications.length > 0" class="notification-list">
-          <div *ngFor="let badge of badgeNotifications" class="notification-item" (click)="openBadgeDetails(badge)">
-            <img *ngIf="badge.icon_asset_path" [src]="badge.icon_asset_path" [alt]="badge.badge_name" class="badge-icon">
-            <div class="item-content">
-              <div class="item-title">{{ badge.badge_name }}</div>
-              <div class="item-sub">{{ badge.required_streak_days }}-day streak badge available</div>
+            <!-- Badges List -->
+            <div *ngIf="!notificationsLoading && !notificationsError && badgeNotifications.length > 0" class="badges-grid">
+              <div *ngFor="let badge of badgeNotifications" class="badge-card" (click)="openBadgeDetails(badge)">
+                <div class="badge-icon-wrapper">
+                  <img *ngIf="badge.icon_asset_path" [src]="badge.icon_asset_path" [alt]="badge.badge_name" class="badge-icon-img">
+                  <i *ngIf="!badge.icon_asset_path" class="fa-solid fa-award"></i>
+                </div>
+                <div class="badge-info">
+                  <h4 class="badge-name">{{ badge.badge_name }}</h4>
+                  <p class="badge-description">{{ badge.required_streak_days }}-day streak milestone</p>
+                  <span class="badge-status earned">
+                    <i class="fa-solid fa-check-circle"></i>
+                    Earned
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!notificationsLoading && !notificationsError && badgeNotifications.length === 0" class="empty-state">
+              <div class="empty-icon">
+                <i class="fa-solid fa-award"></i>
+              </div>
+              <h4 class="empty-title">No badges yet</h4>
+              <p class="empty-message">Keep staying healthy to earn badges!</p>
             </div>
           </div>
         </div>
