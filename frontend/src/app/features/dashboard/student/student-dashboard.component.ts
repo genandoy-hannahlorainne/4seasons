@@ -45,9 +45,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   loading = true;
   error = '';
 
-  // Medical form completion status
-  showIncompleteFormNotification = false;
-  incompleteFormMessage = '';
+
 
   constructor(
     private studentService: StudentService,
@@ -201,9 +199,6 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
           console.log('✅ Medical data found:', data);
 
-          // Check if medical form is incomplete
-          this.checkFormCompletion(data);
-
           // Set vitals data from personal_info
           if (data.personal_info) {
             this.height = data.personal_info.height_cm ? `${data.personal_info.height_cm} cm` : '--';
@@ -326,51 +321,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     return 'assets/user-male.png'; // default
   }
 
-  checkFormCompletion(data: any): void {
-    const missingFields: string[] = [];
 
-    if (data.personal_info) {
-      const info = data.personal_info;
-
-      // Check Physical Information
-      if (!info.height_cm || !info.weight_kg) {
-        missingFields.push('Physical Information (Height & Weight)');
-      }
-
-      // Check Contact Information
-      const emergencyContactName = (info.emergency_contact || info.emergency_contact_person || '').toString().trim();
-      const emergencyContactPhone = (info.emergency_contact_phone || '').toString().trim();
-
-      if (!emergencyContactName || !emergencyContactPhone) {
-        missingFields.push('Contact Information (Emergency Contact)');
-      }
-
-      if (!info.address) {
-        missingFields.push('Contact Information (Address)');
-      }
-    }
-
-    // Check Medical History - if no medical_history data exists, it's incomplete
-    if (!data.medical_history) {
-      missingFields.push('Medical History');
-    }
-
-    // Show notification if any fields are missing
-    if (missingFields.length > 0) {
-      this.showIncompleteFormNotification = true;
-      this.incompleteFormMessage = `Please complete your Personal Medical Information Form. Missing: ${missingFields.join(', ')}`;
-    } else {
-      this.showIncompleteFormNotification = false;
-    }
-  }
-
-  dismissNotification(): void {
-    this.showIncompleteFormNotification = false;
-  }
-
-  goToMedicalForm(): void {
-    this.router.navigate(['/dashboard/student/medical-records/personal-info']);
-  }
 
   goToSHDFForm(): void {
     const currentUser = this.authService.currentUserValue;

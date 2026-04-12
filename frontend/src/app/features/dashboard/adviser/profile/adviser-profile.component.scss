@@ -5,6 +5,8 @@ $card-bg: #fff;
 $text: #1e293b;
 $muted: #64748b;
 $border: #e2e8f0;
+$danger: #dc2626;
+$danger-600: #b91c1c;
 $radius: 12px;
 
 .adviser-profile {
@@ -39,15 +41,65 @@ $radius: 12px;
   gap: 1.25rem;
 }
 
-/* ── Identity Card ── */
-.identity-card {
+/* ── Profile Settings Card ── */
+.profile-settings {
   display: flex;
   align-items: center;
   gap: 1.5rem;
   padding: 1.5rem;
+  background: $card-bg;
+  border-radius: $radius;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.identity-avatar {
+.profile-settings-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-settings-main {
+  flex: 1;
+}
+
+.profile-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.profile-item {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.4rem;
+}
+
+.profile-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.profile-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $text;
+}
+
+/* ── Profile Avatar ── */
+.profile-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+
   .avatar-img {
     width: 80px;
     height: 80px;
@@ -59,31 +111,173 @@ $radius: 12px;
   }
 }
 
-.identity-info {
-  .identity-name {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: $text;
-    margin-bottom: 0.2rem;
-  }
-  .identity-meta {
-    font-size: 0.85rem;
-    color: $brand-light;
-    font-weight: 600;
-    margin-bottom: 0.15rem;
-  }
-  .identity-email {
-    font-size: 0.82rem;
-    color: $muted;
+/* ── Bottom Grid ── */
+.profile-bottom-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+}
+
+/* ── Contact Card ── */
+.contact-card {
+  padding: 1.5rem;
+  background: $card-bg;
+  border-radius: $radius;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.contact-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.contact-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $text;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: #f8fafc;
+    border-color: $brand-light;
+    transform: translateY(-1px);
   }
 }
 
-/* ── Two column layout ── */
-.two-col {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 1.25rem;
-  align-items: start;
+.edit-btn-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* ── Others Card ── */
+.others-card {
+  padding: 1.5rem;
+  background: $card-bg;
+  border-radius: $radius;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.other-link {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 0.5rem;
+  border: 0;
+  background: transparent;
+  color: $text;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  display: block;
+
+  &:hover {
+    background: #f8fafc;
+  }
+
+  &.danger {
+    color: $danger;
+
+    &:hover {
+      background: rgba(220, 38, 38, 0.08);
+    }
+  }
+}
+
+.others-sep {
+  height: 1px;
+  background: $border;
+  margin: 0.75rem 0;
+}
+
+/* ── Input Fields ── */
+.field {
+  margin-bottom: 1rem;
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.4rem;
+  }
+}
+
+.field-note {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: $muted;
+  font-style: italic;
+}
+
+.input-with-icon {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: $brand-light;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.input-icon-img {
+  width: 20px;
+  height: 20px;
+  display: block;
+  object-fit: contain;
+}
+
+.input-with-icon .form-control {
+  padding-left: 60px;
+}
+
+.contact-card .form-control {
+  background: #d7e8ff;
+  border: 0;
+  box-shadow: none;
+}
+
+.contact-card textarea.form-control {
+  height: auto;
+  min-height: 44px;
+}
+
+.input-with-icon textarea.form-control {
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 /* ── Card head ── */
@@ -91,7 +285,7 @@ $radius: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
   padding-bottom: 0.875rem;
   border-bottom: 1px solid $border;
 }
@@ -102,6 +296,7 @@ $radius: 12px;
   color: $text;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-bottom: 0;
 }
 
 /* ── Edit / Cancel buttons ── */
@@ -109,25 +304,29 @@ $radius: 12px;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.4rem 0.9rem;
-  background: #f1f5f9;
+  padding: 0.6rem 1rem;
+  background: #fff;
   border: 1px solid $border;
-  border-radius: 7px;
-  font-size: 0.8rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: $text;
   cursor: pointer;
   transition: all 0.15s;
 
-  &:hover { background: #e2e8f0; }
+  &:hover { 
+    background: #f8fafc;
+    border-color: $brand-light;
+    transform: translateY(-1px);
+  }
 }
 
 .btn-cancel {
-  padding: 0.4rem 0.9rem;
+  padding: 0.6rem 1rem;
   background: white;
   border: 1px solid $border;
-  border-radius: 7px;
-  font-size: 0.8rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: $muted;
   cursor: pointer;
@@ -336,15 +535,27 @@ $radius: 12px;
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
-  .two-col { grid-template-columns: 1fr; }
-  .identity-card { flex-direction: column; text-align: center; }
+  .profile-bottom-grid { 
+    grid-template-columns: 1fr; 
+  }
+  
+  .profile-settings {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
-  .adviser-profile { padding: 1rem; }
+  .adviser-profile { 
+    padding: 1rem; 
+  }
 }
 
-/* ── Read-only info rows ── */
+/* ── Read-only info rows (if needed) ── */
 .info-row {
   display: flex;
   justify-content: space-between;
@@ -356,7 +567,7 @@ $radius: 12px;
 }
 
 .info-label {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: $muted;
   text-transform: uppercase;
@@ -365,7 +576,7 @@ $radius: 12px;
 
 .info-value {
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   color: $text;
 }
 
@@ -373,7 +584,7 @@ $radius: 12px;
 .modal-sub {
   font-size: 0.85rem;
   color: $muted;
-  margin: -0.75rem 0 1.25rem;
+  margin: -0.75rem 0 1rem;
 }
 
 /* ── Modal inline error ── */
@@ -381,10 +592,11 @@ $radius: 12px;
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #b91c1c;
-  padding: 0.65rem 0.875rem;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
-  font-size: 0.82rem;
-  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
 }
 
 /* ── Toast ── */

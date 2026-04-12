@@ -27,58 +27,82 @@ import { AdviserService } from '../../../../core/services/adviser.service';
 
       <div class="profile-content">
 
-        <!-- Identity Card -->
-        <div class="identity-card card">
-          <div class="identity-avatar">
-            <img [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
+        <!-- Profile Settings Card -->
+        <div class="profile-settings card" role="region" aria-label="Profile Settings">
+          <div class="profile-settings-left">
+            <div class="profile-avatar">
+              <img [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
+            </div>
           </div>
-          <div class="identity-info">
-            <div class="identity-name">{{ profileData.fullName }}</div>
-            <div class="identity-meta">{{ profileData.advisoryClass || 'Advisory Class not assigned' }}</div>
-            <div class="identity-email">{{ profileData.email }}</div>
+
+          <div class="profile-settings-main">
+            <div class="profile-grid">
+              <div class="profile-item">
+                <div class="profile-label">Full Name</div>
+                <div class="profile-value">{{ profileData.fullName || 'Loading...' }}</div>
+              </div>
+
+              <div class="profile-item">
+                <div class="profile-label">Date of Birth</div>
+                <div class="profile-value">{{ profileData.birthDate || 'Not set' }}</div>
+              </div>
+
+              <div class="profile-item">
+                <div class="profile-label">Advisory Class</div>
+                <div class="profile-value">{{ profileData.advisoryClass || 'Not assigned' }}</div>
+              </div>
+
+              <div class="profile-item">
+                <div class="profile-label">Employee ID</div>
+                <div class="profile-value">{{ profileData.employeeId || 'Not set' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-settings-actions">
+            
           </div>
         </div>
 
-        <div class="two-col">
+        <!-- Bottom Grid -->
+        <div class="profile-bottom-grid">
+          <!-- Contact Information Card -->
+          <div class="contact-card card">
+            <div class="contact-header">
+              <div class="card-title">Contact Information</div>
+              <button type="button" class="btn btn-outline edit-btn" (click)="openEditModal()">
+                <img src="assets/edit-icon.png" alt="" class="edit-btn-icon">
+                <span>Edit</span>
+              </button>
+            </div>
 
-          <!-- Contact Information (read-only display) -->
-          <div class="card contact-card">
-            <div class="card-head">
-              <span class="card-title">Contact Information</span>
+            <div class="field">
+              <label for="email">Email Address</label>
+              <div class="input-with-icon">
+                <span class="input-icon" aria-hidden="true">
+                  <img src="assets/message-icon.png" alt="" class="input-icon-img">
+                </span>
+                <input type="email" id="email" [value]="profileData.email" class="form-control" readonly placeholder="Not provided">
+              </div>
             </div>
-            <div class="info-row">
-              <span class="info-label">Email</span>
-              <span class="info-value">{{ profileData.email || '—' }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Phone</span>
-              <span class="info-value">{{ profileData.phone || 'Not set' }}</span>
+
+            <div class="field">
+              <label for="phone">Phone Number</label>
+              <div class="input-with-icon">
+                <span class="input-icon" aria-hidden="true">
+                  <img src="assets/contact-icon.png" alt="" class="input-icon-img">
+                </span>
+                <input type="tel" id="phone" [value]="profileData.phone" class="form-control" readonly placeholder="Not provided">
+              </div>
             </div>
           </div>
 
-          <!-- Account Actions -->
-          <div class="card actions-card">
-            <span class="card-title">Account</span>
-
-            <button type="button" class="action-item" (click)="changePassword()">
-              <span class="action-icon"><i class="fa-solid fa-lock"></i></span>
-              <div class="action-text">
-                <span class="action-label">Change Password</span>
-                <span class="action-sub">Update your login password</span>
-              </div>
-              <i class="fa-solid fa-chevron-right action-arrow"></i>
-            </button>
-
-            <button type="button" class="action-item" (click)="openEditModal()">
-              <span class="action-icon"><i class="fa-solid fa-user-pen"></i></span>
-              <div class="action-text">
-                <span class="action-label">Update Information</span>
-                <span class="action-sub">Edit your contact details</span>
-              </div>
-              <i class="fa-solid fa-chevron-right action-arrow"></i>
-            </button>
+          <!-- Account Card -->
+          <div class="others-card card">
+            <div class="card-title">Account</div>
+            <button type="button" class="other-link" (click)="changePassword()">Change Password</button>
+            <button type="button" class="other-link" (click)="openEditModal()">Update Information</button>
           </div>
-
         </div>
       </div>
     </div>
@@ -90,7 +114,8 @@ import { AdviserService } from '../../../../core/services/adviser.service';
           <i class="fa-solid fa-xmark"></i>
         </button>
         <h3>Update Information</h3>
-        <p class="modal-sub">Edit your contact details below</p>
+
+        <div class="modal-error" *ngIf="editError">{{ editError }}</div>
 
         <div class="form-group">
           <label>Email Address *</label>
@@ -101,12 +126,9 @@ import { AdviserService } from '../../../../core/services/adviser.service';
           <input type="tel" [(ngModel)]="editForm.phone" class="form-control" placeholder="Enter phone number">
         </div>
 
-        <div class="modal-error" *ngIf="editError">{{ editError }}</div>
-
         <div class="modal-actions">
           <button class="btn btn-secondary" (click)="closeEditModal()" [disabled]="saving">Cancel</button>
           <button class="btn btn-primary" (click)="saveProfile()" [disabled]="saving">
-            <i class="fa-solid fa-spinner fa-spin" *ngIf="saving"></i>
             {{ saving ? 'Saving...' : 'Save Changes' }}
           </button>
         </div>
@@ -120,7 +142,8 @@ import { AdviserService } from '../../../../core/services/adviser.service';
           <i class="fa-solid fa-xmark"></i>
         </button>
         <h3>Change Password</h3>
-        <p class="modal-sub">Choose a strong password for your account</p>
+
+        <div class="modal-error" *ngIf="passwordError">{{ passwordError }}</div>
 
         <div class="form-group">
           <label>Current Password *</label>
@@ -134,8 +157,6 @@ import { AdviserService } from '../../../../core/services/adviser.service';
           <label>Confirm Password *</label>
           <input type="password" [(ngModel)]="passwordForm.confirmPassword" class="form-control" placeholder="Re-enter new password">
         </div>
-
-        <div class="modal-error" *ngIf="passwordError">{{ passwordError }}</div>
 
         <div class="modal-actions">
           <button class="btn btn-secondary" (click)="closePasswordModal()">Cancel</button>
@@ -164,6 +185,8 @@ export class AdviserProfileComponent implements OnInit {
     email: '',
     phone: '',
     advisoryClass: '',
+    birthDate: '',
+    employeeId: '',
     avatar: 'assets/user-female.png'
   };
 
@@ -191,6 +214,8 @@ export class AdviserProfileComponent implements OnInit {
       this.profileData.fullName = currentUser.full_name || 'Adviser';
       this.profileData.email = currentUser.email || '';
       this.profileData.phone = currentUser.phone || '';
+      this.profileData.birthDate = (currentUser as any).birth_date || 'Not set';
+      this.profileData.employeeId = (currentUser as any).employee_id || 'Not set';
 
       this.adviserService.getAdviserProfile().subscribe({
         next: (response: any) => {
@@ -200,9 +225,13 @@ export class AdviserProfileComponent implements OnInit {
             this.profileData.fullName = profile.full_name || this.profileData.fullName;
             this.profileData.email = profile.email || this.profileData.email;
             this.profileData.phone = profile.phone || this.profileData.phone;
+            this.profileData.birthDate = profile.birth_date || this.profileData.birthDate;
+            this.profileData.employeeId = profile.employee_id || this.profileData.employeeId;
           }
         },
-        error: () => { this.profileData.advisoryClass = 'Not assigned'; }
+        error: () => { 
+          this.profileData.advisoryClass = 'Not assigned'; 
+        }
       });
     }
   }
