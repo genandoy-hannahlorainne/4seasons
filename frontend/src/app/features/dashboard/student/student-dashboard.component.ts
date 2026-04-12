@@ -119,9 +119,16 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
           // Set basic info
           this.studentName = `${profile.first_name} ${profile.last_name}`;
           this.studentId = profile.student_number || '';
+          
+          // Check if grade_level already contains "Grade" prefix
+          const gradeLevel = profile.grade_level || '';
+          const hasGradePrefix = gradeLevel.toLowerCase().includes('grade');
+          
           this.gradeLevel = profile.grade_level && profile.section
-            ? `Grade ${profile.grade_level} - ${profile.section}`
-            : profile.grade_level ? `Grade ${profile.grade_level}` : 'Not assigned';
+            ? `${hasGradePrefix ? gradeLevel : 'Grade ' + gradeLevel} - ${profile.section}`
+            : profile.grade_level 
+              ? (hasGradePrefix ? gradeLevel : 'Grade ' + gradeLevel)
+              : 'Not assigned';
 
           // Set gender
           this.studentGender = profile.gender || '';
