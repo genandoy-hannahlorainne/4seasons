@@ -182,13 +182,16 @@
   }
 
   .btn-secondary {
-    background: #fff;
-    color: #374151;
-    border: 1.5px solid #d1d5db;
+    background: #ffffff;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 
     &:hover {
-      background: #f9fafb;
-      border-color: #9ca3af;
+      background: #f8fafc;
+      color: #1e293b;
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
     }
   }
 }
