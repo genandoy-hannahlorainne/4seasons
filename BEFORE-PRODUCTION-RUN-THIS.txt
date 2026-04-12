@@ -1,0 +1,58 @@
+⚠️  IMPORTANT: RUN BEFORE PRODUCTION DEPLOYMENT ⚠️
+====================================================
+
+PROBLEM:
+Students are getting 403 Unauthorized errors when submitting comprehensive SHDF form.
+
+ROOT CAUSE:
+Students' user_id in the database doesn't match their logged-in user account.
+
+SOLUTION (Run these commands BEFORE deploying to production):
+--------------------------------------------------------------
+
+1. CHECK what needs to be fixed (safe, no changes):
+   cd backend-laravel
+   php artisan student:fix-all-user-mappings --dry-run
+
+2. FIX all student-user mappings:
+   php artisan student:fix-all-user-mappings
+
+3. VERIFY it worked:
+   - Login as a student
+   - Try submitting comprehensive SHDF form
+   - Should work without 403 errors
+
+WHAT THIS DOES:
+---------------
+- Links each student record to their correct user account
+- Updates the user_id field in students table
+- Ensures authorization checks pass correctly
+
+AFTER RUNNING:
+--------------
+✓ Students can submit forms without 403 errors
+✓ Authorization is properly enforced (secure)
+✓ Safe to deploy to production
+
+DO NOT SKIP THIS STEP!
+----------------------
+If you deploy without fixing the mappings:
+❌ Students will get 403 errors
+❌ Forms won't submit
+❌ Users will be frustrated
+
+VERIFICATION:
+-------------
+After running the fix, check the logs when a student submits:
+
+tail -f backend-laravel/storage/logs/laravel.log
+
+Should see:
+[SHDF Form Request] Authorization check
+  can_submit: true  ← This should be TRUE
+
+If you see "can_submit: false", the mapping is still wrong.
+
+NEED HELP?
+----------
+See PRODUCTION-DEPLOYMENT-CHECKLIST.md for detailed instructions.

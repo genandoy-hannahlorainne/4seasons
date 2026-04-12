@@ -26,6 +26,10 @@ export class SHDFBasicComponent implements OnInit {
     private shdService: SHDFService
   ) {}
 
+  goToDashboard(): void {
+    this.router.navigate(['/dashboard/student']);
+  }
+
   ngOnInit(): void {
     this.studentId = Number(this.route.snapshot.paramMap.get('studentId'));
     this.buildForm();
@@ -36,7 +40,9 @@ export class SHDFBasicComponent implements OnInit {
     // Check if basic info is already completed
     this.shdService.getStatus(this.studentId).subscribe({
       next: (status) => {
+        console.log('[SHDF Basic] Status check for student', this.studentId, ':', status);
         if (status.basic_completed) {
+          console.log('[SHDF Basic] Basic already completed, redirecting to success page');
           // Already completed - redirect to success page
           this.router.navigate(['/shdf', this.studentId, 'success'], {
             queryParams: {
@@ -46,11 +52,13 @@ export class SHDFBasicComponent implements OnInit {
             }
           });
         } else {
+          console.log('[SHDF Basic] Basic not completed, loading existing data');
           // Not completed - load existing data if any
           this.loadExistingData();
         }
       },
-      error: () => {
+      error: (err) => {
+        console.error('[SHDF Basic] Status check failed:', err);
         // No status found - load existing data if any
         this.loadExistingData();
       }

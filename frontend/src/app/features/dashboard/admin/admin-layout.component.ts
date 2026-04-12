@@ -15,6 +15,14 @@ import { Router } from '@angular/router';
       <!-- Mobile overlay -->
       <div class="sidebar-overlay" (click)="closeMobile()"></div>
 
+      <!-- Logout overlay -->
+      <div class="logout-overlay" *ngIf="loggingOut">
+        <div class="logout-box">
+          <div class="logout-spinner"></div>
+          <p>Logging out...</p>
+        </div>
+      </div>
+
       <!-- Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-brand">
@@ -92,22 +100,16 @@ import { Router } from '@angular/router';
 export class AdminLayoutComponent {
   isCollapsed = false;
   mobileOpen = false;
+  loggingOut = false;
 
   constructor(private authService: AuthService, private router: Router) {}
 
-  toggleSidebar(): void {
-    this.isCollapsed = !this.isCollapsed;
-  }
-
-  openMobile(): void {
-    this.mobileOpen = true;
-  }
-
-  closeMobile(): void {
-    this.mobileOpen = false;
-  }
+  toggleSidebar(): void { this.isCollapsed = !this.isCollapsed; }
+  openMobile(): void { this.mobileOpen = true; }
+  closeMobile(): void { this.mobileOpen = false; }
 
   logout(): void {
+    this.loggingOut = true;
     this.authService.logout().subscribe({
       complete: () => this.router.navigate(['/login']),
       error: () => this.router.navigate(['/login'])

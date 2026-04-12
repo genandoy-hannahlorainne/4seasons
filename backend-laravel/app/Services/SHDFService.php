@@ -366,6 +366,7 @@ class SHDFService
         $schoolYear = SchoolYear::where('is_current', true)->first();
 
         if (!$schoolYear) {
+            \Log::warning('[SHDF Status] No current school year found for student: ' . $studentId);
             return [
                 'basic_completed' => false,
                 'comprehensive_completed' => false,
@@ -379,6 +380,7 @@ class SHDFService
             ->first();
 
         if (!$status) {
+            \Log::info('[SHDF Status] No status record found for student: ' . $studentId . ' in school year: ' . $schoolYear->id);
             return [
                 'basic_completed' => false,
                 'comprehensive_completed' => false,
@@ -388,6 +390,8 @@ class SHDFService
                 'is_overdue' => false,
             ];
         }
+
+        \Log::info('[SHDF Status] Found status for student: ' . $studentId . ' | basic_completed: ' . ($status->basic_completed ? 'true' : 'false') . ' | comprehensive_completed: ' . ($status->comprehensive_completed ? 'true' : 'false'));
 
         return [
             'basic_completed' => $status->basic_completed,

@@ -116,231 +116,225 @@ import { BMIUtils } from '../../../../shared/utils/bmi-utils';
   styles: [`
     .modal-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.55);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
       padding: 1rem;
+      backdrop-filter: blur(2px);
     }
 
     .modal-content {
-      background: white;
+      background: #fff;
       border-radius: 16px;
-      max-width: 500px;
+      max-width: 480px;
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
       position: relative;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.22);
     }
 
     .close-btn {
       position: absolute;
-      top: 15px;
-      right: 15px;
-      background: white;
+      top: 12px;
+      right: 12px;
+      background: rgba(255,255,255,0.18);
       border: none;
-      width: 35px;
-      height: 35px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      color: #666;
-      transition: all 0.2s;
-      
-      &:hover {
-        background: #e8eaed;
-        color: #202124;
-      }
+      color: #fff;
+      transition: background 0.2s;
+      z-index: 10;
+
+      &:hover { background: rgba(255,255,255,0.32); }
     }
 
+    /* ── Header ── */
     .modal-header {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 1.5rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      gap: 1.1rem;
+      padding: 1.5rem 1.5rem 1.75rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       border-radius: 16px 16px 0 0;
-      
+      color: #fff;
+
       .student-avatar {
-        width: 80px;
-        height: 80px;
+        width: 72px;
+        height: 72px;
         border-radius: 50%;
         overflow: hidden;
-        border: 3px solid rgba(255,255,255,0.3);
-        
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
+        border: 2.5px solid rgba(255,255,255,0.4);
+        flex-shrink: 0;
+        background: rgba(255,255,255,0.15);
+
+        img { width: 100%; height: 100%; object-fit: cover; }
       }
-      
+
       .student-header-info {
         h2 {
-          margin: 0 0 0.25rem 0;
-          font-size: 1.4rem;
-          font-weight: 600;
+          margin: 0 0 0.2rem;
+          font-size: 1.2rem;
+          font-weight: 700;
+          letter-spacing: -0.01em;
         }
-        
         .student-number {
-          margin: 0;
-          opacity: 0.9;
-          font-size: 0.95rem;
+          margin: 0 0 0.15rem;
+          font-size: 0.82rem;
+          opacity: 0.85;
+          font-family: 'Courier New', monospace;
+          letter-spacing: 0.04em;
         }
-        
         .student-section {
           margin: 0;
-          opacity: 0.8;
-          font-size: 0.85rem;
+          font-size: 0.8rem;
+          opacity: 0.75;
         }
       }
     }
 
+    /* ── Sections ── */
     .info-section {
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid #e9ecef;
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
+      padding: 1.1rem 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+
+      &:last-child { border-bottom: none; padding-bottom: 1.5rem; }
+
       h3 {
-        font-size: 1.1rem;
-        color: #2c3e50;
-        margin-bottom: 1rem;
-        font-weight: 600;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #e9ecef;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748b;
+        margin: 0 0 0.9rem;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.45rem;
+
+        i { font-size: 0.75rem; color: #94a3b8; }
       }
     }
 
+    /* ── Info Grid ── */
     .info-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 0.75rem;
-      
+      gap: 0.85rem 1rem;
+
       .info-item {
         .label {
           display: block;
-          font-size: 0.75rem;
-          color: #6c757d;
+          font-size: 0.72rem;
+          color: #94a3b8;
           margin-bottom: 0.2rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
         }
-        
         .value {
           display: block;
-          font-size: 0.95rem;
-          color: #212529;
-          font-weight: 500;
+          font-size: 0.92rem;
+          color: #0f172a;
+          font-weight: 600;
         }
       }
     }
 
+    /* ── Allergy Tags ── */
     .allergy-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
-      
+      gap: 0.4rem;
+
       .allergy-tag {
-        background: #fff3cd;
-        color: #856404;
-        padding: 0.35rem 0.75rem;
-        border-radius: 15px;
-        font-size: 0.85rem;
-        font-weight: 500;
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+        padding: 0.25rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
       }
     }
 
     .no-data {
-      color: #6c757d;
-      font-size: 0.9rem;
+      color: #94a3b8;
+      font-size: 0.875rem;
       font-style: italic;
       margin: 0;
     }
 
+    /* ── Emergency Contact ── */
     .emergency-contact {
-      background: #f8f9fa;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+
       .contact-name {
-        font-weight: 600;
-        color: #212529;
-        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 0.92rem;
+        margin-bottom: 0.2rem;
       }
-      
       .contact-relation {
-        color: #6c757d;
-        font-size: 0.85rem;
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-bottom: 0.2rem;
       }
-      
       .contact-phone {
-        color: #007bff;
-        font-size: 0.9rem;
-        margin-top: 0.25rem;
+        color: #4f46e5;
+        font-size: 0.85rem;
+        font-weight: 600;
       }
     }
 
+    /* ── Visits ── */
     .visits-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
       .visit-item {
         display: flex;
         align-items: center;
-        gap: 1rem;
-        padding: 0.75rem;
-        background: #f8f9fa;
+        gap: 0.75rem;
+        padding: 0.7rem 0.9rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
         border-radius: 8px;
-        margin-bottom: 0.5rem;
-        
-        &:last-child {
-          margin-bottom: 0;
-        }
-        
+
         .visit-date {
-          font-size: 0.85rem;
-          color: #495057;
-          min-width: 100px;
+          font-size: 0.78rem;
+          color: #64748b;
+          min-width: 90px;
+          font-weight: 500;
         }
-        
         .visit-reason {
           flex: 1;
-          font-size: 0.9rem;
-          color: #212529;
+          font-size: 0.875rem;
+          color: #1e293b;
+          font-weight: 500;
         }
-        
         .visit-status {
-          padding: 0.25rem 0.6rem;
-          border-radius: 10px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          
-          &.resolved {
-            background: #d4edda;
-            color: #155724;
-          }
-          
-          &.ongoing {
-            background: #fff3cd;
-            color: #856404;
-          }
-          
-          &.follow-up {
-            background: #d1ecf1;
-            color: #0c5460;
-          }
+          padding: 0.2rem 0.6rem;
+          border-radius: 999px;
+          font-size: 0.72rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+
+          &.resolved  { background: #dcfce7; color: #15803d; }
+          &.ongoing   { background: #fef9c3; color: #a16207; }
+          &.follow-up { background: #dbeafe; color: #1d4ed8; }
         }
       }
     }

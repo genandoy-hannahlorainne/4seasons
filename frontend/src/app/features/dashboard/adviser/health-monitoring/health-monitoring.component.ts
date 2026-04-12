@@ -66,51 +66,88 @@ interface Alert {
           </div>
         </div>
 
-        <!-- Heat Map Section -->
-        <div class="card heatmap-card">
-          <div class="card-header">
-            <h2>Clinic Visit Heat Map</h2>
-            <p class="card-subtitle">Daily clinic visits as percentage of class</p>
-          </div>
+        <!-- Heat Map + Donut Row -->
+        <div class="heatmap-donut-row">
 
-          <div class="heatmap-container">
-            <div class="heatmap-grid">
-              <div 
-                *ngFor="let day of visitsByDate" 
-                class="heatmap-cell"
-                [ngClass]="getHeatmapClass(day.percentage)"
-                [title]="getTooltip(day)"
-                (click)="selectDay(day)">
-                <div class="cell-date">{{ formatDate(day.date) }}</div>
-                <div class="cell-value">{{ day.percentage || 0 }}%</div>
-                <div class="cell-count">{{ day.unique_students || 0 }} students</div>
+          <!-- Heat Map Section -->
+          <div class="card heatmap-card">
+            <div class="card-header">
+              <div>
+                <h2>Clinic Visit Heat Map</h2>
+                <p class="card-subtitle">Daily clinic visits as percentage of class</p>
               </div>
             </div>
 
-            <div class="heatmap-legend">
-              <span class="legend-label">Risk Level:</span>
-              <div class="legend-item">
-                <div class="legend-color heat-none"></div>
-                <span>0%</span>
+            <div class="heatmap-container">
+              <div class="heatmap-grid">
+                <div
+                  *ngFor="let day of visitsByDate"
+                  class="heatmap-cell"
+                  [ngClass]="getHeatmapClass(day.percentage)"
+                  [title]="getTooltip(day)"
+                  (click)="selectDay(day)">
+                  <div class="cell-date">{{ formatDate(day.date) }}</div>
+                  <div class="cell-value">{{ day.percentage || 0 }}%</div>
+                  <div class="cell-count">{{ day.unique_students || 0 }} students</div>
+                </div>
               </div>
-              <div class="legend-item">
-                <div class="legend-color heat-low"></div>
-                <span>1-5%</span>
-              </div>
-              <div class="legend-item">
-                <div class="legend-color heat-medium"></div>
-                <span>6-10%</span>
-              </div>
-              <div class="legend-item">
-                <div class="legend-color heat-high"></div>
-                <span>11-15%</span>
-              </div>
-              <div class="legend-item">
-                <div class="legend-color heat-critical"></div>
-                <span>>15%</span>
+
+              <div class="heatmap-legend">
+                <span class="legend-label">Risk Level:</span>
+                <div class="legend-item"><div class="legend-color heat-none"></div><span>0%</span></div>
+                <div class="legend-item"><div class="legend-color heat-low"></div><span>1-5%</span></div>
+                <div class="legend-item"><div class="legend-color heat-medium"></div><span>6-10%</span></div>
+                <div class="legend-item"><div class="legend-color heat-high"></div><span>11-15%</span></div>
+                <div class="legend-item"><div class="legend-color heat-critical"></div><span>>15%</span></div>
               </div>
             </div>
           </div>
+
+          <!-- Donut Chart -->
+          <div class="card donut-card">
+            <div class="card-header">
+              <div>
+                <h2>Visit Reasons</h2>
+                <p class="card-subtitle">Breakdown by health concern</p>
+              </div>
+            </div>
+
+            <div *ngIf="donutSegments.length > 0; else noDonutData" class="donut-body">
+              <div class="donut-chart-wrap">
+                <svg viewBox="0 0 120 120" class="donut-svg">
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" stroke-width="18"/>
+                  <circle
+                    *ngFor="let seg of donutSegments"
+                    cx="60" cy="60" r="50"
+                    fill="none"
+                    [attr.stroke]="seg.color"
+                    stroke-width="18"
+                    [attr.stroke-dasharray]="seg.dash"
+                    [attr.stroke-dashoffset]="seg.offset"
+                    stroke-linecap="butt"
+                    transform="rotate(-90 60 60)">
+                  </circle>
+                  <text x="60" y="55" text-anchor="middle" class="donut-center-value">{{ totalVisitsInPeriod }}</text>
+                  <text x="60" y="68" text-anchor="middle" class="donut-center-label">visits</text>
+                </svg>
+              </div>
+
+              <div class="donut-legend">
+                <div *ngFor="let seg of donutSegments" class="donut-legend-item">
+                  <span class="donut-dot" [style.background]="seg.color"></span>
+                  <span class="donut-name">{{ seg.name }}</span>
+                  <span class="donut-pct">{{ seg.pct }}%</span>
+                </div>
+              </div>
+            </div>
+
+            <ng-template #noDonutData>
+              <div class="empty-state">
+                <p>No visit data for this period</p>
+              </div>
+            </ng-template>
+          </div>
+
         </div>
 
         <!-- Trending Symptoms -->
@@ -188,24 +225,29 @@ interface Alert {
     }
 
     .page-header {
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      color: white;
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 2rem;
+      align-items: center;
       gap: 1rem;
     }
 
     .page-title {
-      font-size: 2rem;
-      font-weight: 800;
-      color: #0b2a4a;
-      margin: 0 0 0.5rem 0;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0 0 0.3rem 0;
     }
 
     .page-subtitle {
-      color: #4f7ea9;
-      font-weight: 600;
+      color: rgba(255,255,255,0.8);
+      font-weight: 500;
       margin: 0;
+      font-size: 0.9rem;
     }
 
     .header-actions {
@@ -215,16 +257,17 @@ interface Alert {
 
     .days-select {
       padding: 0.5rem 1rem;
-      border: 1px solid #e5e7eb;
+      border: 1px solid rgba(255,255,255,0.3);
       border-radius: 8px;
-      background: white;
-      font-size: 0.9rem;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-size: 0.875rem;
       cursor: pointer;
       outline: none;
-      
-      &:hover {
-        border-color: #007bff;
-      }
+
+      option { background: #052355; color: white; }
+
+      &:hover { border-color: rgba(255,255,255,0.6); }
     }
 
     .loading-state, .error-state {
@@ -238,7 +281,7 @@ interface Alert {
         width: 40px;
         height: 40px;
         border: 4px solid #e5e7eb;
-        border-top-color: #007bff;
+        border-top-color: #052355;
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin: 0 auto 1rem;
@@ -248,10 +291,7 @@ interface Alert {
       
       .btn-retry {
         padding: 0.5rem 1.5rem;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 6px;
+        background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
         cursor: pointer;
         
         &:hover { background: #0056b3; }
@@ -359,10 +399,89 @@ interface Alert {
       margin: 0.25rem 0 0 0;
     }
 
-    .heatmap-container {
+    /* ── Heatmap + Donut row ── */
+    .heatmap-donut-row {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    /* ── Donut Card ── */
+    .donut-card {
+      position: sticky;
+      top: 1rem;
+    }
+
+    .donut-body {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .donut-chart-wrap {
+      width: 160px;
+      height: 160px;
+    }
+
+    .donut-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .donut-center-value {
+      font-size: 22px;
+      font-weight: 800;
+      fill: #1e293b;
+    }
+
+    .donut-center-label {
+      font-size: 10px;
+      fill: #94a3b8;
+    }
+
+    .donut-legend {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .donut-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.82rem;
+    }
+
+    .donut-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .donut-name {
+      flex: 1;
+      color: #374151;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .donut-pct {
+      color: #64748b;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 1024px) {
+      .heatmap-donut-row {
+        grid-template-columns: 1fr;
+      }
+      .donut-card { position: static; }
     }
 
     .heatmap-grid {
@@ -485,7 +604,7 @@ interface Alert {
     .trending-rank {
       width: 32px;
       height: 32px;
-      background: #007bff;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       color: white;
       border-radius: 50%;
       display: flex;
@@ -522,7 +641,7 @@ interface Alert {
 
     .bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #007bff, #0056b3);
+      background: linear-gradient(90deg, #052355, #5381b2);
       transition: width 0.3s;
     }
 
@@ -617,15 +736,25 @@ interface Alert {
 export class HealthMonitoringComponent implements OnInit {
   loading = true;
   error = '';
-  
+
   advisoryClass = '';
   totalStudents = 0;
   selectedDays = 30;
-  
+
   visitsByDate: HeatmapDay[] = [];
   trendingSymptoms: any[] = [];
   alerts: Alert[] = [];
   selectedDay: HeatmapDay | null = null;
+
+  // Donut chart
+  donutSegments: { name: string; color: string; pct: number; dash: string; offset: number }[] = [];
+  totalVisitsInPeriod = 0;
+
+  private readonly DONUT_COLORS = [
+    '#052355', '#5381b2', '#3b82f6', '#22c55e',
+    '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'
+  ];
+  private readonly CIRCUMFERENCE = 2 * Math.PI * 50; // r=50
 
   constructor(private adviserService: AdviserService) {}
 
@@ -646,6 +775,7 @@ export class HealthMonitoringComponent implements OnInit {
           this.visitsByDate = response.data.visits_by_date;
           this.trendingSymptoms = response.data.trending_symptoms;
           this.alerts = response.data.alerts;
+          this.buildDonut();
         } else {
           this.error = response.message || 'Failed to load health data';
         }
@@ -696,5 +826,42 @@ export class HealthMonitoringComponent implements OnInit {
       count: data.count,
       students: data.students
     }));
+  }
+
+  private buildDonut(): void {
+    // Aggregate visit counts per symptom across all days
+    const totals: { [key: string]: number } = {};
+    for (const day of this.visitsByDate) {
+      for (const [symptom, data] of Object.entries(day.symptoms)) {
+        totals[symptom] = (totals[symptom] || 0) + data.count;
+      }
+    }
+
+    const total = Object.values(totals).reduce((s, v) => s + v, 0);
+    this.totalVisitsInPeriod = total;
+
+    if (total === 0) { this.donutSegments = []; return; }
+
+    // Sort descending, keep top 7, group rest as "Other"
+    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    const top = sorted.slice(0, 7);
+    const otherCount = sorted.slice(7).reduce((s, [, v]) => s + v, 0);
+    if (otherCount > 0) top.push(['Other', otherCount]);
+
+    let cumulativeOffset = 0;
+    this.donutSegments = top.map(([name, count], i) => {
+      const pct = Math.round((count / total) * 100);
+      const dash = (count / total) * this.CIRCUMFERENCE;
+      const gap = this.CIRCUMFERENCE - dash;
+      const offset = -cumulativeOffset;
+      cumulativeOffset += dash;
+      return {
+        name,
+        color: this.DONUT_COLORS[i % this.DONUT_COLORS.length],
+        pct,
+        dash: `${dash} ${gap}`,
+        offset,
+      };
+    });
   }
 }

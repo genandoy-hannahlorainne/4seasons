@@ -302,3 +302,44 @@ $mobile-bp: 768px;
   .brand-text { display: block !important; opacity: 1 !important; max-width: 160px !important; }
   .nav-label { display: block !important; opacity: 1 !important; max-width: 160px !important; }
 }
+
+/* ── Logout overlay ── */
+.logout-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 35, 85, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 9999;
+  backdrop-filter: blur(3px);
+}
+
+.logout-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+  }
+}
+
+.logout-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top: 3px solid #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

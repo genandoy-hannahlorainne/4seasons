@@ -111,21 +111,63 @@ import { StudentProfileModalComponent } from '../student-profile-modal/student-p
       min-height: 100vh;
     }
 
-    .dashboard-wrap {
+    /* ── Hero ── */
+    .overview-card {
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      color: white;
+    }
+
+    .overview-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .overview-sub {
+      opacity: 0.85;
+      font-size: 0.95rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .overview-meta {
+      opacity: 0.75;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── Stat Tiles ── */
+    .stats-row {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(4, 1fr);
       gap: 1rem;
     }
 
+    .stat-tile {
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      color: #fff;
+      border-left: 3px solid rgba(255,255,255,0.4);
+    }
+
+    .tile-value { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+    .tile-label { font-size: 0.8rem; opacity: 0.9; margin-top: 0.3rem; }
+
+    /* ── Loading / Error ── */
     .loading-state, .error-state {
       text-align: center;
       padding: 3rem;
       background: white;
       border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
       p { color: #7f8c8d; margin-bottom: 1rem; }
       button {
         padding: 0.5rem 1.5rem;
-        background: #007bff;
+        background: #052355;
         color: white;
         border: none;
         border-radius: 6px;
@@ -133,72 +175,11 @@ import { StudentProfileModalComponent } from '../student-profile-modal/student-p
       }
     }
 
-    .overview-card {
-      background: #fff;
+    /* ── Table Card ── */
+    .table-card {
+      background: white;
       border-radius: 12px;
       padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    .overview-title {
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: #0b2a4a;
-      margin-bottom: 0.25rem;
-    }
-
-    .overview-sub {
-      color: #4f7ea9;
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-      font-size: 0.95rem;
-    }
-
-    .overview-meta {
-      color: #0b2a4a;
-      font-weight: 700;
-      font-size: 0.85rem;
-      margin-bottom: 1rem;
-    }
-
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 1rem;
-    }
-
-    .stat-tile {
-      border-radius: 10px;
-      padding: 1rem 1.1rem;
-      color: #fff;
-      min-height: 72px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    .tile-value {
-      font-size: 1.6rem;
-      font-weight: 900;
-      line-height: 1;
-    }
-
-    .tile-label {
-      font-size: 0.85rem;
-      font-weight: 700;
-      opacity: 0.95;
-    }
-
-    .tile-fit { background: linear-gradient(135deg, #6489f7 0%, #c0d0ff 100%); }
-    .tile-pending { background: linear-gradient(135deg, #f78e64 0%, #ffc0c0 100%); }
-    .tile-restricted { background: linear-gradient(135deg, #f7bf64 0%, #ffd8c0 100%); }
-    .tile-special { background: linear-gradient(135deg, #ab64f7 0%, #dcc0ff 100%); }
-
-    .table-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 1.25rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
@@ -207,58 +188,64 @@ import { StudentProfileModalComponent } from '../student-profile-modal/student-p
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e9ecef;
     }
 
     .table-title {
-      font-size: 1.25rem;
-      font-weight: 900;
-      color: #4f7ea9;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #2c3e50;
     }
 
     .search-wrap {
       position: relative;
-      width: 340px;
+      width: 280px;
       max-width: 100%;
     }
 
     .search-input {
       width: 100%;
       height: 36px;
-      border-radius: 999px;
-      border: 1px solid rgba(229, 231, 235, 0.9);
-      padding: 0 38px 0 14px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      padding: 0 36px 0 12px;
       background: #f8fafc;
       outline: none;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
+      &:focus { border-color: #5381b2; }
     }
 
     .search-icon {
       position: absolute;
-      right: 12px;
+      right: 10px;
       top: 50%;
       transform: translateY(-50%);
-      opacity: 0.65;
-      font-size: 0.9rem;
+      opacity: 0.5;
+      font-size: 0.85rem;
       pointer-events: none;
     }
 
     .table {
       width: 100%;
-      border-radius: 12px;
+      border-radius: 8px;
       overflow: hidden;
-      background: #fff;
-      border: 1px solid rgba(229, 231, 235, 0.9);
+      border: 1px solid #e9ecef;
     }
 
     .thead {
       display: grid;
       grid-template-columns: 2fr 1.4fr 1fr 1.4fr 1.6fr 0.6fr;
       gap: 1rem;
-      padding: 0.85rem 1rem;
-      font-weight: 800;
-      color: #111827;
-      background: #fff;
+      padding: 0.75rem 1rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      background: #f8fafc;
+      border-bottom: 1px solid #e9ecef;
     }
 
     .tbody .trow {
@@ -267,94 +254,68 @@ import { StudentProfileModalComponent } from '../student-profile-modal/student-p
       gap: 1rem;
       padding: 0.85rem 1rem;
       align-items: center;
-      border-top: 1px solid rgba(229, 231, 235, 0.9);
+      border-top: 1px solid #f1f5f9;
+      transition: background 0.15s;
+      &:hover { background: #f8fafc; }
     }
 
-    .student-name {
-      font-weight: 700;
-      color: #111827;
-    }
+    .student-name { font-weight: 600; color: #1e293b; font-size: 0.9rem; }
 
     .muted {
-      color: #6b7280;
-      font-size: 0.9rem;
+      color: #64748b;
+      font-size: 0.875rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .right {
-      display: flex;
-      justify-content: flex-end;
-    }
+    .right { display: flex; justify-content: flex-end; }
 
     .status-pill {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      padding: 0.2rem 0.6rem;
+      padding: 0.2rem 0.65rem;
       border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 800;
-    }
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
 
-    .status-pill.fit {
-      background: rgba(34, 197, 94, 0.18);
-      color: #166534;
-    }
-
-    .status-pill.restricted {
-      background: rgba(239, 68, 68, 0.18);
-      color: #991b1b;
-    }
-
-    .status-pill.pending {
-      background: rgba(245, 158, 11, 0.22);
-      color: #92400e;
-    }
-
-    .status-pill.special {
-      background: rgba(168, 85, 247, 0.18);
-      color: #6b21a8;
+      &.fit        { background: #dcfce7; color: #15803d; }
+      &.restricted { background: #fee2e2; color: #b91c1c; }
+      &.pending    { background: #fef9c3; color: #a16207; }
+      &.special    { background: #ede9fe; color: #6d28d9; }
     }
 
     .icon-action {
-      width: 34px;
-      height: 34px;
-      border-radius: 999px;
-      border: 0;
-      background: transparent;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      background: white;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      transition: all 0.15s;
+      &:hover { background: #f1f5f9; border-color: #cbd5e1; }
     }
 
-    .icon-action:hover {
-      background: rgba(15, 23, 42, 0.06);
-    }
-
-    .action-icon {
-      width: 18px;
-      height: 18px;
-      display: block;
-      object-fit: contain;
-      opacity: 0.9;
-    }
+    .action-icon { width: 16px; height: 16px; object-fit: contain; opacity: 0.8; }
 
     .empty {
-      padding: 1.25rem;
+      padding: 2rem;
       text-align: center;
-      color: #6b7280;
-      border-top: 1px solid rgba(229, 231, 235, 0.9);
+      color: #94a3b8;
+      font-size: 0.9rem;
+      border-top: 1px solid #f1f5f9;
     }
 
     @media (max-width: 1024px) {
-      .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .thead, .tbody .trow { grid-template-columns: 2fr 1.3fr 1fr 1.3fr 1.4fr 0.6fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
     }
-
     @media (max-width: 768px) {
+      .adviser-health-status { padding: 1rem; }
       .table-header { flex-direction: column; align-items: flex-start; }
       .search-wrap { width: 100%; }
       .thead, .tbody .trow { grid-template-columns: 1.6fr 1fr 1fr 1fr 0.6fr; }
@@ -496,36 +457,79 @@ export class AdviserHealthStatusComponent implements OnInit {
   }
 
   viewFullRecord(student: AdvisedStudent): void {
+    this.adviserService.getStudentCompleteProfile(student.student_id).subscribe({
+      next: (response: any) => {
+        const profile = response?.data?.profile || response?.data?.personal_info || response?.profile;
+        if (profile) {
+          const birthDate = profile.birth_date ? new Date(profile.birth_date) : null;
+          const age = birthDate
+            ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+            : null;
+
+          const allergies = (response?.data?.allergies || []).map((a: any) =>
+            a.allergy_name || a.name || a
+          );
+
+          const visits = (response?.data?.medical_visits || []).map((v: any) => ({
+            date: v.visit_datetime
+              ? new Date(v.visit_datetime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : 'N/A',
+            reason: v.reason || v.chief_complaint || 'N/A',
+            status: (v.status || 'resolved').toLowerCase(),
+            statusText: v.status || 'Completed'
+          }));
+
+          this.selectedStudent = {
+            name: profile.full_name || `${profile.first_name} ${profile.last_name}`,
+            studentNumber: profile.student_number,
+            gradeSection: `${profile.grade_level || ''} - ${profile.section || ''}`.trim().replace(/^-\s*|-\s*$/, ''),
+            avatar: (profile.gender === 'F' || profile.gender === 'Female') ? 'assets/user-female.png' : 'assets/user-male.png',
+            gender: profile.gender === 'F' ? 'Female' : (profile.gender === 'M' ? 'Male' : profile.gender || 'N/A'),
+            birthday: birthDate
+              ? birthDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : 'N/A',
+            age,
+            contact: profile.phone || profile.contact_number || 'N/A',
+            vitals: {
+              bloodType: profile.blood_type || 'N/A',
+              height: profile.height_cm ? `${profile.height_cm} cm` : 'N/A',
+              weight: profile.weight_kg ? `${profile.weight_kg} kg` : 'N/A',
+              bmi: profile.bmi || null,
+            },
+            allergies,
+            emergencyContact: profile.emergency_contact ? {
+              name: profile.emergency_contact,
+              relation: profile.emergency_contact_relation || 'Guardian',
+              phone: profile.emergency_contact_phone || 'N/A'
+            } : null,
+            recentVisits: visits,
+          };
+        } else {
+          this.selectedStudent = this.buildFallback(student);
+        }
+      },
+      error: () => {
+        this.selectedStudent = this.buildFallback(student);
+      }
+    });
+  }
+
+  private buildFallback(student: AdvisedStudent): any {
     const birthDate = student.birth_date ? new Date(student.birth_date) : null;
     const age = birthDate ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null;
-    
-    this.selectedStudent = {
+    return {
       name: student.full_name,
       studentNumber: student.student_number,
       gradeSection: student.grade_section,
       avatar: this.getAvatarUrl(student),
       gender: student.gender === 'F' ? 'Female' : (student.gender === 'M' ? 'Male' : 'Other'),
       birthday: birthDate ? birthDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A',
-      age: age,
+      age,
       contact: student.phone || 'N/A',
-      vitals: {
-        height: 'N/A',
-        weight: 'N/A',
-        bmi: 'N/A',
-        bloodType: student.blood_type || 'N/A'
-      },
+      vitals: { bloodType: student.blood_type || 'N/A', height: 'N/A', weight: 'N/A', bmi: null },
       allergies: student.allergies || [],
-      emergencyContact: student.emergency_contact ? {
-        name: student.emergency_contact,
-        relation: 'Guardian',
-        phone: 'N/A'
-      } : null,
-      lastVisit: student.last_visit ? {
-        date: new Date(student.last_visit.visit_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        reason: student.last_visit.reason,
-        status: student.last_visit.status?.toLowerCase() || 'resolved',
-        statusText: student.last_visit.status || 'Completed'
-      } : null
+      emergencyContact: student.emergency_contact ? { name: student.emergency_contact, relation: 'Guardian', phone: 'N/A' } : null,
+      recentVisits: [],
     };
   }
 

@@ -12,9 +12,29 @@ class SHDFFormRequest extends FormRequest
     {
         $student = Student::where('student_id', $this->input('student_id'))->first();
         if (!$student) {
+            \Log::error('[SHDF Form Request] Student not found: ' . $this->input('student_id'));
             return false;
         }
-        return $this->user()->can('submit', $student);
+        
+        $user = $this->user();
+        
+        // Check if user exists
+        if (!$user) {
+            \Log::error('[SHDF Form Request] No authenticated user');
+            return false;
+        }
+        
+        $canSubmit = $user->can('submit', $student);
+        
+        \Log::info('[SHDF Form Request] Authorization check', [
+            'student_id' => $student->student_id,
+            'student_user_id' => $student->user_id,
+            'logged_in_user_id' => $user->user_id,
+            'user_role' => $user->role?->role_name,
+            'can_submit' => $canSubmit
+        ]);
+        
+        return $canSubmit;
     }
 
     public function rules(): array

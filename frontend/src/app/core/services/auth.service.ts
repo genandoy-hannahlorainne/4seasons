@@ -307,11 +307,10 @@ export class AuthService {
   }
 
   changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/change-password`, {
-      user_id: userId,
+    return this.http.post<any>(`${environment.apiUrl}/force-change-password`, {
       current_password: currentPassword,
       new_password: newPassword,
-      confirm_password: newPassword
+      new_password_confirmation: newPassword,
     });
   }
 

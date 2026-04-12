@@ -1,6 +1,6 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, RouterOutlet } from '@angular/router';
+import { RouterModule, RouterOutlet, Router } from '@angular/router';
 import { StudentService } from '../../../core/services/student.service';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -10,44 +10,181 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [CommonModule, RouterModule, RouterOutlet],
   styleUrls: ['./student-layout.component.scss'],
   template: `
-    <div class="student-layout">
-      <nav class="top-nav">
-        <div class="nav-links">
-          <a routerLink="/dashboard/student" class="nav-link" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
-          <a routerLink="/dashboard/student/medical-records" class="nav-link" routerLinkActive="active">MyMedical</a>
+    <div class="student-layout" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen">
+
+      <!-- Mobile overlay -->
+      <div class="sidebar-overlay" (click)="closeMobile()"></div>
+
+      <!-- Logout overlay -->
+      <div class="logout-overlay" *ngIf="loggingOut">
+        <div class="logout-box">
+          <div class="logout-spinner"></div>
+          <p>Logging out...</p>
         </div>
-        <div class="nav-icons">
-          <button class="icon-btn notification" (click)="toggleNotifications($event)">
-            <img src="assets/notification-icon.png" alt="Notifications" class="icon-img">
-            <span *ngIf="badgeNotifications.length > 0" class="notif-count">{{ badgeNotifications.length }}</span>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <img src="assets/pdmhs-logo.png" alt="PDMHS Logo" class="brand-logo" (click)="toggleSidebar()" style="cursor:pointer">
+          <span class="brand-text">PDMHS<br><small>Student Portal</small></span>
+          <button class="hamburger" (click)="toggleSidebar()" title="Toggle sidebar">
+            <span></span><span></span><span></span>
           </button>
-          <button class="icon-btn profile" routerLink="/dashboard/student/profile">
-            <img src="assets/user-male.png" alt="Profile" class="icon-img">
+        </div>
+
+        <nav class="sidebar-nav">
+          <a routerLink="/dashboard/student" routerLinkActive="active"
+             [routerLinkActiveOptions]="{exact: true}" class="nav-item" title="Dashboard" (click)="closeMobile()">
+            <img src="assets/icons/dashboard.png" class="nav-icon" alt="Dashboard">
+            <span class="nav-label">Dashboard</span>
+          </a>
+          <a routerLink="/dashboard/student/medical-records" routerLinkActive="active" class="nav-item" title="My Medical Records" (click)="closeMobile()">
+            <img src="assets/icons/my-medical.png" class="nav-icon" alt="Medical Records">
+            <span class="nav-label">My Medical</span>
+          </a>
+          <button class="nav-item notification" (click)="toggleNotifications($event)" title="Notifications">
+            <img src="assets/icons/notification.png" class="nav-icon" alt="Notifications">
+            <span class="nav-label">Notifications</span>
+            <span *ngIf="showIncompleteFormNotification" class="notif-count">1</span>
           </button>
+          <button class="nav-item" (click)="toggleBadges($event)" title="Badges">
+            <img src="assets/icons/badge.png" class="nav-icon" alt="Badges">
+            <span class="nav-label">Badges</span>
+          </button>
+        </nav>
 
-          <div *ngIf="showNotificationsPanel" class="notifications-panel" (click)="$event.stopPropagation()">
-            <div class="panel-title">Earned Badges</div>
+        <div class="sidebar-footer">
+          <a routerLink="/dashboard/student/profile" routerLinkActive="active" class="nav-item" title="Profile" (click)="closeMobile()">
+            <img src="assets/icons/profile.png" class="nav-icon" alt="Profile">
+            <span class="nav-label">Profile</span>
+          </a>
+          <button class="nav-item logout-btn" (click)="logout()" title="Logout">
+            <img src="assets/icons/logout.jpg" class="nav-icon" alt="Logout">
+            <span class="nav-label">Logout</span>
+          </button>
+        </div>
+      </aside>
 
-            <div *ngIf="notificationsLoading" class="panel-state">Loading badges...</div>
-            <div *ngIf="notificationsError" class="panel-state error">{{ notificationsError }}</div>
-            <div *ngIf="!notificationsLoading && !notificationsError && badgeNotifications.length === 0" class="panel-state">No badges earned yet. Keep staying healthy!</div>
+      <!-- Mobile topbar -->
+      <header class="mobile-topbar">
+        <button class="mobile-menu-btn" (click)="openMobile()">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="mobile-brand">PDMHS Student</span>
+      </header>
 
-            <div *ngIf="!notificationsLoading && badgeNotifications.length > 0" class="notification-list">
-              <div *ngFor="let badge of badgeNotifications" class="notification-item" (click)="openBadgeDetails(badge)">
-                <img *ngIf="badge.icon_asset_path" [src]="badge.icon_asset_path" [alt]="badge.badge_name" class="badge-icon">
-                <div class="item-content">
-                  <div class="item-title">{{ badge.badge_name }}</div>
-                  <div class="item-sub">{{ badge.required_streak_days }}-day streak badge available</div>
+      <!-- Notifications Panel -->
+      <div *ngIf="showNotificationsPanel" class="notifications-panel-overlay" (click)="showNotificationsPanel = false">
+        <div class="notifications-panel" (click)="$event.stopPropagation()">
+          <div class="panel-header">
+            <div class="panel-title-row">
+              <h3 class="panel-title">Notifications</h3>
+              <span *ngIf="showIncompleteFormNotification" class="notif-badge">1</span>
+            </div>
+            <button class="panel-close" (click)="showNotificationsPanel = false" title="Close">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          
+          <div class="panel-body">
+            <!-- Medical Form Incomplete Notification -->
+            <div *ngIf="showIncompleteFormNotification" class="notification-card unread">
+              <div class="notification-header">
+                <div class="notification-icon-wrapper warning">
+                  <i class="fa-solid fa-clipboard-list"></i>
+                </div>
+                <div class="notification-meta">
+                  <span class="notification-time">Just now</span>
+                  <span class="unread-dot"></span>
+                </div>
+              </div>
+              <div class="notification-content">
+                <h4 class="notification-title">Complete Your Medical Information</h4>
+                <p class="notification-message">{{ incompleteFormMessage }}</p>
+                <div class="notification-actions">
+                  <button class="btn-action primary" (click)="completeForm()">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    Complete Form
+                  </button>
                 </div>
               </div>
             </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!showIncompleteFormNotification" class="empty-state">
+              <div class="empty-icon">
+                <i class="fa-solid fa-bell-slash"></i>
+              </div>
+              <h4 class="empty-title">All caught up!</h4>
+              <p class="empty-message">You have no new notifications</p>
+            </div>
           </div>
         </div>
-      </nav>
-      
-      <div class="content-area">
-        <router-outlet></router-outlet>
       </div>
+
+      <!-- Badges Panel -->
+      <div *ngIf="showBadgesPanel" class="notifications-panel-overlay" (click)="showBadgesPanel = false">
+        <div class="notifications-panel" (click)="$event.stopPropagation()">
+          <div class="panel-header">
+            <div class="panel-title-row">
+              <h3 class="panel-title">Earned Badges</h3>
+              <span *ngIf="badgeNotifications.length > 0" class="notif-badge badge-count">{{ badgeNotifications.length }}</span>
+            </div>
+            <button class="panel-close" (click)="showBadgesPanel = false" title="Close">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          
+          <div class="panel-body">
+            <!-- Loading State -->
+            <div *ngIf="notificationsLoading" class="loading-state">
+              <div class="loading-spinner-small"></div>
+              <p>Loading badges...</p>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="notificationsError && !notificationsLoading" class="error-state">
+              <div class="error-icon">
+                <i class="fa-solid fa-circle-exclamation"></i>
+              </div>
+              <p>{{ notificationsError }}</p>
+            </div>
+
+            <!-- Badges List -->
+            <div *ngIf="!notificationsLoading && !notificationsError && badgeNotifications.length > 0" class="badges-grid">
+              <div *ngFor="let badge of badgeNotifications" class="badge-card" (click)="openBadgeDetails(badge)">
+                <div class="badge-icon-wrapper">
+                  <img *ngIf="badge.icon_asset_path" [src]="badge.icon_asset_path" [alt]="badge.badge_name" class="badge-icon-img">
+                  <i *ngIf="!badge.icon_asset_path" class="fa-solid fa-award"></i>
+                </div>
+                <div class="badge-info">
+                  <h4 class="badge-name">{{ badge.badge_name }}</h4>
+                  <p class="badge-description">{{ badge.required_streak_days }}-day streak milestone</p>
+                  <span class="badge-status earned">
+                    <i class="fa-solid fa-check-circle"></i>
+                    Earned
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!notificationsLoading && !notificationsError && badgeNotifications.length === 0" class="empty-state">
+              <div class="empty-icon">
+                <i class="fa-solid fa-award"></i>
+              </div>
+              <h4 class="empty-title">No badges yet</h4>
+              <p class="empty-message">Keep staying healthy to earn badges!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main content -->
+      <main class="main-content">
+        <router-outlet></router-outlet>
+      </main>
 
       <div *ngIf="showBadgeModal && activeBadge" class="badge-modal-overlay" (click)="closeBadgeModal()">
         <div class="badge-modal" (click)="$event.stopPropagation()">
@@ -72,11 +209,31 @@ import { AuthService } from '../../../core/services/auth.service';
           </div>
         </div>
       </div>
+
+      <!-- Incomplete Medical Form Modal -->
+      <div *ngIf="showIncompleteFormModal" class="modal-overlay" (click)="closeIncompleteFormModal()">
+        <div class="incomplete-form-modal" (click)="$event.stopPropagation()">
+          <div class="modal-icon warning">
+            <i class="fa-solid fa-clipboard-list"></i>
+          </div>
+          <h2>Complete Your Medical Information</h2>
+          <p class="modal-description">{{ incompleteFormMessage }}</p>
+          <p class="modal-note">Completing your medical information helps us provide better healthcare services.</p>
+          <div class="modal-actions">
+            <button class="btn-secondary" (click)="closeIncompleteFormModal()">Later</button>
+            <button class="btn-primary" (click)="completeFormFromModal()">Complete Now</button>
+          </div>
+        </div>
+      </div>
     </div>
   `,
 })
 export class StudentLayoutComponent implements OnInit {
+  isCollapsed = false;
+  mobileOpen = false;
+  loggingOut = false;
   showNotificationsPanel = false;
+  showBadgesPanel = false;
   notificationsLoading = false;
   notificationsError = '';
   badgeNotifications: any[] = [];
@@ -86,24 +243,59 @@ export class StudentLayoutComponent implements OnInit {
   activeBadge: any = null;
   popupBadgeKey: string | null = null;
   isFirstBadgeSyncDone = false;
+  
+  // Medical form notification
+  showIncompleteFormNotification = false;
+  incompleteFormMessage = '';
+  showIncompleteFormModal = false;
 
   constructor(
     private studentService: StudentService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadBadgeNotifications();
+    this.checkMedicalFormCompletionAndShowModal();
+  }
+
+  toggleSidebar(): void { 
+    this.isCollapsed = !this.isCollapsed; 
+  }
+  
+  openMobile(): void { 
+    this.mobileOpen = true; 
+  }
+  
+  closeMobile(): void { 
+    this.mobileOpen = false; 
+  }
+
+  logout(): void {
+    this.loggingOut = true;
+    this.authService.logout().subscribe({
+      complete: () => this.router.navigate(['/login']),
+      error: () => this.router.navigate(['/login'])
+    });
   }
 
   @HostListener('document:click')
   onDocumentClick(): void {
     this.showNotificationsPanel = false;
+    this.showBadgesPanel = false;
   }
 
   toggleNotifications(event: MouseEvent): void {
     event.stopPropagation();
     this.showNotificationsPanel = !this.showNotificationsPanel;
+    this.showBadgesPanel = false;
+  }
+
+  toggleBadges(event: MouseEvent): void {
+    event.stopPropagation();
+    this.showBadgesPanel = !this.showBadgesPanel;
+    this.showNotificationsPanel = false;
   }
 
   loadBadgeNotifications(): void {
@@ -240,5 +432,99 @@ export class StudentLayoutComponent implements OnInit {
     const currentUser = this.authService.currentUserValue;
     const studentId = currentUser?.student_info?.student_id || currentUser?.user_id || 'guest';
     return `student_badges_${type}_${studentId}`;
+  }
+
+  checkMedicalFormCompletion(): void {
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser?.user_id) return;
+
+    this.studentService.getStudentMedicalData(currentUser.user_id).subscribe({
+      next: (response) => {
+        if (response.success && response.data?.personal_info) {
+          const personalInfo = response.data.personal_info;
+          const missingFields: string[] = [];
+
+          // Check required fields
+          if (!personalInfo.address) missingFields.push('Contact Information (Address)');
+          if (!personalInfo.medical_history || personalInfo.medical_history.length === 0) {
+            missingFields.push('Medical History');
+          }
+
+          // Show notification if any fields are missing
+          if (missingFields.length > 0) {
+            this.showIncompleteFormNotification = true;
+            this.incompleteFormMessage = `Please complete your Personal Medical Information Form. Missing: ${missingFields.join(', ')}`;
+          } else {
+            this.showIncompleteFormNotification = false;
+          }
+        }
+      },
+      error: () => {
+        // Silently fail - don't show error for this check
+      }
+    });
+  }
+
+  checkMedicalFormCompletionAndShowModal(): void {
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser?.user_id) return;
+
+    // Check if modal was already shown in this session
+    const modalShownKey = `medical_form_modal_shown_${currentUser.user_id}`;
+    const modalShown = sessionStorage.getItem(modalShownKey);
+
+    if (modalShown) {
+      // Just update notification, don't show modal again
+      this.checkMedicalFormCompletion();
+      return;
+    }
+
+    this.studentService.getStudentMedicalData(currentUser.user_id).subscribe({
+      next: (response) => {
+        if (response.success && response.data?.personal_info) {
+          const personalInfo = response.data.personal_info;
+          const missingFields: string[] = [];
+
+          // Check required fields
+          if (!personalInfo.address) missingFields.push('Contact Information (Address)');
+          if (!personalInfo.medical_history || personalInfo.medical_history.length === 0) {
+            missingFields.push('Medical History');
+          }
+
+          // Show notification and modal if any fields are missing
+          if (missingFields.length > 0) {
+            this.showIncompleteFormNotification = true;
+            this.incompleteFormMessage = `Please complete your Personal Medical Information Form. Missing: ${missingFields.join(', ')}`;
+            
+            // Show modal on first login
+            this.showIncompleteFormModal = true;
+            sessionStorage.setItem(modalShownKey, 'true');
+          } else {
+            this.showIncompleteFormNotification = false;
+          }
+        }
+      },
+      error: () => {
+        // Silently fail - don't show error for this check
+      }
+    });
+  }
+
+  dismissNotification(): void {
+    this.showIncompleteFormNotification = false;
+  }
+
+  closeIncompleteFormModal(): void {
+    this.showIncompleteFormModal = false;
+  }
+
+  completeForm(): void {
+    this.showNotificationsPanel = false;
+    this.router.navigate(['/shdf', 'basic']);
+  }
+
+  completeFormFromModal(): void {
+    this.showIncompleteFormModal = false;
+    this.router.navigate(['/shdf', 'basic']);
   }
 }
