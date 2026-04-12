@@ -5,7 +5,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'], // Allow all origins for development
+    'allowed_origins' => array_filter(explode(',', env('ALLOWED_ORIGINS', ''))),
 
     'allowed_origins_patterns' => [
         '/^https?:\/\/localhost(:[0-9]+)?$/',

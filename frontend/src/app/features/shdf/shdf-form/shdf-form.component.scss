@@ -188,6 +188,36 @@
   }
 }
 
+/* Additional form control for text inputs in sections */
+.form-control {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  color: #1e293b;
+  background: white;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  margin-top: 0.75rem;
+
+  &:focus {
+    outline: none;
+    border-color: #5381b2;
+    background: #f8fafc;
+    box-shadow: 0 0 0 4px rgba(83, 129, 178, 0.12);
+  }
+}
+
+/* Error text outside form-field */
+.error-text {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
 /* Form Sections */
 .form-section {
   margin-bottom: 2rem;
@@ -197,6 +227,17 @@
     font-weight: 600;
     color: #1e293b;
     margin-bottom: 1rem;
+  }
+
+  .info-text {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: #fef3c7;
+    border: 2px solid #fbbf24;
+    border-radius: 8px;
+    color: #92400e;
+    font-weight: 500;
+    font-size: 0.875rem;
   }
 }
 
@@ -258,6 +299,16 @@
     &:hover {
       border-color: #cbd5e1;
       background: #f8fafc;
+    }
+
+    &.none-option {
+      border-color: #fbbf24;
+      background: #fef3c7;
+      
+      &:hover {
+        border-color: #f59e0b;
+        background: #fde68a;
+      }
     }
 
     input[type="checkbox"] {

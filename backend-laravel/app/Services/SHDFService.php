@@ -12,6 +12,7 @@ use App\Models\StudentPhilhealth;
 use App\Models\StudentSHDFStatus;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -27,7 +28,7 @@ class SHDFService
             $schoolYear = SchoolYear::where('is_current', true)->firstOrFail();
 
             // Update student basic info
-            Student::where('student_id', $studentId)->update([
+            $updateData = [
                 'parent_guardian_name' => $validated['parent_guardian_name'],
                 'emergency_contact' => $validated['emergency_contact'],
                 'emergency_contact_relation' => $validated['emergency_contact_relation'],
@@ -35,7 +36,14 @@ class SHDFService
                 'height_cm' => $validated['height_cm'] ?? null,
                 'weight_kg' => $validated['weight_kg'] ?? null,
                 'blood_type' => $validated['blood_type'] ?? null,
-            ]);
+            ];
+            
+            // Only add emergency_contact_relation_other if column exists
+            if (Schema::hasColumn('students', 'emergency_contact_relation_other')) {
+                $updateData['emergency_contact_relation_other'] = $validated['emergency_contact_relation_other'] ?? null;
+            }
+            
+            Student::where('student_id', $studentId)->update($updateData);
 
             // Calculate BMI if height and weight provided
             if (isset($validated['height_cm']) && isset($validated['weight_kg'])) {
@@ -57,15 +65,17 @@ class SHDFService
                 ]
             );
 
-            // Generate QR code if it doesn't exist
-            $qrExists = DB::table('qr_codes')->where('student_id', $studentId)->exists();
-            if (!$qrExists) {
-                DB::table('qr_codes')->insert([
-                    'student_id' => $studentId,
-                    'qr_token' => \Illuminate\Support\Str::uuid()->toString(),
-                    'qr_generated_at' => now(),
-                    'qr_expires_at' => null,
-                ]);
+            // Generate QR code if it doesn't exist and table exists
+            if (Schema::hasTable('qr_codes')) {
+                $qrExists = DB::table('qr_codes')->where('student_id', $studentId)->exists();
+                if (!$qrExists) {
+                    DB::table('qr_codes')->insert([
+                        'student_id' => $studentId,
+                        'qr_token' => \Illuminate\Support\Str::uuid()->toString(),
+                        'qr_generated_at' => now(),
+                        'qr_expires_at' => null,
+                    ]);
+                }
             }
 
             return [
@@ -212,12 +222,19 @@ class SHDFService
             $schoolYearId = $schoolYear->id;
 
             // 1. Update student parent/guardian name
-            Student::where('student_id', $studentId)->update([
+            $updateData = [
                 'parent_guardian_name'       => $validated['parent_guardian_name'],
                 'emergency_contact'          => $validated['emergency_contact'],
                 'emergency_contact_relation' => $validated['emergency_contact_relation'],
                 'emergency_contact_phone'    => $validated['emergency_contact_phone'],
-            ]);
+            ];
+            
+            // Only add emergency_contact_relation_other if column exists
+            if (Schema::hasColumn('students', 'emergency_contact_relation_other')) {
+                $updateData['emergency_contact_relation_other'] = $validated['emergency_contact_relation_other'] ?? null;
+            }
+            
+            Student::where('student_id', $studentId)->update($updateData);
 
             // 2. PhilHealth
             StudentPhilhealth::updateOrCreate(
