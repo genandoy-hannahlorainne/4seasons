@@ -2,6 +2,7 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   AbstractControl,
+  FormArray,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
@@ -418,7 +419,7 @@ export class SHDFFormComponent implements OnInit {
         break;
       
       case 3: // Immunizations
-        const immunizations = this.form.get('immunizations');
+        const immunizations = this.form.get('immunizations') as FormArray;
         if (immunizations && immunizations.invalid) {
           Object.keys(immunizations.controls).forEach(key => {
             immunizations.get(key)?.markAsTouched();
