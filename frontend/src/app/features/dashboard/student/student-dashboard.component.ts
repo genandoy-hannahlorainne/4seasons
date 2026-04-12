@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ViewContainerRef, ComponentRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, NavigationEnd, Router } from '@angular/router';
 import { StudentService } from '../../../core/services/student.service';
@@ -15,6 +15,8 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./student-dashboard.component.scss']
 })
 export class StudentDashboardComponent implements OnInit, OnDestroy {
+  @ViewChild('formContainer', { read: ViewContainerRef, static: false }) formContainer!: ViewContainerRef;
+  private formComponentRef?: ComponentRef<any>;
   private routerSubscription?: Subscription;
   // Student information
   studentName = 'User';
@@ -44,6 +46,10 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
   loading = true;
   error = '';
+
+  // Modal state
+  showComprehensiveModal = false;
+  comprehensiveFormStudentId: number | null = null;
 
 
 
@@ -328,14 +334,12 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     return 'assets/user-male.png'; // default
   }
 
-
-
   goToSHDFForm(): void {
     const currentUser = this.authService.currentUserValue;
     if (currentUser && currentUser.user_id) {
       // Get student_id from the loaded profile
       this.studentService.getStudentProfile(currentUser.user_id).subscribe({
-        next: (response) => {
+        next: async (response) => {
           let profile = null;
           if (response.success && response.profile) {
             profile = response.profile;
@@ -344,8 +348,14 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
           }
 
           if (profile && profile.student_id) {
-            // Navigate to basic form (Stage 1)
-            this.router.navigate(['/shdf', profile.student_id, 'basic']);
+            // Open comprehensive form in modal
+            this.comprehensiveFormStudentId = profile.student_id;
+            this.showComprehensiveModal = true;
+            
+            // Wait for view to update, then load form
+            setTimeout(() => {
+              this.loadFormComponent();
+            }, 100);
           } else {
             console.error('Student ID not found');
             this.error = 'Unable to load SHDF form. Student ID not found.';
@@ -359,4 +369,61 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  async loadFormComponent(): Promise<void> {
+    if (!this.formContainer) {
+      console.error('Form container not found');
+      return;
+    }
+    
+    console.log('Loading form component...');
+    
+    // Clear any existing component
+    this.formContainer.clear();
+    
+    try {
+      // Dynamically import and create the component
+      const { SHDFFormComponent } = await import('../../shdf/shdf-form/shdf-form.component');
+      this.formComponentRef = this.formContainer.createComponent(SHDFFormComponent);
+      
+      console.log('Form component created');
+      
+      // Set inputs
+      this.formComponentRef.instance.studentId = this.comprehensiveFormStudentId;
+      this.formComponentRef.instance.isModal = true;
+      
+      // Subscribe to outputs
+      this.formComponentRef.instance.formSubmitted.subscribe(() => {
+        this.onFormSubmitted();
+      });
+      
+      this.formComponentRef.instance.formCancelled.subscribe(() => {
+        this.closeComprehensiveModal();
+      });
+      
+      // Trigger change detection
+      this.formComponentRef.changeDetectorRef.detectChanges();
+    } catch (error) {
+      console.error('Error loading form component:', error);
+      this.error = 'Failed to load form component';
+    }
+  }
+
+  closeComprehensiveModal(): void {
+    this.showComprehensiveModal = false;
+    this.comprehensiveFormStudentId = null;
+    
+    // Destroy the component
+    if (this.formComponentRef) {
+      this.formComponentRef.destroy();
+      this.formComponentRef = undefined;
+    }
+    
+    // Reload dashboard data to reflect any changes
+    this.loadStudentData();
+  }
+
+  onFormSubmitted(): void {
+    // Close modal and reload data after successful submission
+    this.closeComprehensiveModal();
+  }
 }

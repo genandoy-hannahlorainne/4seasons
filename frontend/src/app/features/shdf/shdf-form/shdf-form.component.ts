@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   AbstractControl,
@@ -33,16 +33,33 @@ function requiredIfValidator(conditionKey: string, conditionValue: string, targe
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './shdf-form.component.html',
-  styleUrls: ['./shdf-form.component.css'],
+  styleUrls: ['./shdf-form.component.scss'],
 })
 export class SHDFFormComponent implements OnInit {
+  @Input() studentId!: number;
+  @Input() isModal: boolean = false;
+  @Output() formSubmitted = new EventEmitter<void>();
+  @Output() formCancelled = new EventEmitter<void>();
+
   form!: FormGroup;
-  studentId!: number;
   loading = false;
   submitted = false;
   errorMessage = '';
   successMessage = '';
   signatureFile: File | null = null;
+
+  // Multi-step form state
+  currentStep = 1;
+  totalSteps = 6;
+  
+  steps = [
+    { number: 1, title: 'Student Information', icon: '👤' },
+    { number: 2, title: 'PhilHealth Information', icon: '🏥' },
+    { number: 3, title: 'Immunization Records', icon: '💉' },
+    { number: 4, title: 'Medical History', icon: '📋' },
+    { number: 5, title: 'Family History', icon: '👨‍👩‍👧‍👦' },
+    { number: 6, title: 'Parental Consent', icon: '✍️' }
+  ];
 
   readonly vaccines = [
     { key: 'bcg', label: 'BCG (Tuberculosis Vaccine)' },
@@ -63,7 +80,10 @@ export class SHDFFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.studentId = Number(this.route.snapshot.paramMap.get('studentId'));
+    // Use Input studentId if provided (modal mode), otherwise get from route
+    if (!this.studentId) {
+      this.studentId = Number(this.route.snapshot.paramMap.get('studentId'));
+    }
     this.buildForm();
     this.loadExisting();
   }
@@ -322,15 +342,135 @@ export class SHDFFormComponent implements OnInit {
 
     this.loading = true;
     this.errorMessage = '';
-    this.shdService.submitShdf(payload).subscribe({
-      next: () => {
+    
+    // Use submitComprehensive for the comprehensive form
+    this.shdService.submitComprehensive(payload).subscribe({
+      next: (response: any) => {
         this.loading = false;
-        this.successMessage = 'Health form submitted successfully.';
+        this.successMessage = response.message || 'Health form submitted successfully.';
+        
+        if (this.isModal) {
+          // Emit event for modal mode
+          setTimeout(() => {
+            this.formSubmitted.emit();
+          }, 1500);
+        } else {
+          // Redirect for standalone mode
+          setTimeout(() => {
+            window.location.href = `/shdf/${this.studentId}/success?stage=comprehensive`;
+          }, 2000);
+        }
       },
-      error: (err) => {
+      error: (err: any) => {
         this.loading = false;
         this.errorMessage = err?.error?.message ?? 'Submission failed. Please try again.';
+        console.error('Submission error:', err);
       },
     });
+  }
+
+  onCancel(): void {
+    if (this.isModal) {
+      this.formCancelled.emit();
+    }
+  }
+
+  // Step navigation methods
+  nextStep(): void {
+    if (this.currentStep < this.totalSteps) {
+      // Validate current step before proceeding
+      if (this.validateCurrentStep()) {
+        this.currentStep++;
+        this.scrollToTop();
+      }
+    }
+  }
+
+  previousStep(): void {
+    if (this.currentStep > 1) {
+      this.currentStep--;
+      this.scrollToTop();
+    }
+  }
+
+  goToStep(step: number): void {
+    if (step >= 1 && step <= this.totalSteps) {
+      this.currentStep = step;
+      this.scrollToTop();
+    }
+  }
+
+  validateCurrentStep(): boolean {
+    let isValid = true;
+    
+    switch (this.currentStep) {
+      case 1: // Student Information
+        const studentGroup = this.form.get('student');
+        if (studentGroup) {
+          ['parent_guardian_name', 'emergency_contact', 'emergency_contact_relation', 'emergency_contact_phone'].forEach(field => {
+            const control = studentGroup.get(field);
+            if (control && control.invalid) {
+              control.markAsTouched();
+              isValid = false;
+            }
+          });
+        }
+        break;
+      
+      case 3: // Immunizations
+        const immunizations = this.form.get('immunizations');
+        if (immunizations && immunizations.invalid) {
+          Object.keys(immunizations.controls).forEach(key => {
+            immunizations.get(key)?.markAsTouched();
+          });
+          isValid = false;
+        }
+        break;
+      
+      case 4: // Medical History
+        const medical = this.form.get('medical');
+        if (medical?.get('allergy_status')?.invalid) {
+          medical.get('allergy_status')?.markAsTouched();
+          isValid = false;
+        }
+        break;
+      
+      case 6: // Parental Consent
+        const consent = this.form.get('consent');
+        if (consent) {
+          ['information_certified', 'deworming_consent'].forEach(field => {
+            const control = consent.get(field);
+            if (control && control.invalid) {
+              control.markAsTouched();
+              isValid = false;
+            }
+          });
+        }
+        if (!this.signatureFile) {
+          this.errorMessage = 'Please upload your signature';
+          isValid = false;
+        }
+        break;
+    }
+    
+    if (!isValid) {
+      this.errorMessage = 'Please fill in all required fields';
+      setTimeout(() => this.errorMessage = '', 3000);
+    }
+    
+    return isValid;
+  }
+
+  scrollToTop(): void {
+    const modalBody = document.querySelector('.modal-body');
+    if (modalBody) {
+      modalBody.scrollTop = 0;
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  getProgressPercentage(): number {
+    return (this.currentStep / this.totalSteps) * 100;
   }
 }
