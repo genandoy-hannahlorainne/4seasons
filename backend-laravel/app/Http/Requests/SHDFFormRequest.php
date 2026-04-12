@@ -10,9 +10,16 @@ class SHDFFormRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $student = Student::where('student_id', $this->input('student_id'))->first();
+        $studentId = $this->input('student_id');
+        
+        \Log::info('[SHDF Form Request] Authorization attempt', [
+            'student_id_from_request' => $studentId,
+            'all_inputs' => array_keys($this->all()),
+        ]);
+        
+        $student = Student::where('student_id', $studentId)->first();
         if (!$student) {
-            \Log::error('[SHDF Form Request] Student not found: ' . $this->input('student_id'));
+            \Log::error('[SHDF Form Request] Student not found: ' . $studentId);
             return false;
         }
         
@@ -24,6 +31,18 @@ class SHDFFormRequest extends FormRequest
             return false;
         }
         
+        // Eager load the role relationship if not already loaded
+        if (!$user->relationLoaded('role')) {
+            $user->load('role');
+        }
+        
+        \Log::info('[SHDF Form Request] User details', [
+            'user_id' => $user->user_id,
+            'role_id' => $user->role_id,
+            'role_name' => $user->role?->role_name,
+            'role_loaded' => $user->relationLoaded('role'),
+        ]);
+        
         $canSubmit = $user->can('submit', $student);
         
         \Log::info('[SHDF Form Request] Authorization check', [
@@ -33,6 +52,15 @@ class SHDFFormRequest extends FormRequest
             'user_role' => $user->role?->role_name,
             'can_submit' => $canSubmit
         ]);
+        
+        if (!$canSubmit) {
+            \Log::warning('[SHDF Form Request] Authorization denied', [
+                'reason' => 'Policy check failed',
+                'student_user_id' => $student->user_id,
+                'logged_in_user_id' => $user->user_id,
+                'user_role' => $user->role?->role_name,
+            ]);
+        }
         
         return $canSubmit;
     }

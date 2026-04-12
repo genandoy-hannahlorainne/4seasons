@@ -92,6 +92,12 @@ class SHDFController extends Controller
      */
     public function storeComprehensive(SHDFFormRequest $request): JsonResponse
     {
+        \Log::info('[SHDF Controller] Comprehensive submission attempt', [
+            'user_id' => $request->user()?->user_id,
+            'user_role' => $request->user()?->role?->role_name,
+            'student_id' => $request->input('student_id'),
+        ]);
+        
         try {
             $result = $this->shdService->submitComprehensive(
                 $request->validated(),
@@ -100,6 +106,10 @@ class SHDFController extends Controller
 
             return response()->json($result, 200);
         } catch (\Throwable $e) {
+            \Log::error('[SHDF Controller] Comprehensive submission failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             report($e);
             return response()->json(
                 ['message' => $e->getMessage()],
