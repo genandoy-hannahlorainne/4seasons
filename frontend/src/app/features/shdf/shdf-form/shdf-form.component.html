@@ -98,12 +98,18 @@
 
       <div class="form-grid">
         <div class="form-field full-width">
-          <label>Learner's PhilHealth ID (12 digits)</label>
-          <input formControlName="learner_philhealth_id" placeholder="e.g., 123456789012" />
+          <label>Learner's PhilHealth ID (12 alphanumeric characters)</label>
+          <input formControlName="learner_philhealth_id" placeholder="e.g., 123456789012" maxlength="12" />
+          <span class="error-text" *ngIf="submitted && form.get('philhealth.learner_philhealth_id')?.hasError('pattern')">
+            Must be exactly 12 alphanumeric characters
+          </span>
         </div>
         <div class="form-field full-width">
-          <label>Parent's PhilHealth ID (12 digits)</label>
-          <input formControlName="parent_philhealth_id" placeholder="e.g., 123456789012" />
+          <label>Parent's PhilHealth ID (12 alphanumeric characters)</label>
+          <input formControlName="parent_philhealth_id" placeholder="e.g., 123456789012" maxlength="12" />
+          <span class="error-text" *ngIf="submitted && form.get('philhealth.parent_philhealth_id')?.hasError('pattern')">
+            Must be exactly 12 alphanumeric characters
+          </span>
         </div>
         <div class="form-field">
           <label>Parent's Name (PhilHealth Member)</label>
@@ -156,6 +162,38 @@
         <h2>Medical History</h2>
       </div>
 
+      <div class="form-section" *ngIf="isFemale">
+        <h3>Menarche Age *</h3>
+        <div class="radio-group">
+          <label>
+            <input type="radio" formControlName="menarche_age" value="<10" />
+            Less than 10 years old
+          </label>
+          <label>
+            <input type="radio" formControlName="menarche_age" value="10-12" />
+            10-12 years old
+          </label>
+          <label>
+            <input type="radio" formControlName="menarche_age" value="13-15" />
+            13-15 years old
+          </label>
+          <label>
+            <input type="radio" formControlName="menarche_age" value=">15" />
+            More than 15 years old
+          </label>
+          <label>
+            <input type="radio" formControlName="menarche_age" value="other" />
+            Other
+          </label>
+        </div>
+        <input *ngIf="form.get('medical.menarche_age')?.value === 'other'" 
+               type="text" 
+               formControlName="menarche_age_other" 
+               placeholder="Please specify" 
+               class="form-control" />
+        <span class="error-text" *ngIf="submitted && form.get('medical.menarche_age')?.invalid">Required for female students</span>
+      </div>
+
       <div class="form-section">
         <h3>Allergy Status *</h3>
         <div class="radio-group">
@@ -168,10 +206,14 @@
             No Known Allergies
           </label>
         </div>
+        <span class="error-text" *ngIf="submitted && form.get('medical.allergy_status')?.invalid">Required</span>
       </div>
 
       <div class="form-section">
         <h3>Medical Conditions</h3>
+        <p class="info-text" *ngIf="form.get('medical')?.hasError('noneExclusivity')">
+          ⚠️ Cannot select "None" with other medical conditions
+        </p>
         <div class="checkbox-grid">
           <label><input type="checkbox" formControlName="condition_error_of_refraction" /> Error of Refraction</label>
           <label><input type="checkbox" formControlName="condition_asthma" /> Asthma</label>
@@ -183,12 +225,20 @@
           <label><input type="checkbox" formControlName="condition_gastric_ulcer" /> Gastric Ulcer</label>
           <label><input type="checkbox" formControlName="condition_anxiety_depression" /> Anxiety/Depression</label>
           <label><input type="checkbox" formControlName="condition_g6pd" /> G6PD Deficiency</label>
-          <label><input type="checkbox" formControlName="condition_none" /> None</label>
+          <label class="none-option"><input type="checkbox" formControlName="condition_none" /> None</label>
         </div>
+        <input *ngIf="!form.get('medical.condition_none')?.value" 
+               type="text" 
+               formControlName="condition_other_text" 
+               placeholder="Other conditions (optional)" 
+               class="form-control" />
       </div>
 
       <div class="form-section">
         <h3>Medications Allowed</h3>
+        <p class="info-text" *ngIf="form.get('medical')?.hasError('noneExclusivity')">
+          ⚠️ Cannot select "Don't Give Any" with other medications
+        </p>
         <div class="checkbox-grid">
           <label><input type="checkbox" formControlName="medications_paracetamol" /> Paracetamol</label>
           <label><input type="checkbox" formControlName="medications_mefenamic" /> Mefenamic Acid</label>
@@ -197,8 +247,43 @@
           <label><input type="checkbox" formControlName="medications_loperamide" /> Loperamide</label>
           <label><input type="checkbox" formControlName="medications_antacids" /> Antacids</label>
           <label><input type="checkbox" formControlName="medications_or_solution" /> ORS</label>
-          <label><input type="checkbox" formControlName="medications_none" /> Don't Give Any</label>
+          <label class="none-option"><input type="checkbox" formControlName="medications_none" /> Don't Give Any</label>
         </div>
+        <input *ngIf="!form.get('medical.medications_none')?.value" 
+               type="text" 
+               formControlName="medications_other_text" 
+               placeholder="Other medications (optional)" 
+               class="form-control" />
+      </div>
+
+      <div class="form-section">
+        <h3>PWD Status</h3>
+        <div class="radio-group">
+          <label>
+            <input type="radio" formControlName="pwd_status" value="none" />
+            Not a PWD
+          </label>
+          <label>
+            <input type="radio" formControlName="pwd_status" value="acquired" />
+            Acquired Disability
+          </label>
+          <label>
+            <input type="radio" formControlName="pwd_status" value="congenital" />
+            Congenital Disability
+          </label>
+        </div>
+        <input *ngIf="pwdIsCongenital" 
+               type="text" 
+               formControlName="pwd_congenital_detail" 
+               placeholder="Please specify congenital condition" 
+               class="form-control" />
+      </div>
+
+      <div class="form-section">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="surgery_history" />
+          Has Surgery History
+        </label>
       </div>
     </div>
 
@@ -211,6 +296,9 @@
 
       <div class="form-section">
         <h3>Family Medical Conditions</h3>
+        <p class="info-text" *ngIf="form.get('family')?.hasError('noneExclusivity')">
+          ⚠️ Cannot select "None" with other family conditions
+        </p>
         <div class="checkbox-grid">
           <label><input type="checkbox" formControlName="condition_tuberculosis" /> Tuberculosis</label>
           <label><input type="checkbox" formControlName="condition_cancer" /> Cancer</label>
@@ -220,8 +308,13 @@
           <label><input type="checkbox" formControlName="condition_pneumonia" /> Pneumonia</label>
           <label><input type="checkbox" formControlName="condition_gastric_ulcer" /> Gastric Ulcer</label>
           <label><input type="checkbox" formControlName="condition_anxiety_depression" /> Anxiety/Depression</label>
-          <label><input type="checkbox" formControlName="condition_none" /> None</label>
+          <label class="none-option"><input type="checkbox" formControlName="condition_none" /> None</label>
         </div>
+        <input *ngIf="!form.get('family.condition_none')?.value" 
+               type="text" 
+               formControlName="condition_other_text" 
+               placeholder="Other family conditions (optional)" 
+               class="form-control" />
       </div>
 
       <div class="form-section">
@@ -246,6 +339,7 @@
           <input type="checkbox" formControlName="information_certified" />
           I certify that the given information is correct *
         </label>
+        <span class="error-text" *ngIf="submitted && form.get('consent.information_certified')?.invalid">Required</span>
       </div>
 
       <div class="form-section">
@@ -260,12 +354,75 @@
             Hindi (No)
           </label>
         </div>
+        <span class="error-text" *ngIf="submitted && form.get('consent.deworming_consent')?.invalid">Required</span>
+      </div>
+
+      <div class="form-section" *ngIf="dewormingIsHindi">
+        <h3>Reason for Declining Deworming *</h3>
+        <div class="radio-group">
+          <label>
+            <input type="radio" formControlName="deworming_refusal_reason" value="takot" />
+            Takot (Afraid)
+          </label>
+          <label>
+            <input type="radio" formControlName="deworming_refusal_reason" value="regular_pribado" />
+            Regular sa Pribado (Regular at Private Clinic)
+          </label>
+          <label>
+            <input type="radio" formControlName="deworming_refusal_reason" value="nabigyan_barangay" />
+            Nabigyan na sa Barangay (Already given at Barangay)
+          </label>
+          <label>
+            <input type="radio" formControlName="deworming_refusal_reason" value="allergy_reaksyon" />
+            Allergy/Reaksyon (Allergy/Reaction)
+          </label>
+          <label>
+            <input type="radio" formControlName="deworming_refusal_reason" value="other" />
+            Other
+          </label>
+        </div>
+        <input *ngIf="form.get('consent.deworming_refusal_reason')?.value === 'other'" 
+               type="text" 
+               formControlName="deworming_refusal_other" 
+               placeholder="Please specify" 
+               class="form-control" />
+      </div>
+
+      <div class="form-section" *ngIf="isGrade7">
+        <h3>MRTD (Measles-Rubella-Tetanus-Diphtheria) Consent *</h3>
+        <div class="radio-group">
+          <label>
+            <input type="radio" formControlName="mrtd_consent" value="oo" />
+            Oo (Yes)
+          </label>
+          <label>
+            <input type="radio" formControlName="mrtd_consent" value="hindi" />
+            Hindi (No)
+          </label>
+        </div>
+        <span class="error-text" *ngIf="submitted && form.get('consent.mrtd_consent')?.invalid">Required for Grade 7 students</span>
+      </div>
+
+      <div class="form-section" *ngIf="isFemale">
+        <h3>WIFA (Weekly Iron-Folic Acid) Supplementation Consent *</h3>
+        <div class="radio-group">
+          <label>
+            <input type="radio" formControlName="wifa_consent" value="oo" />
+            Oo (Yes)
+          </label>
+          <label>
+            <input type="radio" formControlName="wifa_consent" value="hindi" />
+            Hindi (No)
+          </label>
+        </div>
+        <span class="error-text" *ngIf="submitted && form.get('consent.wifa_consent')?.invalid">Required for female students</span>
       </div>
 
       <div class="form-section">
         <h3>Signature Upload (PDF, JPEG, PNG - max 100 MB) *</h3>
         <input type="file" (change)="onSignatureChange($event)" accept=".pdf,.jpeg,.jpg,.png" />
         <p class="file-info" *ngIf="signatureFile">Selected: {{ signatureFile.name }}</p>
+        <span class="error-text" *ngIf="submitted && !signatureFile">Signature file is required</span>
       </div>
     </div>
 

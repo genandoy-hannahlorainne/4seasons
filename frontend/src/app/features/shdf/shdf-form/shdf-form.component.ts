@@ -29,6 +29,19 @@ function requiredIfValidator(conditionKey: string, conditionValue: string, targe
   };
 }
 
+function philhealthIdValidator() {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    // If empty, it's valid (optional field)
+    if (!value || value.trim() === '') {
+      return null;
+    }
+    // If has value, must be exactly 12 alphanumeric characters
+    const pattern = /^[A-Za-z0-9]{12}$/;
+    return pattern.test(value) ? null : { pattern: true };
+  };
+}
+
 @Component({
   selector: 'app-shdf-form',
   standalone: true,
@@ -140,8 +153,8 @@ export class SHDFFormComponent implements OnInit {
       ),
 
       philhealth: this.fb.group({
-        learner_philhealth_id: ['', [Validators.pattern(/^[A-Za-z0-9]{12}$/)]],
-        parent_philhealth_id: ['', [Validators.pattern(/^[A-Za-z0-9]{12}$/)]],
+        learner_philhealth_id: ['', [philhealthIdValidator()]],
+        parent_philhealth_id: ['', [philhealthIdValidator()]],
         parent_philhealth_name: [''],
         parent_relationship: [''],
       }),
@@ -309,40 +322,90 @@ export class SHDFFormComponent implements OnInit {
 
   onSubmit(): void {
     this.submitted = true;
-    if (this.form.invalid || !this.signatureFile) {
+    
+    // Check signature file first
+    if (!this.signatureFile) {
+      this.errorMessage = 'Please upload your signature';
+      this.scrollToTop();
+      return;
+    }
+
+    // Validate the form
+    if (this.form.invalid) {
+      this.errorMessage = this.getErrorMessage();
+      console.error('Form validation errors:', this.getFormValidationErrors());
+      
+      // Find which step has errors and navigate to it
+      const errors = this.getFormValidationErrors();
+      if (errors['student'] || Object.keys(errors).some(k => k.startsWith('student.'))) {
+        this.currentStep = 1;
+      } else if (errors['philhealth'] || Object.keys(errors).some(k => k.startsWith('philhealth.'))) {
+        this.currentStep = 2;
+      } else if (errors['immunizations'] || Object.keys(errors).some(k => k.startsWith('immunizations.'))) {
+        this.currentStep = 3;
+      } else if (errors['medical'] || Object.keys(errors).some(k => k.startsWith('medical.'))) {
+        this.currentStep = 4;
+      } else if (errors['family'] || Object.keys(errors).some(k => k.startsWith('family.'))) {
+        this.currentStep = 5;
+      } else if (errors['consent'] || Object.keys(errors).some(k => k.startsWith('consent.'))) {
+        this.currentStep = 6;
+      }
+      
+      this.scrollToTop();
       return;
     }
 
     const raw = this.form.getRawValue();
     const payload = new FormData();
 
-    // Flatten student fields
-    Object.entries(raw.student).forEach(([k, v]) => payload.append(k, String(v ?? '')));
+    // Always include student_id first
+    payload.append('student_id', String(this.studentId));
+
+    // Flatten student fields (skip student_id as we already added it)
+    Object.entries(raw.student).forEach(([k, v]) => {
+      if (k !== 'student_id') {
+        // Include all values, even empty strings and false
+        payload.append(k, v === null || v === undefined ? '' : String(v));
+      }
+    });
 
     // PhilHealth
-    Object.entries(raw.philhealth).forEach(([k, v]) => payload.append(k, String(v ?? '')));
+    Object.entries(raw.philhealth).forEach(([k, v]) => {
+      payload.append(k, v === null || v === undefined ? '' : String(v));
+    });
 
     // Immunizations
-    Object.entries(raw.immunizations).forEach(([k, v]) =>
-      payload.append(`immunizations[${k}]`, String(v ?? ''))
-    );
+    Object.entries(raw.immunizations).forEach(([k, v]) => {
+      payload.append(`immunizations[${k}]`, v === null || v === undefined ? '' : String(v));
+    });
 
     // Medical history
-    Object.entries(raw.medical).forEach(([k, v]) => payload.append(k, String(v ?? '')));
+    Object.entries(raw.medical).forEach(([k, v]) => {
+      payload.append(k, v === null || v === undefined ? '' : String(v));
+    });
 
     // Family history
-    Object.entries(raw.family).forEach(([k, v]) =>
-      payload.append(`family[${k}]`, String(v ?? ''))
-    );
+    Object.entries(raw.family).forEach(([k, v]) => {
+      payload.append(`family[${k}]`, v === null || v === undefined ? '' : String(v));
+    });
 
     // Consent
-    Object.entries(raw.consent).forEach(([k, v]) => payload.append(k, String(v ?? '')));
+    Object.entries(raw.consent).forEach(([k, v]) => {
+      payload.append(k, v === null || v === undefined ? '' : String(v));
+    });
 
     // Signature file
     payload.append('signature', this.signatureFile);
 
     this.loading = true;
     this.errorMessage = '';
+    
+    // Debug: Log the payload contents
+    console.log('[SHDF Submit] Student ID:', this.studentId);
+    console.log('[SHDF Submit] Form data being sent:');
+    for (let pair of payload.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
     
     // Use submitComprehensive for the comprehensive form
     this.shdService.submitComprehensive(payload).subscribe({
@@ -366,8 +429,57 @@ export class SHDFFormComponent implements OnInit {
         this.loading = false;
         this.errorMessage = err?.error?.message ?? 'Submission failed. Please try again.';
         console.error('Submission error:', err);
+        this.scrollToTop();
       },
     });
+  }
+
+  // Helper method to get form validation errors for debugging
+  getFormValidationErrors(): any {
+    const errors: any = {};
+    Object.keys(this.form.controls).forEach(key => {
+      const control = this.form.get(key);
+      if (control && control.invalid) {
+        errors[key] = control.errors;
+        if (control instanceof FormGroup) {
+          Object.keys((control as FormGroup).controls).forEach(subKey => {
+            const subControl = control.get(subKey);
+            if (subControl && subControl.invalid) {
+              errors[`${key}.${subKey}`] = subControl.errors;
+            }
+          });
+        }
+      }
+    });
+    return errors;
+  }
+
+  // Helper method to get user-friendly error messages
+  getErrorMessage(): string {
+    const errors = this.getFormValidationErrors();
+    const errorMessages: string[] = [];
+
+    Object.keys(errors).forEach(key => {
+      const error = errors[key];
+      if (!error) return; // Skip if error is null/undefined
+      
+      if (error.required) {
+        errorMessages.push(`${key} is required`);
+      } else if (error.noneExclusivity) {
+        errorMessages.push(`Cannot select "None" with other options in ${key}`);
+      } else if (error.pattern) {
+        errorMessages.push(`${key} has invalid format`);
+      } else if (error.requiredTrue) {
+        errorMessages.push(`${key} must be accepted`);
+      } else {
+        // Generic error message for other validation errors
+        errorMessages.push(`${key} is invalid`);
+      }
+    });
+
+    return errorMessages.length > 0 
+      ? errorMessages.join('; ') 
+      : 'Please fill in all required fields correctly';
   }
 
   onCancel(): void {
@@ -403,6 +515,7 @@ export class SHDFFormComponent implements OnInit {
 
   validateCurrentStep(): boolean {
     let isValid = true;
+    this.errorMessage = '';
     
     switch (this.currentStep) {
       case 1: // Student Information
@@ -419,12 +532,15 @@ export class SHDFFormComponent implements OnInit {
         break;
       
       case 3: // Immunizations
-        const immunizations = this.form.get('immunizations') as FormArray;
-        if (immunizations && immunizations.invalid) {
-          Object.keys(immunizations.controls).forEach(key => {
-            immunizations.get(key)?.markAsTouched();
+        const immunizationsGroup = this.form.get('immunizations') as FormGroup;
+        if (immunizationsGroup && immunizationsGroup.invalid) {
+          Object.keys(immunizationsGroup.controls).forEach(key => {
+            const control = immunizationsGroup.get(key);
+            if (control && control.invalid) {
+              control.markAsTouched();
+              isValid = false;
+            }
           });
-          isValid = false;
         }
         break;
       
@@ -432,6 +548,11 @@ export class SHDFFormComponent implements OnInit {
         const medical = this.form.get('medical');
         if (medical?.get('allergy_status')?.invalid) {
           medical.get('allergy_status')?.markAsTouched();
+          isValid = false;
+        }
+        // Check menarche_age for female students
+        if (this.isFemale && medical?.get('menarche_age')?.invalid) {
+          medical.get('menarche_age')?.markAsTouched();
           isValid = false;
         }
         break;
@@ -446,6 +567,18 @@ export class SHDFFormComponent implements OnInit {
               isValid = false;
             }
           });
+          
+          // Check MRTD consent for Grade 7
+          if (this.isGrade7 && consent.get('mrtd_consent')?.invalid) {
+            consent.get('mrtd_consent')?.markAsTouched();
+            isValid = false;
+          }
+          
+          // Check WIFA consent for female students
+          if (this.isFemale && consent.get('wifa_consent')?.invalid) {
+            consent.get('wifa_consent')?.markAsTouched();
+            isValid = false;
+          }
         }
         if (!this.signatureFile) {
           this.errorMessage = 'Please upload your signature';
@@ -454,9 +587,12 @@ export class SHDFFormComponent implements OnInit {
         break;
     }
     
-    if (!isValid) {
+    if (!isValid && !this.errorMessage) {
       this.errorMessage = 'Please fill in all required fields';
-      setTimeout(() => this.errorMessage = '', 3000);
+    }
+    
+    if (!isValid) {
+      setTimeout(() => this.errorMessage = '', 5000);
     }
     
     return isValid;
