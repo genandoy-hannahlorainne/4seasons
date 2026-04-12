@@ -1,30 +1,30 @@
 .medical-records-container {
-  padding: 0;
-  background: transparent;
+  padding: 2rem;
+  background: #f5f7fa;
   min-height: 100vh;
   position: relative;
 }
 
 .header {
-  background: linear-gradient(135deg, rgba(5, 35, 85, 0.95) 0%, rgba(83, 129, 178, 0.95) 100%);
-  padding: 3rem 2.5rem;
-  margin-bottom: 2.5rem;
-  border-radius: 0 0 24px 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  text-align: center;
-  color: white;
+  background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+  border-radius: 12px;
+  padding: 1.75rem 2rem;
+  margin-bottom: 1.5rem;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 
   h1 {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
     font-weight: 700;
+    margin: 0 0 0.25rem;
     color: white;
-    margin-bottom: 0.5rem;
   }
 
   .subtitle {
-    font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.95);
     margin: 0;
+    opacity: 0.8;
+    font-size: 0.875rem;
+    color: white;
   }
 }
 
@@ -46,7 +46,7 @@
     width: 50px;
     height: 50px;
     border: 4px solid #e3f2fd;
-    border-top: 4px solid #2563eb;
+    border-top: 4px solid #052355;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     position: relative;
@@ -54,7 +54,7 @@
   }
 
   p {
-    color: #2563eb;
+    color: #052355;
     font-size: 1.1rem;
     font-weight: 600;
     text-align: center;
@@ -63,7 +63,6 @@
     z-index: 2;
   }
 
-  // White container background
   &::after {
     content: '';
     position: absolute;
@@ -86,112 +85,112 @@
 }
 
 .error-message {
-  background: #f8d7da;
-  color: #721c24;
-  padding: 1rem;
-  border-radius: 8px;
-  border: 1px solid #f5c6cb;
-  text-align: center;
-  margin-bottom: 2rem;
+  background: rgba(220, 38, 38, 0.08);
+  color: #991b1b;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  margin-bottom: 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .overview-cards {
-  padding: 0 2.5rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .overview-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(5, 35, 85, 0.1);
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   gap: 1.5rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   }
 
   .card-icon {
-    font-size: 2.5rem;
-    width: 60px;
-    height: 60px;
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: #e3f2fd;
     border-radius: 50%;
+    flex-shrink: 0;
   }
 
   .card-content {
     flex: 1;
 
     h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #6c757d;
-      margin: 0 0 0.5rem 0;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      margin: 0 0 0.4rem 0;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.05em;
     }
 
     .card-value {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #2c3e50;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #1e293b;
       line-height: 1;
       margin-bottom: 0.25rem;
     }
 
     .card-subtitle {
-      font-size: 0.9rem;
-      color: #6c757d;
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 500;
     }
   }
 }
 
 .action-cards {
-  padding: 0 2.5rem 2.5rem 2.5rem;
   display: grid;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .action-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(5, 35, 85, 0.1);
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
   color: inherit;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    background: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    background: #f8fafc;
   }
 
   .action-icon {
-    font-size: 3rem;
-    width: 80px;
-    height: 80px;
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 16px;
+    background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+    border-radius: 12px;
     color: white;
     flex-shrink: 0;
   }
@@ -200,23 +199,23 @@
     flex: 1;
 
     h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #2c3e50;
-      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 0.35rem 0;
     }
 
     p {
-      font-size: 1rem;
-      color: #6c757d;
+      font-size: 0.875rem;
+      color: #64748b;
       margin: 0;
       line-height: 1.5;
     }
   }
 
   .action-arrow {
-    font-size: 2rem;
-    color: #007bff;
+    font-size: 1.5rem;
+    color: #052355;
     font-weight: bold;
     flex-shrink: 0;
   }
@@ -224,24 +223,19 @@
 
 @media (max-width: 768px) {
   .medical-records-container {
+    padding: 1.5rem;
+
     .header {
-      padding: 2rem 1.5rem;
-      border-radius: 0 0 16px 16px;
+      padding: 1.5rem;
 
       h1 {
-        font-size: 1.8rem;
+        font-size: 1.25rem;
       }
 
       .subtitle {
-        font-size: 1rem;
+        font-size: 0.8rem;
       }
     }
-  }
-
-  .overview-cards,
-  .action-cards {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
   }
 
   .overview-cards {
@@ -250,32 +244,36 @@
   }
 
   .overview-card {
-    padding: 1.5rem;
+    padding: 1.25rem;
     gap: 1rem;
 
     .card-icon {
+      font-size: 1.75rem;
+      width: 45px;
+      height: 45px;
+    }
+
+    .card-content .card-value {
+      font-size: 1.25rem;
+    }
+  }
+
+  .action-card {
+    padding: 1.25rem;
+    gap: 1rem;
+
+    .action-icon {
       font-size: 2rem;
       width: 50px;
       height: 50px;
     }
 
-    .card-content .card-value {
-      font-size: 2rem;
-    }
-  }
-
-  .action-card {
-    padding: 1.5rem;
-    gap: 1rem;
-
-    .action-icon {
-      font-size: 2.5rem;
-      width: 60px;
-      height: 60px;
-    }
-
     .action-content h3 {
-      font-size: 1.25rem;
+      font-size: 0.9rem;
+    }
+
+    .action-content p {
+      font-size: 0.8rem;
     }
   }
 }
