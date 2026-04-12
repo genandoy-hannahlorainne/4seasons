@@ -1,15 +1,15 @@
-// Fonts
-$font-primary: 'Poppins', sans-serif;
-$font-secondary: 'Albert Sans', sans-serif;
+// Fonts (matching admin)
+$font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+$font-secondary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-// Colors
-$color-primary: #5b8db8;
-$color-primary-light: #7ba5c9;
-$color-text-dark: #2c3e50;
-$color-text-muted: #7f8c8d;
-$color-background: #f5f7fa;
+// Colors (matching admin)
+$color-primary: #052355;
+$color-primary-light: #5381b2;
+$color-text-dark: #0f172a;
+$color-text-muted: #64748b;
+$color-background: #f0f4f8;
 $color-white: #ffffff;
-$color-border: #ecf0f1;
+$color-border: #e8f0f8;
 $color-light-bg: #f8f9fa;
 
 // Card Gradients
@@ -37,16 +37,16 @@ $radius-md: 8px;
 $radius-lg: 12px;
 $radius-xl: 20px;
 
-// Font Sizes
-$font-size-xs: 0.9rem;
-$font-size-sm: 1rem;
-$font-size-base: 1.05rem;
-$font-size-md: 1.15rem;
+// Font Sizes (matching admin)
+$font-size-xs: 0.8rem;
+$font-size-sm: 0.9rem;
+$font-size-base: 0.95rem;
+$font-size-md: 1.1rem;
 $font-size-lg: 1.2rem;
-$font-size-xl: 1.35rem;
+$font-size-xl: 1.3rem;
 $font-size-2xl: 1.5rem;
-$font-size-3xl: 2.4rem;
-$font-size-4xl: 2.9rem;
+$font-size-3xl: 2.2rem;
+$font-size-4xl: 2.5rem;
 
 // Shadows
 $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -230,26 +230,26 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   .overview-title {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
     font-family: $font-secondary;
-    font-weight: 1000;
-    color: #0b2a4a;
+    font-weight: 700;
+    color: #052355;
     margin-bottom: 0.25rem;
   }
 
   .overview-sub {
-    color: $color-primary;
-    font-weight: 400;
+    color: $color-text-muted;
+    font-weight: 500;
     font-family: $font-primary;
     margin-bottom: 0.25rem;
     font-size: 0.95rem;
   }
 
   .overview-meta {
-    color: #0b2a4a;
-    font-weight: 700;
+    color: $color-text-dark;
+    font-weight: 600;
     font-family: $font-primary;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     margin-bottom: 1rem;
   }
 
@@ -273,14 +273,14 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   .tile-value {
     font-size: 1.4rem;
     font-family: $font-secondary;
-    font-weight: 900;
+    font-weight: 700;
     line-height: 1;
   }
 
   .tile-label {
     font-size: 0.8rem;
     font-family: $font-primary;
-    font-weight: 700;
+    font-weight: 600;
     opacity: 0.95;
   }
 
@@ -341,6 +341,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
       margin-bottom: 0.5rem;
       font-weight: 700;
       color: white;
+      line-height: 1.2;
     }
 
     .student-info {
@@ -348,6 +349,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
       font-family: $font-primary;
       opacity: 0.95;
       color: white;
+      line-height: 1.6;
     }
   }
 
@@ -397,20 +399,22 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
       }
 
       .card-value {
-        font-size: 2.25rem;
+        font-size: 2rem;
         font-family: $font-secondary;
         font-weight: 700;
         margin-bottom: 0.25rem;
         position: relative;
         z-index: 1;
+        line-height: 1;
       }
 
       .card-label {
-        font-size: $font-size-base;
+        font-size: 0.95rem;
         font-family: $font-primary;
         opacity: 0.9;
         position: relative;
         z-index: 1;
+        font-weight: 500;
       }
     }
   }
@@ -462,7 +466,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
         .info-item {
           .info-label {
             color: $color-text-muted;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-family: $font-primary;
             font-weight: 500;
             margin-bottom: 0.25rem;
@@ -472,7 +476,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
             color: $color-text-dark;
             font-size: 0.95rem;
             font-family: $font-secondary;
-            font-weight: 700;
+            font-weight: 600;
           }
         }
       }
@@ -498,7 +502,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
           .activity-info {
             .activity-name {
-              font-weight: 700;
+              font-weight: 600;
               font-family: $font-secondary;
               font-size: 0.95rem;
               color: $color-text-dark;
@@ -506,7 +510,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
             }
 
             .activity-date {
-              font-size: 0.8rem;
+              font-size: 0.9rem;
               font-family: $font-primary;
               font-weight: 500;
               color: $color-text-muted;
@@ -514,11 +518,11 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
           }
 
           .activity-badge {
-            padding: 0.35rem 0.75rem;
+            padding: 0.4rem 1rem;
             border-radius: $radius-xl;
-            font-size: $font-size-xs;
+            font-size: 0.8rem;
             font-family: $font-primary;
-            font-weight: 500;
+            font-weight: 600;
 
             &.activity-routine {
               background: #e8f5e9;
@@ -564,7 +568,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
           .immunization-info {
             .immunization-name {
-              font-weight: 700;
+              font-weight: 600;
               font-family: $font-secondary;
               font-size: 0.95rem;
               color: $color-text-dark;
@@ -572,7 +576,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
             }
 
             .immunization-date {
-              font-size: 0.8rem;
+              font-size: 0.9rem;
               font-family: $font-primary;
               font-weight: 500;
               color: $color-text-muted;
@@ -580,11 +584,11 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
           }
 
           .status-badge {
-            padding: 0.35rem 0.75rem;
+            padding: 0.4rem 1rem;
             border-radius: $radius-xl;
-            font-size: $font-size-xs;
+            font-size: 0.8rem;
             font-family: $font-primary;
-            font-weight: 500;
+            font-weight: 600;
 
             &.updated {
               background: $status-success-bg;
@@ -613,21 +617,23 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
         .edit-btn {
           background: transparent;
-          border: 1px solid $color-primary;
+          border: 2px solid $color-primary;
           color: $color-primary;
-          padding: 0.4rem 0.75rem;
-          border-radius: $radius-sm;
+          padding: 0.6rem 1.25rem;
+          border-radius: 8px;
           cursor: pointer;
-          font-size: $font-size-xs;
+          font-size: 0.9rem;
           font-family: $font-primary;
+          font-weight: 600;
           display: flex;
           align-items: center;
           gap: 0.35rem;
-          transition: all 0.3s;
+          transition: all 0.2s ease;
 
           &:hover {
             background: $color-primary;
             color: $color-white;
+            transform: translateY(-2px);
 
             .edit-icon-img {
               filter: brightness(0) invert(1);
@@ -645,7 +651,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
       .allergies-list {
         .allergy-item {
-          padding: 0.75rem;
+          padding: 1rem;
           background: $color-light-bg;
           border-radius: $radius-md;
           margin-bottom: 0.65rem;
@@ -653,6 +659,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
           font-size: 0.95rem;
           font-family: $font-primary;
           font-weight: 600;
+          border: 1px solid $color-border;
 
           &:last-child {
             margin-bottom: 0;
@@ -681,14 +688,14 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     .btn-shdf {
       width: 100%;
       padding: $spacing-sm $spacing-md;
-      background: linear-gradient(135deg, #5b8db8 0%, #7ba5c9 100%);
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       color: $color-white;
       border: none;
       border-radius: $radius-md;
-      font-size: $font-size-base;
-      font-weight: 500;
+      font-size: 0.95rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -696,7 +703,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(91, 141, 184, 0.3);
+        box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
       }
 
       &:active {

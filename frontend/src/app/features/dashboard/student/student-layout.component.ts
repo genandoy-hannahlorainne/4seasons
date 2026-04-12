@@ -1,6 +1,6 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, RouterOutlet } from '@angular/router';
+import { RouterModule, RouterOutlet, Router } from '@angular/router';
 import { StudentService } from '../../../core/services/student.service';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -10,44 +10,89 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [CommonModule, RouterModule, RouterOutlet],
   styleUrls: ['./student-layout.component.scss'],
   template: `
-    <div class="student-layout">
-      <nav class="top-nav">
-        <div class="nav-links">
-          <a routerLink="/dashboard/student" class="nav-link" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
-          <a routerLink="/dashboard/student/medical-records" class="nav-link" routerLinkActive="active">MyMedical</a>
+    <div class="student-layout" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen">
+
+      <!-- Mobile overlay -->
+      <div class="sidebar-overlay" (click)="closeMobile()"></div>
+
+      <!-- Logout overlay -->
+      <div class="logout-overlay" *ngIf="loggingOut">
+        <div class="logout-box">
+          <div class="logout-spinner"></div>
+          <p>Logging out...</p>
         </div>
-        <div class="nav-icons">
-          <button class="icon-btn notification" (click)="toggleNotifications($event)">
-            <img src="assets/notification-icon.png" alt="Notifications" class="icon-img">
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <img src="assets/pdmhs-logo.png" alt="PDMHS Logo" class="brand-logo" (click)="toggleSidebar()" style="cursor:pointer">
+          <span class="brand-text">PDMHS<br><small>Student Portal</small></span>
+          <button class="hamburger" (click)="toggleSidebar()" title="Toggle sidebar">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a routerLink="/dashboard/student" routerLinkActive="active"
+             [routerLinkActiveOptions]="{exact: true}" class="nav-item" title="Dashboard" (click)="closeMobile()">
+            <img src="assets/icons/dashboard.png" class="nav-icon" alt="Dashboard">
+            <span class="nav-label">Dashboard</span>
+          </a>
+          <a routerLink="/dashboard/student/medical-records" routerLinkActive="active" class="nav-item" title="My Medical Records" (click)="closeMobile()">
+            <img src="assets/icons/my-medical.png" class="nav-icon" alt="Medical Records">
+            <span class="nav-label">My Medical</span>
+          </a>
+          <button class="nav-item notification" (click)="toggleNotifications($event)" title="Badges">
+            <img src="assets/notification-icon.png" class="nav-icon" alt="Badges">
+            <span class="nav-label">Badges</span>
             <span *ngIf="badgeNotifications.length > 0" class="notif-count">{{ badgeNotifications.length }}</span>
           </button>
-          <button class="icon-btn profile" routerLink="/dashboard/student/profile">
-            <img src="assets/user-male.png" alt="Profile" class="icon-img">
+        </nav>
+
+        <div class="sidebar-footer">
+          <a routerLink="/dashboard/student/profile" routerLinkActive="active" class="nav-item" title="Profile" (click)="closeMobile()">
+            <img src="assets/icons/profile.png" class="nav-icon" alt="Profile">
+            <span class="nav-label">Profile</span>
+          </a>
+          <button class="nav-item logout-btn" (click)="logout()" title="Logout">
+            <img src="assets/icons/logout.jpg" class="nav-icon" alt="Logout">
+            <span class="nav-label">Logout</span>
           </button>
+        </div>
+      </aside>
 
-          <div *ngIf="showNotificationsPanel" class="notifications-panel" (click)="$event.stopPropagation()">
-            <div class="panel-title">Earned Badges</div>
+      <!-- Mobile topbar -->
+      <header class="mobile-topbar">
+        <button class="mobile-menu-btn" (click)="openMobile()">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="mobile-brand">PDMHS Student</span>
+      </header>
 
-            <div *ngIf="notificationsLoading" class="panel-state">Loading badges...</div>
-            <div *ngIf="notificationsError" class="panel-state error">{{ notificationsError }}</div>
-            <div *ngIf="!notificationsLoading && !notificationsError && badgeNotifications.length === 0" class="panel-state">No badges earned yet. Keep staying healthy!</div>
+      <!-- Notifications Panel -->
+      <div *ngIf="showNotificationsPanel" class="notifications-panel" (click)="$event.stopPropagation()">
+        <div class="panel-title">Earned Badges</div>
 
-            <div *ngIf="!notificationsLoading && badgeNotifications.length > 0" class="notification-list">
-              <div *ngFor="let badge of badgeNotifications" class="notification-item" (click)="openBadgeDetails(badge)">
-                <img *ngIf="badge.icon_asset_path" [src]="badge.icon_asset_path" [alt]="badge.badge_name" class="badge-icon">
-                <div class="item-content">
-                  <div class="item-title">{{ badge.badge_name }}</div>
-                  <div class="item-sub">{{ badge.required_streak_days }}-day streak badge available</div>
-                </div>
-              </div>
+        <div *ngIf="notificationsLoading" class="panel-state">Loading badges...</div>
+        <div *ngIf="notificationsError" class="panel-state error">{{ notificationsError }}</div>
+        <div *ngIf="!notificationsLoading && !notificationsError && badgeNotifications.length === 0" class="panel-state">No badges earned yet. Keep staying healthy!</div>
+
+        <div *ngIf="!notificationsLoading && badgeNotifications.length > 0" class="notification-list">
+          <div *ngFor="let badge of badgeNotifications" class="notification-item" (click)="openBadgeDetails(badge)">
+            <img *ngIf="badge.icon_asset_path" [src]="badge.icon_asset_path" [alt]="badge.badge_name" class="badge-icon">
+            <div class="item-content">
+              <div class="item-title">{{ badge.badge_name }}</div>
+              <div class="item-sub">{{ badge.required_streak_days }}-day streak badge available</div>
             </div>
           </div>
         </div>
-      </nav>
-      
-      <div class="content-area">
-        <router-outlet></router-outlet>
       </div>
+
+      <!-- Main content -->
+      <main class="main-content">
+        <router-outlet></router-outlet>
+      </main>
 
       <div *ngIf="showBadgeModal && activeBadge" class="badge-modal-overlay" (click)="closeBadgeModal()">
         <div class="badge-modal" (click)="$event.stopPropagation()">
@@ -76,6 +121,9 @@ import { AuthService } from '../../../core/services/auth.service';
   `,
 })
 export class StudentLayoutComponent implements OnInit {
+  isCollapsed = false;
+  mobileOpen = false;
+  loggingOut = false;
   showNotificationsPanel = false;
   notificationsLoading = false;
   notificationsError = '';
@@ -89,11 +137,32 @@ export class StudentLayoutComponent implements OnInit {
 
   constructor(
     private studentService: StudentService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadBadgeNotifications();
+  }
+
+  toggleSidebar(): void { 
+    this.isCollapsed = !this.isCollapsed; 
+  }
+  
+  openMobile(): void { 
+    this.mobileOpen = true; 
+  }
+  
+  closeMobile(): void { 
+    this.mobileOpen = false; 
+  }
+
+  logout(): void {
+    this.loggingOut = true;
+    this.authService.logout().subscribe({
+      complete: () => this.router.navigate(['/login']),
+      error: () => this.router.navigate(['/login'])
+    });
   }
 
   @HostListener('document:click')
