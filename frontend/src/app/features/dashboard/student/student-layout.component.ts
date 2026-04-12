@@ -75,32 +75,51 @@ import { AuthService } from '../../../core/services/auth.service';
       </header>
 
       <!-- Notifications Panel -->
-      <div *ngIf="showNotificationsPanel" class="notifications-panel" (click)="$event.stopPropagation()">
-        <div class="panel-header">
-          <div class="panel-title">Notifications</div>
-          <button class="panel-close" (click)="showNotificationsPanel = false">×</button>
-        </div>
-        
-        <!-- Medical Form Incomplete Notification -->
-        <div *ngIf="showIncompleteFormNotification" class="notification-item-card">
-          <div class="notification-icon warning">
-            <i class="fa-solid fa-exclamation-triangle"></i>
-          </div>
-          <div class="notification-body">
-            <div class="notification-title">Complete Your Medical Information</div>
-            <div class="notification-message">{{ incompleteFormMessage }}</div>
-            <button class="notification-action-btn" (click)="completeForm()">
-              Complete Form
+      <div *ngIf="showNotificationsPanel" class="notifications-panel-overlay" (click)="showNotificationsPanel = false">
+        <div class="notifications-panel" (click)="$event.stopPropagation()">
+          <div class="panel-header">
+            <div class="panel-title-row">
+              <h3 class="panel-title">Notifications</h3>
+              <span *ngIf="showIncompleteFormNotification" class="notif-badge">1</span>
+            </div>
+            <button class="panel-close" (click)="showNotificationsPanel = false" title="Close">
+              <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
-          <button class="notification-dismiss" (click)="dismissNotification()">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
+          
+          <div class="panel-body">
+            <!-- Medical Form Incomplete Notification -->
+            <div *ngIf="showIncompleteFormNotification" class="notification-card unread">
+              <div class="notification-header">
+                <div class="notification-icon-wrapper warning">
+                  <i class="fa-solid fa-clipboard-list"></i>
+                </div>
+                <div class="notification-meta">
+                  <span class="notification-time">Just now</span>
+                  <span class="unread-dot"></span>
+                </div>
+              </div>
+              <div class="notification-content">
+                <h4 class="notification-title">Complete Your Medical Information</h4>
+                <p class="notification-message">{{ incompleteFormMessage }}</p>
+                <div class="notification-actions">
+                  <button class="btn-action primary" (click)="completeForm()">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    Complete Form
+                  </button>
+                </div>
+              </div>
+            </div>
 
-        <div *ngIf="!showIncompleteFormNotification" class="empty-state">
-          <i class="fa-solid fa-bell-slash"></i>
-          <p>No new notifications</p>
+            <!-- Empty State -->
+            <div *ngIf="!showIncompleteFormNotification" class="empty-state">
+              <div class="empty-icon">
+                <i class="fa-solid fa-bell-slash"></i>
+              </div>
+              <h4 class="empty-title">All caught up!</h4>
+              <p class="empty-message">You have no new notifications</p>
+            </div>
+          </div>
         </div>
       </div>
 
