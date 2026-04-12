@@ -242,7 +242,7 @@ jobs:
         echo "DB_DATABASE=4seasons" >> backend-laravel/.env
         echo "DB_USERNAME=root" >> backend-laravel/.env
         echo "DB_PASSWORD=secret" >> backend-laravel/.env
-        docker compose -f docker-compose.yml up -d
+        docker compose -f docker-compose.local.yml up -d
         sleep 10
     
     - name: Wait for services
@@ -265,7 +265,7 @@ jobs:
     
     - name: Stop services
       if: always()
-      run: docker compose down
+      run: docker compose -f docker-compose.local.yml down
 
   security-scan:
     runs-on: ubuntu-latest
