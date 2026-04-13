@@ -185,19 +185,39 @@ interface StudentVisitSummary {
   styles: [`
     .visits-page {
       padding: 2rem;
-      background: #f5f7fa;
+      background: #f0f4f8;
       min-height: 100vh;
     }
 
     .page-header {
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      padding: 2rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
 
       .header-content {
-        h1 { font-size: 1.8rem; color: #2c3e50; margin-bottom: 0.5rem; font-weight: 600; }
-        p { color: #7f8c8d; font-size: 1rem; margin: 0; }
+        h1 {
+          font-size: 2rem;
+          color: #ffffff;
+          margin-bottom: 0.5rem;
+          font-weight: 700;
+        }
+
+        p {
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 1.1rem;
+          margin: 0;
+        }
+      }
+
+      .btn {
+        flex-shrink: 0;
       }
     }
 
