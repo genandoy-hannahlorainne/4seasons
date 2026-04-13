@@ -138,7 +138,7 @@ export class StaffProfileComponent implements OnInit {
     phone: '',
     position: 'Clinic Staff',
     staffCode: '',
-    avatar: 'assets/user-female.png'
+    avatar: 'assets/icons/clinic-staff.png'
   };
 
   passwordForm = {

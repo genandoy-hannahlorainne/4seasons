@@ -63,7 +63,7 @@ import { AuthService } from '../../../core/services/auth.service';
             <span class="nav-label">Profile</span>
           </a>
           <button class="nav-item logout-btn" (click)="logout()">
-            <span class="logout-icon">🚪</span>
+            <img src="assets/icons/logout.jpg" alt="Logout" class="nav-icon">
             <span class="nav-label">Logout</span>
           </button>
         </div>
