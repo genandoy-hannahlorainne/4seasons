@@ -130,6 +130,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
     Route::prefix('students')->group(function () {
         Route::get('/', [StudentController::class, 'index']);
         Route::get('/search', [StudentController::class, 'search']);
+        Route::get('/qr/lookup', [StudentController::class, 'getByQr']);
         Route::get('/medical-data', [StudentController::class, 'getMedicalDataByUserId']);
         Route::get('/{student}', [StudentController::class, 'show'])->name('students.show');
         Route::get('/{student}/medical-data', [StudentController::class, 'getMedicalData']);
