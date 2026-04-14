@@ -64,11 +64,23 @@ class EmergencyDrillController extends BaseController
                 return $this->sendError('Validation Error', $validator->errors()->first());
             }
 
+            $scheduledAt = null;
+            if ($request->scheduled_at) {
+                $scheduledAt = Carbon::parse($request->scheduled_at, 'Asia/Manila');
+
+                Log::info('Creating drill with scheduled time', [
+                    'input' => $request->scheduled_at,
+                    'parsed' => $scheduledAt->toDateTimeString(),
+                    'timezone' => $scheduledAt->timezone->getName(),
+                    'timestamp' => $scheduledAt->timestamp
+                ]);
+            }
+
             $drill = EmergencyDrill::create([
                 'drill_name' => $request->drill_name,
                 'drill_type' => $request->drill_type,
                 'description' => $request->description,
-                'scheduled_at' => $request->scheduled_at,
+                'scheduled_at' => $scheduledAt,
                 'created_by' => auth()->id(),
                 'settings' => $request->settings ?? []
             ]);
@@ -122,8 +134,46 @@ class EmergencyDrillController extends BaseController
         try {
             $drill = EmergencyDrill::findOrFail($id);
 
-            if (!$drill->canStart()) {
+            if ($drill->status !== 'planned') {
                 return $this->sendError('Cannot start drill', 'Drill is not in planned status');
+            }
+
+            // Check if scheduled time allows starting
+            if ($drill->scheduled_at) {
+                $now = now();
+                $scheduledTime = $drill->scheduled_at;
+                $allowedEndTime = $scheduledTime->copy()->addMinutes(30);
+
+                // Debug logging
+                Log::info('Drill start time check', [
+                    'drill_id' => $drill->id,
+                    'now' => $now->toDateTimeString(),
+                    'now_timezone' => $now->timezone->getName(),
+                    'scheduled_at' => $scheduledTime->toDateTimeString(),
+                    'scheduled_timezone' => $scheduledTime->timezone->getName(),
+                    'allowed_end' => $allowedEndTime->toDateTimeString(),
+                    'can_start' => $now->greaterThanOrEqualTo($scheduledTime) && $now->lessThanOrEqualTo($allowedEndTime)
+                ]);
+
+                if ($now->lessThan($scheduledTime)) {
+                    $scheduledFormatted = $scheduledTime->format('F j, Y g:i A');
+
+                    return $this->sendError(
+                        'Cannot start drill',
+                        "This drill is scheduled for {$scheduledFormatted}. You can only start it at or after the scheduled time (up to 30 minutes after).",
+                        403
+                    );
+                }
+
+                if ($now->greaterThan($allowedEndTime)) {
+                    $scheduledFormatted = $scheduledTime->format('F j, Y g:i A');
+
+                    return $this->sendError(
+                        'Cannot start drill',
+                        "The time window for this drill has passed. It was scheduled for {$scheduledFormatted} and could only be started within 30 minutes after.",
+                        403
+                    );
+                }
             }
 
             DB::beginTransaction();

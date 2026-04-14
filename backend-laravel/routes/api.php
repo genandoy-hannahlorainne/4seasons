@@ -164,6 +164,17 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::get('/{id}', [MedicalVisitController::class, 'show'])->name('medical-visits.show');
     });
 
+    // Test endpoint for debugging time
+    Route::get('/test-time', function () {
+        return response()->json([
+            'server_time' => now()->toDateTimeString(),
+            'server_timezone' => now()->timezone->getName(),
+            'server_timestamp' => now()->timestamp,
+            'config_timezone' => config('app.timezone'),
+            'php_timezone' => date_default_timezone_get()
+        ]);
+    });
+
     // Emergency drills
     Route::prefix('emergency-drills')->group(function () {
         Route::get('/', [EmergencyDrillController::class, 'index']);

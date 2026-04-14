@@ -63,7 +63,23 @@ class EmergencyDrill extends Model
 
     public function canStart(): bool
     {
-        return $this->status === 'planned';
+        if ($this->status !== 'planned') {
+            return false;
+        }
+
+        // If scheduled_at is set, check if current time is at or after scheduled time
+        if ($this->scheduled_at) {
+            $now = now();
+            $scheduledTime = $this->scheduled_at;
+
+            // Allow starting only at or after scheduled time (up to 30 minutes after)
+            $allowedEndTime = $scheduledTime->copy()->addMinutes(30);
+
+            return $now->greaterThanOrEqualTo($scheduledTime) && $now->lessThanOrEqualTo($allowedEndTime);
+        }
+
+        // If no scheduled_at, allow starting anytime
+        return true;
     }
 
     public function canEnd(): bool
