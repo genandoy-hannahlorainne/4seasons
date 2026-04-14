@@ -1,0 +1,404 @@
+// Fonts
+$font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+$font-secondary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+// Colors
+$color-primary: #052355;
+$color-primary-light: #5381b2;
+$color-text-dark: #0f172a;
+$color-text-muted: #64748b;
+$color-background: #f0f4f8;
+$color-white: #ffffff;
+$color-border: #e8f0f8;
+$color-light-bg: #f8f9fa;
+
+// Card Gradients
+$gradient-students: linear-gradient(135deg, #6489f7 0%, #c0d0ff 100%);
+$gradient-today: linear-gradient(135deg, #ab64f7 0%, #dcc0ff 100%);
+$gradient-total-visits: linear-gradient(135deg, #f7bf64 0%, #ffd8c0 100%);
+$gradient-pending: linear-gradient(135deg, #f78e64 0%, #ffc0c0 100%);
+
+// Spacing
+$spacing-xs: 0.5rem;
+$spacing-sm: 1rem;
+$spacing-md: 1.5rem;
+$spacing-lg: 2rem;
+
+// Border Radius
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 20px;
+
+// Font Sizes
+$font-size-xs: 0.8rem;
+$font-size-sm: 0.9rem;
+$font-size-base: 0.95rem;
+$font-size-md: 1.1rem;
+$font-size-lg: 1.2rem;
+$font-size-xl: 1.3rem;
+
+// Shadows
+$shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+.clinic-dashboard {
+  padding: 0;
+  background: transparent;
+  min-height: 100vh;
+  position: relative;
+
+  .page-header {
+    margin: 0 2.5rem 2rem 2.5rem;
+    background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+
+    .header-content {
+      h1 {
+        font-size: 2rem;
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+        font-family: $font-secondary;
+      }
+
+      p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+        margin: 0;
+        font-family: $font-primary;
+      }
+    }
+  }
+
+  .dashboard-wrap {
+    padding: 0 2.5rem 2.5rem 2.5rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .stat-tile {
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    color: $color-white;
+    min-height: 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: $shadow-card;
+  }
+
+  .tile-value {
+    font-size: 1.4rem;
+    font-family: $font-secondary;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .tile-label {
+    font-size: 0.8rem;
+    font-family: $font-primary;
+    font-weight: 600;
+    opacity: 0.95;
+  }
+
+  .tile-students { background: $gradient-students; }
+  .tile-today { background: $gradient-today; }
+  .tile-total-visits { background: $gradient-total-visits; }
+  .tile-pending { background: $gradient-pending; }
+
+  .main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+    flex: 1;
+    min-height: 0;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .left-column,
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 0;
+  }
+
+  .card {
+    background: $color-white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(5, 35, 85, 0.1);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    h2 {
+      font-size: 1.3rem;
+      font-family: $font-secondary;
+      color: $color-primary;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+
+    &.quick-actions {
+      .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+
+        @media (max-width: 900px) {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      .action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1.25rem 1rem;
+        background: $color-light-bg;
+        border: 2px solid $color-border;
+        border-radius: $radius-md;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: $font-primary;
+
+        .action-icon {
+          font-size: 1.5rem;
+        }
+
+        .action-icon-img {
+          width: 48px;
+          height: 48px;
+          object-fit: contain;
+        }
+
+        .action-text {
+          font-weight: 600;
+          color: $color-text-dark;
+          font-size: $font-size-sm;
+        }
+
+        &:hover {
+          border-color: $color-primary;
+          background: rgba(5, 35, 85, 0.05);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(5, 35, 85, 0.15);
+
+          .action-text {
+            color: $color-primary;
+          }
+        }
+      }
+    }
+
+    &.recent-visits {
+      flex: 1;
+      min-height: 0;
+
+      .visits-list {
+        overflow-y: auto;
+
+        .visit-item {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 0.75rem 0;
+          border-bottom: 1px solid $color-border;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          .visit-avatar {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+
+            img {
+              width: 100%;
+              height: 100%;
+              border-radius: 50%;
+              object-fit: cover;
+            }
+          }
+
+          .visit-info {
+            flex: 1;
+            min-width: 0;
+
+            .visit-name {
+              font-weight: 600;
+              font-family: $font-secondary;
+              font-size: $font-size-base;
+              color: $color-text-dark;
+              margin-bottom: 0.15rem;
+            }
+
+            .visit-reason {
+              font-size: $font-size-sm;
+              font-family: $font-primary;
+              color: $color-text-muted;
+            }
+          }
+
+          .visit-meta {
+            text-align: right;
+            flex-shrink: 0;
+
+            .visit-time {
+              font-size: $font-size-xs;
+              color: $color-text-muted;
+              margin-bottom: 0.25rem;
+            }
+
+            .visit-status {
+              display: inline-block;
+              padding: 0.25rem 0.75rem;
+              border-radius: $radius-xl;
+              font-size: $font-size-xs;
+              font-weight: 600;
+              text-transform: capitalize;
+
+              &.pending {
+                background: #fff3cd;
+                color: #856404;
+              }
+
+              &.completed {
+                background: #d4edda;
+                color: #155724;
+              }
+
+              &.referred {
+                background: #cce5ff;
+                color: #004085;
+              }
+            }
+          }
+        }
+      }
+
+      .view-all {
+        text-align: center;
+        padding-top: 1rem;
+        border-top: 1px solid $color-border;
+        margin-top: 1rem;
+
+        a {
+          color: $color-primary;
+          text-decoration: none;
+          font-size: $font-size-sm;
+          font-weight: 600;
+          font-family: $font-primary;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+
+    &.allergies-card {
+      flex: 1;
+      min-height: 0;
+
+      .allergy-list {
+        overflow-y: auto;
+
+        .allergy-item {
+          padding: 0.75rem 0;
+          border-bottom: 1px solid $color-border;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          .student-name {
+            font-weight: 600;
+            font-family: $font-secondary;
+            color: $color-text-dark;
+            margin-bottom: 0.5rem;
+            font-size: $font-size-base;
+          }
+
+          .allergy-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+
+            .allergy-tag {
+              background: #fff3cd;
+              color: #856404;
+              padding: 0.25rem 0.75rem;
+              border-radius: $radius-xl;
+              font-size: $font-size-xs;
+              font-weight: 600;
+              font-family: $font-primary;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .loading-state,
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: $color-text-muted;
+    font-family: $font-primary;
+    font-size: $font-size-sm;
+  }
+
+  @media (max-width: 900px) {
+    .stats-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .page-header {
+      margin: 0 1.5rem 1.5rem 1.5rem;
+      padding: 1.5rem;
+
+      .header-content {
+        h1 {
+          font-size: 1.6rem;
+        }
+
+        p {
+          font-size: 1rem;
+        }
+      }
+    }
+
+    .dashboard-wrap {
+      padding: 0 1.5rem 1.5rem 1.5rem;
+    }
+
+    .card {
+      padding: 1.5rem;
+    }
+
+    .stats-row {
+      grid-template-columns: 1fr;
+    }
+  }
+}

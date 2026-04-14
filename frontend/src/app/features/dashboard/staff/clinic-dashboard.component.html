@@ -1,0 +1,109 @@
+<div class="clinic-dashboard">
+  <div class="dashboard-content">
+    <!-- Page Header with Blue Gradient -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1>Clinic Staff Dashboard</h1>
+        <p>Welcome back, {{ staffName }}!</p>
+      </div>
+    </div>
+
+    <div class="dashboard-wrap">
+      <div class="stats-row">
+        <div class="stat-tile tile-students">
+          <div class="tile-value">{{ totalStudents }}</div>
+          <div class="tile-label">Total Students</div>
+        </div>
+        <div class="stat-tile tile-today">
+          <div class="tile-value">{{ todayVisits }}</div>
+          <div class="tile-label">Today's Visits</div>
+        </div>
+        <div class="stat-tile tile-total-visits">
+          <div class="tile-value">{{ totalVisits }}</div>
+          <div class="tile-label">Total Visits</div>
+        </div>
+        <div class="stat-tile tile-pending">
+          <div class="tile-value">{{ pendingVisits }}</div>
+          <div class="tile-label">Pending Visits</div>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="left-column">
+          <!-- Quick Actions -->
+          <div class="card quick-actions">
+            <h2>Quick Actions</h2>
+            <div class="actions-grid">
+              <button class="action-btn" routerLink="/dashboard/staff/visits/new">
+                <img src="assets/icons/add.png" alt="New Visit" class="action-icon-img">
+                <span class="action-text">New Visit</span>
+              </button>
+              <button class="action-btn" routerLink="/dashboard/staff/students">
+                <img src="assets/icons/find.png" alt="Find Student" class="action-icon-img">
+                <span class="action-text">Find Student</span>
+              </button>
+              <button class="action-btn" routerLink="/dashboard/staff/reports">
+                <img src="assets/icons/reports.png" alt="Reports" class="action-icon-img">
+                <span class="action-text">Reports</span>
+              </button>
+              <button class="action-btn" routerLink="/dashboard/staff/profile">
+                <img src="assets/icons/clinic-staff.png" alt="My Profile" class="action-icon-img">
+                <span class="action-text">My Profile</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Recent Visits -->
+          <div class="card recent-visits">
+            <h2>Recent Visits</h2>
+            <div class="loading-state" *ngIf="loadingVisits">
+              <p>Loading visits...</p>
+            </div>
+            <div class="empty-state" *ngIf="!loadingVisits && recentVisits.length === 0">
+              <p>No recent visits recorded</p>
+            </div>
+            <div class="visits-list" *ngIf="!loadingVisits && recentVisits.length > 0">
+              <div *ngFor="let visit of recentVisits" class="visit-item">
+                <div class="visit-avatar">
+                  <img [src]="visit.avatar" alt="Student">
+                </div>
+                <div class="visit-info">
+                  <div class="visit-name">{{ visit.studentName }}</div>
+                  <div class="visit-reason">{{ visit.diagnosis }}</div>
+                </div>
+                <div class="visit-meta">
+                  <div class="visit-time">{{ visit.dateTime }}</div>
+                  <span class="visit-status" [ngClass]="visit.status">{{ visit.status }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="view-all" *ngIf="recentVisits.length > 0">
+              <a routerLink="/dashboard/staff/visits">View All Visits →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-column">
+          <!-- Students with Allergies -->
+          <div class="card allergies-card">
+            <h2>Students with Allergies</h2>
+            <div class="loading-state" *ngIf="loadingAllergies">
+              <p>Loading allergy records...</p>
+            </div>
+            <div class="empty-state" *ngIf="!loadingAllergies && studentsWithAllergies.length === 0">
+              <p>No allergy records found</p>
+            </div>
+            <div class="allergy-list" *ngIf="!loadingAllergies && studentsWithAllergies.length > 0">
+              <div *ngFor="let student of studentsWithAllergies" class="allergy-item">
+                <div class="student-name">{{ student.name }}</div>
+                <div class="allergy-tags">
+                  <span *ngFor="let allergy of student.allergies" class="allergy-tag">{{ allergy }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

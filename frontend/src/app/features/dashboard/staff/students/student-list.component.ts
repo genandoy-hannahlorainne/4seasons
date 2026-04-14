@@ -109,14 +109,29 @@ interface StaffStudentRecord {
   styles: [`
     .student-list-page {
       padding: 2rem;
-      background: #f5f7fa;
+      background: #f0f4f8;
       min-height: 100vh;
     }
 
     .page-header {
-      margin-bottom: 1.5rem;
-      h1 { font-size: 1.8rem; color: #2c3e50; margin-bottom: 0.5rem; font-weight: 600; }
-      p { color: #7f8c8d; font-size: 1rem; }
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      padding: 2rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+      
+      h1 {
+        font-size: 2rem;
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+      }
+
+      p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+        margin: 0;
+      }
     }
 
     .filters-section {
@@ -179,7 +194,7 @@ interface StaffStudentRecord {
       border-collapse: collapse;
 
       th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e9ecef; }
-      th { background: #f8f9fa; font-weight: 600; color: #2c3e50; font-size: 0.9rem; }
+      th { background: #f8f9fa; font-weight: 600; color: #052355; font-size: 0.9rem; }
       tbody tr:hover { background: #f8f9fa; }
     }
 

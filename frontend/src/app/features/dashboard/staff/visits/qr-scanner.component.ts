@@ -30,24 +30,36 @@ import { Html5Qrcode } from 'html5-qrcode';
     .qr-scanner-container {
       background: white;
       border-radius: 12px;
-      padding: 1.5rem;
+      padding: 0;
       max-width: 500px;
       margin: 0 auto;
+      overflow: hidden;
     }
 
     .scanner-header {
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      padding: 1.5rem;
       text-align: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0;
 
-      h3 { color: #2c3e50; margin: 0 0 0.5rem; }
-      p { color: #7f8c8d; margin: 0; font-size: 0.9rem; }
+      h3 { 
+        color: #ffffff; 
+        margin: 0 0 0.5rem;
+        font-weight: 700;
+        font-size: 1.5rem;
+      }
+      p { 
+        color: rgba(255, 255, 255, 0.8); 
+        margin: 0; 
+        font-size: 0.95rem; 
+      }
     }
 
     .scanner-wrapper {
       background: #000;
-      border-radius: 8px;
       overflow: hidden;
-      margin-bottom: 1rem;
+      margin: 1rem 1.5rem;
+      border-radius: 8px;
     }
 
     .qr-reader {
@@ -71,7 +83,7 @@ import { Html5Qrcode } from 'html5-qrcode';
     .scanner-status {
       text-align: center;
       padding: 0.75rem;
-      margin-bottom: 1rem;
+      margin: 0 1.5rem 1rem;
       border-radius: 8px;
 
       .success { color: #155724; background: #d4edda; padding: 0.5rem 1rem; border-radius: 4px; }
@@ -82,6 +94,7 @@ import { Html5Qrcode } from 'html5-qrcode';
     .scanner-actions {
       display: flex;
       justify-content: center;
+      padding: 0 1.5rem 1.5rem;
     }
 
     .btn {
