@@ -55,9 +55,9 @@ interface StudentVisitSummary {
       <!-- Filters -->
       <div class="filters-section" *ngIf="!loading && !error">
         <div class="search-box">
-          <input 
-            type="text" 
-            [(ngModel)]="searchTerm" 
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
             (ngModelChange)="filterVisits()"
             placeholder="Search by student name or number..."
             class="search-input">
@@ -183,6 +183,7 @@ interface StudentVisitSummary {
     </div>
   `,
   styles: [`
+    /* Enhanced Medical Visits Styling - Updated */
     .visits-page {
       padding: 2rem;
       background: #f0f4f8;
@@ -191,28 +192,30 @@ interface StudentVisitSummary {
 
     .page-header {
       margin-bottom: 2rem;
-      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      padding: 2rem 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+      background: linear-gradient(135deg, rgba(5, 35, 85, 0.95) 0%, rgba(83, 129, 178, 0.95) 100%);
+      padding: 2.5rem 2.5rem;
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 2rem;
 
       .header-content {
         h1 {
-          font-size: 2rem;
+          font-size: 2.5rem;
           color: #ffffff;
           margin-bottom: 0.5rem;
           font-weight: 700;
+          line-height: 1.2;
         }
 
         p {
-          color: rgba(255, 255, 255, 0.8);
+          color: rgba(255, 255, 255, 0.95);
           font-size: 1.1rem;
           margin: 0;
+          line-height: 1.6;
         }
       }
 
@@ -222,16 +225,39 @@ interface StudentVisitSummary {
     }
 
     .btn {
-      padding: 0.75rem 1.5rem;
+      padding: 0.875rem 2rem;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
-      font-weight: 500;
+      font-weight: 700;
+      font-size: 0.95rem;
       transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
 
-      &.btn-primary { background: #007bff; color: white; &:hover { background: #0056b3; } }
-      &.btn-outline { background: white; color: #007bff; border: 1px solid #007bff; &:hover { background: #e3f2fd; } }
-      &.btn-sm { padding: 0.4rem 0.75rem; font-size: 0.85rem; }
+      &.btn-primary {
+        background: white;
+        color: #052355;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        &:hover {
+          background: #eef4ff;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+        }
+      }
+      &.btn-outline {
+        background: white;
+        color: #052355;
+        border: 2px solid #052355;
+        &:hover {
+          background: #052355;
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 16px rgba(5, 35, 85, 0.2);
+        }
+      }
+      &.btn-sm { padding: 0.75rem 1.5rem; font-size: 0.9rem; }
     }
 
     .loading-state, .error-state {
@@ -273,42 +299,76 @@ interface StudentVisitSummary {
 
     .filters-section {
       display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
       flex-wrap: wrap;
     }
 
     .search-box {
       flex: 1;
       min-width: 300px;
+      position: relative;
 
       .search-input {
         width: 100%;
-        padding: 0.75rem 1rem;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        font-size: 1rem;
+        padding: 0.875rem 1.25rem 0.875rem 3rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 0.95rem;
         background: white;
-        &:focus { outline: none; border-color: #007bff; }
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #052355;
+          box-shadow: 0 4px 16px rgba(5, 35, 85, 0.1);
+        }
+
+        &::placeholder {
+          color: #94a3b8;
+        }
+      }
+
+      &::before {
+        content: '🔍';
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1rem;
+        pointer-events: none;
       }
     }
 
-    .filter-group { display: flex; gap: 0.5rem; }
+    .filter-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
 
     .filter-input, .filter-select {
-      padding: 0.75rem 1rem;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
-      font-size: 0.9rem;
+      padding: 0.875rem 1.25rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 0.95rem;
       background: white;
-      &:focus { outline: none; border-color: #007bff; }
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s ease;
+      min-width: 150px;
+
+      &:focus {
+        outline: none;
+        border-color: #052355;
+        box-shadow: 0 4px 16px rgba(5, 35, 85, 0.1);
+      }
     }
 
     .card {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      background: transparent;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
     }
 
     .no-visits-alert, .no-results-alert {
@@ -349,50 +409,79 @@ interface StudentVisitSummary {
       }
     }
 
-    .student-summary-list { display: grid; gap: 1rem; }
+    .student-summary-list {
+      display: grid;
+      gap: 1.5rem;
+    }
 
     .student-summary-card {
-      border: 1px solid #e9ecef;
-      border-radius: 10px;
-      padding: 1rem;
-      transition: all 0.2s ease;
-      &:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+      background: white;
+      border: 1px solid rgba(5, 35, 85, 0.1);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+      &:hover {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+      }
     }
 
     .student-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid #e9ecef;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 2px solid #e8f0f8;
+      gap: 2rem;
     }
 
     .student-info {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 1.25rem;
 
       .student-avatar {
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
-        background: #007bff;
+        background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        
+        box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+        flex-shrink: 0;
+
         .avatar-text {
           color: white;
-          font-weight: 600;
-          font-size: 1.1rem;
+          font-weight: 700;
+          font-size: 1.5rem;
         }
       }
-      
-      .student-details { display: flex; flex-direction: column; }
-      .student-name { font-weight: 600; color: #2c3e50; }
-      .student-number { font-size: 0.85rem; color: #7f8c8d; }
-      .student-grade { font-size: 0.8rem; color: #95a5a6; }
+
+      .student-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .student-name {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 1.3rem;
+        text-transform: capitalize;
+      }
+      .student-number {
+        font-size: 0.9rem;
+        color: #64748b;
+        font-weight: 500;
+      }
+      .student-grade {
+        font-size: 0.9rem;
+        color: #475569;
+        font-weight: 600;
+      }
     }
 
     .visit-stats {
@@ -402,80 +491,110 @@ interface StudentVisitSummary {
       .stat {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: flex-end;
+        gap: 0.25rem;
 
-        .stat-label { font-size: 0.8rem; color: #7f8c8d; }
-        .stat-value { font-size: 1.2rem; font-weight: 600; color: #2c3e50; }
+        .stat-label {
+          font-size: 0.85rem;
+          color: #64748b;
+          font-weight: 500;
+        }
+        .stat-value {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #052355;
+        }
       }
     }
 
-    .student-body { margin-bottom: 1rem; }
+    .student-body {
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
 
     .visit-info {
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
+      gap: 1rem;
       align-items: center;
 
-      .info-label { color: #7f8c8d; font-size: 0.9rem; }
-      .info-value { color: #2c3e50; font-size: 0.9rem; }
+      .info-label {
+        color: #64748b;
+        font-size: 0.95rem;
+        font-weight: 600;
+        min-width: 150px;
+      }
+      .info-value {
+        color: #0f172a;
+        font-size: 0.95rem;
+        font-weight: 500;
+      }
     }
 
     .visit-type-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      font-weight: 500;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
       text-transform: capitalize;
 
-      &.type-routine { background: #e3f2fd; color: #1976d2; }
-      &.type-emergency { background: #ffebee; color: #d32f2f; }
+      &.type-routine { background: #e3f2fd; color: #1565c0; }
+      &.type-emergency { background: #ffebee; color: #c62828; }
     }
 
     .emergency-badge {
       background: #ffcdd2;
       color: #c62828;
-      padding: 0.25rem 0.5rem;
-      border-radius: 8px;
-      font-size: 0.75rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
       font-weight: 600;
     }
 
     .status-badge {
-      padding: 0.25rem 0.75rem;
+      padding: 0.4rem 1rem;
       border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 500;
+      font-size: 0.85rem;
+      font-weight: 600;
 
       &.status-open { background: #fff3cd; color: #856404; }
       &.status-closed { background: #d4edda; color: #155724; }
       &.status-referred { background: #f8d7da; color: #721c24; }
+      &.status-cancelled { background: #f8d7da; color: #721c24; }
     }
 
-    .student-actions { 
-      display: flex; 
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
+    .student-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
       flex-wrap: wrap;
     }
 
     .recent-visits {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid #e9ecef;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e8f0f8;
 
       .visits-header {
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        color: #007bff;
-        font-weight: 500;
-        font-size: 0.9rem;
+        color: #0ea5e9;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 0.5rem 0;
+        transition: all 0.2s ease;
+
+        &:hover {
+          color: #0284c7;
+        }
 
         .toggle-icon {
           display: inline-block;
           transition: transform 0.2s ease;
+          font-size: 0.85rem;
         }
 
         &:hover { text-decoration: underline; }
@@ -499,24 +618,24 @@ interface StudentVisitSummary {
         align-items: center;
 
         .visit-date { color: #7f8c8d; }
-        .visit-type-small { 
-          color: #2c3e50; 
+        .visit-type-small {
+          color: #2c3e50;
           font-weight: 500;
           padding: 0.2rem 0.5rem;
           border-radius: 8px;
           font-size: 0.75rem;
           text-align: center;
-          
+
           &.type-routine { background: #e3f2fd; color: #1976d2; }
           &.type-emergency { background: #ffebee; color: #d32f2f; }
         }
         .visit-complaint { color: #495057; }
-        .visit-status { 
+        .visit-status {
           font-size: 0.75rem;
           padding: 0.2rem 0.5rem;
           border-radius: 8px;
           text-align: center;
-          
+
           &.status-open { background: #fff3cd; color: #856404; }
           &.status-closed { background: #d4edda; color: #155724; }
           &.status-referred { background: #f8d7da; color: #721c24; }
@@ -542,7 +661,7 @@ export class VisitsListComponent implements OnInit {
   typeFilter = '';
   loading = true;
   error: string | null = null;
-  
+
   allVisits: any[] = [];
   studentSummaries: StudentVisitSummary[] = [];
   filteredStudents: StudentVisitSummary[] = [];
@@ -560,7 +679,7 @@ export class VisitsListComponent implements OnInit {
   loadVisits(): void {
     this.loading = true;
     this.error = null;
-    
+
     const params: any = {};
     if (this.dateFilter) {
       params.date_from = this.dateFilter;
@@ -592,7 +711,7 @@ export class VisitsListComponent implements OnInit {
     this.allVisits.forEach((visit) => {
       const studentId = visit.student?.student_id;
       if (!studentId) return;
-      
+
       if (!studentMap.has(studentId)) {
         studentMap.set(studentId, {
           student_id: studentId,
@@ -638,16 +757,16 @@ export class VisitsListComponent implements OnInit {
 
   filterVisits(): void {
     this.filteredStudents = this.studentSummaries.filter(student => {
-      const matchesSearch = !this.searchTerm || 
+      const matchesSearch = !this.searchTerm ||
         student.student_name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         student.student_number.toLowerCase().includes(this.searchTerm.toLowerCase());
-      
-      const matchesStatus = !this.statusFilter || 
+
+      const matchesStatus = !this.statusFilter ||
         (student.last_visit && student.last_visit.status === this.statusFilter);
-      
-      const matchesType = !this.typeFilter || 
+
+      const matchesType = !this.typeFilter ||
         (student.last_visit && student.last_visit.visit_type === this.typeFilter);
-      
+
       return matchesSearch && matchesStatus && matchesType;
     });
   }
@@ -678,12 +797,12 @@ export class VisitsListComponent implements OnInit {
 
   getLastVisitDate(dateString?: string): string {
     if (!dateString) return 'Never';
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
