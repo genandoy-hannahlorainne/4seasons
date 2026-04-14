@@ -9,7 +9,7 @@ import { StaffService } from '../../../../core/services/staff.service';
   selector: 'app-staff-profile',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  styleUrls: ['./staff-profile.component.scss'],
+  styleUrls: ['./staff-profile.component.scss', '../shared-staff-styles.scss'],
   template: `
     <div class="staff-profile">
       <div class="profile-header">
@@ -138,7 +138,7 @@ export class StaffProfileComponent implements OnInit {
     phone: '',
     position: 'Clinic Staff',
     staffCode: '',
-    avatar: 'assets/user-female.png'
+    avatar: 'assets/icons/clinic-staff.png'
   };
 
   passwordForm = {

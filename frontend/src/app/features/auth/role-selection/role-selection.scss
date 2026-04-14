@@ -81,22 +81,25 @@
   font-family: 'Albert Sans', sans-serif;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.625rem;
+  justify-content: flex-start;
+  gap: 1rem;
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 1rem 1.5rem;
   background: #052355;
   color: white;
   border: none;
   border-radius: 10px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 14px rgba(5, 35, 85, 0.3);
 
-  svg {
+  .role-icon {
+    width: 32px;
+    height: 32px;
     flex-shrink: 0;
+    filter: brightness(0) invert(1);
   }
 
   &:hover {

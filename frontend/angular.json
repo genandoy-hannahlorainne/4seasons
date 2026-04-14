@@ -37,6 +37,16 @@
                 "glob": "**/*",
                 "input": "node_modules/@fortawesome/fontawesome-free/webfonts",
                 "output": "/webfonts"
+              },
+              {
+                "glob": "_headers",
+                "input": "./",
+                "output": "/"
+              },
+              {
+                "glob": "_redirects",
+                "input": "./",
+                "output": "/"
               }
             ],
             "styles": [

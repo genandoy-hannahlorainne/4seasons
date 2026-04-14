@@ -216,23 +216,42 @@ import { AuthService } from '../../../../core/services/auth.service';
   styles: [`
     .visit-form-page {
       padding: 2rem;
-      background: #f5f7fa;
+      background: #f0f4f8;
       min-height: 100vh;
     }
 
     .page-header {
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      padding: 2rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+      
       .back-btn {
-        background: none;
-        border: none;
-        color: #007bff;
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        color: #ffffff;
         cursor: pointer;
         font-size: 0.9rem;
-        margin-bottom: 0.5rem;
-        padding: 0;
-        &:hover { text-decoration: underline; }
+        margin-bottom: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        display: inline-block;
+        
+        &:hover { 
+          background: rgba(255, 255, 255, 0.25);
+          border-color: #ffffff;
+          text-decoration: none;
+        }
       }
-      h1 { font-size: 1.8rem; color: #2c3e50; font-weight: 600; }
+      
+      h1 { 
+        font-size: 2rem; 
+        color: #ffffff; 
+        font-weight: 700;
+        margin: 0;
+      }
     }
 
     .visit-form { max-width: 800px; }
@@ -244,7 +263,7 @@ import { AuthService } from '../../../../core/services/auth.service';
       margin-bottom: 1.5rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 
-      h3 { color: #2c3e50; margin: 0 0 1rem; font-size: 1.1rem; }
+      h3 { color: #052355; margin: 0 0 1rem; font-size: 1.1rem; font-weight: 600; }
     }
 
     .scan-section {
