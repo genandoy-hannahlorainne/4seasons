@@ -1,19 +1,20 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { 
-  EmergencyDrill, 
-  DrillDashboard, 
-  CreateDrillRequest, 
-  AddParticipantsRequest, 
-  ScanParticipantRequest 
+import {
+  EmergencyDrill,
+  DrillDashboard,
+  CreateDrillRequest,
+  AddParticipantsRequest,
+  ScanParticipantRequest
 } from '../models/emergency-drill.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EmergencyDrillService {
-  private apiUrl = '/api/emergency-drills';
+  private apiUrl = `${environment.apiUrl}/emergency-drills`;
 
   constructor(private http: HttpClient) {}
 
@@ -69,8 +70,8 @@ export class EmergencyDrillService {
 
   // Search users for scanning
   searchUsers(id: number, query: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${id}/search-users`, { 
-      params: { q: query } 
+    return this.http.get<any>(`${this.apiUrl}/${id}/search-users`, {
+      params: { q: query }
     });
   }
 }
