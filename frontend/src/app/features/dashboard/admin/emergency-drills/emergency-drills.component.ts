@@ -144,17 +144,17 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             <h3>Create Emergency Drill</h3>
             <button class="close-btn" (click)="showCreateModal = false">&times;</button>
           </div>
-          
+
           <form (ngSubmit)="createDrill()" class="modal-body">
             <div class="form-group">
               <label>Drill Name *</label>
-              <input type="text" [(ngModel)]="newDrill.drill_name" name="drill_name" 
+              <input type="text" [(ngModel)]="newDrill.drill_name" name="drill_name"
                      class="form-control" required>
             </div>
-            
+
             <div class="form-group">
               <label>Drill Type *</label>
-              <select [(ngModel)]="newDrill.drill_type" name="drill_type" 
+              <select [(ngModel)]="newDrill.drill_type" name="drill_type"
                       class="form-control" required>
                 <option value="">Select Type</option>
                 <option value="earthquake">Earthquake</option>
@@ -164,19 +164,19 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
                 <option value="evacuation">Evacuation</option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label>Description</label>
-              <textarea [(ngModel)]="newDrill.description" name="description" 
+              <textarea [(ngModel)]="newDrill.description" name="description"
                         class="form-control" rows="3"></textarea>
             </div>
-            
+
             <div class="form-group">
               <label>Scheduled Date/Time</label>
-              <input type="datetime-local" [(ngModel)]="newDrill.scheduled_at" 
+              <input type="datetime-local" [(ngModel)]="newDrill.scheduled_at"
                      name="scheduled_at" class="form-control">
             </div>
-            
+
             <div class="modal-actions">
               <button type="button" class="btn btn-secondary" (click)="showCreateModal = false">
                 Cancel
@@ -491,12 +491,12 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       gap: 5px;
     }
 
-    .btn-primary { 
+    .btn-primary {
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       color: white;
       box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
       font-weight: 600;
-      
+
       &:hover:not(:disabled) {
         background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
         box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
@@ -504,22 +504,22 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       }
     }
     .btn-danger { background: #dc3545; color: white; }
-    .btn-secondary { 
-      background: #e9ecef; 
+    .btn-secondary {
+      background: #e9ecef;
       color: #2c3e50;
       font-weight: 600;
-      
+
       &:hover {
         background: #dee2e6;
         transform: translateY(-1px);
       }
     }
-    .btn-outline { 
-      background: white; 
-      color: #052355; 
+    .btn-outline {
+      background: white;
+      color: #052355;
       border: 2px solid #052355;
       font-weight: 600;
-      
+
       &:hover {
         background: #052355;
         color: white;
@@ -657,7 +657,7 @@ export class EmergencyDrillsComponent implements OnInit {
   typeFilter = '';
   showCreateModal = false;
   creating = false;
-  
+
   // Confirmation modal
   showConfirmModal = false;
   confirmAction: (() => void) | null = null;
@@ -725,6 +725,7 @@ export class EmergencyDrillsComponent implements OnInit {
     this.drillService.createDrill(payload).subscribe({
       next: (response) => {
         this.drills.unshift(response.data);
+        this.activeDrills.unshift(response.data);
         this.showCreateModal = false;
         this.resetNewDrill();
         this.creating = false;

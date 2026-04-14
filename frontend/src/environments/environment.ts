@@ -1,4 +1,4 @@
 export const environment = {
-  production: true,
-  apiUrl: 'https://api.studentcare.site/api'
+  production: false,
+  apiUrl: '/api'
 };

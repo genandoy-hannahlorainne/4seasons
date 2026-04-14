@@ -22,7 +22,7 @@ class EmergencyDrillController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = EmergencyDrill::with(['creator', 'participants.student'])
+            $query = EmergencyDrill::with(['creator', 'participants.user', 'participants.student'])
                 ->orderBy('created_at', 'desc');
 
             if ($request->has('status')) {
@@ -38,7 +38,11 @@ class EmergencyDrillController extends BaseController
             return $this->sendResponse($drills, 'Emergency drills retrieved successfully');
 
         } catch (\Exception $e) {
-            return $this->sendError('Failed to retrieve drills', $e->getMessage());
+            Log::error('Emergency drills index error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->sendError('Failed to retrieve drills', $e->getMessage(), 500);
         }
     }
 
@@ -101,7 +105,12 @@ class EmergencyDrillController extends BaseController
             ], 'Drill details retrieved successfully');
 
         } catch (\Exception $e) {
-            return $this->sendError('Failed to retrieve drill', $e->getMessage());
+            Log::error('Emergency drill show error', [
+                'drill_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->sendError('Failed to retrieve drill', $e->getMessage(), 500);
         }
     }
 
@@ -263,7 +272,7 @@ class EmergencyDrillController extends BaseController
 
             // Find the participant by user_id or student_number
             $participant = null;
-            
+
             if ($request->user_id) {
                 $participant = DrillParticipant::where('drill_id', $drill->id)
                     ->where('user_id', $request->user_id)
@@ -411,7 +420,7 @@ class EmergencyDrillController extends BaseController
             'fastest_response' => $scannedParticipants->min('response_time_seconds'),
             'slowest_response' => $scannedParticipants->max('response_time_seconds'),
             'total_scans' => $drill->scans->count(),
-            'completion_rate' => $participants->count() > 0 ? 
+            'completion_rate' => $participants->count() > 0 ?
                 ($scannedParticipants->count() / $participants->count()) * 100 : 0
         ];
 
@@ -425,7 +434,7 @@ class EmergencyDrillController extends BaseController
     {
         try {
             $query = $request->get('q', '');
-            
+
             if (strlen($query) < 2) {
                 return $this->sendResponse([], 'Query too short');
             }
@@ -459,7 +468,7 @@ class EmergencyDrillController extends BaseController
                     'student_name' => $student ? "{$student->first_name} {$student->last_name}" : null,
                     'role' => $user->role->role_name ?? 'Unknown',
                     'is_participant' => $isParticipant,
-                    'display_text' => $student 
+                    'display_text' => $student
                         ? "{$student->first_name} {$student->last_name} ({$student->student_number})"
                         : "{$user->full_name} (ID: {$user->user_id})"
                 ];
