@@ -232,6 +232,100 @@ interface UsersResponse {
         </div>
       </div>
     </div>
+
+    <!-- Emergency Details Modal -->
+    <div class="modal-overlay" *ngIf="showEmergencyModal" (click)="closeEmergencyModal()">
+      <div class="emergency-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="header-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <h2>Emergency Alert Details</h2>
+          <button class="close-btn" (click)="closeEmergencyModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="modal-body" *ngIf="selectedEmergency">
+          <!-- Student Information -->
+          <div class="info-section">
+            <h3><i class="fa-solid fa-user"></i> Student Information</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Name:</span>
+                <span class="value">{{ selectedEmergency?.student?.full_name || 'N/A' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Student Number:</span>
+                <span class="value">{{ selectedEmergency?.student?.student_number || 'N/A' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Grade & Section:</span>
+                <span class="value">{{ selectedEmergency?.student?.grade_section || 'N/A' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visit Information -->
+          <div class="info-section">
+            <h3><i class="fa-solid fa-notes-medical"></i> Visit Information</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Visit Type:</span>
+                <span class="value emergency-badge">{{ selectedEmergency?.visit?.visit_type || 'N/A' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Diagnosis:</span>
+                <span class="value">{{ selectedEmergency?.visit?.diagnosis || selectedEmergency?.visit?.chief_complaint || 'N/A' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Status:</span>
+                <span class="value status-badge" [ngClass]="selectedEmergency?.visit?.status?.toLowerCase()">
+                  {{ selectedEmergency?.visit?.status || 'N/A' }}
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="label">Time:</span>
+                <span class="value">{{ selectedEmergency?.timeAgo || 'N/A' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Staff Information -->
+          <div class="info-section" *ngIf="selectedEmergency?.staff">
+            <h3><i class="fa-solid fa-user-nurse"></i> Attending Staff</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Name:</span>
+                <span class="value">{{ selectedEmergency?.staff?.name || 'N/A' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Position:</span>
+                <span class="value">{{ selectedEmergency?.staff?.position || 'N/A' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alert Message -->
+          <div class="alert-message">
+            <i class="fa-solid fa-circle-info"></i>
+            <p>{{ selectedEmergency?.message }}</p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="closeEmergencyModal()">
+            <i class="fa-solid fa-xmark"></i> Close
+          </button>
+          <button class="btn btn-primary" (click)="sendSMSToParent(selectedEmergency)">
+            <i class="fa-solid fa-message"></i> Send SMS to Parent
+          </button>
+          <button class="btn btn-success" (click)="markAsReadAndClose()">
+            <i class="fa-solid fa-check"></i> Mark as Read
+          </button>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
     .admin-dashboard {
@@ -820,6 +914,282 @@ interface UsersResponse {
       .content-grid { grid-template-columns: 1fr; }
     }
 
+    // Emergency Modal Styles
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .emergency-modal {
+      background: white;
+      border-radius: 16px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 90vh;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+
+      .header-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        animation: pulse 2s infinite;
+      }
+
+      h2 {
+        flex: 1;
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+
+      .close-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: rotate(90deg);
+        }
+      }
+    }
+
+    .modal-body {
+      padding: 2rem;
+      overflow-y: auto;
+      flex: 1;
+
+      .info-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #f0f0f0;
+
+        &:last-of-type {
+          border-bottom: none;
+        }
+
+        h3 {
+          color: #2c3e50;
+          font-size: 1.1rem;
+          font-weight: 600;
+          margin: 0 0 1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          i {
+            color: #e74c3c;
+            font-size: 1rem;
+          }
+        }
+
+        .info-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
+
+          @media (max-width: 600px) {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .info-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+
+          .label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            font-weight: 500;
+          }
+
+          .value {
+            font-size: 1rem;
+            color: #2c3e50;
+            font-weight: 600;
+
+            &.emergency-badge {
+              background: #ffebee;
+              color: #c62828;
+              padding: 0.25rem 0.75rem;
+              border-radius: 20px;
+              display: inline-block;
+              font-size: 0.9rem;
+              width: fit-content;
+            }
+
+            &.status-badge {
+              padding: 0.25rem 0.75rem;
+              border-radius: 20px;
+              display: inline-block;
+              font-size: 0.9rem;
+              width: fit-content;
+
+              &.open, &.pending {
+                background: #fff3cd;
+                color: #856404;
+              }
+
+              &.closed, &.completed {
+                background: #d4edda;
+                color: #155724;
+              }
+
+              &.referred {
+                background: #d1ecf1;
+                color: #0c5460;
+              }
+            }
+          }
+        }
+      }
+
+      .alert-message {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+
+        i {
+          color: #856404;
+          font-size: 1.25rem;
+          margin-top: 0.1rem;
+        }
+
+        p {
+          margin: 0;
+          color: #856404;
+          line-height: 1.5;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .modal-footer {
+      padding: 1.5rem 2rem;
+      background: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+
+        i {
+          font-size: 1rem;
+        }
+
+        &.btn-secondary {
+          background: #6c757d;
+          color: white;
+
+          &:hover {
+            background: #545b62;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+          }
+        }
+
+        &.btn-primary {
+          background: #007bff;
+          color: white;
+
+          &:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+          }
+        }
+
+        &.btn-success {
+          background: #28a745;
+          color: white;
+
+          &:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+          }
+        }
+      }
+
+      @media (max-width: 600px) {
+        flex-direction: column;
+
+        .btn {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    }
+
     @media (max-width: 768px) {
       .admin-dashboard { padding: 1rem; }
       .stats-grid { grid-template-columns: 1fr; }
@@ -827,6 +1197,33 @@ interface UsersResponse {
       .users-table .table-header, .users-table .table-row {
         grid-template-columns: 1fr 1fr;
         .user-date, .user-status { display: none; }
+      }
+
+      .emergency-modal {
+        width: 95%;
+        max-height: 95vh;
+      }
+
+      .modal-header {
+        padding: 1rem 1.5rem;
+
+        h2 {
+          font-size: 1.2rem;
+        }
+
+        .header-icon {
+          width: 40px;
+          height: 40px;
+          font-size: 1.2rem;
+        }
+      }
+
+      .modal-body {
+        padding: 1.5rem;
+      }
+
+      .modal-footer {
+        padding: 1rem 1.5rem;
       }
     }
   `]
@@ -1155,30 +1552,25 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Emergency modal state
+  showEmergencyModal = false;
+  selectedEmergency: any = null;
+
   viewEmergencyDetails(notification: any): void {
-    // Navigate to detailed view or show modal
-    // console.log(...); // Removed for production
+    this.selectedEmergency = notification;
+    this.showEmergencyModal = true;
+  }
 
-    // Create a detailed modal or alert
-    const details = `
-Emergency Details:
+  closeEmergencyModal(): void {
+    this.showEmergencyModal = false;
+    this.selectedEmergency = null;
+  }
 
-Student: ${notification?.student?.full_name || 'N/A'}
-Student Number: ${notification?.student?.student_number || 'N/A'}
-Grade & Section: ${notification?.student?.grade_section || 'N/A'}
-
-Visit Type: ${notification?.visit?.visit_type || 'N/A'}
-Diagnosis: ${notification?.visit?.diagnosis || notification?.visit?.chief_complaint || 'N/A'}
-Visit Status: ${notification?.visit?.status || 'N/A'}
-Time: ${notification?.timeAgo || 'N/A'}
-
-Staff: ${notification?.staff?.name || 'N/A'}
-Position: ${notification?.staff?.position || 'N/A'}
-    `.trim();
-
-    if (confirm(details + '\n\nMark this notification as read?')) {
-      this.markNotificationAsRead(notification?.notification_id);
+  markAsReadAndClose(): void {
+    if (this.selectedEmergency?.notification_id) {
+      this.markNotificationAsRead(this.selectedEmergency.notification_id);
     }
+    this.closeEmergencyModal();
   }
 
   markNotificationAsRead(notificationId: number): void {
