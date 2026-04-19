@@ -131,50 +131,122 @@ class EmergencyDrillController extends BaseController
      */
     public function start($id)
     {
+        // IMMEDIATE VALIDATION - NO EXCEPTIONS, NO TRY-CATCH
+        $drill = EmergencyDrill::find($id);
+        
+        \Log::info('🔥 START DRILL VALIDATION', [
+            'drill_id' => $id,
+            'drill_found' => !!$drill,
+            'status' => $drill ? $drill->status : null,
+            'scheduled_at' => $drill ? $drill->scheduled_at : null,
+            'scheduled_at_type' => $drill && $drill->scheduled_at ? gettype($drill->scheduled_at) : null,
+            'scheduled_at_string' => $drill && $drill->scheduled_at ? $drill->scheduled_at->toDateTimeString() : null,
+        ]);
+        
+        if (!$drill) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Drill not found'
+            ], 404);
+        }
+
+        if ($drill->status !== 'planned') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot start drill - not in planned status'
+            ], 403);
+        }
+
+        // Check scheduled time IMMEDIATELY
+        if ($drill->scheduled_at) {
+            $now = \Carbon\Carbon::now('Asia/Manila');
+            $scheduledTime = \Carbon\Carbon::parse($drill->scheduled_at)->timezone('Asia/Manila');
+            
+            \Log::info('🕐 TIME COMPARISON', [
+                'now' => $now->toDateTimeString(),
+                'scheduled' => $scheduledTime->toDateTimeString(),
+                'is_before' => $now->lessThan($scheduledTime),
+                'diff_minutes' => $now->diffInMinutes($scheduledTime, false)
+            ]);
+            
+            if ($now->lessThan($scheduledTime)) {
+                $minutesUntil = $now->diffInMinutes($scheduledTime);
+                \Log::warning('❌ BLOCKED - TOO EARLY', ['minutes_until' => $minutesUntil]);
+                return response()->json([
+                    'success' => false,
+                    'message' => "Cannot start drill. Scheduled for {$scheduledTime->format('g:i A')}. Wait {$minutesUntil} more minutes."
+                ], 403);
+            }
+            
+            $allowedEndTime = $scheduledTime->copy()->addMinutes(30);
+            if ($now->greaterThan($allowedEndTime)) {
+                \Log::warning('❌ BLOCKED - TOO LATE');
+                return response()->json([
+                    'success' => false,
+                    'message' => "Cannot start drill. Time window has passed."
+                ], 403);
+            }
+        } else {
+            \Log::info('⚠️ NO SCHEDULED TIME - ALLOWING START');
+        }
+
+        Log::info('🔥🔥🔥 START METHOD CALLED', ['id' => $id, 'time' => now()->toDateTimeString()]);
+        
         try {
             $drill = EmergencyDrill::findOrFail($id);
+
+            Log::info('🚨 START DRILL REQUEST', [
+                'drill_id' => $drill->id,
+                'drill_name' => $drill->drill_name,
+                'status' => $drill->status,
+                'scheduled_at_raw' => $drill->scheduled_at,
+                'scheduled_at_formatted' => $drill->scheduled_at ? $drill->scheduled_at->toDateTimeString() : null,
+            ]);
 
             if ($drill->status !== 'planned') {
                 return $this->sendError('Cannot start drill', 'Drill is not in planned status');
             }
 
-            // Check if scheduled time allows starting
-            if ($drill->scheduled_at) {
-                $now = now();
-                $scheduledTime = $drill->scheduled_at;
-                $allowedEndTime = $scheduledTime->copy()->addMinutes(30);
+            // Use the model's canStart method for validation
+            if (!$drill->canStart()) {
+                if ($drill->scheduled_at) {
+                    $now = Carbon::now('Asia/Manila');
+                    $scheduledTime = Carbon::parse($drill->scheduled_at)->timezone('Asia/Manila');
+                    $allowedEndTime = $scheduledTime->copy()->addMinutes(30);
 
-                // Debug logging
-                Log::info('Drill start time check', [
-                    'drill_id' => $drill->id,
-                    'now' => $now->toDateTimeString(),
-                    'now_timezone' => $now->timezone->getName(),
-                    'scheduled_at' => $scheduledTime->toDateTimeString(),
-                    'scheduled_timezone' => $scheduledTime->timezone->getName(),
-                    'allowed_end' => $allowedEndTime->toDateTimeString(),
-                    'can_start' => $now->greaterThanOrEqualTo($scheduledTime) && $now->lessThanOrEqualTo($allowedEndTime)
-                ]);
+                    Log::warning('❌ BLOCKED: Drill cannot be started', [
+                        'now' => $now->toDateTimeString(),
+                        'scheduled' => $scheduledTime->toDateTimeString(),
+                        'is_before' => $now->lessThan($scheduledTime),
+                        'is_after_window' => $now->greaterThan($allowedEndTime)
+                    ]);
 
-                if ($now->lessThan($scheduledTime)) {
-                    $scheduledFormatted = $scheduledTime->format('F j, Y g:i A');
+                    if ($now->lessThan($scheduledTime)) {
+                        $scheduledFormatted = $scheduledTime->format('F j, Y g:i A');
+                        $minutesUntil = $now->diffInMinutes($scheduledTime);
 
-                    return $this->sendError(
-                        'Cannot start drill',
-                        "This drill is scheduled for {$scheduledFormatted}. You can only start it at or after the scheduled time (up to 30 minutes after).",
-                        403
-                    );
+                        return $this->sendError(
+                            'Cannot start drill',
+                            "This drill is scheduled for {$scheduledFormatted}. You can only start it at or after the scheduled time. {$minutesUntil} minutes remaining.",
+                            403
+                        );
+                    }
+
+                    if ($now->greaterThan($allowedEndTime)) {
+                        $scheduledFormatted = $scheduledTime->format('F j, Y g:i A');
+
+                        return $this->sendError(
+                            'Cannot start drill',
+                            "The time window for this drill has passed. It was scheduled for {$scheduledFormatted} and could only be started within 30 minutes after.",
+                            403
+                        );
+                    }
                 }
 
-                if ($now->greaterThan($allowedEndTime)) {
-                    $scheduledFormatted = $scheduledTime->format('F j, Y g:i A');
-
-                    return $this->sendError(
-                        'Cannot start drill',
-                        "The time window for this drill has passed. It was scheduled for {$scheduledFormatted} and could only be started within 30 minutes after.",
-                        403
-                    );
-                }
+                return $this->sendError('Cannot start drill', 'Drill cannot be started at this time', 403);
             }
+
+            Log::info('✅ ALLOWED: Drill can be started');
 
             DB::beginTransaction();
 

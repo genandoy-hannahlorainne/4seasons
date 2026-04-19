@@ -88,7 +88,9 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
                 <i class="fas fa-eye"></i> View
               </button>
               <button *ngIf="drill.status === 'planned'"
-                      class="btn btn-sm btn-success"
+                      class="btn btn-sm"
+                      [class.btn-success]="canStartDrill(drill)"
+                      [class.btn-secondary]="!canStartDrill(drill)"
                       (click)="startDrill(drill.id)"
                       [disabled]="!canStartDrill(drill)"
                       [title]="getStartButtonTooltip(drill)">
@@ -736,6 +738,14 @@ export class EmergencyDrillsComponent implements OnInit {
 
   ngOnInit() {
     this.loadDrills();
+    
+    // Refresh drills every 30 seconds to update button states
+    setInterval(() => {
+      if (this.activeTab === 'active' && this.activeDrills.length > 0) {
+        // Force change detection by creating new array reference
+        this.activeDrills = [...this.activeDrills];
+      }
+    }, 30000);
   }
 
   loadDrills() {
@@ -815,6 +825,7 @@ export class EmergencyDrillsComponent implements OnInit {
         diff: (now.getTime() - scheduledTime.getTime()) / 1000 / 60 + ' minutes'
       });
 
+      // Frontend validation - show alert if too early
       if (!this.canStartDrill(drill)) {
         alert(this.getStartButtonTooltip(drill));
         return;
@@ -848,18 +859,24 @@ export class EmergencyDrillsComponent implements OnInit {
     const now = new Date();
     const scheduledTime = new Date(drill.scheduled_at);
 
-    console.log('🕐 Can start check:', {
-      now: now.toISOString(),
-      nowLocal: now.toLocaleString(),
-      scheduledTime: scheduledTime.toISOString(),
-      scheduledLocal: scheduledTime.toLocaleString(),
-      canStart: now >= scheduledTime
-    });
-
     // Allow starting only at or after scheduled time (up to 30 minutes after)
     const allowedEndTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000);
 
-    return now >= scheduledTime && now <= allowedEndTime;
+    const canStart = now >= scheduledTime && now <= allowedEndTime;
+    
+    console.log('🔍 canStartDrill check:', {
+      drill_id: drill.id,
+      drill_name: drill.drill_name,
+      now: now.toISOString(),
+      scheduledTime: scheduledTime.toISOString(),
+      allowedEndTime: allowedEndTime.toISOString(),
+      canStart: canStart,
+      now_ms: now.getTime(),
+      scheduled_ms: scheduledTime.getTime(),
+      diff_minutes: (scheduledTime.getTime() - now.getTime()) / 60000
+    });
+
+    return canStart;
   }
 
   isScheduledInFuture(drill: EmergencyDrill): boolean {
@@ -892,9 +909,25 @@ export class EmergencyDrillsComponent implements OnInit {
 
     if (now < scheduledTime) {
       const minutesUntil = Math.ceil((scheduledTime.getTime() - now.getTime()) / 60000);
-      return `This drill is scheduled for ${scheduledTime.toLocaleString()}. You can start it at the scheduled time. ${minutesUntil} minutes remaining.`;
+      const scheduledFormatted = scheduledTime.toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric',
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+      return `This drill is scheduled for ${scheduledFormatted}. You can start it at the scheduled time. ${minutesUntil} minutes remaining.`;
     } else if (now > allowedEndTime) {
-      return `The scheduled time window for this drill has passed. It was scheduled for ${scheduledTime.toLocaleString()} and could only be started within 30 minutes after.`;
+      const scheduledFormatted = scheduledTime.toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric',
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+      return `The scheduled time window for this drill has passed. It was scheduled for ${scheduledFormatted} and could only be started within 30 minutes after.`;
     }
 
     return 'Start this drill';

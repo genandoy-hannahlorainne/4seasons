@@ -34,7 +34,11 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
           </button>
           
           <button *ngIf="drill.status === 'planned'" 
-                  class="btn btn-success" 
+                  class="btn"
+                  [class.btn-success]="canStartDrill()"
+                  [class.btn-secondary]="!canStartDrill()"
+                  [disabled]="!canStartDrill()"
+                  [title]="getStartButtonTooltip()"
                   (click)="startDrill()">
             <i class="fas fa-play"></i> Start Drill
           </button>
@@ -885,6 +889,12 @@ export class DrillDetailComponent implements OnInit {
   }
 
   startDrill() {
+    // Frontend validation
+    if (this.drill && !this.canStartDrill()) {
+      alert(this.getStartButtonTooltip());
+      return;
+    }
+
     this.confirmTitle = 'Start Drill';
     this.confirmMessage = 'Are you sure you want to start this drill?';
     this.confirmAction = () => {
@@ -895,11 +905,60 @@ export class DrillDetailComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error starting drill:', error);
+          const errorMessage = error?.error?.message || 'Failed to start drill';
+          alert(errorMessage);
           this.closeConfirmModal();
         }
       });
     };
     this.showConfirmModal = true;
+  }
+
+  canStartDrill(): boolean {
+    if (!this.drill || !this.drill.scheduled_at) {
+      return true; // No schedule restriction
+    }
+
+    const now = new Date();
+    const scheduledTime = new Date(this.drill.scheduled_at);
+    const allowedEndTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000);
+
+    return now >= scheduledTime && now <= allowedEndTime;
+  }
+
+  getStartButtonTooltip(): string {
+    if (!this.drill || !this.drill.scheduled_at) {
+      return 'Start this drill';
+    }
+
+    const now = new Date();
+    const scheduledTime = new Date(this.drill.scheduled_at);
+    const allowedEndTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000);
+
+    if (now < scheduledTime) {
+      const minutesUntil = Math.ceil((scheduledTime.getTime() - now.getTime()) / 60000);
+      const scheduledFormatted = scheduledTime.toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric',
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+      return `This drill is scheduled for ${scheduledFormatted}. You can start it at the scheduled time. ${minutesUntil} minutes remaining.`;
+    } else if (now > allowedEndTime) {
+      const scheduledFormatted = scheduledTime.toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric',
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+      return `The scheduled time window for this drill has passed. It was scheduled for ${scheduledFormatted} and could only be started within 30 minutes after.`;
+    }
+
+    return 'Start this drill';
   }
 
   viewDashboard() {

@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.studentcare.site/api'
+  apiUrl: 'http://localhost:8082/api'
 };
