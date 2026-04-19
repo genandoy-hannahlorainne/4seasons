@@ -83,7 +83,10 @@ import { StaffService } from '../../../../core/services/staff.service';
 
           <div class="others-card card">
             <div class="card-title">Others</div>
-            <button type="button" class="other-link" (click)="changePassword()">Change Password</button>
+            <div class="info-message">
+              <i class="fa-solid fa-info-circle"></i>
+              <span>To change your password, please contact the system administrator.</span>
+            </div>
             <button type="button" class="other-link" (click)="enableEdit()">Update Information</button>
             <div class="others-sep"></div>
             <button type="button" class="other-link danger" (click)="logout()">Logout</button>

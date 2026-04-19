@@ -100,7 +100,10 @@ import { AdviserService } from '../../../../core/services/adviser.service';
           <!-- Account Card -->
           <div class="others-card card">
             <div class="card-title">Account</div>
-            <button type="button" class="other-link" (click)="changePassword()">Change Password</button>
+            <div class="info-message">
+              <i class="fa-solid fa-info-circle"></i>
+              <span>To change your password, please contact the system administrator.</span>
+            </div>
             <button type="button" class="other-link" (click)="openEditModal()">Update Information</button>
           </div>
         </div>
