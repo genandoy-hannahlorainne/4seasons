@@ -28,7 +28,7 @@ export class AuthService {
     return this.http.post<any>(`${environment.apiUrl}/login`, { username, password })
       .pipe(
         map(response => {
-          console.log('Login response:', response);
+          // console.log(...); // Removed for production
           
           if (response && response.success && response.data) {
             const userData = response.data.user;
@@ -40,16 +40,16 @@ export class AuthService {
             localStorage.setItem('tokenExpiry', (Date.now() + (24 * 60 * 60 * 1000)).toString()); // 24 hours
             
             this.currentUserSubject.next(userData);
-            console.log('✅ Login successful, user stored:', userData);
-            console.log('✅ Token stored:', token.substring(0, 20) + '...');
-            console.log('✅ Token expiry set:', new Date(Date.now() + (24 * 60 * 60 * 1000)));
+            // console.log(...); // Removed for production
+            // console.log(...); // Removed for production
+            // console.log(...); // Removed for production
             
             // Verify storage immediately
             setTimeout(() => {
               const storedToken = localStorage.getItem('token');
               const storedUser = localStorage.getItem('currentUser');
-              console.log('🔍 Verification - Token in storage:', storedToken ? storedToken.substring(0, 20) + '...' : 'NOT FOUND');
-              console.log('🔍 Verification - User in storage:', storedUser ? 'FOUND' : 'NOT FOUND');
+              // console.log(...); // Removed for production
+              // console.log(...); // Removed for production
             }, 100);
             
             // Start token refresh and session timeout timers
@@ -80,12 +80,12 @@ export class AuthService {
       return this.http.post<any>(`${environment.apiUrl}/logout`, {})
         .pipe(
           map(() => {
-            console.log('✅ Logout successful');
+            // console.log(...); // Removed for production
             this.clearAuthData();
             return { success: true };
           }),
           catchError((error) => {
-            console.warn('⚠️ Logout API failed, clearing local data anyway:', error);
+            // console.warn(...); // Removed for production
             this.clearAuthData();
             return new Observable(observer => {
               observer.next({ success: true });
@@ -94,7 +94,7 @@ export class AuthService {
           })
         );
     } else {
-      console.log('ℹ️ No token found, clearing local data');
+      // console.log(...); // Removed for production
       this.clearAuthData();
       
       return new Observable(observer => {
@@ -109,7 +109,7 @@ export class AuthService {
     
     // Check if token is expired
     if (!this.isTokenValid()) {
-      console.warn('⚠️ Token expired, clearing auth data');
+      // console.warn(...); // Removed for production
       this.clearAuthData();
       return throwError(() => new Error('Token expired'));
     }
@@ -119,7 +119,7 @@ export class AuthService {
       return this.http.get<any>(`${environment.apiUrl}/me`)
         .pipe(
           map(response => {
-            console.log('Current user response:', response);
+            // console.log(...); // Removed for production
             
             if (response && response.success && response.data) {
               const userData = response.data;
@@ -135,7 +135,7 @@ export class AuthService {
             
             // If 401, token is invalid
             if (error.status === 401) {
-              console.warn('🚫 Token invalid, clearing auth data');
+              // console.warn(...); // Removed for production
               this.clearAuthData();
             }
             
@@ -162,7 +162,7 @@ export class AuthService {
     const isValid = !!user && !!token && this.isTokenValid();
     
     if (!isValid && (user || token)) {
-      console.warn('⚠️ Invalid auth state detected, clearing data');
+      // console.warn(...); // Removed for production
       this.clearAuthData();
     }
     
@@ -193,14 +193,14 @@ export class AuthService {
     const user = this.currentUserValue;
     
     if (!token || !user) {
-      console.warn('🔐 Authentication check failed - missing token or user');
+      // console.warn(...); // Removed for production
       this.clearAuthData();
       return false;
     }
     
     // Check token expiry
     if (!this.isTokenValid()) {
-      console.warn('🔐 Token expired during authentication check');
+      // console.warn(...); // Removed for production
       this.clearAuthData();
       return false;
     }
@@ -224,7 +224,7 @@ export class AuthService {
       setTimeout(() => {
         this.refreshToken().subscribe({
           next: () => {
-            console.log('✅ Token refreshed successfully');
+            // console.log(...); // Removed for production
             this.startTokenRefreshTimer(); // Start next refresh cycle
           },
           error: (error) => {
@@ -248,7 +248,7 @@ export class AuthService {
             localStorage.setItem('token', newToken);
             localStorage.setItem('tokenExpiry', newExpiry.toString());
             
-            console.log('✅ Token refreshed successfully');
+            // console.log(...); // Removed for production
             return response;
           }
           throw new Error('Invalid refresh response');
@@ -303,7 +303,7 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('tokenExpiry');
     this.currentUserSubject.next(null);
-    console.log('🧹 Auth data cleared');
+    // console.log(...); // Removed for production
   }
 
   changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {
@@ -317,7 +317,7 @@ export class AuthService {
   updateCurrentUser(updatedUser: User): void {
     localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     this.currentUserSubject.next(updatedUser);
-    console.log('✅ Current user updated:', updatedUser);
+    // console.log(...); // Removed for production
   }
 
   // Force change password for first-time login
@@ -328,7 +328,7 @@ export class AuthService {
       confirm_password: newPassword
     }).pipe(
       map(response => {
-        console.log('Force change password response:', response);
+        // console.log(...); // Removed for production
         return response;
       }),
       catchError((error: HttpErrorResponse) => {

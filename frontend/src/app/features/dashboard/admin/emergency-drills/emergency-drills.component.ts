@@ -595,16 +595,16 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
 
     /* Confirmation Modal Styles */
     .confirm-modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
       background: rgba(0, 0, 0, 0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 9999 !important;
       animation: fadeIn 0.2s ease;
     }
 
@@ -786,12 +786,12 @@ export class EmergencyDrillsComponent implements OnInit {
         : undefined
     };
 
-    console.log('🕐 Creating drill with scheduled_at:', payload.scheduled_at);
-    console.log('🕐 Current browser time:', new Date().toISOString());
+    // console.log(...); // Removed for production
+    // console.log(...); // Removed for production
 
     this.drillService.createDrill(payload).subscribe({
       next: (response) => {
-        console.log('✅ Drill created, scheduled_at from server:', response.data.scheduled_at);
+        // console.log(...); // Removed for production
         this.drills.unshift(response.data);
         this.activeDrills.unshift(response.data);
         this.showCreateModal = false;
@@ -812,18 +812,7 @@ export class EmergencyDrillsComponent implements OnInit {
       const now = new Date();
       const scheduledTime = new Date(drill.scheduled_at);
 
-      console.log('🚨 START DRILL ATTEMPT:', {
-        drillId: id,
-        now: now.toISOString(),
-        nowLocal: now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }),
-        scheduledTime: scheduledTime.toISOString(),
-        scheduledLocal: scheduledTime.toLocaleString('en-US', { timeZone: 'Asia/Manila' }),
-        scheduledRaw: drill.scheduled_at,
-        canStart: this.canStartDrill(drill),
-        nowTimestamp: now.getTime(),
-        scheduledTimestamp: scheduledTime.getTime(),
-        diff: (now.getTime() - scheduledTime.getTime()) / 1000 / 60 + ' minutes'
-      });
+      // console.log(...); // Removed for production
 
       // Frontend validation - show alert if too early
       if (!this.canStartDrill(drill)) {
@@ -864,17 +853,7 @@ export class EmergencyDrillsComponent implements OnInit {
 
     const canStart = now >= scheduledTime && now <= allowedEndTime;
     
-    console.log('🔍 canStartDrill check:', {
-      drill_id: drill.id,
-      drill_name: drill.drill_name,
-      now: now.toISOString(),
-      scheduledTime: scheduledTime.toISOString(),
-      allowedEndTime: allowedEndTime.toISOString(),
-      canStart: canStart,
-      now_ms: now.getTime(),
-      scheduled_ms: scheduledTime.getTime(),
-      diff_minutes: (scheduledTime.getTime() - now.getTime()) / 60000
-    });
+    // console.log(...); // Removed for production
 
     return canStart;
   }

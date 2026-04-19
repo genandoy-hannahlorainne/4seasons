@@ -9,7 +9,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
 
   // First check: Local authentication state
   if (!authService.isAuthenticated()) {
-    console.warn('🔒 Admin Guard: No valid local authentication');
+    // console.warn(...); // Removed for production
     router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
     return false;
   }
@@ -18,7 +18,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
   return authService.getCurrentUser().pipe(
     map(user => {
       if (!user) {
-        console.warn('🔒 Admin Guard: Backend verification failed');
+        // console.warn(...); // Removed for production
         router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
         return false;
       }
@@ -40,7 +40,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
         return false;
       }
 
-      console.log('✅ Admin Guard: Admin access granted');
+      // console.log(...); // Removed for production
       return true;
     }),
     catchError(error => {

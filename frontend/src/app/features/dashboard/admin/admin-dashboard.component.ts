@@ -867,8 +867,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
     const currentUser = this.authService.currentUserValue;
 
-    console.log('🔐 Admin Dashboard - Authentication verified');
-    console.log('Current user:', currentUser);
+    // console.log(...); // Removed for production
+    // console.log(...); // Removed for production
 
     if (currentUser?.role_name?.toLowerCase() !== 'admin') {
       console.error('❌ Not admin user, redirecting');
@@ -877,7 +877,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('✅ Authenticated as admin, loading dashboard');
+    // console.log(...); // Removed for production
     this.loadDashboardData();
 
     // Auto-refresh dashboard data every 30 seconds
@@ -916,12 +916,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   loadDashboardData(): void {
     this.loading = true;
-    console.log('📊 Loading dashboard data...');
+    // console.log(...); // Removed for production
 
     // Load dashboard statistics first
     this.adminService.getDashboard().subscribe({
       next: (response) => {
-        console.log('✅ Dashboard response:', response);
+        // console.log(...); // Removed for production
         if (response?.success && response.data) {
           const dashboardData = response.data;
 
@@ -933,7 +933,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
               totalAdvisers: dashboardData.current_stats.faculty || 0,
               totalStaff: dashboardData.current_stats.clinic_staff || 0
             };
-            console.log('✅ Updated system stats from dashboard:', this.systemStats);
+            // console.log(...); // Removed for production
           }
         }
       },
@@ -945,7 +945,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     // Load users data for recent users display
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
-        console.log('✅ getAllUsers full response:', response);
+        // console.log(...); // Removed for production
 
         if (response?.success && response.data?.users) {
           this.usersData$.next(response);
@@ -965,7 +965,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     // Load activity logs
     this.adminService.getActivityLogs(5).subscribe({
       next: (response) => {
-        console.log('✅ Activity logs response:', response);
+        // console.log(...); // Removed for production
         if (response?.success && Array.isArray(response.data?.activities)) {
           this.activityLog = response.data.activities.slice(0, 5).map((activity: any) => ({
             type: activity?.activity_type || 'system',
@@ -990,12 +990,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     // Load emergency notifications
     this.adminService.getNotifications().subscribe({
       next: (response) => {
-        console.log('✅ Admin notifications response:', response);
+        // console.log(...); // Removed for production
         if (response?.success && Array.isArray(response.data?.notifications)) {
           // Separate urgent (pending) from history (read/sent)
           const allNotifications = response.data.notifications.map((notif: any) => {
-            console.log('🔍 Notification structure:', notif);
-            console.log('🔍 Visit ID:', notif.visit?.visit_id || notif.visit_id);
+            // console.log(...); // Removed for production
+            // console.log(...); // Removed for production
             return {
               ...notif,
               timeAgo: this.formatTimestamp(notif?.created_at || '')
@@ -1012,13 +1012,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
           ).slice(0, 10); // Show last 10
 
-          console.log('✅ Emergency notifications loaded:', this.emergencyNotifications.length);
-          console.log('✅ Notification history loaded:', this.notificationHistory.length);
+          // console.log(...); // Removed for production
+          // console.log(...); // Removed for production
         } else if (response?.success && Array.isArray(response.notifications)) {
           // Fallback for direct notifications array
           const allNotifications = response.notifications.map((notif: any) => {
-            console.log('🔍 Notification structure:', notif);
-            console.log('🔍 Visit ID:', notif.visit?.visit_id || notif.visit_id);
+            // console.log(...); // Removed for production
+            // console.log(...); // Removed for production
             return {
               ...notif,
               timeAgo: this.formatTimestamp(notif?.created_at || '')
@@ -1035,8 +1035,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
           ).slice(0, 10); // Show last 10
 
-          console.log('✅ Emergency notifications loaded:', this.emergencyNotifications.length);
-          console.log('✅ Notification history loaded:', this.notificationHistory.length);
+          // console.log(...); // Removed for production
+          // console.log(...); // Removed for production
         }
       },
       error: (err) => {
@@ -1046,7 +1046,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   private updateRecentUsersData(data: any): void {
-    console.log('📊 Updating recent users with data:', data);
+    // console.log(...); // Removed for production
 
     if (!data || !data.users) {
       console.error('❌ Invalid data structure');
@@ -1072,7 +1072,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         status: user.is_active ? 'Active' : 'Inactive'
       }));
 
-    console.log('✅ Recent users updated:', this.recentUsers.length);
+    // console.log(...); // Removed for production
   }
 
   private formatRoleName(roleName: string): string {
@@ -1157,7 +1157,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   viewEmergencyDetails(notification: any): void {
     // Navigate to detailed view or show modal
-    console.log('Viewing emergency details:', notification);
+    // console.log(...); // Removed for production
 
     // Create a detailed modal or alert
     const details = `
