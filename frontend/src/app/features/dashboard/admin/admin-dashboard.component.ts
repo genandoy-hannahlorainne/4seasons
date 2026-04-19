@@ -326,6 +326,37 @@ interface UsersResponse {
         </div>
       </div>
     </div>
+
+    <!-- Mark All Notifications Modal -->
+    <div class="modal-overlay" *ngIf="showMarkAllModal" (click)="closeMarkAllModal()">
+      <div class="confirm-modal" (click)="$event.stopPropagation()">
+        <div class="confirm-header">
+          <div class="confirm-icon">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <h2>Mark All as Read</h2>
+        </div>
+
+        <div class="confirm-body">
+          <div class="error-message" *ngIf="markAllError">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <p>{{ markAllError }}</p>
+          </div>
+          
+          <p *ngIf="!markAllError">Are you sure you want to mark all <strong>{{ emergencyNotifications.length }}</strong> emergency notification{{ emergencyNotifications.length > 1 ? 's' : '' }} as read?</p>
+          <p class="confirm-note" *ngIf="!markAllError">This action will move all emergency alerts to your notification history.</p>
+        </div>
+
+        <div class="confirm-footer">
+          <button class="btn btn-secondary" (click)="closeMarkAllModal()">
+            <i class="fa-solid fa-xmark"></i> {{ markAllError ? 'Close' : 'Cancel' }}
+          </button>
+          <button class="btn btn-success" (click)="confirmMarkAllAsRead()" *ngIf="!markAllError">
+            <i class="fa-solid fa-check"></i> Yes, Mark All as Read
+          </button>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
     .admin-dashboard {
@@ -1190,6 +1221,162 @@ interface UsersResponse {
       }
     }
 
+    // Confirmation Modal Styles
+    .confirm-modal {
+      background: white;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 90%;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+    }
+
+    .confirm-header {
+      background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+
+      .confirm-icon {
+        width: 70px;
+        height: 70px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin: 0 auto 1rem;
+        animation: scaleIn 0.4s ease;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .confirm-body {
+      padding: 2rem;
+      text-align: center;
+
+      .error-message {
+        background: #fff5f5;
+        border-left: 4px solid #e74c3c;
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        text-align: left;
+
+        i {
+          color: #e74c3c;
+          font-size: 1.25rem;
+          margin-top: 0.1rem;
+        }
+
+        p {
+          margin: 0;
+          color: #c0392b;
+          line-height: 1.5;
+          font-weight: 500;
+          font-size: 1rem;
+        }
+      }
+
+      p {
+        color: #2c3e50;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin: 0 0 1rem;
+
+        strong {
+          color: #e74c3c;
+          font-weight: 700;
+        }
+      }
+
+      .confirm-note {
+        font-size: 0.95rem;
+        color: #7f8c8d;
+        font-style: italic;
+        margin: 0;
+      }
+    }
+
+    .confirm-footer {
+      padding: 1.5rem 2rem;
+      background: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        min-width: 140px;
+        justify-content: center;
+
+        i {
+          font-size: 1rem;
+        }
+
+        &.btn-secondary {
+          background: #6c757d;
+          color: white;
+
+          &:hover {
+            background: #545b62;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+          }
+        }
+
+        &.btn-success {
+          background: #28a745;
+          color: white;
+
+          &:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+          }
+        }
+      }
+
+      @media (max-width: 600px) {
+        flex-direction: column;
+
+        .btn {
+          width: 100%;
+        }
+      }
+    }
+
     @media (max-width: 768px) {
       .admin-dashboard { padding: 1rem; }
       .stats-grid { grid-template-columns: 1fr; }
@@ -1589,30 +1776,42 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Mark all modal state
+  showMarkAllModal = false;
+  markAllError = '';
+
   markAllNotificationsAsRead(): void {
     if (this.emergencyNotifications.length === 0) return;
+    this.markAllError = '';
+    this.showMarkAllModal = true;
+  }
 
-    if (confirm(`Mark all ${this.emergencyNotifications.length} emergency notifications as read?`)) {
-      this.adminService.markAllNotificationsAsRead().subscribe({
-        next: (response) => {
-          if (response.success) {
-            // Move emergency notifications to history
-            this.notificationHistory = [
-              ...this.emergencyNotifications.map(n => ({ ...n, status: 'Read' })),
-              ...this.notificationHistory
-            ].slice(0, 10);
+  closeMarkAllModal(): void {
+    this.showMarkAllModal = false;
+    this.markAllError = '';
+  }
 
-            // Clear emergency notifications
-            this.emergencyNotifications = [];
+  confirmMarkAllAsRead(): void {
+    this.adminService.markAllNotificationsAsRead().subscribe({
+      next: (response) => {
+        if (response.success) {
+          // Move emergency notifications to history
+          this.notificationHistory = [
+            ...this.emergencyNotifications.map(n => ({ ...n, status: 'Read' })),
+            ...this.notificationHistory
+          ].slice(0, 10);
 
-            alert('All emergency notifications marked as read');
-          }
-        },
-        error: (err) => {
-          console.error('Failed to mark all notifications as read:', err);
+          // Clear emergency notifications
+          this.emergencyNotifications = [];
+
+          this.closeMarkAllModal();
         }
-      });
-    }
+      },
+      error: (err) => {
+        console.error('Failed to mark all notifications as read:', err);
+        this.markAllError = 'Failed to mark notifications as read. Please try again.';
+      }
+    });
   }
 
   sendSMSToParent(notification: any): void {
