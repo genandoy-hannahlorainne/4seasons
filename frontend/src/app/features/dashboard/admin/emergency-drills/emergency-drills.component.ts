@@ -55,8 +55,8 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
                 <span *ngIf="drill.scheduled_at && drill.status === 'planned'"
                       class="schedule-badge"
                       [class.can-start]="canStartDrill(drill)"
-                      [class.too-early]="!canStartDrill(drill) && new Date() < new Date(drill.scheduled_at)"
-                      [class.too-late]="!canStartDrill(drill) && new Date() > new Date(drill.scheduled_at)">
+                      [class.too-early]="isScheduledTooEarly(drill)"
+                      [class.too-late]="isScheduledTooLate(drill)">
                   <i class="fas fa-clock"></i>
                   {{ canStartDrill(drill) ? 'Ready' : 'Scheduled' }}
                 </span>
@@ -861,6 +861,17 @@ export class EmergencyDrillsComponent implements OnInit {
 
     return now >= scheduledTime && now <= allowedEndTime;
   }
+
+  isScheduledTooEarly(drill: EmergencyDrill): boolean {
+    if (!drill.scheduled_at || drill.status !== 'planned') return false;
+    return !this.canStartDrill(drill) && new Date() < new Date(drill.scheduled_at);
+  }
+
+  isScheduledTooLate(drill: EmergencyDrill): boolean {
+    if (!drill.scheduled_at || drill.status !== 'planned') return false;
+    return !this.canStartDrill(drill) && new Date() > new Date(drill.scheduled_at);
+  }
+
 
   getStartButtonTooltip(drill: EmergencyDrill): string {
     if (!drill.scheduled_at) {

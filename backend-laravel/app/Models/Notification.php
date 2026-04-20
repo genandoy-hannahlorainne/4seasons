@@ -8,7 +8,7 @@ class Notification extends Model
 {
     protected $primaryKey = 'notification_id';
     public $timestamps = false; // Disable timestamps since table doesn't have updated_at
-    
+
     protected $fillable = [
         'parent_id',
         'user_id',
@@ -22,13 +22,15 @@ class Notification extends Model
         'sent_at',
         'notification_type',
         'badge_key',
-        'metadata'
+        'metadata',
+        'request_data'
     ];
 
     protected $casts = [
         'sent_at' => 'datetime',
         'created_at' => 'datetime',
-        'metadata' => 'array'
+        'metadata' => 'array',
+        'request_data' => 'array'
     ];
 
     public function user()

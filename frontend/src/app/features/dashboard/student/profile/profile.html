@@ -40,7 +40,7 @@
       </div>
 
       <div class="profile-settings-actions">
-        
+
       </div>
     </div>
 
@@ -98,6 +98,7 @@
       <div class="others-card card">
         <div class="card-title">Others</div>
         <button type="button" class="other-link" (click)="changePassword()">Change Password</button>
+        <button type="button" class="other-link" (click)="requestPasswordChange()">Request Password Reset from Admin</button>
         <button type="button" class="other-link" (click)="viewQRCode()" [disabled]="qrCodeLoading">View QR Code</button>
         <button type="button" class="other-link" (click)="toggleEdit()">Update Information</button>
       </div>
@@ -110,7 +111,7 @@
   <div class="modal-content" (click)="$event.stopPropagation()">
     <button class="close-btn" (click)="closePasswordModal()"><i class="fa-solid fa-xmark"></i></button>
     <h3>Change Password</h3>
-    
+
     <div *ngIf="passwordSuccess" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ passwordSuccess }}</div>
     <div *ngIf="passwordError" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ passwordError }}</div>
 
@@ -137,27 +138,50 @@
   </div>
 </div>
 
+<!-- Request Password Reset Modal -->
+<div class="modal-overlay" *ngIf="showRequestPasswordModal" (click)="closeRequestPasswordModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="closeRequestPasswordModal()"><i class="fa-solid fa-xmark"></i></button>
+    <h3>Request Password Reset</h3>
+    <p style="color: #666; margin-bottom: 1rem;">Submit a request to the admin to reset your password. You'll receive a temporary password once approved.</p>
+
+    <div *ngIf="requestPasswordError" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ requestPasswordError }}</div>
+
+    <div class="form-group">
+      <label>Reason for Request (Optional)</label>
+      <textarea [(ngModel)]="passwordRequestReason" class="form-control" rows="3" placeholder="e.g., I forgot my password, Security concern, etc."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" (click)="closeRequestPasswordModal()" [disabled]="submittingRequest">Cancel</button>
+      <button type="button" class="btn btn-primary" (click)="submitPasswordRequest()" [disabled]="submittingRequest">
+        {{ submittingRequest ? 'Submitting...' : 'Submit Request' }}
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- QR Code Modal -->
 <div class="modal-overlay" *ngIf="showQRModal" (click)="closeQRModal()">
   <div class="modal-content qr-modal" (click)="$event.stopPropagation()">
     <button class="close-btn" (click)="closeQRModal()"><i class="fa-solid fa-xmark"></i></button>
     <h3>Your Student QR Code</h3>
-    
+
     <div class="qr-code-container" *ngIf="qrCodeData">
-      <qrcode 
-        [qrdata]="qrCodeData" 
-        [width]="250" 
+      <qrcode
+        [qrdata]="qrCodeData"
+        [width]="250"
         [errorCorrectionLevel]="'M'"
         [margin]="2">
       </qrcode>
     </div>
-    
+
     <div class="qr-info">
       <p><strong>Student Number:</strong> {{ profileForm.get('studentNumber')?.value }}</p>
       <p><strong>Name:</strong> {{ profileForm.get('firstName')?.value }} {{ profileForm.get('lastName')?.value }}</p>
       <p class="qr-note">Show this QR code to clinic staff for quick access to your medical records.</p>
     </div>
-    
+
     <div class="modal-actions">
       <button class="btn btn-success" (click)="downloadQRCode()"><i class="fa-solid fa-download"></i> Download</button>
     </div>

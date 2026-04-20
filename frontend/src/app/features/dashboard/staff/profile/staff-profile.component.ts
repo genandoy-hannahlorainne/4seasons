@@ -41,7 +41,7 @@ import { StaffService } from '../../../../core/services/staff.service';
           </div>
 
           <div class="profile-settings-actions">
-            
+
           </div>
         </div>
 
@@ -84,6 +84,7 @@ import { StaffService } from '../../../../core/services/staff.service';
           <div class="others-card card">
             <div class="card-title">Others</div>
             <button type="button" class="other-link" (click)="changePassword()">Change Password</button>
+            <button type="button" class="other-link" (click)="requestPasswordChange()">Request Password Reset from Admin</button>
             <button type="button" class="other-link" (click)="enableEdit()">Update Information</button>
             <div class="others-sep"></div>
             <button type="button" class="other-link danger" (click)="logout()">Logout</button>
@@ -97,7 +98,7 @@ import { StaffService } from '../../../../core/services/staff.service';
       <div class="modal-content" (click)="$event.stopPropagation()">
         <button class="close-btn" (click)="closePasswordModal()">×</button>
         <h3>Change Password</h3>
-        
+
         <div class="form-group">
           <label>Current Password *</label>
           <input type="password" [(ngModel)]="passwordForm.currentPassword" class="form-control" placeholder="Enter current password">
@@ -117,6 +118,29 @@ import { StaffService } from '../../../../core/services/staff.service';
       </div>
     </div>
 
+    <!-- Request Password Reset Modal -->
+    <div class="modal-overlay" *ngIf="showRequestPasswordModal" (click)="closeRequestPasswordModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="closeRequestPasswordModal()">×</button>
+        <h3>Request Password Reset</h3>
+        <p style="color: #666; margin-bottom: 1rem;">Submit a request to the admin to reset your password. You'll receive a temporary password once approved.</p>
+
+        <div class="modal-error" *ngIf="requestPasswordError" style="background: #fee; color: #c33; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem;">{{ requestPasswordError }}</div>
+
+        <div class="form-group">
+          <label>Reason for Request (Optional)</label>
+          <textarea [(ngModel)]="passwordRequestReason" class="form-control" rows="3" placeholder="e.g., I forgot my password, Security concern, etc."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="closeRequestPasswordModal()" [disabled]="submittingRequest">Cancel</button>
+          <button class="btn btn-primary" (click)="submitPasswordRequest()" [disabled]="submittingRequest">
+            {{ submittingRequest ? 'Submitting...' : 'Submit Request' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Logout Modal -->
     <div class="modal-overlay" *ngIf="showLogoutModal">
       <div class="modal-content logout-modal">
@@ -129,7 +153,9 @@ import { StaffService } from '../../../../core/services/staff.service';
 export class StaffProfileComponent implements OnInit {
   editMode = false;
   showPasswordModal = false;
+  showRequestPasswordModal = false;
   showLogoutModal = false;
+  submittingRequest = false;
   originalProfileData: any = {};
 
   profileData = {
@@ -147,6 +173,9 @@ export class StaffProfileComponent implements OnInit {
     confirmPassword: ''
   };
 
+  passwordRequestReason = '';
+  requestPasswordError = '';
+
   constructor(
     private authService: AuthService,
     private staffService: StaffService,
@@ -163,7 +192,7 @@ export class StaffProfileComponent implements OnInit {
       this.profileData.fullName = currentUser.full_name || 'Clinic Staff';
       this.profileData.email = currentUser.email || '';
       this.profileData.phone = currentUser.phone || '';
-      
+
       // Fetch updated staff info including phone from API
       if (currentUser.user_id) {
         this.staffService.getStaffDashboard(currentUser.user_id).subscribe({
@@ -172,12 +201,12 @@ export class StaffProfileComponent implements OnInit {
               const staff = response.data.staff;
               this.profileData.staffCode = staff.staff_code || '';
               this.profileData.position = staff.position || 'Clinic Staff';
-              
+
               // Update phone number from API response
               if (staff.phone) {
                 this.profileData.phone = staff.phone;
               }
-              
+
               // Update full name if available
               if (staff.full_name) {
                 this.profileData.fullName = staff.full_name;
@@ -222,10 +251,10 @@ export class StaffProfileComponent implements OnInit {
         if (response.success) {
           alert('Profile updated successfully');
           this.editMode = false;
-          
+
           // Update the auth service with new data (convert null to undefined for User type)
-          const updatedUser = { 
-            ...currentUser, 
+          const updatedUser = {
+            ...currentUser,
             full_name: updates.full_name,
             email: updates.email,
             phone: updates.phone || undefined
@@ -263,6 +292,35 @@ export class StaffProfileComponent implements OnInit {
     }
     console.log('Changing password');
     this.closePasswordModal();
+  }
+
+  requestPasswordChange(): void {
+    this.requestPasswordError = '';
+    this.passwordRequestReason = '';
+    this.showRequestPasswordModal = true;
+  }
+
+  closeRequestPasswordModal(): void {
+    this.showRequestPasswordModal = false;
+    this.passwordRequestReason = '';
+    this.requestPasswordError = '';
+  }
+
+  submitPasswordRequest(): void {
+    this.submittingRequest = true;
+    this.requestPasswordError = '';
+
+    this.authService.requestPasswordChange(this.passwordRequestReason).subscribe({
+      next: (response) => {
+        this.submittingRequest = false;
+        this.closeRequestPasswordModal();
+        alert('Password change request submitted successfully! Admin will process your request.');
+      },
+      error: (err) => {
+        this.submittingRequest = false;
+        this.requestPasswordError = err.error?.message || 'Failed to submit request. Please try again.';
+      }
+    });
   }
 
   logout(): void {

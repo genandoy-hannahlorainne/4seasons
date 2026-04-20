@@ -60,7 +60,7 @@ import { AdviserService } from '../../../../core/services/adviser.service';
           </div>
 
           <div class="profile-settings-actions">
-            
+
           </div>
         </div>
 
@@ -101,6 +101,7 @@ import { AdviserService } from '../../../../core/services/adviser.service';
           <div class="others-card card">
             <div class="card-title">Account</div>
             <button type="button" class="other-link" (click)="changePassword()">Change Password</button>
+            <button type="button" class="other-link" (click)="requestPasswordChange()">Request Password Reset from Admin</button>
             <button type="button" class="other-link" (click)="openEditModal()">Update Information</button>
           </div>
         </div>
@@ -164,14 +165,41 @@ import { AdviserService } from '../../../../core/services/adviser.service';
         </div>
       </div>
     </div>
+
+    <!-- Request Password Reset Modal -->
+    <div class="modal-overlay" *ngIf="showRequestPasswordModal" (click)="closeRequestPasswordModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="closeRequestPasswordModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3>Request Password Reset</h3>
+        <p style="color: #666; margin-bottom: 1rem;">Submit a request to the admin to reset your password. You'll receive a temporary password once approved.</p>
+
+        <div class="modal-error" *ngIf="requestPasswordError">{{ requestPasswordError }}</div>
+
+        <div class="form-group">
+          <label>Reason for Request (Optional)</label>
+          <textarea [(ngModel)]="passwordRequestReason" class="form-control" rows="3" placeholder="e.g., I forgot my password, Security concern, etc."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="closeRequestPasswordModal()" [disabled]="submittingRequest">Cancel</button>
+          <button class="btn btn-primary" (click)="submitPasswordRequest()" [disabled]="submittingRequest">
+            {{ submittingRequest ? 'Submitting...' : 'Submit Request' }}
+          </button>
+        </div>
+      </div>
+    </div>
   `,
 })
 export class AdviserProfileComponent implements OnInit {
   editMode = false;
   showEditModal = false;
   showPasswordModal = false;
+  showRequestPasswordModal = false;
   showLogoutModal = false;
   saving = false;
+  submittingRequest = false;
   passwordLoading = false;
   passwordError = '';
   passwordSuccess = '';
@@ -197,6 +225,9 @@ export class AdviserProfileComponent implements OnInit {
     newPassword: '',
     confirmPassword: ''
   };
+
+  passwordRequestReason = '';
+  requestPasswordError = '';
 
   constructor(
     private authService: AuthService,
@@ -229,8 +260,8 @@ export class AdviserProfileComponent implements OnInit {
             this.profileData.employeeId = profile.employee_id || this.profileData.employeeId;
           }
         },
-        error: () => { 
-          this.profileData.advisoryClass = 'Not assigned'; 
+        error: () => {
+          this.profileData.advisoryClass = 'Not assigned';
         }
       });
     }
@@ -324,6 +355,35 @@ export class AdviserProfileComponent implements OnInit {
       },
       error: (err) => {
         this.passwordError = err.error?.message || 'Failed to change password.';
+      }
+    });
+  }
+
+  requestPasswordChange(): void {
+    this.requestPasswordError = '';
+    this.passwordRequestReason = '';
+    this.showRequestPasswordModal = true;
+  }
+
+  closeRequestPasswordModal(): void {
+    this.showRequestPasswordModal = false;
+    this.passwordRequestReason = '';
+    this.requestPasswordError = '';
+  }
+
+  submitPasswordRequest(): void {
+    this.submittingRequest = true;
+    this.requestPasswordError = '';
+
+    this.authService.requestPasswordChange(this.passwordRequestReason).subscribe({
+      next: (response) => {
+        this.submittingRequest = false;
+        this.closeRequestPasswordModal();
+        this.showToast('Password change request submitted successfully! Admin will process your request.', 'success');
+      },
+      error: (err) => {
+        this.submittingRequest = false;
+        this.requestPasswordError = err.error?.message || 'Failed to submit request. Please try again.';
       }
     });
   }

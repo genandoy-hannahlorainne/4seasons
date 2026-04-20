@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: '/api'
+  apiUrl: 'https://api.studentcare.site/api'  // Point to production API for local testing
 };

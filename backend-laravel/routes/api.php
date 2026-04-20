@@ -48,6 +48,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
 Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:sanctum');
 Route::post('/force-change-password', [AuthController::class, 'forceChangePassword'])->middleware('auth:sanctum');
+Route::post('/request-password-change', [AuthController::class, 'requestPasswordChange'])->middleware('auth:sanctum');
 
 // Protected routes
 Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function () {
@@ -67,6 +68,10 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::post('/sections/assign-adviser', [AdminController::class, 'assignAdviserToSection']);
         Route::get('/sections/get-students', [AdminController::class, 'getSectionStudents']);
         Route::get('/notifications', [AdminController::class, 'getNotifications']);
+        Route::put('/notifications/{id}/read', [AdminController::class, 'markNotificationAsRead']);
+        Route::post('/notifications/mark-all-read', [AdminController::class, 'markAllNotificationsAsRead']);
+        Route::post('/notifications/{id}/approve-password-change', [AdminController::class, 'approvePasswordChangeRequest']);
+        Route::post('/notifications/{id}/dismiss', [AdminController::class, 'dismissPasswordChangeRequest']);
         Route::get('/activity-logs', [AdminController::class, 'getActivityLogs']);
         Route::get('/health-risk-visualization', [AdminController::class, 'getHealthRiskVisualization']);
         Route::post('/users', [AdminController::class, 'createUser']);

@@ -39,7 +39,7 @@ class AuthController extends BaseController
 
             // Load role relationship
             $user->load('role');
-            
+
             if  (!$user->role) {
                 return $this->sendError('User role not found', [], 500);
             }
@@ -56,7 +56,7 @@ class AuthController extends BaseController
                 'username' => $user->username,
                 'email' => $user->email,
                 'full_name' => $user->full_name,
-                'role_id' => $user->role_id, 
+                'role_id' => $user->role_id,
                 'role_name' => $user->role->role_name,
                 'password_must_change' => (bool)$user->password_must_change
             ];
@@ -97,11 +97,11 @@ class AuthController extends BaseController
         try {
             // Get the authenticated user
             $user = $request->user();
-            
+
             if ($user) {
                 // Log activity
                 $this->logActivity($user->user_id, 'Logout', $request->ip());
-                
+
                 // Revoke current token
                 $request->user()->currentAccessToken()->delete();
             }
@@ -122,7 +122,7 @@ class AuthController extends BaseController
     {
         try {
             $user = $request->user();
-            
+
             if (!$user) {
                 return $this->sendError('Unauthorized', [], 401);
             }
@@ -153,7 +153,7 @@ class AuthController extends BaseController
     {
         try {
             $user = $request->user();
-            
+
             if (!$user) {
                 return $this->sendError('Unauthorized', [], 401);
             }
@@ -198,7 +198,7 @@ class AuthController extends BaseController
             ]);
 
             $user = $request->user();
-            
+
             if (!$user) {
                 return $this->sendError('Unauthorized', [], 401);
             }
@@ -235,6 +235,54 @@ class AuthController extends BaseController
             ], 500);
         }
     }
+
+    /**
+     * Request password change (for non-admin users)
+     */
+    public function requestPasswordChange(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return $this->sendError('Unauthorized', [], 401);
+            }
+
+            $request->validate([
+                'reason' => 'nullable|string|max:500'
+            ]);
+
+            // Create notification for admin
+            \App\Models\Notification::create([
+                'user_id' => $user->user_id,
+                'channel' => 'System',
+                'message' => "{$user->first_name} {$user->last_name} ({$user->role->role_name}) has requested a password change.",
+                'status' => 'Pending',
+                'priority' => 'normal',
+                'notification_type' => 'password_change_request',
+                'request_data' => [
+                    'user_id' => $user->user_id,
+                    'username' => $user->username,
+                    'full_name' => trim($user->first_name . ' ' . $user->last_name),
+                    'role' => $user->role->role_name,
+                    'reason' => $request->reason ?? 'No reason provided',
+                    'requested_at' => now()->toISOString()
+                ]
+            ]);
+
+            return $this->sendResponse([
+                'message' => 'Password change request submitted successfully. An admin will process your request.'
+            ], 'Request submitted successfully');
+
+        } catch (ValidationException $e) {
+            return $this->sendValidationError($e->errors());
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to submit password change request', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 
     /**
      * Validate role-specific profile exists

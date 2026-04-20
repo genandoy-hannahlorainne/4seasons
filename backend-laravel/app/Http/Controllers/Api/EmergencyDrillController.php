@@ -186,6 +186,23 @@ class EmergencyDrillController extends BaseController
             // Update all participants' assigned_at timestamp
             $drill->participants()->update(['assigned_at' => now()]);
 
+            // Create notification for admin about drill start
+            \App\Models\Notification::create([
+                'channel' => 'System',
+                'message' => "Emergency drill '{$drill->drill_name}' ({$drill->drill_type}) has been started.",
+                'status' => 'Pending',
+                'priority' => 'urgent',
+                'notification_type' => 'emergency_drill_alert',
+                'request_data' => [
+                    'drill_id' => $drill->id,
+                    'drill_name' => $drill->drill_name,
+                    'drill_type' => $drill->drill_type,
+                    'status' => 'active',
+                    'started_at' => $drill->started_at->toISOString(),
+                    'action' => 'started'
+                ]
+            ]);
+
             DB::commit();
 
             return $this->sendResponse($drill, 'Emergency drill started successfully');
