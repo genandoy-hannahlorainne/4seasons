@@ -122,10 +122,20 @@ import { StaffService } from '../../../../core/services/staff.service';
     <div class="modal-overlay" *ngIf="showRequestPasswordModal" (click)="closeRequestPasswordModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <button class="close-btn" (click)="closeRequestPasswordModal()">×</button>
-        <h3>Request Password Reset</h3>
-        <p style="color: #666; margin-bottom: 1rem;">Submit a request to the admin to reset your password. You'll receive a temporary password once approved.</p>
+        <h3>Request Password Change</h3>
+        <p style="color: #666; margin-bottom: 1rem;">Submit your desired new password. Admin will review and approve your request.</p>
 
         <div class="modal-error" *ngIf="requestPasswordError" style="background: #fee; color: #c33; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem;">{{ requestPasswordError }}</div>
+
+        <div class="form-group">
+          <label>New Password *</label>
+          <input type="password" [(ngModel)]="passwordRequestNewPassword" class="form-control" placeholder="Enter your desired new password (min 6 characters)" required>
+        </div>
+
+        <div class="form-group">
+          <label>Confirm New Password *</label>
+          <input type="password" [(ngModel)]="passwordRequestConfirmPassword" class="form-control" placeholder="Re-enter your new password" required>
+        </div>
 
         <div class="form-group">
           <label>Reason for Request (Optional)</label>
@@ -174,6 +184,8 @@ export class StaffProfileComponent implements OnInit {
   };
 
   passwordRequestReason = '';
+  passwordRequestNewPassword = '';
+  passwordRequestConfirmPassword = '';
   requestPasswordError = '';
 
   constructor(
@@ -297,12 +309,16 @@ export class StaffProfileComponent implements OnInit {
   requestPasswordChange(): void {
     this.requestPasswordError = '';
     this.passwordRequestReason = '';
+    this.passwordRequestNewPassword = '';
+    this.passwordRequestConfirmPassword = '';
     this.showRequestPasswordModal = true;
   }
 
   closeRequestPasswordModal(): void {
     this.showRequestPasswordModal = false;
     this.passwordRequestReason = '';
+    this.passwordRequestNewPassword = '';
+    this.passwordRequestConfirmPassword = '';
     this.requestPasswordError = '';
   }
 
@@ -310,11 +326,30 @@ export class StaffProfileComponent implements OnInit {
     this.submittingRequest = true;
     this.requestPasswordError = '';
 
-    this.authService.requestPasswordChange(this.passwordRequestReason).subscribe({
+    // Validation
+    if (!this.passwordRequestNewPassword) {
+      this.requestPasswordError = 'Please enter a new password';
+      this.submittingRequest = false;
+      return;
+    }
+
+    if (this.passwordRequestNewPassword.length < 6) {
+      this.requestPasswordError = 'Password must be at least 6 characters';
+      this.submittingRequest = false;
+      return;
+    }
+
+    if (this.passwordRequestNewPassword !== this.passwordRequestConfirmPassword) {
+      this.requestPasswordError = 'Passwords do not match';
+      this.submittingRequest = false;
+      return;
+    }
+
+    this.authService.requestPasswordChange(this.passwordRequestReason, this.passwordRequestNewPassword).subscribe({
       next: (response) => {
         this.submittingRequest = false;
         this.closeRequestPasswordModal();
-        alert('Password change request submitted successfully! Admin will process your request.');
+        alert('Password change request submitted successfully! Admin will review your request.');
       },
       error: (err) => {
         this.submittingRequest = false;

@@ -29,6 +29,8 @@ export class StudentProfileComponent implements OnInit {
   passwordError = '';
   passwordSuccess = '';
   passwordRequestReason = '';
+  passwordRequestNewPassword = '';
+  passwordRequestConfirmPassword = '';
   requestPasswordError = '';
 
   // Display values
@@ -378,12 +380,16 @@ export class StudentProfileComponent implements OnInit {
   requestPasswordChange(): void {
     this.requestPasswordError = '';
     this.passwordRequestReason = '';
+    this.passwordRequestNewPassword = '';
+    this.passwordRequestConfirmPassword = '';
     this.showRequestPasswordModal = true;
   }
 
   closeRequestPasswordModal(): void {
     this.showRequestPasswordModal = false;
     this.passwordRequestReason = '';
+    this.passwordRequestNewPassword = '';
+    this.passwordRequestConfirmPassword = '';
     this.requestPasswordError = '';
   }
 
@@ -391,11 +397,30 @@ export class StudentProfileComponent implements OnInit {
     this.submittingRequest = true;
     this.requestPasswordError = '';
 
-    this.authService.requestPasswordChange(this.passwordRequestReason).subscribe({
+    // Validation
+    if (!this.passwordRequestNewPassword) {
+      this.requestPasswordError = 'Please enter a new password';
+      this.submittingRequest = false;
+      return;
+    }
+
+    if (this.passwordRequestNewPassword.length < 6) {
+      this.requestPasswordError = 'Password must be at least 6 characters';
+      this.submittingRequest = false;
+      return;
+    }
+
+    if (this.passwordRequestNewPassword !== this.passwordRequestConfirmPassword) {
+      this.requestPasswordError = 'Passwords do not match';
+      this.submittingRequest = false;
+      return;
+    }
+
+    this.authService.requestPasswordChange(this.passwordRequestReason, this.passwordRequestNewPassword).subscribe({
       next: (response) => {
         this.submittingRequest = false;
         this.closeRequestPasswordModal();
-        this.successMessage = 'Password change request submitted successfully! Admin will process your request.';
+        this.successMessage = 'Password change request submitted successfully! Admin will review your request.';
         setTimeout(() => {
           this.successMessage = '';
         }, 5000);

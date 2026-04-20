@@ -172,10 +172,20 @@ import { AdviserService } from '../../../../core/services/adviser.service';
         <button class="close-btn" (click)="closeRequestPasswordModal()">
           <i class="fa-solid fa-xmark"></i>
         </button>
-        <h3>Request Password Reset</h3>
-        <p style="color: #666; margin-bottom: 1rem;">Submit a request to the admin to reset your password. You'll receive a temporary password once approved.</p>
+        <h3>Request Password Change</h3>
+        <p style="color: #666; margin-bottom: 1rem;">Submit your desired new password. Admin will review and approve your request.</p>
 
         <div class="modal-error" *ngIf="requestPasswordError">{{ requestPasswordError }}</div>
+
+        <div class="form-group">
+          <label>New Password *</label>
+          <input type="password" [(ngModel)]="passwordRequestNewPassword" class="form-control" placeholder="Enter your desired new password (min 6 characters)" required>
+        </div>
+
+        <div class="form-group">
+          <label>Confirm New Password *</label>
+          <input type="password" [(ngModel)]="passwordRequestConfirmPassword" class="form-control" placeholder="Re-enter your new password" required>
+        </div>
 
         <div class="form-group">
           <label>Reason for Request (Optional)</label>
@@ -227,6 +237,8 @@ export class AdviserProfileComponent implements OnInit {
   };
 
   passwordRequestReason = '';
+  passwordRequestNewPassword = '';
+  passwordRequestConfirmPassword = '';
   requestPasswordError = '';
 
   constructor(
@@ -362,12 +374,16 @@ export class AdviserProfileComponent implements OnInit {
   requestPasswordChange(): void {
     this.requestPasswordError = '';
     this.passwordRequestReason = '';
+    this.passwordRequestNewPassword = '';
+    this.passwordRequestConfirmPassword = '';
     this.showRequestPasswordModal = true;
   }
 
   closeRequestPasswordModal(): void {
     this.showRequestPasswordModal = false;
     this.passwordRequestReason = '';
+    this.passwordRequestNewPassword = '';
+    this.passwordRequestConfirmPassword = '';
     this.requestPasswordError = '';
   }
 
@@ -375,11 +391,30 @@ export class AdviserProfileComponent implements OnInit {
     this.submittingRequest = true;
     this.requestPasswordError = '';
 
-    this.authService.requestPasswordChange(this.passwordRequestReason).subscribe({
+    // Validation
+    if (!this.passwordRequestNewPassword) {
+      this.requestPasswordError = 'Please enter a new password';
+      this.submittingRequest = false;
+      return;
+    }
+
+    if (this.passwordRequestNewPassword.length < 6) {
+      this.requestPasswordError = 'Password must be at least 6 characters';
+      this.submittingRequest = false;
+      return;
+    }
+
+    if (this.passwordRequestNewPassword !== this.passwordRequestConfirmPassword) {
+      this.requestPasswordError = 'Passwords do not match';
+      this.submittingRequest = false;
+      return;
+    }
+
+    this.authService.requestPasswordChange(this.passwordRequestReason, this.passwordRequestNewPassword).subscribe({
       next: (response) => {
         this.submittingRequest = false;
         this.closeRequestPasswordModal();
-        this.showToast('Password change request submitted successfully! Admin will process your request.', 'success');
+        this.showToast('Password change request submitted successfully! Admin will review your request.', 'success');
       },
       error: (err) => {
         this.submittingRequest = false;

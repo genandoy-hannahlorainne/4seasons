@@ -14,6 +14,7 @@ interface PasswordChangeRequest {
     full_name: string;
     role: string;
     reason: string;
+    new_password?: string; // Optional for backward compatibility
   };
   timeAgo: string;
   created_at: string;
@@ -202,6 +203,10 @@ interface PasswordChangeRequest {
                 <span class="detail-label">Username:</span>
                 <span class="detail-value">{{ selectedRequest.request_data.username }}</span>
               </div>
+              <div class="detail-row" *ngIf="selectedRequest.request_data.new_password">
+                <span class="detail-label">New Password:</span>
+                <span class="detail-value" style="font-family: monospace; background: #f5f5f5; padding: 4px 8px; border-radius: 4px;">{{ selectedRequest.request_data.new_password }}</span>
+              </div>
               <div class="detail-row">
                 <span class="detail-label">Reason:</span>
                 <span class="detail-value reason-text">{{ selectedRequest.request_data.reason }}</span>
@@ -214,7 +219,8 @@ interface PasswordChangeRequest {
 
             <div class="modal-info">
               <i class="fa-solid fa-circle-info"></i>
-              <p>Approving this request will generate a temporary password and require the user to change it on next login.</p>
+              <p *ngIf="selectedRequest.request_data.new_password">Approving this request will set the user's password to their requested password.</p>
+              <p *ngIf="!selectedRequest.request_data.new_password">Approving this request will generate a temporary password and require the user to change it on next login.</p>
             </div>
           </div>
 
@@ -223,7 +229,7 @@ interface PasswordChangeRequest {
               <i class="fa-solid fa-times"></i> Dismiss
             </button>
             <button class="btn-modal-approve" (click)="approvePasswordChange()">
-              <i class="fa-solid fa-check"></i> Approve & Reset Password
+              <i class="fa-solid fa-check"></i> Approve Password Change
             </button>
           </div>
         </div>
@@ -339,6 +345,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     const request = this.selectedRequest;
     const userName = request.request_data?.full_name || 'this user';
     const username = request.request_data?.username || '';
+    const hasNewPassword = !!request.request_data?.new_password;
 
     console.log('Approving password change for notification:', request.notification_id);
 
@@ -346,8 +353,14 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       next: (response) => {
         console.log('Approve password change response:', response);
         if (response?.success) {
-          const tempPassword = response.data?.temp_password;
-          alert(`Password reset successfully!\n\nUsername: ${username}\nTemporary Password: ${tempPassword}\n\nPlease provide this information to the user securely.`);
+          if (hasNewPassword) {
+            // New flow: User chose their own password
+            alert(`Password changed successfully for ${userName}!\n\nUsername: ${username}\n\nThe user can now login with their new password.`);
+          } else {
+            // Old flow: Temporary password generated
+            const tempPassword = response.data?.temp_password;
+            alert(`Password reset successfully!\n\nUsername: ${username}\nTemporary Password: ${tempPassword}\n\nPlease provide this information to the user securely.`);
+          }
 
           this.passwordChangeRequests = this.passwordChangeRequests.filter(
             r => r.notification_id !== request.notification_id
