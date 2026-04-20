@@ -1,8 +1,23 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { AdminService } from '../../../core/services/admin.service';
+import { interval, Subscription } from 'rxjs';
+
+interface PasswordChangeRequest {
+  notification_id: number;
+  request_data: {
+    user_id: number;
+    username: string;
+    full_name: string;
+    role: string;
+    reason: string;
+  };
+  timeAgo: string;
+  created_at: string;
+}
 
 @Component({
   selector: 'app-admin-layout',
@@ -39,6 +54,14 @@ import { Router } from '@angular/router';
             <img src="assets/icons/dashboard.png" class="nav-icon" alt="Dashboard">
             <span class="nav-label">Dashboard</span>
           </a>
+
+          <!-- Notification Bell in Sidebar -->
+          <button class="nav-item notification-nav-item" (click)="toggleNotificationPanel()" title="Notifications">
+            <img src="assets/icons/bell.png" class="nav-icon" alt="Notifications">
+            <span class="nav-label">Notifications</span>
+            <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+          </button>
+
           <a routerLink="/dashboard/admin/manage-users" routerLinkActive="active" class="nav-item" title="Users" (click)="closeMobile()">
             <img src="assets/icons/users.jpg" class="nav-icon" alt="Users">
             <span class="nav-label">Users</span>
@@ -87,7 +110,124 @@ import { Router } from '@angular/router';
           <span></span><span></span><span></span>
         </button>
         <span class="mobile-brand">PDMHS Admin</span>
+
+        <!-- Notification Bell -->
+        <div class="notification-bell" (click)="toggleNotificationPanel()">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+        </div>
       </header>
+
+      <!-- Notification Panel (Facebook-style dropdown) -->
+      <div class="notification-panel" *ngIf="showNotificationPanel">
+        <div class="panel-header">
+          <h3>Notifications</h3>
+          <button class="panel-close" (click)="closeNotificationPanel()">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+
+        <div class="panel-tabs">
+          <button
+            class="tab-btn"
+            [class.active]="showAllTab"
+            (click)="showAllTab = true">
+            All
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="!showAllTab"
+            (click)="showAllTab = false">
+            Unread
+          </button>
+        </div>
+
+        <div class="panel-content">
+          <div class="section-header">
+            <span>Earlier</span>
+            <a href="javascript:void(0)" class="see-all">See all</a>
+          </div>
+
+          <div class="notification-list">
+            <div
+              *ngFor="let request of passwordChangeRequests"
+              class="notification-item password-change-notif">
+              <div class="notif-banner" (click)="openNotificationModal(request)">
+                <div class="banner-header">
+                  <i class="fa-solid fa-key"></i>
+                  <span>1 Password Change Request</span>
+                </div>
+                <div class="banner-body">
+                  <div class="request-main">
+                    <strong>({{ request.request_data.role }})</strong>
+                  </div>
+                  <div class="request-reason">{{ request.request_data.reason }}</div>
+                  <div class="request-footer">
+                    <span>Username: {{ request.request_data.username }}</span>
+                    <span class="time-ago">{{ request.timeAgo }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="passwordChangeRequests.length === 0" class="no-notifications">
+              <i class="fa-solid fa-bell-slash"></i>
+              <p>No new notifications</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification Modal -->
+      <div class="modal-overlay" *ngIf="showNotificationModal" (click)="closeNotificationModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3><i class="fa-solid fa-key"></i> Password Change Request</h3>
+            <button class="modal-close" (click)="closeNotificationModal()">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+
+          <div class="modal-body" *ngIf="selectedRequest">
+            <div class="request-details">
+              <div class="detail-row">
+                <span class="detail-label">Name:</span>
+                <span class="detail-value">{{ selectedRequest.request_data.full_name }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Role:</span>
+                <span class="detail-value role-badge">{{ selectedRequest.request_data.role }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Username:</span>
+                <span class="detail-value">{{ selectedRequest.request_data.username }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Reason:</span>
+                <span class="detail-value reason-text">{{ selectedRequest.request_data.reason }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Requested:</span>
+                <span class="detail-value">{{ selectedRequest.timeAgo }}</span>
+              </div>
+            </div>
+
+            <div class="modal-info">
+              <i class="fa-solid fa-circle-info"></i>
+              <p>Approving this request will generate a temporary password and require the user to change it on next login.</p>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-modal-dismiss" (click)="dismissPasswordChange()">
+              <i class="fa-solid fa-times"></i> Dismiss
+            </button>
+            <button class="btn-modal-approve" (click)="approvePasswordChange()">
+              <i class="fa-solid fa-check"></i> Approve & Reset Password
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- Main content -->
       <main class="main-content">
@@ -97,12 +237,150 @@ import { Router } from '@angular/router';
     </div>
   `,
 })
-export class AdminLayoutComponent {
+export class AdminLayoutComponent implements OnInit, OnDestroy {
   isCollapsed = false;
   mobileOpen = false;
   loggingOut = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  // Notification system
+  showNotificationPanel = false;
+  showNotificationModal = false;
+  selectedRequest: PasswordChangeRequest | null = null;
+  passwordChangeRequests: PasswordChangeRequest[] = [];
+  unreadCount = 0;
+  showAllTab = true; // true = All, false = Unread
+  private pollSubscription?: Subscription;
+
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private adminService: AdminService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadNotifications();
+    // Poll for new notifications every 30 seconds
+    this.pollSubscription = interval(30000).subscribe(() => {
+      this.loadNotifications();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.pollSubscription?.unsubscribe();
+  }
+
+  loadNotifications(): void {
+    this.adminService.getNotifications().subscribe({
+      next: (response) => {
+        if (response?.success && response?.data) {
+          const allNotifications = response.data;
+          this.passwordChangeRequests = allNotifications
+            .filter((n: any) => n.notification_type === 'password_change_request' && n.status === 'Pending')
+            .map((n: any) => ({
+              notification_id: n.notification_id,
+              request_data: n.request_data,
+              timeAgo: this.formatTimeAgo(n.created_at),
+              created_at: n.created_at
+            }));
+          this.unreadCount = this.passwordChangeRequests.length;
+        }
+      },
+      error: (err) => console.error('Failed to load notifications:', err)
+    });
+  }
+
+  formatTimeAgo(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+    return date.toLocaleDateString();
+  }
+
+  toggleNotificationPanel(): void {
+    this.showNotificationPanel = !this.showNotificationPanel;
+  }
+
+  closeNotificationPanel(): void {
+    this.showNotificationPanel = false;
+  }
+
+  openNotificationModal(request: PasswordChangeRequest): void {
+    this.selectedRequest = request;
+    this.showNotificationModal = true;
+    this.showNotificationPanel = false;
+  }
+
+  closeNotificationModal(): void {
+    this.showNotificationModal = false;
+    this.selectedRequest = null;
+  }
+
+  approvePasswordChange(): void {
+    if (!this.selectedRequest) return;
+
+    const request = this.selectedRequest;
+    const userName = request.request_data?.full_name || 'this user';
+    const username = request.request_data?.username || '';
+
+    this.adminService.approvePasswordChangeRequest(request.notification_id).subscribe({
+      next: (response) => {
+        if (response?.success) {
+          const tempPassword = response.data?.temp_password;
+          alert(`Password reset successfully!\n\nUsername: ${username}\nTemporary Password: ${tempPassword}\n\nPlease provide this information to the user securely.`);
+
+          this.passwordChangeRequests = this.passwordChangeRequests.filter(
+            r => r.notification_id !== request.notification_id
+          );
+          this.unreadCount = this.passwordChangeRequests.length;
+          this.closeNotificationModal();
+        } else {
+          alert('Failed to approve password change: ' + (response?.message || 'Unknown error'));
+        }
+      },
+      error: (err) => {
+        console.error('Failed to approve password change:', err);
+        alert('Error approving password change request');
+      }
+    });
+  }
+
+  dismissPasswordChange(): void {
+    if (!this.selectedRequest) return;
+
+    const request = this.selectedRequest;
+    const userName = request.request_data?.full_name || 'this user';
+
+    if (confirm(`Dismiss password change request from ${userName}?`)) {
+      this.adminService.dismissPasswordChangeRequest(request.notification_id).subscribe({
+        next: (response) => {
+          if (response?.success) {
+            this.passwordChangeRequests = this.passwordChangeRequests.filter(
+              r => r.notification_id !== request.notification_id
+            );
+            this.unreadCount = this.passwordChangeRequests.length;
+            this.closeNotificationModal();
+          }
+        },
+        error: (err) => {
+          console.error('Failed to dismiss request:', err);
+          alert('Error dismissing request');
+        }
+      });
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.notification-bell') && !target.closest('.notification-panel')) {
+      this.closeNotificationPanel();
+    }
+  }
 
   toggleSidebar(): void { this.isCollapsed = !this.isCollapsed; }
   openMobile(): void { this.mobileOpen = true; }
