@@ -186,6 +186,22 @@ import { DrillDashboard, EmergencyDrill } from '../../../../core/models/emergenc
         </div>
       </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal confirm-modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
+      <div class="confirm-modal-content" (click)="$event.stopPropagation()">
+        <div class="confirm-modal-header">
+          <h3>{{ confirmTitle }}</h3>
+        </div>
+        <div class="confirm-modal-body">
+          <p>{{ confirmMessage }}</p>
+        </div>
+        <div class="confirm-modal-actions">
+          <button class="btn btn-confirm" (click)="confirmYes()">OK</button>
+          <button class="btn btn-cancel-confirm" (click)="closeConfirmModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
     .drill-dashboard {
@@ -594,6 +610,116 @@ import { DrillDashboard, EmergencyDrill } from '../../../../core/models/emergenc
       opacity: 0.6;
       cursor: not-allowed;
     }
+
+    /* Confirmation Modal Styles */
+    .confirm-modal-overlay {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 9999 !important;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .confirm-modal-content {
+      background: #ffffff;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 0 10px 40px rgba(5, 35, 85, 0.3);
+      animation: slideUp 0.3s ease;
+      overflow: hidden;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .confirm-modal-header {
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      border-bottom: none;
+
+      h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        color: #ffffff;
+        font-weight: 700;
+      }
+    }
+
+    .confirm-modal-body {
+      padding: 2rem 1.5rem;
+      background: #ffffff;
+
+      p {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+    }
+
+    .confirm-modal-actions {
+      padding: 1rem 1.5rem 1.5rem;
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      background: #ffffff;
+    }
+
+    .btn-confirm {
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+
+      &:hover {
+        background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
+      }
+    }
+
+    .btn-cancel-confirm {
+      background: #e9ecef;
+      color: #2c3e50;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+
+      &:hover {
+        background: #dee2e6;
+        transform: translateY(-2px);
+      }
+    }
   `]
 })
 export class DrillDashboardComponent implements OnInit, OnDestroy {
@@ -605,6 +731,12 @@ export class DrillDashboardComponent implements OnInit, OnDestroy {
   searchResults: any[] = [];
   showSearchResults = false;
   searchLoading = false;
+  
+  // Confirmation modal
+  showConfirmModal = false;
+  confirmAction: (() => void) | null = null;
+  confirmMessage = '';
+  confirmTitle = '';
   
   scanData = {
     user_id: null as number | string | null,
@@ -682,16 +814,34 @@ export class DrillDashboardComponent implements OnInit, OnDestroy {
   }
 
   endDrill() {
-    if (confirm('Are you sure you want to end this drill?')) {
+    this.confirmTitle = 'End Drill';
+    this.confirmMessage = 'Are you sure you want to end this drill?';
+    this.confirmAction = () => {
       this.drillService.endDrill(this.drillId).subscribe({
         next: () => {
           this.loadDrillDetails();
+          this.closeConfirmModal();
         },
         error: (error) => {
           console.error('Error ending drill:', error);
+          this.closeConfirmModal();
         }
       });
+    };
+    this.showConfirmModal = true;
+  }
+
+  confirmYes() {
+    if (this.confirmAction) {
+      this.confirmAction();
     }
+  }
+
+  closeConfirmModal() {
+    this.showConfirmModal = false;
+    this.confirmAction = null;
+    this.confirmMessage = '';
+    this.confirmTitle = '';
   }
 
   openScanModal() {
