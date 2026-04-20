@@ -514,7 +514,6 @@ class StudentController extends BaseController
             });
 
             return $this->sendResponse([
-                'success' => true,
                 'students' => $formattedStudents
             ], 'Students found successfully');
 
@@ -590,7 +589,6 @@ class StudentController extends BaseController
             ];
 
             return $this->sendResponse([
-                'success' => true,
                 'student' => $studentData
             ], 'Student found successfully');
 

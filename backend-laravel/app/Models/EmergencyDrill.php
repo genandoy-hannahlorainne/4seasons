@@ -63,7 +63,30 @@ class EmergencyDrill extends Model
 
     public function canStart(): bool
     {
-        return $this->status === 'planned';
+        if ($this->status !== 'planned') {
+            return false;
+        }
+
+        // If scheduled_at is set, check if current time is at or after scheduled time
+        if ($this->scheduled_at) {
+            $now = \Carbon\Carbon::now('Asia/Manila');
+            $scheduledTime = \Carbon\Carbon::parse($this->scheduled_at)->timezone('Asia/Manila');
+
+            // Allow starting only at or after scheduled time (up to 30 minutes after)
+            $allowedEndTime = $scheduledTime->copy()->addMinutes(30);
+
+            \Log::info('🔍 Model canStart check', [
+                'now' => $now->toDateTimeString(),
+                'scheduled' => $scheduledTime->toDateTimeString(),
+                'allowed_end' => $allowedEndTime->toDateTimeString(),
+                'can_start' => $now->greaterThanOrEqualTo($scheduledTime) && $now->lessThanOrEqualTo($allowedEndTime)
+            ]);
+
+            return $now->greaterThanOrEqualTo($scheduledTime) && $now->lessThanOrEqualTo($allowedEndTime);
+        }
+
+        // If no scheduled_at, allow starting anytime
+        return true;
     }
 
     public function canEnd(): bool

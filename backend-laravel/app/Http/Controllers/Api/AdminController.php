@@ -42,7 +42,7 @@ class AdminController extends BaseController
 
             // Get recent users count (last 30 days)
             $recentUsersCount = DB::table('users')
-                ->where('created_at', '>=', now()->subDays(30)) 
+                ->where('created_at', '>=', now()->subDays(30))
                 ->count();
 
             // Get BMI statistics for health insights
@@ -1927,43 +1927,66 @@ class AdminController extends BaseController
             $notifications = \App\Models\Notification::with([
                     'student.currentSection.gradeLevel',
                     'medicalVisit.clinicStaff.user',
+                    'user.role'
                 ])
-                ->whereNotNull('visit_id')
                 ->orderBy('created_at', 'desc')
-                ->limit(50)
+                ->limit(100)
                 ->get()
                 ->map(function ($notif) {
-                    $student = $notif->student;
-                    $visit   = $notif->medicalVisit;
-                    $staff   = $visit?->clinicStaff?->user;
-
-                    $section = $student?->currentSection;
-                    $grade   = $section?->gradeLevel;
-                    $gradeSection = collect([$grade?->level_name, $section?->section_name])
-                        ->filter()->implode(' - ');
-
-                    return [
+                    $baseData = [
                         'notification_id' => $notif->notification_id,
                         'message'         => $notif->message,
                         'priority'        => $notif->priority,
                         'status'          => $notif->status,
                         'created_at'      => $notif->created_at?->toISOString(),
-                        'student' => $student ? [
+                        'notification_type' => $notif->notification_type,
+                    ];
+
+                    // Handle medical visit notifications
+                    if ($notif->visit_id && $notif->student) {
+                        $student = $notif->student;
+                        $visit   = $notif->medicalVisit;
+                        $staff   = $visit?->clinicStaff?->user;
+
+                        $section = $student?->currentSection;
+                        $grade   = $section?->gradeLevel;
+                        $gradeSection = collect([$grade?->level_name, $section?->section_name])
+                            ->filter()->implode(' - ');
+
+                        $baseData['student'] = [
                             'full_name'      => trim($student->first_name . ' ' . $student->last_name),
                             'student_number' => $student->student_number,
                             'grade_section'  => $gradeSection ?: null,
-                        ] : null,
-                        'visit' => $visit ? [
+                        ];
+                        $baseData['visit'] = $visit ? [
                             'visit_id'   => $visit->visit_id,
                             'visit_type' => $visit->visit_type,
                             'diagnosis'  => $visit->chief_complaint,
                             'status'     => $visit->status,
-                        ] : null,
-                        'staff' => $staff ? [
+                        ] : null;
+                        $baseData['staff'] = $staff ? [
                             'name'     => trim($staff->first_name . ' ' . $staff->last_name),
                             'position' => $visit->clinicStaff->position ?? null,
-                        ] : null,
-                    ];
+                        ] : null;
+                    }
+
+                    // Handle password change requests
+                    if ($notif->notification_type === 'password_change_request' && $notif->request_data) {
+                        $baseData['request_data'] = $notif->request_data;
+                        $baseData['user'] = $notif->user ? [
+                            'user_id' => $notif->user->user_id,
+                            'username' => $notif->user->username,
+                            'full_name' => trim($notif->user->first_name . ' ' . $notif->user->last_name),
+                            'role' => $notif->user->role->role_name ?? null,
+                        ] : null;
+                    }
+
+                    // Handle emergency drill notifications
+                    if ($notif->notification_type === 'emergency_drill_alert' && $notif->request_data) {
+                        $baseData['request_data'] = $notif->request_data;
+                    }
+
+                    return $baseData;
                 });
 
             return $this->sendResponse(['notifications' => $notifications], 'Notifications retrieved successfully');
@@ -1978,7 +2001,9 @@ class AdminController extends BaseController
     public function markNotificationAsRead($notificationId)
     {
         try {
-            // Implement notification marking logic
+            $notification = \App\Models\Notification::findOrFail($notificationId);
+            $notification->markAsRead();
+
             return $this->sendResponse([], 'Notification marked as read');
         } catch (\Exception $e) {
             return $this->sendError('Failed to mark notification as read', $e->getMessage());
@@ -1991,10 +2016,83 @@ class AdminController extends BaseController
     public function markAllNotificationsAsRead()
     {
         try {
-            // Implement bulk notification marking logic
+            \App\Models\Notification::where('status', 'Pending')->update([
+                'status' => 'Sent',
+                'sent_at' => now()
+            ]);
+
             return $this->sendResponse([], 'All notifications marked as read');
         } catch (\Exception $e) {
             return $this->sendError('Failed to mark notifications as read', $e->getMessage());
+        }
+    }
+
+    /**
+     * Approve password change request and reset user password
+     */
+    public function approvePasswordChangeRequest(Request $request, $notificationId)
+    {
+        try {
+            $notification = \App\Models\Notification::findOrFail($notificationId);
+
+            if ($notification->notification_type !== 'password_change_request') {
+                return $this->sendError('Invalid notification type', [], 400);
+            }
+
+            $userId = $notification->request_data['user_id'] ?? null;
+            if (!$userId) {
+                return $this->sendError('User ID not found in notification', [], 400);
+            }
+
+            $user = User::findOrFail($userId);
+
+            // Generate temporary password
+            $tempPassword = $this->generateTempPassword();
+
+            // Reset password
+            $user->update([
+                'password_hash' => Hash::make($tempPassword),
+                'password_must_change' => true,
+                'password_changed_at' => now()
+            ]);
+
+            // Mark notification as read
+            $notification->markAsRead();
+
+            // Log activity
+            \App\Models\AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'Password Reset Approved',
+                'table_name' => 'users',
+                'record_id' => $userId,
+                'old_values' => null,
+                'new_values' => json_encode(['password_reset' => true]),
+                'ip_address' => $request->ip()
+            ]);
+
+            return $this->sendResponse([
+                'temp_password' => $tempPassword,
+                'username' => $user->username,
+                'full_name' => trim($user->first_name . ' ' . $user->last_name)
+            ], 'Password reset successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to approve password change request', $e->getMessage());
+        }
+    }
+
+    /**
+     * Dismiss/reject password change request
+     */
+    public function dismissPasswordChangeRequest($notificationId)
+    {
+        try {
+            $notification = \App\Models\Notification::findOrFail($notificationId);
+            $notification->markAsRead();
+
+            return $this->sendResponse([], 'Request dismissed');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to dismiss request', $e->getMessage());
         }
     }
 

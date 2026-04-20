@@ -22,7 +22,7 @@ class EmergencyDrillController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = EmergencyDrill::with(['creator', 'participants.student'])
+            $query = EmergencyDrill::with(['creator', 'participants.user', 'participants.student'])
                 ->orderBy('created_at', 'desc');
 
             if ($request->has('status')) {
@@ -38,7 +38,11 @@ class EmergencyDrillController extends BaseController
             return $this->sendResponse($drills, 'Emergency drills retrieved successfully');
 
         } catch (\Exception $e) {
-            return $this->sendError('Failed to retrieve drills', $e->getMessage());
+            Log::error('Emergency drills index error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->sendError('Failed to retrieve drills', $e->getMessage(), 500);
         }
     }
 
@@ -60,11 +64,23 @@ class EmergencyDrillController extends BaseController
                 return $this->sendError('Validation Error', $validator->errors()->first());
             }
 
+            $scheduledAt = null;
+            if ($request->scheduled_at) {
+                $scheduledAt = Carbon::parse($request->scheduled_at, 'Asia/Manila');
+
+                Log::info('Creating drill with scheduled time', [
+                    'input' => $request->scheduled_at,
+                    'parsed' => $scheduledAt->toDateTimeString(),
+                    'timezone' => $scheduledAt->timezone->getName(),
+                    'timestamp' => $scheduledAt->timestamp
+                ]);
+            }
+
             $drill = EmergencyDrill::create([
                 'drill_name' => $request->drill_name,
                 'drill_type' => $request->drill_type,
                 'description' => $request->description,
-                'scheduled_at' => $request->scheduled_at,
+                'scheduled_at' => $scheduledAt,
                 'created_by' => auth()->id(),
                 'settings' => $request->settings ?? []
             ]);
@@ -101,7 +117,12 @@ class EmergencyDrillController extends BaseController
             ], 'Drill details retrieved successfully');
 
         } catch (\Exception $e) {
-            return $this->sendError('Failed to retrieve drill', $e->getMessage());
+            Log::error('Emergency drill show error', [
+                'drill_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->sendError('Failed to retrieve drill', $e->getMessage(), 500);
         }
     }
 
@@ -110,12 +131,122 @@ class EmergencyDrillController extends BaseController
      */
     public function start($id)
     {
+        // IMMEDIATE VALIDATION - NO EXCEPTIONS, NO TRY-CATCH
+        $drill = EmergencyDrill::find($id);
+        
+        \Log::info('🔥 START DRILL VALIDATION', [
+            'drill_id' => $id,
+            'drill_found' => !!$drill,
+            'status' => $drill ? $drill->status : null,
+            'scheduled_at' => $drill ? $drill->scheduled_at : null,
+            'scheduled_at_type' => $drill && $drill->scheduled_at ? gettype($drill->scheduled_at) : null,
+            'scheduled_at_string' => $drill && $drill->scheduled_at ? $drill->scheduled_at->toDateTimeString() : null,
+        ]);
+        
+        if (!$drill) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Drill not found'
+            ], 404);
+        }
+
+        if ($drill->status !== 'planned') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot start drill - not in planned status'
+            ], 403);
+        }
+
+        // Check scheduled time IMMEDIATELY
+        if ($drill->scheduled_at) {
+            $now = \Carbon\Carbon::now('Asia/Manila');
+            $scheduledTime = \Carbon\Carbon::parse($drill->scheduled_at)->timezone('Asia/Manila');
+            
+            \Log::info('🕐 TIME COMPARISON', [
+                'now' => $now->toDateTimeString(),
+                'scheduled' => $scheduledTime->toDateTimeString(),
+                'is_before' => $now->lessThan($scheduledTime),
+                'diff_minutes' => $now->diffInMinutes($scheduledTime, false)
+            ]);
+            
+            if ($now->lessThan($scheduledTime)) {
+                $minutesUntil = $now->diffInMinutes($scheduledTime);
+                \Log::warning('❌ BLOCKED - TOO EARLY', ['minutes_until' => $minutesUntil]);
+                return response()->json([
+                    'success' => false,
+                    'message' => "Cannot start drill. Scheduled for {$scheduledTime->format('g:i A')}. Wait {$minutesUntil} more minutes."
+                ], 403);
+            }
+            
+            $allowedEndTime = $scheduledTime->copy()->addMinutes(30);
+            if ($now->greaterThan($allowedEndTime)) {
+                \Log::warning('❌ BLOCKED - TOO LATE');
+                return response()->json([
+                    'success' => false,
+                    'message' => "Cannot start drill. Time window has passed."
+                ], 403);
+            }
+        } else {
+            \Log::info('⚠️ NO SCHEDULED TIME - ALLOWING START');
+        }
+
+        Log::info('🔥🔥🔥 START METHOD CALLED', ['id' => $id, 'time' => now()->toDateTimeString()]);
+        
         try {
             $drill = EmergencyDrill::findOrFail($id);
 
-            if (!$drill->canStart()) {
+            Log::info('🚨 START DRILL REQUEST', [
+                'drill_id' => $drill->id,
+                'drill_name' => $drill->drill_name,
+                'status' => $drill->status,
+                'scheduled_at_raw' => $drill->scheduled_at,
+                'scheduled_at_formatted' => $drill->scheduled_at ? $drill->scheduled_at->toDateTimeString() : null,
+            ]);
+
+            if ($drill->status !== 'planned') {
                 return $this->sendError('Cannot start drill', 'Drill is not in planned status');
             }
+
+            // Use the model's canStart method for validation
+            if (!$drill->canStart()) {
+                if ($drill->scheduled_at) {
+                    $now = Carbon::now('Asia/Manila');
+                    $scheduledTime = Carbon::parse($drill->scheduled_at)->timezone('Asia/Manila');
+                    $allowedEndTime = $scheduledTime->copy()->addMinutes(30);
+
+                    Log::warning('❌ BLOCKED: Drill cannot be started', [
+                        'now' => $now->toDateTimeString(),
+                        'scheduled' => $scheduledTime->toDateTimeString(),
+                        'is_before' => $now->lessThan($scheduledTime),
+                        'is_after_window' => $now->greaterThan($allowedEndTime)
+                    ]);
+
+                    if ($now->lessThan($scheduledTime)) {
+                        $scheduledFormatted = $scheduledTime->format('F j, Y g:i A');
+                        $minutesUntil = $now->diffInMinutes($scheduledTime);
+
+                        return $this->sendError(
+                            'Cannot start drill',
+                            "This drill is scheduled for {$scheduledFormatted}. You can only start it at or after the scheduled time. {$minutesUntil} minutes remaining.",
+                            403
+                        );
+                    }
+
+                    if ($now->greaterThan($allowedEndTime)) {
+                        $scheduledFormatted = $scheduledTime->format('F j, Y g:i A');
+
+                        return $this->sendError(
+                            'Cannot start drill',
+                            "The time window for this drill has passed. It was scheduled for {$scheduledFormatted} and could only be started within 30 minutes after.",
+                            403
+                        );
+                    }
+                }
+
+                return $this->sendError('Cannot start drill', 'Drill cannot be started at this time', 403);
+            }
+
+            Log::info('✅ ALLOWED: Drill can be started');
 
             DB::beginTransaction();
 
@@ -126,6 +257,23 @@ class EmergencyDrillController extends BaseController
 
             // Update all participants' assigned_at timestamp
             $drill->participants()->update(['assigned_at' => now()]);
+
+            // Create notification for admin about drill start
+            \App\Models\Notification::create([
+                'channel' => 'System',
+                'message' => "Emergency drill '{$drill->drill_name}' ({$drill->drill_type}) has been started.",
+                'status' => 'Pending',
+                'priority' => 'urgent',
+                'notification_type' => 'emergency_drill_alert',
+                'request_data' => [
+                    'drill_id' => $drill->id,
+                    'drill_name' => $drill->drill_name,
+                    'drill_type' => $drill->drill_type,
+                    'status' => 'active',
+                    'started_at' => $drill->started_at->toISOString(),
+                    'action' => 'started'
+                ]
+            ]);
 
             DB::commit();
 
@@ -263,7 +411,7 @@ class EmergencyDrillController extends BaseController
 
             // Find the participant by user_id or student_number
             $participant = null;
-            
+
             if ($request->user_id) {
                 $participant = DrillParticipant::where('drill_id', $drill->id)
                     ->where('user_id', $request->user_id)
@@ -411,7 +559,7 @@ class EmergencyDrillController extends BaseController
             'fastest_response' => $scannedParticipants->min('response_time_seconds'),
             'slowest_response' => $scannedParticipants->max('response_time_seconds'),
             'total_scans' => $drill->scans->count(),
-            'completion_rate' => $participants->count() > 0 ? 
+            'completion_rate' => $participants->count() > 0 ?
                 ($scannedParticipants->count() / $participants->count()) * 100 : 0
         ];
 
@@ -425,7 +573,7 @@ class EmergencyDrillController extends BaseController
     {
         try {
             $query = $request->get('q', '');
-            
+
             if (strlen($query) < 2) {
                 return $this->sendResponse([], 'Query too short');
             }
@@ -459,7 +607,7 @@ class EmergencyDrillController extends BaseController
                     'student_name' => $student ? "{$student->first_name} {$student->last_name}" : null,
                     'role' => $user->role->role_name ?? 'Unknown',
                     'is_participant' => $isParticipant,
-                    'display_text' => $student 
+                    'display_text' => $student
                         ? "{$student->first_name} {$student->last_name} ({$student->student_number})"
                         : "{$user->full_name} (ID: {$user->user_id})"
                 ];

@@ -9,7 +9,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
 
   // First check: Local authentication state
   if (!authService.isAuthenticated()) {
-    console.warn('🔒 Role Guard: No valid local authentication');
+    // console.warn(...); // Removed for production
     router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
     return false;
   }
@@ -32,7 +32,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
   return authService.getCurrentUser().pipe(
     map(user => {
       if (!user) {
-        console.warn('🔒 Role Guard: Backend verification failed');
+        // console.warn(...); // Removed for production
         router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
         return false;
       }
@@ -42,7 +42,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
       const hasRequiredRole = requiredRoles.some(role => role === userRole);
 
       if (hasRequiredRole) {
-        console.log(`✅ Role Guard: Access granted for role '${userRole}'`);
+        // console.log(...); // Removed for production
         return true;
       }
 

@@ -48,13 +48,24 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
           <div class="drill-card" *ngFor="let drill of activeDrills" [class.active]="drill.status === 'active'">
             <div class="drill-header">
               <h3>{{ drill.drill_name }}</h3>
-              <span class="status-badge" [class]="'status-' + drill.status">
-                {{ drill.status | titlecase }}
-              </span>
+              <div class="header-badges">
+                <span class="status-badge" [class]="'status-' + drill.status">
+                  {{ drill.status | titlecase }}
+                </span>
+                <span *ngIf="drill.scheduled_at && drill.status === 'planned'"
+                      class="schedule-badge"
+                      [class.can-start]="canStartDrill(drill)"
+                      [class.too-early]="isScheduledTooEarly(drill)"
+                      [class.too-late]="isScheduledTooLate(drill)">
+                  <i class="fas fa-clock"></i>
+                  {{ canStartDrill(drill) ? 'Ready' : 'Scheduled' }}
+                </span>
+              </div>
             </div>
             <div class="drill-info">
               <p><strong>Type:</strong> {{ drill.drill_type | titlecase }}</p>
               <p><strong>Created:</strong> {{ drill.created_at | date:'short' }}</p>
+              <p *ngIf="drill.scheduled_at"><strong>Scheduled:</strong> {{ drill.scheduled_at | date:'short' }}</p>
               <p *ngIf="drill.started_at"><strong>Started:</strong> {{ drill.started_at | date:'short' }}</p>
               <p *ngIf="drill.description">{{ drill.description }}</p>
             </div>
@@ -69,14 +80,18 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
               </div>
               <div class="stat" *ngIf="drill.statistics.average_response_time">
                 <span class="stat-value">{{ drill.statistics.average_response_time | number:'1.0-1' }}s</span>
-                <span class="stat-label">Avg Response</span>
+                <span class="stat-label">Avg Response </span>
               </div>
             </div>
             <div class="drill-actions">
               <button class="btn btn-sm btn-outline" (click)="viewDrill(drill.id)">
                 <i class="fas fa-eye"></i> View
               </button>
-              <button *ngIf="drill.status === 'planned'" class="btn btn-sm btn-success" (click)="startDrill(drill.id)">
+              <button *ngIf="drill.status === 'planned'"
+                      class="btn btn-sm btn-success"
+                      (click)="startDrill(drill.id)"
+                      [disabled]="!canStartDrill(drill)"
+                      [title]="getStartButtonTooltip(drill)">
                 <i class="fas fa-play"></i> Start
               </button>
               <button *ngIf="drill.status === 'active'" class="btn btn-sm btn-primary" (click)="viewDashboard(drill.id)">
@@ -105,6 +120,7 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             <div class="drill-info">
               <p><strong>Type:</strong> {{ drill.drill_type | titlecase }}</p>
               <p><strong>Created:</strong> {{ drill.created_at | date:'short' }}</p>
+              <p *ngIf="drill.scheduled_at"><strong>Scheduled:</strong> {{ drill.scheduled_at | date:'short' }}</p>
               <p *ngIf="drill.started_at"><strong>Started:</strong> {{ drill.started_at | date:'short' }}</p>
               <p *ngIf="drill.ended_at"><strong>Ended:</strong> {{ drill.ended_at | date:'short' }}</p>
               <p *ngIf="drill.description">{{ drill.description }}</p>
@@ -144,17 +160,17 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             <h3>Create Emergency Drill</h3>
             <button class="close-btn" (click)="showCreateModal = false">&times;</button>
           </div>
-          
+
           <form (ngSubmit)="createDrill()" class="modal-body">
             <div class="form-group">
               <label>Drill Name *</label>
-              <input type="text" [(ngModel)]="newDrill.drill_name" name="drill_name" 
+              <input type="text" [(ngModel)]="newDrill.drill_name" name="drill_name"
                      class="form-control" required>
             </div>
-            
+
             <div class="form-group">
               <label>Drill Type *</label>
-              <select [(ngModel)]="newDrill.drill_type" name="drill_type" 
+              <select [(ngModel)]="newDrill.drill_type" name="drill_type"
                       class="form-control" required>
                 <option value="">Select Type</option>
                 <option value="earthquake">Earthquake</option>
@@ -164,19 +180,19 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
                 <option value="evacuation">Evacuation</option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label>Description</label>
-              <textarea [(ngModel)]="newDrill.description" name="description" 
+              <textarea [(ngModel)]="newDrill.description" name="description"
                         class="form-control" rows="3"></textarea>
             </div>
-            
+
             <div class="form-group">
               <label>Scheduled Date/Time</label>
-              <input type="datetime-local" [(ngModel)]="newDrill.scheduled_at" 
+              <input type="datetime-local" [(ngModel)]="newDrill.scheduled_at"
                      name="scheduled_at" class="form-control">
             </div>
-            
+
             <div class="modal-actions">
               <button type="button" class="btn btn-secondary" (click)="showCreateModal = false">
                 Cancel
@@ -346,12 +362,46 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       color: #333;
     }
 
+    .header-badges {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
     .status-badge {
       padding: 4px 8px;
       border-radius: 4px;
       font-size: 12px;
       font-weight: bold;
       text-transform: uppercase;
+    }
+
+    .schedule-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .schedule-badge.can-start {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .schedule-badge.too-early {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    .schedule-badge.too-late {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
     }
 
     .status-planned { background: #e3f2fd; color: #1976d2; }
@@ -489,14 +539,23 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       display: inline-flex;
       align-items: center;
       gap: 5px;
+      transition: all 0.2s ease;
     }
 
-    .btn-primary { 
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #ccc !important;
+      color: #666 !important;
+      border-color: #ccc !important;
+    }
+
+    .btn-primary {
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       color: white;
       box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
       font-weight: 600;
-      
+
       &:hover:not(:disabled) {
         background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
         box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
@@ -504,22 +563,22 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       }
     }
     .btn-danger { background: #dc3545; color: white; }
-    .btn-secondary { 
-      background: #e9ecef; 
+    .btn-secondary {
+      background: #e9ecef;
       color: #2c3e50;
       font-weight: 600;
-      
+
       &:hover {
         background: #dee2e6;
         transform: translateY(-1px);
       }
     }
-    .btn-outline { 
-      background: white; 
-      color: #052355; 
+    .btn-outline {
+      background: white;
+      color: #052355;
       border: 2px solid #052355;
       font-weight: 600;
-      
+
       &:hover {
         background: #052355;
         color: white;
@@ -530,11 +589,6 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
 
     .btn:hover {
       opacity: 0.9;
-    }
-
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
     }
 
     /* Confirmation Modal Styles */
@@ -657,7 +711,7 @@ export class EmergencyDrillsComponent implements OnInit {
   typeFilter = '';
   showCreateModal = false;
   creating = false;
-  
+
   // Confirmation modal
   showConfirmModal = false;
   confirmAction: (() => void) | null = null;
@@ -722,9 +776,14 @@ export class EmergencyDrillsComponent implements OnInit {
         : undefined
     };
 
+    console.log('🕐 Creating drill with scheduled_at:', payload.scheduled_at);
+    console.log('🕐 Current browser time:', new Date().toISOString());
+
     this.drillService.createDrill(payload).subscribe({
       next: (response) => {
+        console.log('✅ Drill created, scheduled_at from server:', response.data.scheduled_at);
         this.drills.unshift(response.data);
+        this.activeDrills.unshift(response.data);
         this.showCreateModal = false;
         this.resetNewDrill();
         this.creating = false;
@@ -737,6 +796,31 @@ export class EmergencyDrillsComponent implements OnInit {
   }
 
   startDrill(id: number) {
+    const drill = this.activeDrills.find(d => d.id === id);
+
+    if (drill && drill.scheduled_at) {
+      const now = new Date();
+      const scheduledTime = new Date(drill.scheduled_at);
+
+      console.log('🚨 START DRILL ATTEMPT:', {
+        drillId: id,
+        now: now.toISOString(),
+        nowLocal: now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }),
+        scheduledTime: scheduledTime.toISOString(),
+        scheduledLocal: scheduledTime.toLocaleString('en-US', { timeZone: 'Asia/Manila' }),
+        scheduledRaw: drill.scheduled_at,
+        canStart: this.canStartDrill(drill),
+        nowTimestamp: now.getTime(),
+        scheduledTimestamp: scheduledTime.getTime(),
+        diff: (now.getTime() - scheduledTime.getTime()) / 1000 / 60 + ' minutes'
+      });
+
+      if (!this.canStartDrill(drill)) {
+        alert(this.getStartButtonTooltip(drill));
+        return;
+      }
+    }
+
     this.confirmTitle = 'Start Drill';
     this.confirmMessage = 'Are you sure you want to start this drill?';
     this.confirmAction = () => {
@@ -747,11 +831,65 @@ export class EmergencyDrillsComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error starting drill:', error);
+          const errorMessage = error?.error?.message || 'Failed to start drill';
+          alert(errorMessage);
           this.closeConfirmModal();
         }
       });
     };
     this.showConfirmModal = true;
+  }
+
+  canStartDrill(drill: EmergencyDrill): boolean {
+    if (!drill.scheduled_at) {
+      return true; // No schedule restriction
+    }
+
+    const now = new Date();
+    const scheduledTime = new Date(drill.scheduled_at);
+
+    console.log('🕐 Can start check:', {
+      now: now.toISOString(),
+      nowLocal: now.toLocaleString(),
+      scheduledTime: scheduledTime.toISOString(),
+      scheduledLocal: scheduledTime.toLocaleString(),
+      canStart: now >= scheduledTime
+    });
+
+    // Allow starting only at or after scheduled time (up to 30 minutes after)
+    const allowedEndTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000);
+
+    return now >= scheduledTime && now <= allowedEndTime;
+  }
+
+  isScheduledTooEarly(drill: EmergencyDrill): boolean {
+    if (!drill.scheduled_at || drill.status !== 'planned') return false;
+    return !this.canStartDrill(drill) && new Date() < new Date(drill.scheduled_at);
+  }
+
+  isScheduledTooLate(drill: EmergencyDrill): boolean {
+    if (!drill.scheduled_at || drill.status !== 'planned') return false;
+    return !this.canStartDrill(drill) && new Date() > new Date(drill.scheduled_at);
+  }
+
+
+  getStartButtonTooltip(drill: EmergencyDrill): string {
+    if (!drill.scheduled_at) {
+      return 'Start this drill';
+    }
+
+    const now = new Date();
+    const scheduledTime = new Date(drill.scheduled_at);
+    const allowedEndTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000);
+
+    if (now < scheduledTime) {
+      const minutesUntil = Math.ceil((scheduledTime.getTime() - now.getTime()) / 60000);
+      return `This drill is scheduled for ${scheduledTime.toLocaleString()}. You can start it at the scheduled time. ${minutesUntil} minutes remaining.`;
+    } else if (now > allowedEndTime) {
+      return `The scheduled time window for this drill has passed. It was scheduled for ${scheduledTime.toLocaleString()} and could only be started within 30 minutes after.`;
+    }
+
+    return 'Start this drill';
   }
 
   endDrill(id: number) {

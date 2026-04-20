@@ -17,20 +17,20 @@ export class AuthInitService {
    * Verifies token validity with backend
    */
   async initializeAuth(): Promise<void> {
-    console.log('🔐 Initializing authentication...');
+    // console.log(...); // Removed for production
 
     // Check if we have local auth data
     if (!this.authService.isAuthenticated()) {
-      console.log('ℹ️ No local authentication found');
+      // console.log(...); // Removed for production
       return;
     }
 
     try {
       // Verify with backend that token is still valid
       await firstValueFrom(this.authService.getCurrentUser());
-      console.log('✅ Authentication verified with backend');
+      // console.log(...); // Removed for production
     } catch (error) {
-      console.warn('⚠️ Authentication verification failed, clearing auth data:', error);
+      // console.warn(...); // Removed for production
       // Clear invalid auth data
       await firstValueFrom(this.authService.logout());
 

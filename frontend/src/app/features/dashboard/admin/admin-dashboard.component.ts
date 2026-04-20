@@ -61,6 +61,63 @@ interface UsersResponse {
       </div>
 
       <div class="dashboard-content" *ngIf="!loading">
+        <!-- Password Change Requests -->
+        <div class="password-requests-banner" *ngIf="passwordChangeRequests.length > 0">
+          <div class="requests-header">
+            <i class="fa-solid fa-key"></i>
+            <span>{{ passwordChangeRequests.length }} Password Change Request{{ passwordChangeRequests.length > 1 ? 's' : '' }}</span>
+          </div>
+          <div class="requests-list">
+            <div *ngFor="let request of passwordChangeRequests" class="request-item">
+              <div class="request-content">
+                <div class="request-message">
+                  <strong>{{ request.request_data?.full_name }}</strong> ({{ request.request_data?.role }})
+                </div>
+                <div class="request-reason">{{ request.request_data?.reason }}</div>
+                <div class="request-meta">
+                  <span>Username: {{ request.request_data?.username }}</span>
+                  <span>{{ request.timeAgo }}</span>
+                </div>
+              </div>
+              <div class="request-actions">
+                <button class="btn-approve" (click)="approvePasswordChange(request)" title="Approve & Reset Password">
+                  <i class="fa-solid fa-check"></i> Approve
+                </button>
+                <button class="btn-dismiss" (click)="dismissPasswordChange(request)" title="Dismiss Request">
+                  <i class="fa-solid fa-times"></i> Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Emergency Drill Alerts -->
+        <div class="drill-alerts-banner" *ngIf="drillAlerts.length > 0">
+          <div class="drill-header">
+            <i class="fa-solid fa-bell"></i>
+            <span>{{ drillAlerts.length }} Emergency Drill Alert{{ drillAlerts.length > 1 ? 's' : '' }}</span>
+            <button class="mark-all-read" (click)="markAllNotificationsAsRead()">
+              Mark All Read
+            </button>
+          </div>
+          <div class="drill-list">
+            <div *ngFor="let alert of drillAlerts" class="drill-item">
+              <div class="drill-content">
+                <div class="drill-message">{{ alert.message }}</div>
+                <div class="drill-meta">
+                  <span><strong>{{ alert.request_data?.drill_name }}</strong> ({{ alert.request_data?.drill_type }})</span>
+                  <span>{{ alert.timeAgo }}</span>
+                </div>
+              </div>
+              <div class="drill-actions">
+                <button class="drill-view" (click)="viewDrillDashboard(alert.request_data?.drill_id)">
+                  <i class="fa-solid fa-chart-line"></i> View Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Emergency Notifications (if any) -->
         <div class="emergency-banner" *ngIf="emergencyNotifications.length > 0">
           <div class="emergency-header">
@@ -98,12 +155,13 @@ interface UsersResponse {
           <div class="history-list">
             <div *ngFor="let notification of notificationHistory" class="history-item" [ngClass]="notification.priority">
               <div class="history-icon">
-                <i class="fa-solid" [ngClass]="notification.priority === 'urgent' ? 'fa-triangle-exclamation' : 'fa-circle-info'"></i>
+                <i class="fa-solid" [ngClass]="getNotificationIcon(notification)"></i>
               </div>
               <div class="history-content">
                 <div class="history-message">{{ notification.message }}</div>
                 <div class="history-meta">
-                  <span class="history-student">{{ notification.student?.full_name }} ({{ notification.student?.student_number }})</span>
+                  <span class="history-student" *ngIf="notification.student">{{ notification.student?.full_name }} ({{ notification.student?.student_number }})</span>
+                  <span class="history-user" *ngIf="notification.user && !notification.student">{{ notification.user?.full_name }} ({{ notification.user?.role }})</span>
                   <span class="history-time">{{ notification.timeAgo }}</span>
                   <span class="history-status" [ngClass]="notification.status.toLowerCase()">{{ notification.status }}</span>
                 </div>
@@ -382,6 +440,187 @@ interface UsersResponse {
       }
     }
 
+    .password-requests-banner {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      color: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+
+      .requests-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        i { font-size: 1.25rem; }
+      }
+
+      .requests-list {
+        .request-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 0.75rem;
+          &:last-child { margin-bottom: 0; }
+
+          .request-content {
+            flex: 1;
+            .request-message {
+              font-weight: 500;
+              margin-bottom: 0.5rem;
+            }
+            .request-reason {
+              font-size: 0.9rem;
+              opacity: 0.9;
+              margin-bottom: 0.5rem;
+              font-style: italic;
+            }
+            .request-meta {
+              font-size: 0.85rem;
+              opacity: 0.85;
+              span {
+                margin-right: 1rem;
+                &:last-child { margin-right: 0; }
+              }
+            }
+          }
+
+          .request-actions {
+            display: flex;
+            gap: 0.5rem;
+
+            .btn-approve {
+              background: rgba(46, 204, 113, 0.2);
+              border: 1px solid rgba(46, 204, 113, 0.4);
+              color: white;
+              padding: 0.5rem 1rem;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 500;
+              transition: all 0.2s ease;
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              &:hover {
+                background: rgba(46, 204, 113, 0.3);
+                border-color: rgba(46, 204, 113, 0.6);
+              }
+            }
+
+            .btn-dismiss {
+              background: rgba(231, 76, 60, 0.2);
+              border: 1px solid rgba(231, 76, 60, 0.4);
+              color: white;
+              padding: 0.5rem 1rem;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 500;
+              transition: all 0.2s ease;
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              &:hover {
+                background: rgba(231, 76, 60, 0.3);
+                border-color: rgba(231, 76, 60, 0.6);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .drill-alerts-banner {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+
+      .drill-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+
+        i { font-size: 1.25rem; }
+
+        .mark-all-read {
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: white;
+          padding: 0.4rem 0.8rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          font-weight: 500;
+          transition: all 0.2s ease;
+          &:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+          }
+        }
+      }
+
+      .drill-list {
+        .drill-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 0.75rem;
+          &:last-child { margin-bottom: 0; }
+
+          .drill-content {
+            flex: 1;
+            .drill-message {
+              font-weight: 500;
+              margin-bottom: 0.5rem;
+            }
+            .drill-meta {
+              font-size: 0.9rem;
+              opacity: 0.9;
+              span {
+                margin-right: 1rem;
+                &:last-child { margin-right: 0; }
+              }
+            }
+          }
+
+          .drill-actions {
+            .drill-view {
+              background: rgba(255, 255, 255, 0.2);
+              border: 1px solid rgba(255, 255, 255, 0.3);
+              color: white;
+              padding: 0.5rem 1rem;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 500;
+              transition: all 0.2s ease;
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              &:hover {
+                background: rgba(255, 255, 255, 0.3);
+                border-color: rgba(255, 255, 255, 0.5);
+              }
+            }
+          }
+        }
+      }
+    }
+
     @keyframes pulse {
       0% { box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3); }
       50% { box-shadow: 0 4px 20px rgba(255, 107, 107, 0.5); }
@@ -635,8 +874,8 @@ interface UsersResponse {
           font-weight: 600;
           transition: all 0.2s ease;
           box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
-          
-          &:hover { 
+
+          &:hover {
             background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
             box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
             transform: translateY(-2px);
@@ -849,6 +1088,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   activityLog: any[] = [];
   emergencyNotifications: any[] = [];
   notificationHistory: any[] = [];
+  passwordChangeRequests: any[] = [];
+  drillAlerts: any[] = [];
 
   constructor(
     private router: Router,
@@ -992,19 +1233,26 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       next: (response) => {
         console.log('✅ Admin notifications response:', response);
         if (response?.success && Array.isArray(response.data?.notifications)) {
-          // Separate urgent (pending) from history (read/sent)
           const allNotifications = response.data.notifications.map((notif: any) => {
-            console.log('🔍 Notification structure:', notif);
-            console.log('🔍 Visit ID:', notif.visit?.visit_id || notif.visit_id);
             return {
               ...notif,
               timeAgo: this.formatTimestamp(notif?.created_at || '')
             };
           });
 
-          // Emergency notifications (urgent + pending)
+          // Password change requests (pending)
+          this.passwordChangeRequests = allNotifications.filter(
+            (notif: any) => notif?.notification_type === 'password_change_request' && notif?.status === 'Pending'
+          );
+
+          // Emergency drill alerts (pending)
+          this.drillAlerts = allNotifications.filter(
+            (notif: any) => notif?.notification_type === 'emergency_drill_alert' && notif?.status === 'Pending'
+          );
+
+          // Medical emergency notifications (urgent + pending + has visit_id)
           this.emergencyNotifications = allNotifications.filter(
-            (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending'
+            (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending' && notif?.visit_id
           );
 
           // Notification history (all read/sent notifications, or normal priority)
@@ -1012,31 +1260,39 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
           ).slice(0, 10); // Show last 10
 
-          console.log('✅ Emergency notifications loaded:', this.emergencyNotifications.length);
-          console.log('✅ Notification history loaded:', this.notificationHistory.length);
+          console.log('✅ Password change requests:', this.passwordChangeRequests.length);
+          console.log('✅ Drill alerts:', this.drillAlerts.length);
+          console.log('✅ Emergency notifications:', this.emergencyNotifications.length);
+          console.log('✅ Notification history:', this.notificationHistory.length);
         } else if (response?.success && Array.isArray(response.notifications)) {
           // Fallback for direct notifications array
           const allNotifications = response.notifications.map((notif: any) => {
-            console.log('🔍 Notification structure:', notif);
-            console.log('🔍 Visit ID:', notif.visit?.visit_id || notif.visit_id);
             return {
               ...notif,
               timeAgo: this.formatTimestamp(notif?.created_at || '')
             };
           });
 
-          // Emergency notifications (urgent + pending)
-          this.emergencyNotifications = allNotifications.filter(
-            (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending'
+          this.passwordChangeRequests = allNotifications.filter(
+            (notif: any) => notif?.notification_type === 'password_change_request' && notif?.status === 'Pending'
           );
 
-          // Notification history (all read/sent notifications, or normal priority)
+          this.drillAlerts = allNotifications.filter(
+            (notif: any) => notif?.notification_type === 'emergency_drill_alert' && notif?.status === 'Pending'
+          );
+
+          this.emergencyNotifications = allNotifications.filter(
+            (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending' && notif?.visit_id
+          );
+
           this.notificationHistory = allNotifications.filter(
             (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
-          ).slice(0, 10); // Show last 10
+          ).slice(0, 10);
 
-          console.log('✅ Emergency notifications loaded:', this.emergencyNotifications.length);
-          console.log('✅ Notification history loaded:', this.notificationHistory.length);
+          console.log('✅ Password change requests:', this.passwordChangeRequests.length);
+          console.log('✅ Drill alerts:', this.drillAlerts.length);
+          console.log('✅ Emergency notifications:', this.emergencyNotifications.length);
+          console.log('✅ Notification history:', this.notificationHistory.length);
         }
       },
       error: (err) => {
@@ -1272,4 +1528,72 @@ ${notification.message || 'N/A'}
 
     alert(details);
   }
+
+  approvePasswordChange(request: any): void {
+    const userName = request.request_data?.full_name || 'this user';
+    const username = request.request_data?.username || '';
+
+    if (confirm(`Approve password change request for ${userName} (${username})?\n\nA temporary password will be generated and the user will be required to change it on next login.`)) {
+      this.adminService.approvePasswordChangeRequest(request.notification_id).subscribe({
+        next: (response) => {
+          if (response?.success) {
+            const tempPassword = response.data?.temp_password;
+            alert(`Password reset successfully!\n\nUsername: ${username}\nTemporary Password: ${tempPassword}\n\nPlease provide this information to the user securely.`);
+
+            // Remove from password change requests
+            this.passwordChangeRequests = this.passwordChangeRequests.filter(
+              r => r.notification_id !== request.notification_id
+            );
+          } else {
+            alert('Failed to approve password change: ' + (response?.message || 'Unknown error'));
+          }
+        },
+        error: (err) => {
+          console.error('Failed to approve password change:', err);
+          alert('Error approving password change request');
+        }
+      });
+    }
+  }
+
+  dismissPasswordChange(request: any): void {
+    const userName = request.request_data?.full_name || 'this user';
+
+    if (confirm(`Dismiss password change request from ${userName}?`)) {
+      this.adminService.dismissPasswordChangeRequest(request.notification_id).subscribe({
+        next: (response) => {
+          if (response?.success) {
+            // Remove from password change requests
+            this.passwordChangeRequests = this.passwordChangeRequests.filter(
+              r => r.notification_id !== request.notification_id
+            );
+            alert('Request dismissed');
+          }
+        },
+        error: (err) => {
+          console.error('Failed to dismiss request:', err);
+          alert('Error dismissing request');
+        }
+      });
+    }
+  }
+
+  viewDrillDashboard(drillId: number): void {
+    if (drillId) {
+      this.router.navigate(['/dashboard/admin/emergency-drills', drillId, 'dashboard']);
+    }
+  }
+
+  getNotificationIcon(notification: any): string {
+    if (notification.notification_type === 'password_change_request') {
+      return 'fa-key';
+    } else if (notification.notification_type === 'emergency_drill_alert') {
+      return 'fa-bell';
+    } else if (notification.priority === 'urgent') {
+      return 'fa-triangle-exclamation';
+    } else {
+      return 'fa-circle-info';
+    }
+  }
 }
+

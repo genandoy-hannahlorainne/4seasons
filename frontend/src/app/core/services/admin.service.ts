@@ -168,6 +168,14 @@ export class AdminService {
     return this.http.post<any>(`${environment.apiUrl}/admin/notifications/mark-all-read`, {});
   }
 
+  approvePasswordChangeRequest(notificationId: number): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/notifications/${notificationId}/approve-password-change`, {});
+  }
+
+  dismissPasswordChangeRequest(notificationId: number): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/admin/notifications/${notificationId}/dismiss`, {});
+  }
+
   deleteNotification(notificationId: number): Observable<any> {
     return this.http.request<any>('DELETE', `${environment.apiUrl}/admin/notifications`, {
       body: { notification_id: notificationId }
