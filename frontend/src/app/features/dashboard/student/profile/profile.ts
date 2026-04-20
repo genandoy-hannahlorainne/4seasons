@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -9,7 +9,7 @@ import { StudentService } from '../../../../core/services/student.service';
 @Component({
   selector: 'app-student-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, QRCodeComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, QRCodeComponent],
   templateUrl: './profile.html',
   styleUrls: ['./profile.scss']
 })
@@ -19,20 +19,24 @@ export class StudentProfileComponent implements OnInit {
   isEditing = false;
   loading = false;
   showPasswordModal = false;
+  showRequestPasswordModal = false;
   showLogoutModal = false;
   passwordLoading = false;
+  submittingRequest = false;
   currentUser: any;
   errorMessage = '';
   successMessage = '';
   passwordError = '';
   passwordSuccess = '';
-  
+  passwordRequestReason = '';
+  requestPasswordError = '';
+
   // Display values
   displayName = '';
   displayGender = '';
   displayBirthday = '';
   displayStudentNumber = '';
-  
+
   // QR Code data
   qrCodeData = '';
   qrCodeLoading = false;
@@ -70,7 +74,7 @@ export class StudentProfileComponent implements OnInit {
   passwordMatchValidator(form: FormGroup) {
     const newPassword = form.get('newPassword');
     const confirmPassword = form.get('confirmPassword');
-    
+
     if (newPassword && confirmPassword && newPassword.value !== confirmPassword.value) {
       confirmPassword.setErrors({ passwordMismatch: true });
       return { passwordMismatch: true };
@@ -94,16 +98,16 @@ export class StudentProfileComponent implements OnInit {
 
   formatDisplayDate(dateString: string): string {
     if (!dateString) return '';
-    
+
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return '';
-      
+
       // Return in a readable format like "March 29, 2006"
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
     } catch (error) {
       console.error('Error formatting date:', error);
@@ -113,9 +117,9 @@ export class StudentProfileComponent implements OnInit {
 
   loadUserProfile(): void {
     this.currentUser = this.authService.currentUserValue;
-    
+
     console.log('Current User:', this.currentUser);
-    
+
     if (!this.currentUser || !this.currentUser.user_id) {
       this.errorMessage = 'User not logged in. Please login again.';
       console.error('No user logged in');
@@ -124,30 +128,30 @@ export class StudentProfileComponent implements OnInit {
 
     this.loading = true;
     console.log('Fetching profile for user_id:', this.currentUser.user_id);
-    
+
     this.studentService.getStudentProfile(this.currentUser.user_id).subscribe({
       next: (response) => {
         this.loading = false;
         console.log('Profile API Response:', response);
-        
+
         if (response.success && response.profile) {
           const profile = response.profile;
           console.log('Profile data:', profile);
           console.log('Phone number from API:', profile.phone, profile.contact_number);
-          
+
           // Convert gender from database format to form format
           const genderMap: any = { 'M': 'male', 'F': 'female', 'Other': 'other' };
           const gender = genderMap[profile.gender] || 'other';
-          
+
           // Store student_id for QR code generation
           this.studentId = profile.student_id;
-          
+
           // Set display values
           this.displayName = `${profile.first_name} ${profile.middle_name || ''} ${profile.last_name}`.trim();
           this.displayGender = genderMap[profile.gender] || 'other';
           this.displayBirthday = this.formatDisplayDate(profile.birth_date);
           this.displayStudentNumber = profile.student_number;
-          
+
           this.profileForm.patchValue({
             studentNumber: profile.student_number,
             firstName: profile.first_name,
@@ -162,14 +166,14 @@ export class StudentProfileComponent implements OnInit {
             contactNumber: profile.contact_number || profile.phone || '',
             email: profile.email || ''
           });
-          
+
           // Debug log to verify phone number is set
           console.log('Contact number set to:', profile.contact_number || profile.phone || '');
-          
+
           // Disable form after loading
           this.profileForm.disable();
           console.log('Form values after patch:', this.profileForm.value);
-          
+
           // Load QR code
           this.loadQRCode();
         } else {
@@ -187,7 +191,7 @@ export class StudentProfileComponent implements OnInit {
 
   toggleEdit(): void {
     this.isEditing = !this.isEditing;
-    
+
     if (this.isEditing) {
       this.profileForm.enable();
       this.profileForm.get('studentNumber')?.disable();
@@ -201,7 +205,7 @@ export class StudentProfileComponent implements OnInit {
     console.log('onSubmit called');
     console.log('Form valid:', !this.profileForm.invalid);
     console.log('Form values:', this.profileForm.getRawValue());
-    
+
     if (this.profileForm.invalid) {
       console.error('Form is invalid');
       this.errorMessage = 'Please fill in all required fields correctly';
@@ -232,11 +236,11 @@ export class StudentProfileComponent implements OnInit {
         if (response.success) {
           this.successMessage = 'Profile updated successfully!';
           this.isEditing = false;
-          
+
           // Update form with current values and disable it
           this.profileForm.patchValue(profileData);
           this.profileForm.disable();
-          
+
           // Clear success message after 3 seconds
           setTimeout(() => {
             this.successMessage = '';
@@ -259,7 +263,7 @@ export class StudentProfileComponent implements OnInit {
 
   logout(): void {
     this.showLogoutModal = true;
-    
+
     // Logout after showing the modal
     setTimeout(() => {
       this.authService.logout();
@@ -328,7 +332,7 @@ export class StudentProfileComponent implements OnInit {
 
     console.log('Loading QR code for student_id:', this.studentId);
     this.qrCodeLoading = true;
-    
+
     // Generate QR code data as JSON string
     const qrData = {
       student_id: this.studentId,
@@ -336,10 +340,10 @@ export class StudentProfileComponent implements OnInit {
       name: `${this.profileForm.get('firstName')?.value} ${this.profileForm.get('lastName')?.value}`,
       timestamp: new Date().toISOString()
     };
-    
+
     this.qrCodeData = JSON.stringify(qrData);
     this.qrCodeLoading = false;
-    
+
     console.log('QR Code data:', this.qrCodeData);
   }
 
@@ -370,4 +374,37 @@ export class StudentProfileComponent implements OnInit {
       }
     }
   }
+
+  requestPasswordChange(): void {
+    this.requestPasswordError = '';
+    this.passwordRequestReason = '';
+    this.showRequestPasswordModal = true;
+  }
+
+  closeRequestPasswordModal(): void {
+    this.showRequestPasswordModal = false;
+    this.passwordRequestReason = '';
+    this.requestPasswordError = '';
+  }
+
+  submitPasswordRequest(): void {
+    this.submittingRequest = true;
+    this.requestPasswordError = '';
+
+    this.authService.requestPasswordChange(this.passwordRequestReason).subscribe({
+      next: (response) => {
+        this.submittingRequest = false;
+        this.closeRequestPasswordModal();
+        this.successMessage = 'Password change request submitted successfully! Admin will process your request.';
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 5000);
+      },
+      error: (err) => {
+        this.submittingRequest = false;
+        this.requestPasswordError = err.error?.message || 'Failed to submit request. Please try again.';
+      }
+    });
+  }
 }
+

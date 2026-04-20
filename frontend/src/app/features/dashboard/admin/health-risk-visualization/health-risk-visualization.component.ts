@@ -921,7 +921,7 @@ export class HealthRiskVisualizationComponent implements OnInit, OnDestroy {
           if (response.success) {
             this.healthData = response.data;
             this.topRisk = response.data.top_health_risks?.[0] || null;
-            console.log('Health data loaded:', this.healthData);
+            // console.log(...); // Removed for production
           } else {
             this.error = response.message || 'Failed to load health data';
           }

@@ -9,7 +9,7 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   // First check: Local authentication state
   if (!authService.isAuthenticated()) {
-    console.warn('🔒 Auth Guard: No valid local authentication');
+    // console.warn(...); // Removed for production
     router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
     return false;
   }
@@ -18,10 +18,10 @@ export const authGuard: CanActivateFn = (route, state) => {
   return authService.getCurrentUser().pipe(
     map(user => {
       if (user) {
-        console.log('✅ Auth Guard: User authenticated and verified with backend');
+        // console.log(...); // Removed for production
         return true;
       }
-      console.warn('🔒 Auth Guard: Backend verification failed');
+      // console.warn(...); // Removed for production
       router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
       return false;
     }),

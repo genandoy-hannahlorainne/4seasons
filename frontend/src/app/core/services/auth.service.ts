@@ -29,21 +29,21 @@ export class AuthService {
       .pipe(
         map(response => {
           console.log('Login response:', response);
-          
+
           if (response && response.success && response.data) {
             const userData = response.data.user;
             const token = response.data.token;
-            
+
             // Store user data and token
             localStorage.setItem('currentUser', JSON.stringify(userData));
             localStorage.setItem('token', token);
             localStorage.setItem('tokenExpiry', (Date.now() + (24 * 60 * 60 * 1000)).toString()); // 24 hours
-            
+
             this.currentUserSubject.next(userData);
             console.log('✅ Login successful, user stored:', userData);
             console.log('✅ Token stored:', token.substring(0, 20) + '...');
             console.log('✅ Token expiry set:', new Date(Date.now() + (24 * 60 * 60 * 1000)));
-            
+
             // Verify storage immediately
             setTimeout(() => {
               const storedToken = localStorage.getItem('token');
@@ -51,11 +51,11 @@ export class AuthService {
               console.log('🔍 Verification - Token in storage:', storedToken ? storedToken.substring(0, 20) + '...' : 'NOT FOUND');
               console.log('🔍 Verification - User in storage:', storedUser ? 'FOUND' : 'NOT FOUND');
             }, 100);
-            
+
             // Start token refresh and session timeout timers
             this.startTokenRefreshTimer();
             this.startSessionTimeoutWarning();
-            
+
             return userData;
           }
           throw new Error('Invalid response format');
@@ -74,7 +74,7 @@ export class AuthService {
 
   logout(): Observable<any> {
     const token = localStorage.getItem('token');
-    
+
     // Call Laravel logout endpoint if we have a token
     if (token) {
       return this.http.post<any>(`${environment.apiUrl}/logout`, {})
@@ -96,7 +96,7 @@ export class AuthService {
     } else {
       console.log('ℹ️ No token found, clearing local data');
       this.clearAuthData();
-      
+
       return new Observable(observer => {
         observer.next({ success: true });
         observer.complete();
@@ -106,21 +106,21 @@ export class AuthService {
 
   getCurrentUser(): Observable<User> {
     const token = localStorage.getItem('token');
-    
+
     // Check if token is expired
     if (!this.isTokenValid()) {
       console.warn('⚠️ Token expired, clearing auth data');
       this.clearAuthData();
       return throwError(() => new Error('Token expired'));
     }
-    
+
     // If we have a valid token, use Laravel /me endpoint
     if (token) {
       return this.http.get<any>(`${environment.apiUrl}/me`)
         .pipe(
           map(response => {
             console.log('Current user response:', response);
-            
+
             if (response && response.success && response.data) {
               const userData = response.data;
               // Update stored user data
@@ -132,13 +132,13 @@ export class AuthService {
           }),
           catchError((error: HttpErrorResponse) => {
             console.error('❌ Get current user failed:', error);
-            
+
             // If 401, token is invalid
             if (error.status === 401) {
               console.warn('🚫 Token invalid, clearing auth data');
               this.clearAuthData();
             }
-            
+
             return throwError(() => error);
           })
         );
@@ -160,12 +160,12 @@ export class AuthService {
     const user = this.currentUserValue;
     const token = this.getToken();
     const isValid = !!user && !!token && this.isTokenValid();
-    
+
     if (!isValid && (user || token)) {
       console.warn('⚠️ Invalid auth state detected, clearing data');
       this.clearAuthData();
     }
-    
+
     return isValid;
   }
 
@@ -176,14 +176,14 @@ export class AuthService {
   public isTokenValid(): boolean {
     const token = localStorage.getItem('token');
     const expiry = localStorage.getItem('tokenExpiry');
-    
+
     if (!token || !expiry) {
       return false;
     }
-    
+
     const expiryTime = parseInt(expiry, 10);
     const now = Date.now();
-    
+
     return now < expiryTime;
   }
 
@@ -191,20 +191,20 @@ export class AuthService {
   checkAuthenticationStatus(): boolean {
     const token = localStorage.getItem('token');
     const user = this.currentUserValue;
-    
+
     if (!token || !user) {
       console.warn('🔐 Authentication check failed - missing token or user');
       this.clearAuthData();
       return false;
     }
-    
+
     // Check token expiry
     if (!this.isTokenValid()) {
       console.warn('🔐 Token expired during authentication check');
       this.clearAuthData();
       return false;
     }
-    
+
     return true;
   }
 
@@ -212,14 +212,14 @@ export class AuthService {
   startTokenRefreshTimer(): void {
     const expiry = localStorage.getItem('tokenExpiry');
     if (!expiry) return;
-    
+
     const expiryTime = parseInt(expiry, 10);
     const now = Date.now();
     const timeUntilExpiry = expiryTime - now;
-    
+
     // Refresh token 5 minutes before expiry
     const refreshTime = timeUntilExpiry - (5 * 60 * 1000);
-    
+
     if (refreshTime > 0) {
       setTimeout(() => {
         this.refreshToken().subscribe({
@@ -244,10 +244,10 @@ export class AuthService {
           if (response && response.success && response.data) {
             const newToken = response.data.token;
             const newExpiry = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
-            
+
             localStorage.setItem('token', newToken);
             localStorage.setItem('tokenExpiry', newExpiry.toString());
-            
+
             console.log('✅ Token refreshed successfully');
             return response;
           }
@@ -265,14 +265,14 @@ export class AuthService {
   startSessionTimeoutWarning(): void {
     const expiry = localStorage.getItem('tokenExpiry');
     if (!expiry) return;
-    
+
     const expiryTime = parseInt(expiry, 10);
     const now = Date.now();
     const timeUntilExpiry = expiryTime - now;
-    
+
     // Show warning 10 minutes before expiry
     const warningTime = timeUntilExpiry - (10 * 60 * 1000);
-    
+
     if (warningTime > 0) {
       setTimeout(() => {
         const remainingMinutes = Math.floor((expiryTime - Date.now()) / (60 * 1000));
@@ -280,7 +280,7 @@ export class AuthService {
           const extendSession = confirm(
             `Your session will expire in ${remainingMinutes} minutes. Would you like to extend your session?`
           );
-          
+
           if (extendSession) {
             this.refreshToken().subscribe({
               next: () => {
@@ -333,6 +333,22 @@ export class AuthService {
       }),
       catchError((error: HttpErrorResponse) => {
         console.error('❌ Force change password error:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Request password change from admin
+  requestPasswordChange(reason?: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/request-password-change`, {
+      reason: reason || ''
+    }).pipe(
+      map(response => {
+        console.log('Password change request response:', response);
+        return response;
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('❌ Password change request error:', error);
         return throwError(() => error);
       })
     );
