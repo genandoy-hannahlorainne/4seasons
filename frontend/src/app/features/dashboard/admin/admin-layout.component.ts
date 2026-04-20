@@ -272,8 +272,16 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   loadNotifications(): void {
     this.adminService.getNotifications().subscribe({
       next: (response) => {
-        if (response?.success && response?.data) {
-          const allNotifications = response.data;
+        console.log('Notifications response:', response);
+        if (response?.success && response?.data?.notifications) {
+          const allNotifications = response.data.notifications;
+          console.log('All notifications:', allNotifications);
+          
+          if (!Array.isArray(allNotifications)) {
+            console.error('Notifications is not an array:', allNotifications);
+            return;
+          }
+          
           this.passwordChangeRequests = allNotifications
             .filter((n: any) => n.notification_type === 'password_change_request' && n.status === 'Pending')
             .map((n: any) => ({
@@ -283,9 +291,14 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
               created_at: n.created_at
             }));
           this.unreadCount = this.passwordChangeRequests.length;
+          console.log('Password change requests:', this.passwordChangeRequests);
+        } else {
+          console.warn('Invalid response structure:', response);
         }
       },
-      error: (err) => console.error('Failed to load notifications:', err)
+      error: (err) => {
+        console.error('Failed to load notifications:', err);
+      }
     });
   }
 
@@ -327,8 +340,11 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     const userName = request.request_data?.full_name || 'this user';
     const username = request.request_data?.username || '';
 
+    console.log('Approving password change for notification:', request.notification_id);
+
     this.adminService.approvePasswordChangeRequest(request.notification_id).subscribe({
       next: (response) => {
+        console.log('Approve password change response:', response);
         if (response?.success) {
           const tempPassword = response.data?.temp_password;
           alert(`Password reset successfully!\n\nUsername: ${username}\nTemporary Password: ${tempPassword}\n\nPlease provide this information to the user securely.`);
@@ -339,12 +355,20 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
           this.unreadCount = this.passwordChangeRequests.length;
           this.closeNotificationModal();
         } else {
+          console.error('Failed response:', response);
           alert('Failed to approve password change: ' + (response?.message || 'Unknown error'));
         }
       },
       error: (err) => {
         console.error('Failed to approve password change:', err);
-        alert('Error approving password change request');
+        console.error('Error details:', {
+          status: err.status,
+          statusText: err.statusText,
+          message: err.message,
+          error: err.error
+        });
+        const errorMessage = err.error?.message || err.message || 'Unknown error occurred';
+        alert('Error approving password change request: ' + errorMessage);
       }
     });
   }
@@ -377,7 +401,9 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    if (!target.closest('.notification-bell') && !target.closest('.notification-panel')) {
+    if (!target.closest('.notification-bell') && 
+        !target.closest('.notification-panel') && 
+        !target.closest('.notification-nav-item')) {
       this.closeNotificationPanel();
     }
   }
