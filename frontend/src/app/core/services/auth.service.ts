@@ -339,9 +339,10 @@ export class AuthService {
   }
 
   // Request password change from admin
-  requestPasswordChange(reason?: string): Observable<any> {
+  requestPasswordChange(reason?: string, newPassword?: string): Observable<any> {
     return this.http.post<any>(`${environment.apiUrl}/request-password-change`, {
-      reason: reason || ''
+      reason: reason || '',
+      new_password: newPassword || ''
     }).pipe(
       map(response => {
         console.log('Password change request response:', response);
