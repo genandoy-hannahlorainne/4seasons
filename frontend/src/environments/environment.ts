@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:8082/api'
+  apiUrl: 'https://api.studentcare.site/api',
+  version: '1.0.1' // Force rebuild
 };

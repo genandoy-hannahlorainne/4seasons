@@ -1,9 +1,10 @@
 FROM php:8.2-apache
 
 # System deps + PHP extensions required by Laravel/MySQL
-RUN apt-get update \
+RUN sed -i 's/deb.debian.org/ftp.us.debian.org/g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
+    && apt-get update \
     && apt-get install -y --no-install-recommends git unzip libzip-dev curl \
-    && docker-php-ext-install pdo pdo_mysql mysqli \
+    && docker-php-ext-install pdo pdo_mysql mysqli zip \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && a2enmod rewrite headers \
