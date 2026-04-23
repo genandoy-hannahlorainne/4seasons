@@ -7,21 +7,30 @@ set -e
 
 # Configuration
 DOCKER_USERNAME="notcla"
-IMAGE_NAME="4seasons-backend"
+BACKEND_IMAGE="4seasons-backend"
+FRONTEND_IMAGE="4seasons-frontend"
 TAG="latest"
-FULL_IMAGE_NAME="${DOCKER_USERNAME}/${IMAGE_NAME}:${TAG}"
 
 echo "=========================================="
 echo "Building Backend Docker Image"
 echo "=========================================="
 
 # Build the backend image
-docker build -t ${FULL_IMAGE_NAME} ./backend-laravel
+docker build -t ${DOCKER_USERNAME}/${BACKEND_IMAGE}:${TAG} ./backend-laravel
+
+echo ""
+echo "=========================================="
+echo "Building Frontend Docker Image"
+echo "=========================================="
+
+# Build the frontend image
+docker build -t ${DOCKER_USERNAME}/${FRONTEND_IMAGE}:${TAG} ./frontend
 
 echo ""
 echo "=========================================="
 echo "Build completed successfully!"
-echo "Image: ${FULL_IMAGE_NAME}"
+echo "Backend: ${DOCKER_USERNAME}/${BACKEND_IMAGE}:${TAG}"
+echo "Frontend: ${DOCKER_USERNAME}/${FRONTEND_IMAGE}:${TAG}"
 echo "=========================================="
 
 # Check if user is logged in to Docker Hub
@@ -34,23 +43,21 @@ fi
 
 echo ""
 echo "=========================================="
-echo "Pushing image to Docker Hub"
+echo "Pushing images to Docker Hub"
 echo "=========================================="
 
-# Push the image
-docker push ${FULL_IMAGE_NAME}
+# Push the images
+docker push ${DOCKER_USERNAME}/${BACKEND_IMAGE}:${TAG}
+docker push ${DOCKER_USERNAME}/${FRONTEND_IMAGE}:${TAG}
 
 echo ""
 echo "=========================================="
-echo "✓ Image pushed successfully!"
+echo "✓ Images pushed successfully!"
 echo "=========================================="
-echo ""
-echo "To pull on your server, run:"
-echo "  docker pull ${FULL_IMAGE_NAME}"
 echo ""
 echo "To deploy on your server, run:"
 echo "  cd ~/4seasons"
-echo "  git pull"
-echo "  docker-compose -f docker-compose.prod.yml pull"
-echo "  docker-compose -f docker-compose.prod.yml up -d"
+echo "  docker compose -f docker-compose.prod.yml pull"
+echo "  docker compose -f docker-compose.prod.yml up -d"
 echo ""
+
