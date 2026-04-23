@@ -79,9 +79,9 @@ import { environment } from '../../../../environments/environment';
             {{ success }}
           </div>
 
-          <button 
-            type="submit" 
-            class="btn-submit" 
+          <button
+            type="submit"
+            class="btn-submit"
             [disabled]="loading || changePasswordForm.invalid"
           >
             {{ loading ? 'Changing Password...' : 'Change Password' }}
@@ -95,73 +95,91 @@ import { environment } from '../../../../environments/environment';
     </div>
   `,
   styles: [`
+    @import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@900&family=Albert+Sans:wght@600&display=swap');
+
     .force-change-password-container {
+      position: relative;
+      width: 100%;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 20px;
+      background-image: url('/assets/pdmhs-background.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: rgba(83, 129, 178, 0.9);
+      background-blend-mode: multiply;
+      padding: 2rem;
     }
 
     .change-password-card {
       background: white;
+      padding: 2.5rem;
       border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-      padding: 40px;
-      max-width: 500px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
       width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 10;
     }
 
     .header {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 2rem;
     }
 
     .logo {
       width: 80px;
       height: 80px;
-      margin-bottom: 20px;
+      margin-bottom: 1.5rem;
     }
 
     h2 {
-      color: #333;
-      margin: 0 0 10px 0;
-      font-size: 24px;
-      font-weight: 600;
+      font-family: 'Epilogue', sans-serif;
+      text-align: center;
+      margin: 0 0 0.5rem 0;
+      color: #052355;
+      font-size: 32px;
+      font-weight: 900;
     }
 
     .subtitle {
+      font-family: 'Albert Sans', sans-serif;
+      text-align: center;
       color: #666;
-      font-size: 14px;
+      font-size: 16px;
       margin: 0;
     }
 
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 1rem;
     }
 
     label {
+      font-family: 'Albert Sans', sans-serif;
       display: block;
-      margin-bottom: 8px;
-      color: #333;
-      font-weight: 500;
-      font-size: 14px;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #052355;
+      font-size: 0.95rem;
     }
 
     .form-control {
+      font-family: 'Albert Sans', sans-serif;
       width: 100%;
-      padding: 12px;
+      padding: 0.75rem;
       border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      transition: border-color 0.3s;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
       box-sizing: border-box;
     }
 
     .form-control:focus {
       outline: none;
-      border-color: #667eea;
+      border-color: #052355;
+      box-shadow: 0 0 0 3px rgba(5, 35, 85, 0.1);
     }
 
     .form-control.error {
@@ -169,59 +187,90 @@ import { environment } from '../../../../environments/environment';
     }
 
     .error-message {
-      color: #dc3545;
-      font-size: 12px;
-      margin-top: 5px;
-      padding: 8px;
-      background-color: #f8d7da;
-      border-radius: 4px;
+      font-family: 'Albert Sans', sans-serif;
+      color: #721c24;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+      border: 1px solid #ffcccc;
+      border-left: 4px solid #dc3545;
+      border-radius: 8px;
+      line-height: 1.5;
     }
 
     .success-message {
-      color: #28a745;
-      font-size: 14px;
-      margin-bottom: 15px;
-      padding: 12px;
-      background-color: #d4edda;
-      border-radius: 4px;
+      font-family: 'Albert Sans', sans-serif;
+      color: #155724;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      padding: 0.875rem;
+      background: linear-gradient(135deg, #f0fff4 0%, #d1fae5 100%);
+      border: 1px solid #c3e6cb;
+      border-left: 4px solid #28a745;
+      border-radius: 8px;
       text-align: center;
+      font-weight: 600;
     }
 
     .btn-submit {
+      font-family: 'Albert Sans', sans-serif;
       width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      padding: 0.75rem;
       border: none;
-      border-radius: 6px;
-      font-size: 16px;
+      border-radius: 10px;
+      font-size: 1.1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      margin-top: 10px;
+      transition: all 0.3s ease;
+      background-color: #052355;
+      color: white;
+      margin-top: 0.5rem;
     }
 
     .btn-submit:hover:not(:disabled) {
+      background-color: #041b44;
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(0);
     }
 
     .btn-submit:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none;
     }
 
     .footer {
       text-align: center;
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e5e7eb;
     }
 
     .footer p {
+      font-family: 'Albert Sans', sans-serif;
       color: #666;
-      font-size: 13px;
+      font-size: 0.95rem;
       margin: 0;
+    }
+
+    @media (max-width: 640px) {
+      .change-password-card {
+        padding: 2rem 1.5rem;
+      }
+
+      h2 {
+        font-size: 28px;
+      }
+
+      .logo {
+        width: 70px;
+        height: 70px;
+      }
     }
   `]
 })
@@ -290,7 +339,7 @@ export class ForceChangePasswordComponent implements OnInit {
         this.loading = false;
         if (response.success) {
           this.success = 'Password changed successfully! Redirecting...';
-          
+
           // Update user data in localStorage to clear password_must_change flag
           const currentUser = localStorage.getItem('currentUser');
           if (currentUser) {
@@ -298,16 +347,16 @@ export class ForceChangePasswordComponent implements OnInit {
             user.password_must_change = false;
             localStorage.setItem('currentUser', JSON.stringify(user));
             this.authService.updateCurrentUser(user);
-            
+
             const roleRoutes: { [key: string]: string } = {
               'Student': '/dashboard/student',
               'Adviser': '/dashboard/adviser',
               'Clinic Staff': '/dashboard/staff',
               'Admin': '/dashboard/admin'
             };
-            
+
             const route = roleRoutes[user.role_name] || '/dashboard';
-            
+
             setTimeout(() => {
               this.router.navigate([route]);
             }, 2000);

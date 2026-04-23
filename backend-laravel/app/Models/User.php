@@ -55,7 +55,10 @@ class User extends Authenticatable
         'role_id',
         'phone',
         'is_active',
-        'password_must_change'
+        'password_must_change',
+        'password_changed_at',
+        'created_by_admin_id',
+        'temp_password'
     ];
 
     /**

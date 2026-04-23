@@ -289,6 +289,57 @@ interface UsersResponse {
           </div>
         </div>
       </div>
+
+      <!-- Password Change Modal -->
+      <div class="modal-overlay" *ngIf="showPasswordChangeModal" (click)="closePasswordChangeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3><i class="fa-solid fa-key"></i> Password Change Request</h3>
+            <button class="modal-close" (click)="closePasswordChangeModal()">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+
+          <div class="modal-body" *ngIf="selectedPasswordRequest">
+            <div class="request-details">
+              <div class="detail-row">
+                <span class="detail-label">Name:</span>
+                <span class="detail-value">{{ selectedPasswordRequest.request_data?.full_name }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Role:</span>
+                <span class="detail-value role-badge">{{ selectedPasswordRequest.request_data?.role }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Username:</span>
+                <span class="detail-value">{{ selectedPasswordRequest.request_data?.username }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Reason:</span>
+                <span class="detail-value reason-text">{{ selectedPasswordRequest.request_data?.reason }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Requested:</span>
+                <span class="detail-value">{{ selectedPasswordRequest.timeAgo }}</span>
+              </div>
+            </div>
+
+            <div class="modal-info">
+              <i class="fa-solid fa-circle-info"></i>
+              <p>Approving this request will generate a temporary password and require the user to change it on next login.</p>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-modal-dismiss" (click)="dismissPasswordChange(selectedPasswordRequest)">
+              <i class="fa-solid fa-times"></i> Dismiss
+            </button>
+            <button class="btn-modal-approve" (click)="confirmApprovePasswordChange()">
+              <i class="fa-solid fa-check"></i> Approve & Reset Password
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
@@ -1091,6 +1142,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   passwordChangeRequests: any[] = [];
   drillAlerts: any[] = [];
 
+  // Modal state
+  showPasswordChangeModal = false;
+  selectedPasswordRequest: any = null;
+
   constructor(
     private router: Router,
     private adminService: AdminService,
@@ -1530,30 +1585,42 @@ ${notification.message || 'N/A'}
   }
 
   approvePasswordChange(request: any): void {
+    this.selectedPasswordRequest = request;
+    this.showPasswordChangeModal = true;
+  }
+
+  confirmApprovePasswordChange(): void {
+    if (!this.selectedPasswordRequest) return;
+
+    const request = this.selectedPasswordRequest;
     const userName = request.request_data?.full_name || 'this user';
     const username = request.request_data?.username || '';
 
-    if (confirm(`Approve password change request for ${userName} (${username})?\n\nA temporary password will be generated and the user will be required to change it on next login.`)) {
-      this.adminService.approvePasswordChangeRequest(request.notification_id).subscribe({
-        next: (response) => {
-          if (response?.success) {
-            const tempPassword = response.data?.temp_password;
-            alert(`Password reset successfully!\n\nUsername: ${username}\nTemporary Password: ${tempPassword}\n\nPlease provide this information to the user securely.`);
+    this.adminService.approvePasswordChangeRequest(request.notification_id).subscribe({
+      next: (response) => {
+        if (response?.success) {
+          const tempPassword = response.data?.temp_password;
+          alert(`Password reset successfully!\n\nUsername: ${username}\nTemporary Password: ${tempPassword}\n\nPlease provide this information to the user securely.`);
 
-            // Remove from password change requests
-            this.passwordChangeRequests = this.passwordChangeRequests.filter(
-              r => r.notification_id !== request.notification_id
-            );
-          } else {
-            alert('Failed to approve password change: ' + (response?.message || 'Unknown error'));
-          }
-        },
-        error: (err) => {
-          console.error('Failed to approve password change:', err);
-          alert('Error approving password change request');
+          // Remove from password change requests
+          this.passwordChangeRequests = this.passwordChangeRequests.filter(
+            r => r.notification_id !== request.notification_id
+          );
+          this.closePasswordChangeModal();
+        } else {
+          alert('Failed to approve password change: ' + (response?.message || 'Unknown error'));
         }
-      });
-    }
+      },
+      error: (err) => {
+        console.error('Failed to approve password change:', err);
+        alert('Error approving password change request');
+      }
+    });
+  }
+
+  closePasswordChangeModal(): void {
+    this.showPasswordChangeModal = false;
+    this.selectedPasswordRequest = null;
   }
 
   dismissPasswordChange(request: any): void {

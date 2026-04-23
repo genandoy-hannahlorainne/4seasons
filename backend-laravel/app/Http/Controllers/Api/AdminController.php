@@ -2046,35 +2046,65 @@ class AdminController extends BaseController
 
             $user = User::findOrFail($userId);
 
-            // Generate temporary password
-            $tempPassword = $this->generateTempPassword();
+            // Check if this is a new request with user-provided password or old request
+            $newPassword = $notification->request_data['new_password'] ?? null;
+            
+            if ($newPassword) {
+                // New flow: Use user's requested password
+                $user->update([
+                    'password_hash' => Hash::make($newPassword),
+                    'password_must_change' => false,
+                    'password_changed_at' => now()
+                ]);
 
-            // Reset password
-            $user->update([
-                'password_hash' => Hash::make($tempPassword),
-                'password_must_change' => true,
-                'password_changed_at' => now()
-            ]);
+                // Mark notification as read
+                $notification->markAsRead();
 
-            // Mark notification as read
-            $notification->markAsRead();
+                // Log activity
+                \App\Models\AuditLog::create([
+                    'user_id' => auth()->id(),
+                    'action' => 'Password Change Request Approved',
+                    'table_name' => 'users',
+                    'record_id' => $userId,
+                    'old_values' => null,
+                    'new_values' => json_encode(['password_changed' => true]),
+                    'ip_address' => $request->ip()
+                ]);
 
-            // Log activity
-            \App\Models\AuditLog::create([
-                'user_id' => auth()->id(),
-                'action' => 'Password Reset Approved',
-                'table_name' => 'users',
-                'record_id' => $userId,
-                'old_values' => null,
-                'new_values' => json_encode(['password_reset' => true]),
-                'ip_address' => $request->ip()
-            ]);
+                return $this->sendResponse([
+                    'username' => $user->username,
+                    'full_name' => trim($user->first_name . ' ' . $user->last_name)
+                ], 'Password changed successfully');
+            } else {
+                // Old flow: Generate temporary password (for backward compatibility)
+                $tempPassword = $this->generateTempPassword();
 
-            return $this->sendResponse([
-                'temp_password' => $tempPassword,
-                'username' => $user->username,
-                'full_name' => trim($user->first_name . ' ' . $user->last_name)
-            ], 'Password reset successfully');
+                $user->update([
+                    'password_hash' => Hash::make($tempPassword),
+                    'password_must_change' => true,
+                    'password_changed_at' => now()
+                ]);
+
+                // Mark notification as read
+                $notification->markAsRead();
+
+                // Log activity
+                \App\Models\AuditLog::create([
+                    'user_id' => auth()->id(),
+                    'action' => 'Password Reset Approved',
+                    'table_name' => 'users',
+                    'record_id' => $userId,
+                    'old_values' => null,
+                    'new_values' => json_encode(['password_reset' => true]),
+                    'ip_address' => $request->ip()
+                ]);
+
+                return $this->sendResponse([
+                    'temp_password' => $tempPassword,
+                    'username' => $user->username,
+                    'full_name' => trim($user->first_name . ' ' . $user->last_name)
+                ], 'Password reset successfully');
+            }
 
         } catch (\Exception $e) {
             return $this->sendError('Failed to approve password change request', $e->getMessage());

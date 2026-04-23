@@ -249,7 +249,8 @@ class AuthController extends BaseController
             }
 
             $request->validate([
-                'reason' => 'nullable|string|max:500'
+                'reason' => 'nullable|string|max:500',
+                'new_password' => 'required|string|min:6|max:50'
             ]);
 
             // Create notification for admin
@@ -266,6 +267,7 @@ class AuthController extends BaseController
                     'full_name' => trim($user->first_name . ' ' . $user->last_name),
                     'role' => $user->role->role_name,
                     'reason' => $request->reason ?? 'No reason provided',
+                    'new_password' => $request->new_password,
                     'requested_at' => now()->toISOString()
                 ]
             ]);
