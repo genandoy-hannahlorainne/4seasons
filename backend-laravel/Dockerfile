@@ -1,7 +1,7 @@
 FROM php:8.2-apache
 
 # System deps + PHP extensions required by Laravel/MySQL
-RUN sed -i 's/deb.debian.org/ftp.us.debian.org/g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
+RUN printf 'Types: deb\nURIs: http://ftp.us.debian.org/debian\nSuites: trixie trixie-updates\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n' > /etc/apt/sources.list.d/debian.sources \
     && apt-get update \
     && apt-get install -y --no-install-recommends git unzip libzip-dev curl \
     && docker-php-ext-install pdo pdo_mysql mysqli zip \
