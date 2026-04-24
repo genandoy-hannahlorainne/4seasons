@@ -32,6 +32,9 @@ export class SystemSettingsComponent implements OnInit {
   showDeleteModal = false;
   backupToDelete: string | null = null;
   deleting = false;
+  showRestoreModal = false;
+  backupToRestore: string | null = null;
+  restoring = false;
 
   constructor(private adminService: AdminService) {}
 
@@ -189,32 +192,31 @@ export class SystemSettingsComponent implements OnInit {
   }
 
   restoreBackup(filename: string): void {
-    const confirmMsg = `⚠️ WARNING: This will restore the database to the state of this backup.\n\n` +
-                       `All current data will be replaced with data from:\n${filename}\n\n` +
-                       `This action CANNOT be undone!\n\n` +
-                       `Are you absolutely sure you want to continue?`;
-    
-    if (!confirm(confirmMsg)) {
-      return;
-    }
-    
-    // Double confirmation for safety
-    if (!confirm('Final confirmation: Restore database from backup?')) {
-      return;
-    }
-    
-    this.loadingBackups = true;
+    this.backupToRestore = filename;
+    this.showRestoreModal = true;
+  }
+
+  closeRestoreModal(): void {
+    this.showRestoreModal = false;
+    this.backupToRestore = null;
+  }
+
+  confirmRestoreBackup(): void {
+    if (!this.backupToRestore) return;
+
+    this.restoring = true;
     this.errorMessage = '';
     this.successMessage = '';
-    
-    this.adminService.restoreBackup(filename).subscribe({
+
+    this.adminService.restoreBackup(this.backupToRestore).subscribe({
       next: (response: any) => {
-        this.loadingBackups = false;
+        this.restoring = false;
+        this.closeRestoreModal();
         this.successMessage = '✅ Database restored successfully! The page will reload in 3 seconds...';
         setTimeout(() => window.location.reload(), 3000);
       },
       error: (err: any) => {
-        this.loadingBackups = false;
+        this.restoring = false;
         this.errorMessage = 'Failed to restore backup. Please try again or restore manually.';
         console.error('Error restoring backup:', err);
       }
