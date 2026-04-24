@@ -31,6 +31,7 @@ export interface SHDFBasicData {
   emergency_contact: string;
   emergency_contact_relation: string;
   emergency_contact_phone: string;
+  address?: string;
   height_cm?: number;
   weight_kg?: number;
   blood_type?: string;

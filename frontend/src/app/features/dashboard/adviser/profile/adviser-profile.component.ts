@@ -95,6 +95,16 @@ import { AdviserService } from '../../../../core/services/adviser.service';
                 <input type="tel" id="phone" [value]="profileData.phone" class="form-control" readonly placeholder="Not provided">
               </div>
             </div>
+
+            <div class="field">
+              <label for="address">Complete Address</label>
+              <div class="input-with-icon">
+                <span class="input-icon" aria-hidden="true">
+                  <img src="assets/address-icon.png" alt="" class="input-icon-img">
+                </span>
+                <textarea id="address" [value]="profileData.address" class="form-control" rows="2" readonly placeholder="Not provided"></textarea>
+              </div>
+            </div>
           </div>
 
           <!-- Account Card -->
@@ -132,6 +142,10 @@ import { AdviserService } from '../../../../core/services/adviser.service';
         <div class="form-group">
           <label>Phone Number</label>
           <input type="tel" [(ngModel)]="editForm.phone" class="form-control" placeholder="Enter phone number">
+        </div>
+        <div class="form-group">
+          <label>Complete Address</label>
+          <textarea [(ngModel)]="editForm.address" class="form-control" rows="3" placeholder="Enter complete address"></textarea>
         </div>
 
         <div class="modal-actions">
@@ -195,13 +209,14 @@ export class AdviserProfileComponent implements OnInit {
     fullName: '',
     email: '',
     phone: '',
+    address: '',
     advisoryClass: '',
     birthDate: 'Loading...',
     employeeId: 'Loading...',
     avatar: 'assets/user-female.png'
   };
 
-  editForm = { email: '', phone: '', employeeId: '', birthDate: '' };
+  editForm = { email: '', phone: '', address: '', employeeId: '', birthDate: '' };
 
   passwordRequestReason = '';
   passwordRequestNewPassword = '';
@@ -243,7 +258,8 @@ export class AdviserProfileComponent implements OnInit {
             this.profileData.fullName = profile.full_name || this.profileData.fullName;
             this.profileData.email = profile.email || this.profileData.email;
             this.profileData.phone = profile.phone || this.profileData.phone;
-            this.profileData.birthDate = profile.birth_date ? profile.birth_date : 'Not set';
+            this.profileData.address = profile.address || '';
+            this.profileData.birthDate = profile.birth_date ? profile.birth_date.split('T')[0] : 'Not set';
             // Check employee_id directly, or from adviser_info, or fallback to employee_number
             const empId = profile.employee_id
               || profile.adviser_info?.employee_id
@@ -268,6 +284,7 @@ export class AdviserProfileComponent implements OnInit {
     this.editForm = {
       email: this.profileData.email,
       phone: this.profileData.phone,
+      address: this.profileData.address,
       employeeId: this.profileData.employeeId,
       birthDate: this.profileData.birthDate
     };
@@ -301,7 +318,8 @@ export class AdviserProfileComponent implements OnInit {
       email: this.editForm.email,
       phone: this.editForm.phone || null,
       employee_id: this.editForm.employeeId || null,
-      birth_date: this.editForm.birthDate || null
+      birth_date: this.editForm.birthDate || null,
+      address: this.editForm.address || null
     };
 
     this.adviserService.updateAdviserProfile(currentUser.user_id, updates).subscribe({
@@ -310,6 +328,7 @@ export class AdviserProfileComponent implements OnInit {
         if (response.success) {
           this.profileData.email = this.editForm.email;
           this.profileData.phone = this.editForm.phone;
+          this.profileData.address = this.editForm.address;
           this.profileData.employeeId = this.editForm.employeeId;
           this.profileData.birthDate = this.editForm.birthDate;
           this.closeEditModal();

@@ -45,62 +45,86 @@
     </div>
 
     <div class="profile-bottom-grid">
-      <form class="contact-card card" [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+      <div class="contact-card card">
         <div class="contact-header">
           <div class="card-title">Contact Information</div>
-          <button type="button" class="btn btn-outline edit-btn" (click)="toggleEdit()">
+          <button type="button" class="btn btn-outline edit-btn" (click)="openEditModal()">
             <img src="assets/edit-icon.png" alt="" class="edit-btn-icon">
-            <span>{{ isEditing ? 'Cancel' : 'Edit' }}</span>
+            <span>Edit</span>
           </button>
         </div>
 
         <div class="field">
-          <label for="email">Email Address</label>
+          <label>Email Address</label>
           <div class="input-with-icon">
             <span class="input-icon" aria-hidden="true">
               <img src="assets/message-icon.png" alt="" class="input-icon-img">
             </span>
-            <input type="email" id="email" formControlName="email" class="form-control" [readonly]="!isEditing" placeholder="Not provided">
+            <input type="email" [value]="profileForm.getRawValue().email" class="form-control" readonly placeholder="Not provided">
           </div>
-          <small class="field-note" *ngIf="!profileForm.get('email')?.value && !isEditing">
-            No email on file. Click Edit to add one.
-          </small>
         </div>
 
         <div class="field">
-          <label for="contactNumber">Phone Number</label>
+          <label>Phone Number</label>
           <div class="input-with-icon">
             <span class="input-icon" aria-hidden="true">
               <img src="assets/contact-icon.png" alt="" class="input-icon-img">
             </span>
-            <input type="tel" id="contactNumber" formControlName="contactNumber" class="form-control" [readonly]="!isEditing" placeholder="Not provided">
+            <input type="tel" [value]="profileForm.getRawValue().contactNumber" class="form-control" readonly placeholder="Not provided">
           </div>
-          <small class="field-note" *ngIf="!profileForm.get('contactNumber')?.value && !isEditing">
-            No phone number on file. Click Edit to add one.
-          </small>
         </div>
 
         <div class="field">
-          <label for="address">Residential Address</label>
+          <label>Complete Address</label>
           <div class="input-with-icon">
             <span class="input-icon" aria-hidden="true">
               <img src="assets/address-icon.png" alt="" class="input-icon-img">
             </span>
-            <textarea id="address" formControlName="address" class="form-control" rows="2" [readonly]="!isEditing"></textarea>
+            <textarea class="form-control" rows="2" readonly placeholder="Not provided">{{ profileForm.getRawValue().address }}</textarea>
           </div>
         </div>
-
-        <button type="submit" class="btn btn-primary save-btn" [disabled]="loading || profileForm.invalid || !isEditing">
-          Save Changes
-        </button>
-      </form>
+      </div>
 
       <div class="others-card card">
         <div class="card-title">Others</div>
         <button type="button" class="other-link" (click)="requestPasswordChange()">Request Password Reset from Admin</button>
         <button type="button" class="other-link" (click)="viewQRCode()" [disabled]="qrCodeLoading">View QR Code</button>
-        <button type="button" class="other-link" (click)="toggleEdit()">Update Information</button>
+        <button type="button" class="other-link" (click)="openEditModal()">Update Information</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Update Information Modal -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
+    <h3>Update Information</h3>
+
+    <div *ngIf="editError" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ editError }}</div>
+
+    <div class="form-group">
+      <label>Date of Birth</label>
+      <input type="date" [(ngModel)]="editForm.birthday" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" [(ngModel)]="editForm.email" class="form-control" placeholder="Enter email address">
+    </div>
+    <div class="form-group">
+      <label>Phone Number</label>
+      <input type="tel" [(ngModel)]="editForm.contactNumber" class="form-control" placeholder="Enter phone number">
+    </div>
+    <div class="form-group">
+      <label>Complete Address</label>
+      <textarea [(ngModel)]="editForm.address" class="form-control" rows="3" placeholder="Enter complete address"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" (click)="closeEditModal()" [disabled]="saving">Cancel</button>
+      <button type="button" class="btn btn-primary" (click)="saveProfile()" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save Changes' }}
+      </button>
     </div>
   </div>
 </div>

@@ -36,6 +36,7 @@ class SHDFService
                 'height_cm' => $validated['height_cm'] ?? null,
                 'weight_kg' => $validated['weight_kg'] ?? null,
                 'blood_type' => $validated['blood_type'] ?? null,
+                'address' => $validated['address'] ?? null,
             ];
 
             // Only add emergency_contact_relation_other if column exists

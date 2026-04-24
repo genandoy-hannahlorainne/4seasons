@@ -169,6 +169,7 @@ class AdviserController extends BaseController
                 'phone' => $user->phone,
                 'employee_id' => $adviser ? $adviser->employee_id : null,
                 'birth_date' => $adviser ? $adviser->birth_date : null,
+                'address' => $adviser ? $adviser->address : null,
                 'advisory_class' => $advisoryClass,
                 'student_count' => $studentCount,
                 'section_id' => $section ? $section->id : null,
@@ -207,7 +208,8 @@ class AdviserController extends BaseController
                 'email' => 'sometimes|email|max:255|unique:users,email,' . $user->user_id . ',user_id',
                 'phone' => 'sometimes|nullable|string|max:20',
                 'employee_id' => 'sometimes|nullable|string|max:50',
-                'birth_date' => 'sometimes|nullable|date'
+                'birth_date' => 'sometimes|nullable|date',
+                'address' => 'sometimes|nullable|string|max:500'
             ]);
 
             if ($validator->fails()) {
@@ -239,6 +241,9 @@ class AdviserController extends BaseController
                 }
                 if ($request->has('birth_date')) {
                     $adviserUpdateData['birth_date'] = $request->birth_date;
+                }
+                if ($request->has('address')) {
+                    $adviserUpdateData['address'] = $request->address;
                 }
 
                 if (!empty($adviserUpdateData)) {
