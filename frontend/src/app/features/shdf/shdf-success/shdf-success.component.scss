@@ -106,6 +106,7 @@
 
   .qr-label {
     font-size: 0.8rem;
+    font-weight: 800;
     color: #6b7280;
     margin: 0 0 0.25rem;
     text-transform: uppercase;
@@ -169,6 +170,7 @@
 // ── Buttons ───────────────────────────────────────────
 .action-buttons {
   display: flex;
+  align-items: stretch;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
 
@@ -198,9 +200,8 @@
   .btn-secondary {
     background: #ffffff;
     color: #64748b;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #e2e8f0 !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    flex: 0 0 auto;
 
     &:hover {
       background: #f8fafc;
@@ -219,7 +220,7 @@
 
   .next-title {
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: #6b7280;

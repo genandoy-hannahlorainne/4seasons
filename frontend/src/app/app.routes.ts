@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { noAuthGuard } from './core/guards/no-auth.guard';
 
 export const routes: Routes = [
   {
@@ -13,14 +14,17 @@ export const routes: Routes = [
   },
   {
     path: 'role-selection',
+    canActivate: [noAuthGuard],
     loadComponent: () => import('./features/auth/role-selection/role-selection').then(m => m.RoleSelection)
   },
   {
     path: 'login',
+    canActivate: [noAuthGuard],
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
   },
   {
     path: 'admin/login',
+    canActivate: [noAuthGuard],
     loadComponent: () => import('./features/auth/admin-login/admin-login.component').then(m => m.AdminLoginComponent)
   },
   {
