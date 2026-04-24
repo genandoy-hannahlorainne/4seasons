@@ -409,8 +409,9 @@ class AuthController extends BaseController
                 if ($staff) {
                     $userInfo['staff_info'] = [
                         'clinic_staff_id' => $staff->clinic_staff_id,
-                        'staff_id' => $staff->staff_id,
-                        'position' => $staff->position
+                        'staff_id'        => $staff->staff_id,
+                        'staff_code'      => $staff->staff_code,
+                        'position'        => $staff->position
                     ];
                 } else {
                     $userInfo['staff_info'] = ['clinic_staff_id' => null];
