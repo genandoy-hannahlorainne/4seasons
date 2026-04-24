@@ -9,7 +9,7 @@
 
   <!-- Step Indicators -->
   <div class="step-indicators">
-    <div *ngFor="let step of steps" 
+    <div *ngFor="let step of steps"
          class="step-indicator"
          [class.active]="currentStep === step.number"
          [class.completed]="currentStep > step.number"
@@ -24,7 +24,7 @@
 
   <!-- Form Content -->
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    
+
     <!-- Error/Success Messages -->
     <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
     <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
@@ -66,8 +66,9 @@
           <input formControlName="birth_date" readonly />
         </div>
         <div class="form-field full-width">
-          <label>Complete Home Address</label>
-          <input formControlName="address" readonly />
+          <label>Complete Home Address *</label>
+          <input formControlName="address" placeholder="Enter complete home address" />
+          <span class="error-text" *ngIf="form.get('student.address')?.touched && form.get('student.address')?.invalid">Required</span>
         </div>
         <div class="form-field full-width">
           <label>Name of Parent/Guardian *</label>
@@ -186,10 +187,10 @@
             Other
           </label>
         </div>
-        <input *ngIf="form.get('medical.menarche_age')?.value === 'other'" 
-               type="text" 
-               formControlName="menarche_age_other" 
-               placeholder="Please specify" 
+        <input *ngIf="form.get('medical.menarche_age')?.value === 'other'"
+               type="text"
+               formControlName="menarche_age_other"
+               placeholder="Please specify"
                class="form-control" />
         <span class="error-text" *ngIf="submitted && form.get('medical.menarche_age')?.invalid">Required for female students</span>
       </div>
@@ -227,10 +228,10 @@
           <label><input type="checkbox" formControlName="condition_g6pd" /> G6PD Deficiency</label>
           <label class="none-option"><input type="checkbox" formControlName="condition_none" /> None</label>
         </div>
-        <input *ngIf="!form.get('medical.condition_none')?.value" 
-               type="text" 
-               formControlName="condition_other_text" 
-               placeholder="Other conditions (optional)" 
+        <input *ngIf="!form.get('medical.condition_none')?.value"
+               type="text"
+               formControlName="condition_other_text"
+               placeholder="Other conditions (optional)"
                class="form-control" />
       </div>
 
@@ -249,10 +250,10 @@
           <label><input type="checkbox" formControlName="medications_or_solution" /> ORS</label>
           <label class="none-option"><input type="checkbox" formControlName="medications_none" /> Don't Give Any</label>
         </div>
-        <input *ngIf="!form.get('medical.medications_none')?.value" 
-               type="text" 
-               formControlName="medications_other_text" 
-               placeholder="Other medications (optional)" 
+        <input *ngIf="!form.get('medical.medications_none')?.value"
+               type="text"
+               formControlName="medications_other_text"
+               placeholder="Other medications (optional)"
                class="form-control" />
       </div>
 
@@ -272,10 +273,10 @@
             Congenital Disability
           </label>
         </div>
-        <input *ngIf="pwdIsCongenital" 
-               type="text" 
-               formControlName="pwd_congenital_detail" 
-               placeholder="Please specify congenital condition" 
+        <input *ngIf="pwdIsCongenital"
+               type="text"
+               formControlName="pwd_congenital_detail"
+               placeholder="Please specify congenital condition"
                class="form-control" />
       </div>
 
@@ -310,10 +311,10 @@
           <label><input type="checkbox" formControlName="condition_anxiety_depression" /> Anxiety/Depression</label>
           <label class="none-option"><input type="checkbox" formControlName="condition_none" /> None</label>
         </div>
-        <input *ngIf="!form.get('family.condition_none')?.value" 
-               type="text" 
-               formControlName="condition_other_text" 
-               placeholder="Other family conditions (optional)" 
+        <input *ngIf="!form.get('family.condition_none')?.value"
+               type="text"
+               formControlName="condition_other_text"
+               placeholder="Other family conditions (optional)"
                class="form-control" />
       </div>
 
@@ -381,10 +382,10 @@
             Other
           </label>
         </div>
-        <input *ngIf="form.get('consent.deworming_refusal_reason')?.value === 'other'" 
-               type="text" 
-               formControlName="deworming_refusal_other" 
-               placeholder="Please specify" 
+        <input *ngIf="form.get('consent.deworming_refusal_reason')?.value === 'other'"
+               type="text"
+               formControlName="deworming_refusal_other"
+               placeholder="Please specify"
                class="form-control" />
       </div>
 
