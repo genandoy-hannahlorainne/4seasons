@@ -342,10 +342,51 @@
 
       <div class="form-section">
         <h3>Other Information</h3>
-        <div class="checkbox-grid">
-          <label><input type="checkbox" formControlName="smoke_exposure" /> Smoke Exposure at Home</label>
-          <label><input type="checkbox" formControlName="is_4ps_beneficiary" /> 4P's Beneficiary</label>
-          <label><input type="checkbox" formControlName="is_sbfp_beneficiary" /> SBFP Beneficiary</label>
+
+        <div class="other-info-grid">
+          <div class="other-info-item">
+            <label class="other-info-label">Smoke Exposure at Home *</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" formControlName="smoke_exposure" value="yes" />
+                Yes
+              </label>
+              <label>
+                <input type="radio" formControlName="smoke_exposure" value="no" />
+                No
+              </label>
+            </div>
+            <span class="error-text" *ngIf="submitted && form.get('family.smoke_exposure')?.invalid">Required</span>
+          </div>
+
+          <div class="other-info-item">
+            <label class="other-info-label">4P's Beneficiary *</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" formControlName="is_4ps_beneficiary" value="yes" />
+                Yes
+              </label>
+              <label>
+                <input type="radio" formControlName="is_4ps_beneficiary" value="no" />
+                No
+              </label>
+            </div>
+            <span class="error-text" *ngIf="submitted && form.get('family.is_4ps_beneficiary')?.invalid">Required</span>
+          </div>
+
+          <div class="other-info-item">
+            <label class="other-info-label">SBFP Beneficiary</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" formControlName="is_sbfp_beneficiary" value="yes" />
+                Yes
+              </label>
+              <label>
+                <input type="radio" formControlName="is_sbfp_beneficiary" value="no" />
+                No
+              </label>
+            </div>
+          </div>
         </div>
       </div>
     </div>

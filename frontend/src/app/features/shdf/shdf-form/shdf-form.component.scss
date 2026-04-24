@@ -536,6 +536,23 @@ input[type="file"] {
   }
 }
 
+/* Other Info Grid */
+.other-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.other-info-item {
+  .other-info-label {
+    display: block;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.9375rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .modal-card {
