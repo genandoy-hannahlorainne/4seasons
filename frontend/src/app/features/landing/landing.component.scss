@@ -74,7 +74,7 @@
 .footer-copyright { font-size:0.82rem; color:#475569; margin:0; }
 
 .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:1000; padding:1rem; }
-.modal { background:#fff; border-radius:20px; padding:2rem; width:100%; max-width:500px; position:relative; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,0.25); max-height:90vh; overflow-y:auto; }
+.modal { background:#fff; border-radius:20px; padding:2rem; width:100%; max-width:600px; position:relative; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,0.25); max-height:90vh; overflow-y:auto; }
 .modal h2 { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.4rem; font-weight:800; color:#0f172a; margin:0.75rem 0 1.25rem; }
 .modal-icon-wrap { display:flex; justify-content:center; margin-bottom:1rem; }
 .modal-icon { display:inline-flex; align-items:center; justify-content:center; width:100px; height:100px; background:linear-gradient(135deg,#eef4ff,#dbeafe); border-radius:24px; overflow:hidden; }
@@ -83,6 +83,8 @@
 .modal-text { text-align:left; }
 .modal-body p { font-size:0.875rem; color:#475569; line-height:1.75; margin:0 0 0.875rem; }
 .modal-body h4 { font-family:'Plus Jakarta Sans',sans-serif; font-size:0.9rem; font-weight:700; color:#0f172a; margin:1.25rem 0 0.4rem; }
+.modal-body ul { margin:0 0 0.875rem; padding-left:1.25rem; list-style:disc; }
+.modal-body ul li { font-size:0.875rem; color:#475569; line-height:1.75; padding-left:0.25rem; }
 .modal-close { position:absolute; top:1rem; right:1rem; background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-size:0.8rem; cursor:pointer; color:#64748b; display:flex; align-items:center; justify-content:center; }
 .modal-close:hover { background:#e2e8f0; color:#0f172a; }
 .feature-list { list-style:none; padding:0; margin:0 0 1.5rem; text-align:left; }
@@ -124,7 +126,10 @@
   .hours-note { margin:0 1.5rem 1.25rem; }
 
   .footer { padding:1.5rem 1.25rem; }
-  .modal { padding:1.75rem 1.5rem; border-radius:16px; }
+  .modal { padding:1.75rem 1.5rem; border-radius:16px; max-height:85vh; }
+  .modal-body p { font-size:0.85rem; }
+  .modal-body h4 { font-size:0.85rem; }
+  .modal-body ul li { font-size:0.85rem; }
 }
 
 /* ── Small Mobile ── */
@@ -139,4 +144,8 @@
   .day-hours { font-size:0.8rem; }
   .modal { padding:1.5rem 1.25rem; }
   .modal h2 { font-size:1.25rem; }
+  .modal-body p { font-size:0.8rem; line-height:1.65; }
+  .modal-body h4 { font-size:0.82rem; }
+  .modal-body ul { padding-left:1rem; }
+  .modal-body ul li { font-size:0.8rem; line-height:1.65; }
 }

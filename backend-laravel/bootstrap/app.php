@@ -24,6 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'audit' => \App\Http\Middleware\AuditMiddleware::class,
+            'nocache' => \App\Http\Middleware\NoCacheMiddleware::class,
+        ]);
+
+        // Apply no-cache headers to all API responses
+        $middleware->appendToGroup('api', [
+            \App\Http\Middleware\NoCacheMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

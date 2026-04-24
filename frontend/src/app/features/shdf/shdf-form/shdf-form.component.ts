@@ -219,8 +219,8 @@ export class SHDFFormComponent implements OnInit {
           condition_anxiety_depression: [false],
           condition_none: [false],
           condition_other_text: [''],
-          smoke_exposure: [false],
-          is_4ps_beneficiary: [false],
+          smoke_exposure: ['', Validators.required],
+          is_4ps_beneficiary: ['', Validators.required],
           is_sbfp_beneficiary: [false],
         },
         {
@@ -575,6 +575,17 @@ export class SHDFFormComponent implements OnInit {
       if (this.isFemale && medical?.get('menarche_age')?.invalid) {
         medical.get('menarche_age')?.markAsTouched();
         isValid = false;
+      }
+    } else if (this.currentStep === 5) {
+      const family = this.form.get('family');
+      if (family) {
+        ['smoke_exposure', 'is_4ps_beneficiary'].forEach(field => {
+          const control = family.get(field);
+          if (control && control.invalid) {
+            control.markAsTouched();
+            isValid = false;
+          }
+        });
       }
     } else if (this.currentStep === 6) {
       const consent = this.form.get('consent');

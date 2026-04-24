@@ -342,7 +342,7 @@ export class AdminLoginComponent {
         }
 
         if (user && (user.role_name === 'admin' || user.role_name === 'Admin')) {
-          this.router.navigate(['/dashboard/admin']);
+          this.router.navigate(['/dashboard/admin'], { replaceUrl: true });
         } else {
           this.error = 'Access denied. Admin credentials required.';
           this.authService.logout();

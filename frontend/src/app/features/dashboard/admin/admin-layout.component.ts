@@ -428,8 +428,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   logout(): void {
     this.loggingOut = true;
     this.authService.logout().subscribe({
-      complete: () => this.router.navigate(['/login']),
-      error: () => this.router.navigate(['/login'])
+      complete: () => window.location.replace('/login'),
+      error: () => window.location.replace('/login')
     });
   }
 }
