@@ -262,3 +262,23 @@
     </div>
   </div>
 </div>
+
+<!-- Delete Backup Confirmation Modal -->
+<div *ngIf="showDeleteModal" class="delete-modal-overlay" (click)="closeDeleteModal()">
+  <div class="delete-modal" (click)="$event.stopPropagation()">
+    <div class="delete-modal-icon">
+      <i class="fas fa-trash-alt"></i>
+    </div>
+    <h3>Delete Backup</h3>
+    <p>Are you sure you want to delete this backup?</p>
+    <p class="delete-filename">{{ backupToDelete }}</p>
+    <p class="delete-warning">This action cannot be undone.</p>
+    <div class="delete-modal-actions">
+      <button class="btn btn-secondary" (click)="closeDeleteModal()" [disabled]="deleting">Cancel</button>
+      <button class="btn btn-danger" (click)="confirmDeleteBackup()" [disabled]="deleting">
+        <i class="fas fa-trash"></i>
+        {{ deleting ? 'Deleting...' : 'Delete' }}
+      </button>
+    </div>
+  </div>
+</div>
