@@ -153,10 +153,10 @@ export class SHDFFormComponent implements OnInit {
       ),
 
       philhealth: this.fb.group({
-        learner_philhealth_id: ['', [philhealthIdValidator()]],
-        parent_philhealth_id: ['', [philhealthIdValidator()]],
-        parent_philhealth_name: [''],
-        parent_relationship: [''],
+        learner_philhealth_id: ['', [Validators.required, philhealthIdValidator()]],
+        parent_philhealth_id: ['', [Validators.required, philhealthIdValidator()]],
+        parent_philhealth_name: ['', Validators.required],
+        parent_relationship: ['', Validators.required],
       }),
 
       immunizations: this.fb.group(vaccineControls),
@@ -513,8 +513,11 @@ export class SHDFFormComponent implements OnInit {
 
   goToStep(step: number): void {
     if (step >= 1 && step <= this.totalSteps) {
-      this.currentStep = step;
-      this.scrollToTop();
+      // Only allow going back, not skipping forward past unvalidated steps
+      if (step < this.currentStep) {
+        this.currentStep = step;
+        this.scrollToTop();
+      }
     }
   }
 
@@ -522,74 +525,80 @@ export class SHDFFormComponent implements OnInit {
     let isValid = true;
     this.errorMessage = '';
 
-    switch (this.currentStep) {
-      case 1: // Student Information
-        const studentGroup = this.form.get('student');
-        if (studentGroup) {
-          ['parent_guardian_name', 'emergency_contact', 'emergency_contact_relation', 'emergency_contact_phone', 'address'].forEach(field => {
-            const control = studentGroup.get(field);
-            if (control && control.invalid) {
-              control.markAsTouched();
+    if (this.currentStep === 1) {
+      const studentGroup = this.form.get('student');
+      if (studentGroup) {
+        ['parent_guardian_name', 'emergency_contact', 'emergency_contact_relation', 'emergency_contact_phone', 'address'].forEach(field => {
+          const control = studentGroup.get(field);
+          if (control) {
+            control.markAsTouched();
+            control.markAsDirty();
+            const val = control.value;
+            if (control.invalid || !val || (typeof val === 'string' && val.trim() === '')) {
               isValid = false;
             }
-          });
-        }
-        break;
-
-      case 3: // Immunizations
-        const immunizationsGroup = this.form.get('immunizations') as FormGroup;
-        if (immunizationsGroup && immunizationsGroup.invalid) {
-          Object.keys(immunizationsGroup.controls).forEach(key => {
-            const control = immunizationsGroup.get(key);
-            if (control && control.invalid) {
-              control.markAsTouched();
+          }
+        });
+      }
+    } else if (this.currentStep === 2) {
+      const philhealth = this.form.get('philhealth');
+      if (philhealth) {
+        ['learner_philhealth_id', 'parent_philhealth_id', 'parent_philhealth_name', 'parent_relationship'].forEach(field => {
+          const control = philhealth.get(field);
+          if (control) {
+            control.markAsTouched();
+            control.markAsDirty();
+            const val = control.value;
+            if (control.invalid || !val || (typeof val === 'string' && val.trim() === '')) {
               isValid = false;
             }
-          });
-        }
-        break;
-
-      case 4: // Medical History
-        const medical = this.form.get('medical');
-        if (medical?.get('allergy_status')?.invalid) {
-          medical.get('allergy_status')?.markAsTouched();
-          isValid = false;
-        }
-        // Check menarche_age for female students
-        if (this.isFemale && medical?.get('menarche_age')?.invalid) {
-          medical.get('menarche_age')?.markAsTouched();
-          isValid = false;
-        }
-        break;
-
-      case 6: // Parental Consent
-        const consent = this.form.get('consent');
-        if (consent) {
-          ['information_certified', 'deworming_consent'].forEach(field => {
-            const control = consent.get(field);
-            if (control && control.invalid) {
-              control.markAsTouched();
-              isValid = false;
-            }
-          });
-
-          // Check MRTD consent for Grade 7
-          if (this.isGrade7 && consent.get('mrtd_consent')?.invalid) {
-            consent.get('mrtd_consent')?.markAsTouched();
+          }
+        });
+      }
+    } else if (this.currentStep === 3) {
+      const immunizationsGroup = this.form.get('immunizations') as FormGroup;
+      if (immunizationsGroup && immunizationsGroup.invalid) {
+        Object.keys(immunizationsGroup.controls).forEach(key => {
+          const control = immunizationsGroup.get(key);
+          if (control && control.invalid) {
+            control.markAsTouched();
             isValid = false;
           }
-
-          // Check WIFA consent for female students
-          if (this.isFemale && consent.get('wifa_consent')?.invalid) {
-            consent.get('wifa_consent')?.markAsTouched();
+        });
+      }
+    } else if (this.currentStep === 4) {
+      const medical = this.form.get('medical');
+      if (medical?.get('allergy_status')?.invalid) {
+        medical.get('allergy_status')?.markAsTouched();
+        isValid = false;
+      }
+      if (this.isFemale && medical?.get('menarche_age')?.invalid) {
+        medical.get('menarche_age')?.markAsTouched();
+        isValid = false;
+      }
+    } else if (this.currentStep === 6) {
+      const consent = this.form.get('consent');
+      if (consent) {
+        ['information_certified', 'deworming_consent'].forEach(field => {
+          const control = consent.get(field);
+          if (control && control.invalid) {
+            control.markAsTouched();
             isValid = false;
           }
-        }
-        if (!this.signatureFile) {
-          this.errorMessage = 'Please upload your signature';
+        });
+        if (this.isGrade7 && consent.get('mrtd_consent')?.invalid) {
+          consent.get('mrtd_consent')?.markAsTouched();
           isValid = false;
         }
-        break;
+        if (this.isFemale && consent.get('wifa_consent')?.invalid) {
+          consent.get('wifa_consent')?.markAsTouched();
+          isValid = false;
+        }
+      }
+      if (!this.signatureFile) {
+        this.errorMessage = 'Please upload your signature';
+        isValid = false;
+      }
     }
 
     if (!isValid && !this.errorMessage) {
