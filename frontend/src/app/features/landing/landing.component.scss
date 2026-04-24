@@ -83,6 +83,8 @@
 .modal-text { text-align:left; }
 .modal-body p { font-size:0.875rem; color:#475569; line-height:1.75; margin:0 0 0.875rem; }
 .modal-body h4 { font-family:'Plus Jakarta Sans',sans-serif; font-size:0.9rem; font-weight:700; color:#0f172a; margin:1.25rem 0 0.4rem; }
+.modal-body ul { margin:0 0 0.875rem; padding-left:1.25rem; list-style:disc; }
+.modal-body ul li { font-size:0.875rem; color:#475569; line-height:1.75; padding-left:0.25rem; }
 .modal-close { position:absolute; top:1rem; right:1rem; background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-size:0.8rem; cursor:pointer; color:#64748b; display:flex; align-items:center; justify-content:center; }
 .modal-close:hover { background:#e2e8f0; color:#0f172a; }
 .feature-list { list-style:none; padding:0; margin:0 0 1.5rem; text-align:left; }
