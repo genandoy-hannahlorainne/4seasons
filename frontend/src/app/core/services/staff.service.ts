@@ -44,6 +44,10 @@ export class StaffService {
     return this.http.get<any>(`${environment.apiUrl}/staff/dashboard${suffix}`);
   }
 
+  getStaffProfile(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/staff/profile`);
+  }
+
   updateStaffProfile(userId: number, profileData: any): Observable<any> {
     return this.http.put<any>(`${environment.apiUrl}/staff/profile`, {
       user_id: userId,

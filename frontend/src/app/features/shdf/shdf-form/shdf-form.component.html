@@ -9,7 +9,7 @@
 
   <!-- Step Indicators -->
   <div class="step-indicators">
-    <div *ngFor="let step of steps" 
+    <div *ngFor="let step of steps"
          class="step-indicator"
          [class.active]="currentStep === step.number"
          [class.completed]="currentStep > step.number"
@@ -24,7 +24,7 @@
 
   <!-- Form Content -->
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    
+
     <!-- Error/Success Messages -->
     <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
     <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
@@ -66,25 +66,36 @@
           <input formControlName="birth_date" readonly />
         </div>
         <div class="form-field full-width">
-          <label>Complete Home Address</label>
-          <input formControlName="address" readonly />
+          <label>Complete Home Address *</label>
+          <input formControlName="address" placeholder="Enter complete home address" />
+          <span class="error-text" *ngIf="form.get('student.address')?.touched && form.get('student.address')?.invalid">Required</span>
         </div>
         <div class="form-field full-width">
           <label>Name of Parent/Guardian *</label>
           <input formControlName="parent_guardian_name" />
-          <span class="error-text" *ngIf="submitted && form.get('student.parent_guardian_name')?.invalid">Required</span>
+          <span class="error-text" *ngIf="form.get('student.parent_guardian_name')?.touched && form.get('student.parent_guardian_name')?.invalid">Required</span>
         </div>
         <div class="form-field full-width">
           <label>Contact Person in Case of Emergency *</label>
           <input formControlName="emergency_contact" />
+          <span class="error-text" *ngIf="form.get('student.emergency_contact')?.touched && form.get('student.emergency_contact')?.invalid">Required</span>
         </div>
         <div class="form-field">
           <label>Relationship *</label>
-          <input formControlName="emergency_contact_relation" />
+          <select formControlName="emergency_contact_relation">
+            <option value="">Select relationship</option>
+            <option value="mother">Mother</option>
+            <option value="father">Father</option>
+            <option value="guardian">Guardian</option>
+            <option value="sibling">Sibling</option>
+            <option value="other">Other</option>
+          </select>
+          <span class="error-text" *ngIf="form.get('student.emergency_contact_relation')?.touched && form.get('student.emergency_contact_relation')?.invalid">Required</span>
         </div>
         <div class="form-field">
           <label>Contact Number *</label>
           <input formControlName="emergency_contact_phone" />
+          <span class="error-text" *ngIf="form.get('student.emergency_contact_phone')?.touched && form.get('student.emergency_contact_phone')?.invalid">Required</span>
         </div>
       </div>
     </div>
@@ -98,31 +109,35 @@
 
       <div class="form-grid">
         <div class="form-field full-width">
-          <label>Learner's PhilHealth ID (12 alphanumeric characters)</label>
+          <label>Learner's PhilHealth ID (12 alphanumeric characters) *</label>
           <input formControlName="learner_philhealth_id" placeholder="e.g., 123456789012" maxlength="12" />
-          <span class="error-text" *ngIf="submitted && form.get('philhealth.learner_philhealth_id')?.hasError('pattern')">
+          <span class="error-text" *ngIf="form.get('philhealth.learner_philhealth_id')?.touched && form.get('philhealth.learner_philhealth_id')?.hasError('required')">Required</span>
+          <span class="error-text" *ngIf="form.get('philhealth.learner_philhealth_id')?.touched && form.get('philhealth.learner_philhealth_id')?.hasError('pattern')">
             Must be exactly 12 alphanumeric characters
           </span>
         </div>
         <div class="form-field full-width">
-          <label>Parent's PhilHealth ID (12 alphanumeric characters)</label>
+          <label>Parent's PhilHealth ID (12 alphanumeric characters) *</label>
           <input formControlName="parent_philhealth_id" placeholder="e.g., 123456789012" maxlength="12" />
-          <span class="error-text" *ngIf="submitted && form.get('philhealth.parent_philhealth_id')?.hasError('pattern')">
+          <span class="error-text" *ngIf="form.get('philhealth.parent_philhealth_id')?.touched && form.get('philhealth.parent_philhealth_id')?.hasError('required')">Required</span>
+          <span class="error-text" *ngIf="form.get('philhealth.parent_philhealth_id')?.touched && form.get('philhealth.parent_philhealth_id')?.hasError('pattern')">
             Must be exactly 12 alphanumeric characters
           </span>
         </div>
         <div class="form-field">
-          <label>Parent's Name (PhilHealth Member)</label>
+          <label>Parent's Name (PhilHealth Member) *</label>
           <input formControlName="parent_philhealth_name" />
+          <span class="error-text" *ngIf="form.get('philhealth.parent_philhealth_name')?.touched && form.get('philhealth.parent_philhealth_name')?.invalid">Required</span>
         </div>
         <div class="form-field">
-          <label>Relationship</label>
+          <label>Relationship *</label>
           <select formControlName="parent_relationship">
             <option value="">Select</option>
             <option value="mother">Mother</option>
             <option value="father">Father</option>
             <option value="other">Other</option>
           </select>
+          <span class="error-text" *ngIf="form.get('philhealth.parent_relationship')?.touched && form.get('philhealth.parent_relationship')?.invalid">Required</span>
         </div>
       </div>
     </div>
@@ -186,10 +201,10 @@
             Other
           </label>
         </div>
-        <input *ngIf="form.get('medical.menarche_age')?.value === 'other'" 
-               type="text" 
-               formControlName="menarche_age_other" 
-               placeholder="Please specify" 
+        <input *ngIf="form.get('medical.menarche_age')?.value === 'other'"
+               type="text"
+               formControlName="menarche_age_other"
+               placeholder="Please specify"
                class="form-control" />
         <span class="error-text" *ngIf="submitted && form.get('medical.menarche_age')?.invalid">Required for female students</span>
       </div>
@@ -227,10 +242,10 @@
           <label><input type="checkbox" formControlName="condition_g6pd" /> G6PD Deficiency</label>
           <label class="none-option"><input type="checkbox" formControlName="condition_none" /> None</label>
         </div>
-        <input *ngIf="!form.get('medical.condition_none')?.value" 
-               type="text" 
-               formControlName="condition_other_text" 
-               placeholder="Other conditions (optional)" 
+        <input *ngIf="!form.get('medical.condition_none')?.value"
+               type="text"
+               formControlName="condition_other_text"
+               placeholder="Other conditions (optional)"
                class="form-control" />
       </div>
 
@@ -249,10 +264,10 @@
           <label><input type="checkbox" formControlName="medications_or_solution" /> ORS</label>
           <label class="none-option"><input type="checkbox" formControlName="medications_none" /> Don't Give Any</label>
         </div>
-        <input *ngIf="!form.get('medical.medications_none')?.value" 
-               type="text" 
-               formControlName="medications_other_text" 
-               placeholder="Other medications (optional)" 
+        <input *ngIf="!form.get('medical.medications_none')?.value"
+               type="text"
+               formControlName="medications_other_text"
+               placeholder="Other medications (optional)"
                class="form-control" />
       </div>
 
@@ -272,10 +287,10 @@
             Congenital Disability
           </label>
         </div>
-        <input *ngIf="pwdIsCongenital" 
-               type="text" 
-               formControlName="pwd_congenital_detail" 
-               placeholder="Please specify congenital condition" 
+        <input *ngIf="pwdIsCongenital"
+               type="text"
+               formControlName="pwd_congenital_detail"
+               placeholder="Please specify congenital condition"
                class="form-control" />
       </div>
 
@@ -310,10 +325,10 @@
           <label><input type="checkbox" formControlName="condition_anxiety_depression" /> Anxiety/Depression</label>
           <label class="none-option"><input type="checkbox" formControlName="condition_none" /> None</label>
         </div>
-        <input *ngIf="!form.get('family.condition_none')?.value" 
-               type="text" 
-               formControlName="condition_other_text" 
-               placeholder="Other family conditions (optional)" 
+        <input *ngIf="!form.get('family.condition_none')?.value"
+               type="text"
+               formControlName="condition_other_text"
+               placeholder="Other family conditions (optional)"
                class="form-control" />
       </div>
 
@@ -381,10 +396,10 @@
             Other
           </label>
         </div>
-        <input *ngIf="form.get('consent.deworming_refusal_reason')?.value === 'other'" 
-               type="text" 
-               formControlName="deworming_refusal_other" 
-               placeholder="Please specify" 
+        <input *ngIf="form.get('consent.deworming_refusal_reason')?.value === 'other'"
+               type="text"
+               formControlName="deworming_refusal_other"
+               placeholder="Please specify"
                class="form-control" />
       </div>
 

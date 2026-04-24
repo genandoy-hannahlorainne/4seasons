@@ -19,7 +19,7 @@ class DashboardController extends BaseController
         try {
             $days = $request->get('days', 30); // Default to last 30 days
             $startDate = now()->subDays($days);
-            
+
             $stats = [
                 // User statistics
                 'total_users' => User::where('is_active', true)->count(),
@@ -30,14 +30,14 @@ class DashboardController extends BaseController
                 'total_staff' => User::whereHas('role', function($q) {
                     $q->where('role_name', 'Clinic Staff');
                 })->where('is_active', true)->count(),
-                
+
                 // Medical visit statistics
                 'total_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)->count(),
                 'emergency_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)
                                                 ->where('visit_type', 'Emergency')->count(),
                 'visits_today' => MedicalVisit::whereDate('visit_datetime', today())->count(),
                 'visits_this_week' => MedicalVisit::where('visit_datetime', '>=', now()->startOfWeek())->count(),
-                
+
                 // Health statistics
                 'students_with_allergies' => Student::whereHas('allergies')->count(),
                 'students_with_conditions' => Student::whereHas('medicalHistory', function($q) {
@@ -52,34 +52,34 @@ class DashboardController extends BaseController
                               ->orWhere('condition_mental_health', true);
                     });
                 })->count(),
-                
+
                 // Recent activity
                 'recent_visits' => MedicalVisit::with(['student.user', 'clinicStaff.user'])
                                              ->orderBy('visit_datetime', 'desc')
                                              ->limit(5)
                                              ->get(),
-                
+
                 // Charts data
                 'visits_by_day' => MedicalVisit::where('visit_datetime', '>=', $startDate)
                                              ->groupBy(DB::raw('DATE(visit_datetime)'))
                                              ->selectRaw('DATE(visit_datetime) as date, count(*) as count')
                                              ->orderBy('date')
                                              ->get(),
-                
+
                 'visits_by_type' => MedicalVisit::where('visit_datetime', '>=', $startDate)
                                                 ->groupBy('visit_type')
                                                 ->selectRaw('visit_type, count(*) as count')
                                                 ->pluck('count', 'visit_type'),
-                
+
                 'grade_distribution' => Student::where('is_active', true)
                                               ->groupBy('grade_level')
                                               ->selectRaw('grade_level, count(*) as count')
                                               ->orderBy('grade_level')
                                               ->pluck('count', 'grade_level')
             ];
-            
+
             return $this->sendResponse($stats, 'Admin dashboard statistics retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve admin statistics', [
                 'error' => $e->getMessage()
@@ -94,22 +94,22 @@ class DashboardController extends BaseController
     {
         try {
             $user = $request->user();
-            
+
             // Get adviser's students
             $adviser = $user->adviser;
             if (!$adviser) {
                 return $this->sendError('User is not an adviser', [], 403);
             }
-            
+
             $students = Student::where('current_adviser_id', $adviser->adviser_id)
                              ->where('is_active', true)
                              ->get();
-            
+
             $studentIds = $students->pluck('student_id');
-            
+
             $days = $request->get('days', 30);
             $startDate = now()->subDays($days);
-            
+
             $stats = [
                 'total_students' => $students->count(),
                 'students_with_allergies' => $students->filter(function($student) {
@@ -146,9 +146,9 @@ class DashboardController extends BaseController
                                                      ->limit(10)
                                                      ->get()
             ];
-            
+
             return $this->sendResponse($stats, 'Adviser dashboard statistics retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve adviser statistics', [
                 'error' => $e->getMessage()
@@ -163,16 +163,16 @@ class DashboardController extends BaseController
     {
         try {
             $user = $request->user();
-            
+
             // Verify user is clinic staff
             $clinicStaff = $user->clinicStaff;
             if (!$clinicStaff) {
                 return $this->sendError('User is not clinic staff', [], 403);
             }
-            
+
             $days = $request->get('days', 30);
             $startDate = now()->subDays($days);
-            
+
             $stats = [
                 // Overall statistics
                 'total_visits_handled' => MedicalVisit::where('clinic_staff_id', $clinicStaff->clinic_staff_id)
@@ -188,14 +188,14 @@ class DashboardController extends BaseController
                 // Note: follow_up_required column doesn't exist in actual database
                 // Using Open status visits as pending visits instead
                 'pending_visits' => MedicalVisit::where('status', 'Open')->count(),
-                
+
                 // Recent activity
                 'recent_visits' => MedicalVisit::with(['student.user'])
                                              ->where('clinic_staff_id', $clinicStaff->clinic_staff_id)
                                              ->orderBy('visit_datetime', 'desc')
                                              ->limit(10)
                                              ->get(),
-                
+
                 // Students with frequent visits
                 'frequent_visitors' => MedicalVisit::with(['student.user'])
                                                  ->where('clinic_staff_id', $clinicStaff->clinic_staff_id)
@@ -206,14 +206,14 @@ class DashboardController extends BaseController
                                                  ->orderBy('visit_count', 'desc')
                                                  ->limit(10)
                                                  ->get(),
-                
+
                 // Visit patterns
                 'visits_by_type' => MedicalVisit::where('clinic_staff_id', $clinicStaff->clinic_staff_id)
                                                 ->where('visit_datetime', '>=', $startDate)
                                                 ->groupBy('visit_type')
                                                 ->selectRaw('visit_type, count(*) as count')
                                                 ->pluck('count', 'visit_type'),
-                
+
                 'daily_visits' => MedicalVisit::where('clinic_staff_id', $clinicStaff->clinic_staff_id)
                                              ->where('visit_datetime', '>=', $startDate)
                                              ->groupBy(DB::raw('DATE(visit_datetime)'))
@@ -221,9 +221,9 @@ class DashboardController extends BaseController
                                              ->orderBy('date')
                                              ->get()
             ];
-            
+
             return $this->sendResponse($stats, 'Staff dashboard statistics retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve staff statistics', [
                 'error' => $e->getMessage()
@@ -238,13 +238,13 @@ class DashboardController extends BaseController
     {
         try {
             $user = $request->user();
-            
+
             // Get student record
             $student = $user->student;
             if (!$student) {
                 return $this->sendError('User is not a student', [], 403);
             }
-            
+
             $stats = [
                 'student_info' => [
                     'student_id' => $student->student_id,
@@ -277,9 +277,9 @@ class DashboardController extends BaseController
                     'needs_follow_up' => false
                 ]
             ];
-            
+
             return $this->sendResponse($stats, 'Student dashboard information retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve student information', [
                 'error' => $e->getMessage()
@@ -376,14 +376,14 @@ class DashboardController extends BaseController
     {
         try {
             $today = now()->startOfDay();
-            
+
             // Get overall statistics (not per staff member)
             $stats = [
                 'total_students' => Student::where('is_active', true)->count(),
                 'today_visits' => MedicalVisit::whereDate('visit_datetime', $today)->count(),
                 'total_visits' => MedicalVisit::count(),
                 'pending_visits' => MedicalVisit::where('status', 'Open')->count(),
-                
+
                 // Recent visits (last 5)
                 'recent_visits' => MedicalVisit::with(['student'])
                     ->orderBy('visit_datetime', 'desc')
@@ -402,7 +402,7 @@ class DashboardController extends BaseController
                             'avatar' => '/assets/user-' . ($student && $student->gender === 'F' ? 'female' : 'male') . '.png'
                         ];
                     }),
-                
+
                 // Students with allergies
                 'students_with_allergies' => Student::with(['allergies'])
                     ->whereHas('allergies')
@@ -417,13 +417,64 @@ class DashboardController extends BaseController
                         ];
                     })
             ];
-            
+
             return $this->sendResponse($stats, 'Clinic dashboard overview retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve clinic overview', [
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+    public function getStaffProfile(Request $request)
+    {
+        try {
+            $user = $request->user();
+            if (!$user) return $this->sendError('Unauthorized', 'Not authenticated');
+
+            $user->load('role');
+            $staff = \App\Models\ClinicStaff::where('user_id', $user->user_id)->first();
+
+            return $this->sendResponse([
+                'user_id'    => $user->user_id,
+                'full_name'  => $user->full_name,
+                'email'      => $user->email,
+                'phone'      => $user->phone,
+                'staff_code' => $staff?->staff_code,
+                'position'   => $staff?->position ?? 'Clinic Staff',
+            ], 'Staff profile retrieved successfully');
+        } catch (\Throwable $e) {
+            return $this->sendError('Failed to retrieve staff profile', $e->getMessage());
+        }
+    }
+
+    public function updateStaffProfile(Request $request)
+    {
+        try {
+            $user = $request->user();
+            if (!$user || strtolower($user->role?->role_name ?? '') !== 'clinic_staff') {
+                return $this->sendError('Unauthorized', 'User is not clinic staff');
+            }
+
+            $validated = $request->validate([
+                'email'      => 'sometimes|email|max:255|unique:users,email,' . $user->user_id . ',user_id',
+                'phone'      => 'sometimes|nullable|string|max:20',
+                'staff_code' => 'sometimes|nullable|string|max:20',
+            ]);
+
+            $userUpdate = [];
+            if (isset($validated['email']))  $userUpdate['email'] = $validated['email'];
+            if (isset($validated['phone']))  $userUpdate['phone'] = $validated['phone'];
+            if (!empty($userUpdate)) $user->update($userUpdate);
+
+            if (isset($validated['staff_code'])) {
+                \App\Models\ClinicStaff::where('user_id', $user->user_id)
+                    ->update(['staff_code' => $validated['staff_code']]);
+            }
+
+            return $this->sendResponse($user->fresh(), 'Profile updated successfully');
+        } catch (\Throwable $e) {
+            return $this->sendError('Failed to update profile', $e->getMessage());
         }
     }
 }

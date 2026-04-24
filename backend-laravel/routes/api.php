@@ -151,6 +151,8 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::get('/sections', [AdminController::class, 'getSections']);
         Route::get('/dashboard', [DashboardController::class, 'getClinicOverview']);
         Route::get('/reports', [DashboardController::class, 'getStaffReportsAnalytics']);
+        Route::get('/profile', [DashboardController::class, 'getStaffProfile']);
+        Route::put('/profile', [DashboardController::class, 'updateStaffProfile']);
     });
 
     // Student routes

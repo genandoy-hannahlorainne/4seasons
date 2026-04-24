@@ -80,6 +80,24 @@
     </div>
 
     <div class="form-card">
+      <h2>Complete Address</h2>
+
+      <div class="form-group">
+        <label for="address">Complete Home Address *</label>
+        <textarea
+          id="address"
+          formControlName="address"
+          rows="3"
+          placeholder="Enter your complete home address"
+          [class.error]="submitted && form.get('address')?.invalid"
+        ></textarea>
+        <span class="error-message" *ngIf="submitted && form.get('address')?.invalid">
+          Complete address is required
+        </span>
+      </div>
+    </div>
+
+    <div class="form-card">
       <h2>Physical Information (Optional)</h2>
       <p class="info-text">You can skip this now and complete it later</p>
 

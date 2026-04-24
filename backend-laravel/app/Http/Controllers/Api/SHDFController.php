@@ -69,6 +69,7 @@ class SHDFController extends Controller
             'height_cm' => ['nullable', 'numeric', 'min:0'],
             'weight_kg' => ['nullable', 'numeric', 'min:0'],
             'blood_type' => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
+            'address' => ['nullable', 'string', 'max:500'],
         ]);
 
         $student = Student::where('student_id', $validated['student_id'])->firstOrFail();
