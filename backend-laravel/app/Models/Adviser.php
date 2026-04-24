@@ -23,7 +23,8 @@ class Adviser extends Model
         'is_active',
         'grade_level',
         'section',
-        'birth_date'
+        'birth_date',
+        'address'
     ];
 
     protected function casts(): array

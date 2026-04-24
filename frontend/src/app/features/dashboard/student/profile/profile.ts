@@ -17,6 +17,10 @@ export class StudentProfileComponent implements OnInit {
   profileForm: FormGroup;
   changePasswordForm: FormGroup;
   isEditing = false;
+  showEditModal = false;
+  editError = '';
+  saving = false;
+  editForm = { email: '', contactNumber: '', address: '', birthday: '' };
   loading = false;
   showPasswordModal = false;
   showRequestPasswordModal = false;
@@ -201,6 +205,60 @@ export class StudentProfileComponent implements OnInit {
       this.profileForm.disable();
       this.loadUserProfile(); // Reset to original values
     }
+  }
+
+  openEditModal(): void {
+    this.editForm = {
+      email: this.profileForm.getRawValue().email || '',
+      contactNumber: this.profileForm.getRawValue().contactNumber || '',
+      address: this.profileForm.getRawValue().address || '',
+      birthday: this.profileForm.getRawValue().birthday || ''
+    };
+    this.editError = '';
+    this.showEditModal = true;
+  }
+
+  closeEditModal(): void {
+    this.showEditModal = false;
+    this.editError = '';
+  }
+
+  saveProfile(): void {
+    if (!this.studentId) { this.editError = 'Student profile not loaded.'; return; }
+    this.saving = true;
+    this.editError = '';
+
+    const profileData = {
+      ...this.profileForm.getRawValue(),
+      email: this.editForm.email,
+      contactNumber: this.editForm.contactNumber,
+      address: this.editForm.address,
+      birthday: this.editForm.birthday
+    };
+
+    this.studentService.updateStudentProfile(this.studentId, profileData).subscribe({
+      next: (response) => {
+        this.saving = false;
+        if (response.success) {
+          this.profileForm.patchValue({
+            email: this.editForm.email,
+            contactNumber: this.editForm.contactNumber,
+            address: this.editForm.address,
+            birthday: this.editForm.birthday
+          });
+          this.displayBirthday = this.formatDisplayDate(this.editForm.birthday);
+          this.closeEditModal();
+          this.successMessage = 'Profile updated successfully!';
+          setTimeout(() => this.successMessage = '', 3000);
+        } else {
+          this.editError = response.message || 'Failed to update profile.';
+        }
+      },
+      error: (err) => {
+        this.saving = false;
+        this.editError = err.error?.message || 'Error updating profile.';
+      }
+    });
   }
 
   onSubmit(): void {
