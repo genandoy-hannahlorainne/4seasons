@@ -155,15 +155,20 @@ interface GradeLevel {
                   </span>
                 </td>
                 <td>
-                  <button class="btn-assign" (click)="openAssignModal(section)">
-                    {{ section.adviser_id ? 'Change' : 'Assign' }} Adviser
-                  </button>
-                  <button *ngIf="section.adviser_id" class="btn-remove" (click)="removeAdviser(section)">
-                    Remove
-                  </button>
-                  <button class="btn-view-students" (click)="viewSectionStudents(section)">
-                    View Students
-                  </button>
+                  <div class="action-buttons">
+                    <button class="btn-assign" (click)="openAssignModal(section)">
+                      <i class="fa-solid fa-user-pen"></i>
+                      {{ section.adviser_id ? 'Change' : 'Assign' }}
+                    </button>
+                    <button *ngIf="section.adviser_id" class="btn-remove" (click)="removeAdviser(section)">
+                      <i class="fa-solid fa-user-minus"></i>
+                      Remove
+                    </button>
+                    <button class="btn-view-students" (click)="viewSectionStudents(section)">
+                      <i class="fa-solid fa-eye"></i>
+                      View
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -802,40 +807,61 @@ interface GradeLevel {
       }
 
       .btn-assign, .btn-remove, .btn-view-students {
-        padding: 0.5rem 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        padding: 0.45rem 0.85rem;
         border: none;
         border-radius: 6px;
         cursor: pointer;
         font-weight: 500;
+        font-size: 0.82rem;
         transition: all 0.2s ease;
-        margin-right: 0.5rem;
-        font-size: 0.85rem;
+        white-space: nowrap;
+        height: 32px;
+        line-height: 1;
+
+        i { font-size: 0.8rem; }
+      }
+
+      .action-buttons {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-wrap: nowrap;
       }
 
       .btn-assign {
-        background: #3498db;
+        background: #f97316;
         color: white;
 
         &:hover {
-          background: #2980b9;
+          background: #ea6c0a;
+          transform: translateY(-1px);
+          box-shadow: 0 3px 8px rgba(249, 115, 22, 0.35);
         }
       }
 
       .btn-remove {
-        background: #e74c3c;
+        background: #ef4444;
         color: white;
 
         &:hover {
-          background: #c0392b;
+          background: #dc2626;
+          transform: translateY(-1px);
+          box-shadow: 0 3px 8px rgba(239, 68, 68, 0.35);
         }
       }
 
       .btn-view-students {
-        background: #2ecc71;
+        background: #38bdf8;
         color: white;
 
         &:hover {
-          background: #27ae60;
+          background: #0ea5e9;
+          transform: translateY(-1px);
+          box-shadow: 0 3px 8px rgba(56, 189, 248, 0.35);
         }
       }
 
@@ -1400,9 +1426,9 @@ interface GradeLevel {
       }
 
       .action-buttons {
-        flex-direction: column;
+        flex-wrap: wrap;
         gap: 4px;
-        button { width: 100%; justify-content: center; }
+        button { flex: 1; min-width: 60px; justify-content: center; }
       }
 
       .modal-content {

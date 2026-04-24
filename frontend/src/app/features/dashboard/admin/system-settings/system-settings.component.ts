@@ -29,6 +29,12 @@ export class SystemSettingsComponent implements OnInit {
   backups: any[] = [];
   creating = false;
   loadingBackups = false;
+  showDeleteModal = false;
+  backupToDelete: string | null = null;
+  deleting = false;
+  showRestoreModal = false;
+  backupToRestore: string | null = null;
+  restoring = false;
 
   constructor(private adminService: AdminService) {}
 
@@ -41,7 +47,20 @@ export class SystemSettingsComponent implements OnInit {
     this.adminService.getSystemSettings().subscribe({
       next: (response) => {
         if (response.success) {
-          this.settings = response.data || response.settings || {};
+          const data = response.data || response.settings || {};
+          // Ensure all sections always exist with defaults
+          this.settings = {
+            system: data.system || {},
+            email: data.email || {},
+            notifications: data.notifications || {},
+            security: data.security || {},
+            backup: data.backup || {
+              auto_backup_enabled: false,
+              backup_frequency: 'daily',
+              backup_time: '02:00',
+              backup_retention_days: 30
+            }
+          };
         }
         this.loading = false;
       },
@@ -69,7 +88,10 @@ export class SystemSettingsComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.adminService.updateSystemSettings(this.activeTab, this.settings[this.activeTab]).subscribe({
+    // Ensure settings for the active tab exist
+    const settingsToSave = this.settings[this.activeTab] || {};
+
+    this.adminService.updateSystemSettings(this.activeTab, settingsToSave).subscribe({
       next: (response) => {
         this.successMessage = `${this.activeTab.charAt(0).toUpperCase() + this.activeTab.slice(1)} settings saved successfully`;
         setTimeout(() => this.successMessage = '', 3000);
@@ -77,6 +99,7 @@ export class SystemSettingsComponent implements OnInit {
       },
       error: (err) => {
         this.errorMessage = err.error?.message || err.error?.error || 'Failed to save settings';
+        console.error('Save settings error:', err);
         this.saving = false;
       }
     });
@@ -137,50 +160,63 @@ export class SystemSettingsComponent implements OnInit {
   }
 
   deleteBackup(filename: string): void {
-    if (!confirm(`Are you sure you want to delete backup: ${filename}?`)) {
-      return;
-    }
+    this.backupToDelete = filename;
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.backupToDelete = null;
+  }
+
+  confirmDeleteBackup(): void {
+    if (!this.backupToDelete) return;
+
+    this.deleting = true;
+    this.errorMessage = '';
     
-    this.adminService.deleteBackup(filename).subscribe({
+    this.adminService.deleteBackup(this.backupToDelete).subscribe({
       next: (response: any) => {
         this.successMessage = 'Backup deleted successfully';
         this.loadBackups();
         setTimeout(() => this.successMessage = '', 3000);
+        this.deleting = false;
+        this.closeDeleteModal();
       },
       error: (err: any) => {
         this.errorMessage = 'Failed to delete backup';
         console.error('Error deleting backup:', err);
+        this.deleting = false;
       }
     });
   }
 
   restoreBackup(filename: string): void {
-    const confirmMsg = `⚠️ WARNING: This will restore the database to the state of this backup.\n\n` +
-                       `All current data will be replaced with data from:\n${filename}\n\n` +
-                       `This action CANNOT be undone!\n\n` +
-                       `Are you absolutely sure you want to continue?`;
-    
-    if (!confirm(confirmMsg)) {
-      return;
-    }
-    
-    // Double confirmation for safety
-    if (!confirm('Final confirmation: Restore database from backup?')) {
-      return;
-    }
-    
-    this.loadingBackups = true;
+    this.backupToRestore = filename;
+    this.showRestoreModal = true;
+  }
+
+  closeRestoreModal(): void {
+    this.showRestoreModal = false;
+    this.backupToRestore = null;
+  }
+
+  confirmRestoreBackup(): void {
+    if (!this.backupToRestore) return;
+
+    this.restoring = true;
     this.errorMessage = '';
     this.successMessage = '';
-    
-    this.adminService.restoreBackup(filename).subscribe({
+
+    this.adminService.restoreBackup(this.backupToRestore).subscribe({
       next: (response: any) => {
-        this.loadingBackups = false;
+        this.restoring = false;
+        this.closeRestoreModal();
         this.successMessage = '✅ Database restored successfully! The page will reload in 3 seconds...';
         setTimeout(() => window.location.reload(), 3000);
       },
       error: (err: any) => {
-        this.loadingBackups = false;
+        this.restoring = false;
         this.errorMessage = 'Failed to restore backup. Please try again or restore manually.';
         console.error('Error restoring backup:', err);
       }
