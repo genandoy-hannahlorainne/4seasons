@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends BaseController
@@ -253,24 +254,40 @@ class AuthController extends BaseController
                 'new_password' => 'required|string|min:6|max:50'
             ]);
 
-            // Create notification for admin
-            \App\Models\Notification::create([
+            $user->load('role');
+            $roleName = $user->role?->role_name ?? 'User';
+            $fullName = $user->full_name ?? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+
+            // Prepare notification data
+            $notificationData = [
                 'user_id' => $user->user_id,
                 'channel' => 'System',
-                'message' => "{$user->first_name} {$user->last_name} ({$user->role->role_name}) has requested a password change.",
+                'message' => "{$fullName} ({$roleName}) has requested a password change.",
                 'status' => 'Pending',
                 'priority' => 'normal',
-                'notification_type' => 'password_change_request',
-                'request_data' => [
+            ];
+
+            // Add columns only if they exist (backward compatibility with older migrations)
+            if (Schema::hasColumn('notifications', 'notification_type')) {
+                $notificationData['notification_type'] = 'password_change_request';
+            }
+
+            if (Schema::hasColumn('notifications', 'request_data')) {
+                $notificationData['request_data'] = json_encode([
                     'user_id' => $user->user_id,
                     'username' => $user->username,
-                    'full_name' => trim($user->first_name . ' ' . $user->last_name),
-                    'role' => $user->role->role_name,
+                    'full_name' => $fullName,
+                    'role' => $roleName,
                     'reason' => $request->reason ?? 'No reason provided',
                     'new_password' => $request->new_password,
                     'requested_at' => now()->toISOString()
-                ]
-            ]);
+                ]);
+            } else {
+                $notificationData['message'] .= " Reason: " . ($request->reason ?? 'No reason provided');
+            }
+
+            // Create notification for admin
+            \App\Models\Notification::create($notificationData);
 
             return $this->sendResponse([
                 'message' => 'Password change request submitted successfully. An admin will process your request.'
@@ -279,6 +296,11 @@ class AuthController extends BaseController
         } catch (ValidationException $e) {
             return $this->sendValidationError($e->errors());
         } catch (\Exception $e) {
+            \Log::error('Password change request error', [
+                'user_id' => $request->user()?->user_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->sendError('Failed to submit password change request', [
                 'error' => $e->getMessage()
             ], 500);

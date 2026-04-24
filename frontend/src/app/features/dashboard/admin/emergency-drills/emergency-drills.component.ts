@@ -112,36 +112,38 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
         <ng-container *ngIf="activeTab === 'completed'">
           <div class="drill-card completed-card" *ngFor="let drill of completedDrills">
             <div class="drill-header">
-              <h3>{{ drill.drill_name }}</h3>
-              <span class="status-badge" [class]="'status-' + drill.status">
-                {{ drill.status | titlecase }}
-              </span>
-            </div>
-            <div class="drill-info">
-              <p><strong>Type:</strong> {{ drill.drill_type | titlecase }}</p>
-              <p><strong>Created:</strong> {{ drill.created_at | date:'short' }}</p>
-              <p *ngIf="drill.scheduled_at"><strong>Scheduled:</strong> {{ drill.scheduled_at | date:'short' }}</p>
-              <p *ngIf="drill.started_at"><strong>Started:</strong> {{ drill.started_at | date:'short' }}</p>
-              <p *ngIf="drill.ended_at"><strong>Ended:</strong> {{ drill.ended_at | date:'short' }}</p>
-              <p *ngIf="drill.description">{{ drill.description }}</p>
-            </div>
-            <div class="drill-stats" *ngIf="drill.statistics">
-              <div class="stat">
-                <span class="stat-value">{{ drill.statistics.total_participants || 0 }}</span>
-                <span class="stat-label">Participants</span>
+              <div class="drill-type-icon" [class]="'type-' + drill.drill_type">
+                <i class="fas" [class.fa-fire]="drill.drill_type === 'fire'"
+                               [class.fa-house-crack]="drill.drill_type === 'earthquake'"
+                               [class.fa-lock]="drill.drill_type === 'lockdown'"
+                               [class.fa-kit-medical]="drill.drill_type === 'medical'"
+                               [class.fa-person-running]="drill.drill_type === 'evacuation'"></i>
               </div>
-              <div class="stat" *ngIf="drill.statistics.scanned_participants">
-                <span class="stat-value">{{ drill.statistics.scanned_participants }}</span>
-                <span class="stat-label">Scanned</span>
+              <div class="drill-title-group">
+                <h3>{{ drill.drill_name }}</h3>
+                <span class="drill-type-label">{{ drill.drill_type | titlecase }} Drill · {{ drill.created_at | date:'MMM d, y' }}</span>
               </div>
-              <div class="stat" *ngIf="drill.statistics.average_response_time">
-                <span class="stat-value">{{ drill.statistics.average_response_time | number:'1.0-1' }}s</span>
-                <span class="stat-label">Avg Response</span>
+              <span class="status-badge status-completed">Completed</span>
+            </div>
+
+            <div class="drill-stats-row" *ngIf="drill.statistics">
+              <div class="stat-pill">
+                <span class="stat-pill-value">{{ drill.statistics.total_participants || 0 }}</span>
+                <span class="stat-pill-label"><i class="fas fa-users"></i> Participants</span>
+              </div>
+              <div class="stat-pill" *ngIf="drill.statistics.scanned_participants">
+                <span class="stat-pill-value">{{ drill.statistics.scanned_participants }}</span>
+                <span class="stat-pill-label"><i class="fas fa-qrcode"></i> Scanned</span>
+              </div>
+              <div class="stat-pill" *ngIf="drill.statistics.average_response_time">
+                <span class="stat-pill-value">{{ drill.statistics.average_response_time | number:'1.0-1' }}s</span>
+                <span class="stat-pill-label"><i class="fas fa-stopwatch"></i> Avg Response</span>
               </div>
             </div>
+
             <div class="drill-actions">
-              <button class="btn btn-sm btn-outline" (click)="viewDrill(drill.id)">
-                <i class="fas fa-eye"></i> View
+              <button class="btn btn-view-details" (click)="viewDrill(drill.id)">
+                <i class="fas fa-eye"></i> View Details
               </button>
             </div>
           </div>
@@ -698,6 +700,129 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       &:hover {
         background: #dee2e6;
         transform: translateY(-2px);
+      }
+    }
+
+    /* Completed Card - Option B style */
+    .completed-card {
+      border-left: none !important;
+      background: white !important;
+      border-radius: 12px !important;
+      padding: 1.25rem !important;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08) !important;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      .drill-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0;
+      }
+
+      .drill-type-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        i { font-size: 1.2rem; color: white; }
+
+        &.type-fire { background: linear-gradient(135deg, #ef4444, #f97316); }
+        &.type-earthquake { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        &.type-lockdown { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+        &.type-medical { background: linear-gradient(135deg, #10b981, #059669); }
+        &.type-evacuation { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+      }
+
+      .drill-title-group {
+        flex: 1;
+        min-width: 0;
+
+        h3 {
+          margin: 0 0 2px;
+          font-size: 1rem;
+          font-weight: 700;
+          color: #1e293b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .drill-type-label {
+          font-size: 0.78rem;
+          color: #94a3b8;
+        }
+      }
+
+      .drill-stats-row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .stat-pill {
+        flex: 1;
+        min-width: 70px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        text-align: center;
+
+        .stat-pill-value {
+          display: block;
+          font-size: 1.4rem;
+          font-weight: 700;
+          color: #1e293b;
+          line-height: 1.2;
+        }
+
+        .stat-pill-label {
+          font-size: 0.7rem;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.25rem;
+          margin-top: 2px;
+
+          i { font-size: 0.65rem; }
+        }
+      }
+
+      .drill-actions {
+        margin-top: 0;
+      }
+
+      .btn-view-details {
+        width: 100%;
+        justify-content: center;
+        padding: 0.55rem 1rem;
+        border-radius: 8px;
+        border: 2px solid #7b1fa2;
+        background: white;
+        color: #7b1fa2;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+
+        &:hover {
+          background: #7b1fa2;
+          color: white;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(123, 31, 162, 0.25);
+        }
       }
     }
   `]
