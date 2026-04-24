@@ -143,7 +143,7 @@ interface GradeLevel {
                 <td>{{ section.capacity }}</td>
                 <td>
                   <span class="enrollment-badge" [class.full]="section.current_enrollment >= section.capacity">
-                    {{ section.current_enrollment }} / {{ section.capacity }}
+                    {{ section.current_enrollment }}
                   </span>
                 </td>
                 <td>
@@ -197,19 +197,16 @@ interface GradeLevel {
               </p>
             </div>
 
-            <div class="form-group">
-              <label>Select Adviser:</label>
-              <select [(ngModel)]="selectedAdviserId" class="form-select">
-                <option [value]="null">-- Select Adviser --</option>
-                <option *ngFor="let adviser of advisers" [value]="adviser.user_id">
-                  {{ adviser.full_name }} ({{ adviser.employee_id }})
-                </option>
-              </select>
-            </div>
-
             <div class="adviser-list">
-              <h4>Available Advisers:</h4>
-              <div *ngFor="let adviser of advisers" class="adviser-item"
+              <div class="adviser-filter">
+                <label>Filter by Grade Level:</label>
+                <select [(ngModel)]="adviserSearchGrade" class="form-select">
+                  <option [value]="null">All Grade Levels</option>
+                  <option *ngFor="let grade of gradeLevels" [value]="grade.id">{{ grade.level_name }}</option>
+                </select>
+              </div>
+              <h4>Available Advisers: <span class="adviser-count">{{ filteredAdvisers.length }}</span></h4>
+              <div *ngFor="let adviser of filteredAdvisers" class="adviser-item"
                    [class.selected]="selectedAdviserId === adviser.user_id"
                    (click)="selectedAdviserId = adviser.user_id">
                 <div class="adviser-info">
@@ -227,12 +224,52 @@ interface GradeLevel {
                   </span>
                 </div>
               </div>
+              <div *ngIf="filteredAdvisers.length === 0" class="no-advisers">
+                No advisers found for selected grade level.
+              </div>
             </div>
           </div>
           <div class="modal-footer">
             <button class="btn-cancel" (click)="closeAssignModal()">Cancel</button>
             <button class="btn-save" (click)="assignAdviser()" [disabled]="!selectedAdviserId || saving">
               {{ saving ? 'Assigning...' : 'Assign Adviser' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remove Adviser Confirmation Modal -->
+      <div *ngIf="showRemoveAdviserModal" class="modal-overlay" (click)="closeRemoveAdviserModal()">
+        <div class="modal-content confirm-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Remove Adviser</h3>
+            <button class="close-btn" (click)="closeRemoveAdviserModal()">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="confirm-icon">
+              <i class="fa-solid fa-user-minus"></i>
+            </div>
+            <p class="confirm-message">Are you sure you want to remove the adviser from this section?</p>
+            <div class="confirm-details">
+              <div class="confirm-detail-item">
+                <span class="detail-label">Section</span>
+                <span class="detail-value">{{ sectionToRemoveAdviser?.level_name }} - {{ sectionToRemoveAdviser?.section_name }}</span>
+              </div>
+              <div class="confirm-detail-item">
+                <span class="detail-label">Adviser</span>
+                <span class="detail-value">{{ sectionToRemoveAdviser?.adviser_name }}</span>
+              </div>
+            </div>
+            <p class="confirm-warning">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              This section will be marked as unassigned.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeRemoveAdviserModal()">Cancel</button>
+            <button class="btn-danger" (click)="confirmRemoveAdviser()" [disabled]="saving">
+              <i class="fa-solid fa-user-minus"></i>
+              {{ saving ? 'Removing...' : 'Remove Adviser' }}
             </button>
           </div>
         </div>
@@ -677,7 +714,7 @@ interface GradeLevel {
       background: white;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      overflow: hidden;
+      overflow: visible;
     }
 
     .sections-header {
@@ -701,7 +738,7 @@ interface GradeLevel {
       }
 
       .btn-create-section {
-        background: #3498db;
+        background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
         color: white;
         border: none;
         padding: 0.75rem 1.5rem;
@@ -713,16 +750,15 @@ interface GradeLevel {
         gap: 0.5rem;
         transition: all 0.2s ease;
         white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
 
         &:hover {
-          background: #2980b9;
+          background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+          box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
         }
 
-        i {
-          font-size: 1rem;
-        }
+        i { font-size: 1rem; }
       }
 
       .stats {
@@ -758,6 +794,7 @@ interface GradeLevel {
             font-weight: 600;
             color: #2c3e50;
             border-bottom: 2px solid #e9ecef;
+            white-space: nowrap;
           }
         }
 
@@ -777,6 +814,8 @@ interface GradeLevel {
             td {
               padding: 1rem;
               color: #2c3e50;
+              white-space: nowrap;
+              vertical-align: middle;
             }
           }
         }
@@ -789,6 +828,8 @@ interface GradeLevel {
         color: #2e7d32;
         font-weight: 500;
         font-size: 0.9rem;
+        white-space: nowrap;
+        display: inline-block;
 
         &.full {
           background: #ffebee;
@@ -1051,11 +1092,67 @@ interface GradeLevel {
       }
 
       .adviser-list {
+        .adviser-filter {
+          background: linear-gradient(135deg, rgba(5, 35, 85, 0.04) 0%, rgba(83, 129, 178, 0.06) 100%);
+          border: 1.5px solid #d0dff0;
+          border-radius: 10px;
+          padding: 1rem 1.25rem;
+          margin-bottom: 1.25rem;
+
+          label {
+            display: block;
+            font-weight: 700;
+            color: #052355;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.01em;
+          }
+
+          .form-select {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            border: 2px solid #c5d8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #2c3e50;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+
+            &:focus {
+              outline: none;
+              border-color: #052355;
+            }
+          }
+        }
+
         h4 {
-          font-size: 1.1rem;
+          font-size: 1rem;
           color: #2c3e50;
           margin-bottom: 1rem;
           font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          .adviser-count {
+            background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+            color: #fff;
+            border-radius: 12px;
+            padding: 0.15rem 0.65rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+          }
+        }
+
+        .no-advisers {
+          text-align: center;
+          padding: 2rem 1.5rem;
+          color: #7f8c8d;
+          font-size: 0.95rem;
+          background: #f8f9fa;
+          border-radius: 8px;
+          border: 1.5px dashed #dee2e6;
         }
 
         .adviser-item {
@@ -1157,6 +1254,97 @@ interface GradeLevel {
           background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
           box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
         }
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 2px 8px rgba(192, 57, 43, 0.2);
+
+        &:hover:not(:disabled) {
+          background: linear-gradient(135deg, #a93226 0%, #cb4335 100%);
+          box-shadow: 0 4px 12px rgba(192, 57, 43, 0.35);
+        }
+      }
+    }
+
+    .confirm-modal {
+      max-width: 440px;
+
+      .confirm-icon {
+        text-align: center;
+        margin-bottom: 1rem;
+
+        i {
+          font-size: 2rem;
+          color: #e74c3c;
+          background: #fdecea;
+          width: 72px;
+          height: 72px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          overflow: hidden;
+        }
+      }
+
+      .confirm-message {
+        text-align: center;
+        font-size: 1.05rem;
+        color: #2c3e50;
+        font-weight: 500;
+        margin-bottom: 1.25rem;
+      }
+
+      .confirm-details {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+
+        .confirm-detail-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+
+          .detail-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+          }
+
+          .detail-value {
+            font-size: 0.95rem;
+            color: #2c3e50;
+            font-weight: 600;
+            text-align: right;
+          }
+        }
+      }
+
+      .confirm-warning {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #fff8e1;
+        border-left: 4px solid #f39c12;
+        border-radius: 6px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        color: #856404;
+
+        i { color: #f39c12; }
       }
     }
 
@@ -1381,6 +1569,12 @@ interface GradeLevel {
         padding: 1.25rem;
         gap: 0.75rem;
         h1 { font-size: 1.4rem; }
+        p { font-size: 0.95rem; }
+      }
+
+      .school-year-selector {
+        padding: 1rem;
+        margin-bottom: 1rem;
       }
 
       .selector-header {
@@ -1392,30 +1586,51 @@ interface GradeLevel {
         flex-direction: column;
         align-items: flex-start;
         width: 100%;
+        gap: 0.75rem;
 
+        label { font-size: 1rem; }
         .form-select, .btn-create-year { width: 100%; }
       }
 
       .selector-right {
         width: 100%;
-        .btn-set-current { width: 100%; justify-content: center; }
+        .btn-set-current, .current-badge { width: 100%; justify-content: center; }
+      }
+
+      .current-year-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+      }
+
+      .sections-container {
+        border-radius: 8px;
       }
 
       .sections-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
+        padding: 1rem;
+
+        h2 { font-size: 1.2rem; }
 
         .header-actions {
           width: 100%;
           flex-direction: column;
+          gap: 0.75rem;
           .btn-create-section { width: 100%; justify-content: center; }
         }
 
-        .stats { flex-wrap: wrap; }
+        .stats {
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
       }
 
       .sections-table {
+        padding: 0.75rem;
         font-size: 0.8rem;
         th, td { padding: 8px 10px; }
       }
@@ -1431,10 +1646,53 @@ interface GradeLevel {
         button { flex: 1; min-width: 60px; justify-content: center; }
       }
 
+      .modal-overlay {
+        padding: 0.5rem;
+      }
+
       .modal-content {
-        padding: 20px;
-        margin: 1rem;
-        max-width: calc(100% - 2rem);
+        padding: 1rem;
+        margin: 0.5rem;
+        max-width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .school-year-management { padding: 0.75rem; }
+
+      .page-header {
+        padding: 1rem;
+        h1 { font-size: 1.2rem; }
+        p { font-size: 0.85rem; }
+      }
+
+      .school-year-selector {
+        padding: 0.75rem;
+      }
+
+      .sections-header {
+        padding: 0.75rem;
+        h2 { font-size: 1.1rem; }
+      }
+
+      .sections-table {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+        th, td { padding: 6px 8px; }
+      }
+
+      .stats {
+        gap: 0.75rem;
+        .stat { font-size: 0.85rem; }
+      }
+
+      .action-buttons {
+        button {
+          font-size: 0.75rem;
+          padding: 0.35rem 0.5rem;
+        }
       }
     }
   `]
@@ -1448,8 +1706,20 @@ export class SchoolYearManagementComponent implements OnInit {
   selectedSchoolYearId: number | null = null;
   selectedSection: Section | null = null;
   selectedAdviserId: number | null = null;
+  adviserSearchGrade: number | null = null;
+
+  get filteredAdvisers(): Adviser[] {
+    if (!this.adviserSearchGrade) return this.advisers;
+    return this.advisers.filter(a => {
+      const assignedSections = this.getAdviserSections(a.user_id);
+      if (assignedSections.length === 0) return true; // unassigned — always show
+      return assignedSections.some(s => s.grade_level_id === Number(this.adviserSearchGrade));
+    });
+  }
 
   showAssignModal = false;
+  showRemoveAdviserModal = false;
+  sectionToRemoveAdviser: Section | null = null;
   showCreateYearModal = false;
   showCreateSectionModal = false;
   showStudentsModal = false;
@@ -1572,6 +1842,7 @@ export class SchoolYearManagementComponent implements OnInit {
   openAssignModal(section: Section): void {
     this.selectedSection = section;
     this.selectedAdviserId = section.adviser_id;
+    this.adviserSearchGrade = null;
     this.showAssignModal = true;
   }
 
@@ -1611,14 +1882,23 @@ export class SchoolYearManagementComponent implements OnInit {
   }
 
   removeAdviser(section: Section): void {
-    if (!confirm(`Remove adviser from ${section.level_name} - ${section.section_name}?`)) return;
+    this.sectionToRemoveAdviser = section;
+    this.showRemoveAdviserModal = true;
+  }
 
-    const data = {
+  closeRemoveAdviserModal(): void {
+    this.showRemoveAdviserModal = false;
+    this.sectionToRemoveAdviser = null;
+  }
+
+  confirmRemoveAdviser(): void {
+    if (!this.sectionToRemoveAdviser) return;
+    const section = this.sectionToRemoveAdviser;
+
+    this.http.post<any>(`${environment.apiUrl}/admin/sections/assign-adviser`, {
       section_id: section.id,
       adviser_user_id: null
-    };
-
-    this.http.post<any>(`${environment.apiUrl}/admin/sections/assign-adviser`, data).subscribe({
+    }).subscribe({
       next: (response) => {
         if (response.success) {
           this.showMessage('Adviser removed successfully', 'success');
@@ -1626,10 +1906,12 @@ export class SchoolYearManagementComponent implements OnInit {
         } else {
           this.showMessage(response.message || 'Error removing adviser', 'error');
         }
+        this.closeRemoveAdviserModal();
       },
       error: (err) => {
         console.error('Error removing adviser:', err);
         this.showMessage('Error removing adviser', 'error');
+        this.closeRemoveAdviserModal();
       }
     });
   }
