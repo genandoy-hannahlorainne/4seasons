@@ -1,5 +1,57 @@
 /* Multi-Step SHDF Form - Modern Design */
 
+.page-backdrop {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background-image: url('/assets/pdmhs-background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: rgba(83, 129, 178, 0.9);
+  background-blend-mode: multiply;
+  padding: 2rem 1rem;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 780px;
+  padding: 2.5rem;
+  margin: auto;
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-logo {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  font-family: 'Epilogue', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #052355;
+  margin: 0 0 0.4rem;
+}
+
+.modal-subtitle {
+  font-family: 'Albert Sans', sans-serif;
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0;
+}
+
 .multistep-form-container {
   max-width: 100%;
   margin: 0;
@@ -93,10 +145,9 @@
 
 /* Form Steps */
 .form-step {
-  background: white;
-  border-radius: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   border: 1px solid #e2e8f0;
   animation: fadeIn 0.4s ease;
 }
@@ -122,8 +173,11 @@
   border-image: linear-gradient(90deg, #052355 0%, #5381b2 100%);
   border-image-slice: 1;
 
-  .step-icon {
-    font-size: 2.5rem;
+  .step-icon-img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    flex-shrink: 0;
   }
 
   h2 {
@@ -482,8 +536,39 @@ input[type="file"] {
   }
 }
 
+/* Other Info Grid */
+.other-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.other-info-item {
+  .other-info-label {
+    display: block;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.9375rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+  .modal-card {
+    padding: 1.75rem 1.25rem;
+    border-radius: 10px;
+  }
+
+  .modal-title {
+    font-size: 1.4rem;
+  }
+
+  .modal-logo {
+    width: 60px;
+    height: 60px;
+  }
+
   .form-grid {
     grid-template-columns: 1fr;
   }

@@ -114,7 +114,7 @@ export class LoginComponent implements OnInit {
         };
         
         const route = roleRoutes[user.role_name] || '/dashboard/student';
-        this.router.navigate([route]);
+        this.router.navigate([route], { replaceUrl: true });
       },
       error: (err) => {
         this.loading = false;

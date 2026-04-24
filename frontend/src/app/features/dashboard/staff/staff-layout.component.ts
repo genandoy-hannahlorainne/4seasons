@@ -116,7 +116,7 @@ export class StaffLayoutComponent implements OnInit {
     this.loggingOut = true;
     this.authService.logout();
     setTimeout(() => {
-      this.router.navigate(['/role-selection']);
+      window.location.replace('/role-selection');
     }, 800);
   }
 }
