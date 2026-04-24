@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, Router } from '@angular/router';
 import { StudentService } from '../../../core/services/student.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { SHDFService, SHDFStatus } from '../../shdf/shdf.service';
 
 @Component({
   selector: 'app-student-layout',
@@ -46,7 +47,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <button class="nav-item notification" (click)="toggleNotifications($event)" title="Notifications">
             <img src="assets/icons/notification.png" class="nav-icon" alt="Notifications">
             <span class="nav-label">Notifications</span>
-            <span *ngIf="showIncompleteFormNotification" class="notif-count">1</span>
+            <span *ngIf="notificationCount > 0" class="notif-count">{{ notificationCount }}</span>
           </button>
           <button class="nav-item" (click)="toggleBadges($event)" title="Badges">
             <img src="assets/icons/badge.png" class="nav-icon" alt="Badges">
@@ -80,39 +81,68 @@ import { AuthService } from '../../../core/services/auth.service';
           <div class="panel-header">
             <div class="panel-title-row">
               <h3 class="panel-title">Notifications</h3>
-              <span *ngIf="showIncompleteFormNotification" class="notif-badge">1</span>
+              <span *ngIf="notificationCount > 0" class="notif-badge">{{ notificationCount }}</span>
             </div>
             <button class="panel-close" (click)="showNotificationsPanel = false" title="Close">
               <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
-          
+
           <div class="panel-body">
-            <!-- Medical Form Incomplete Notification -->
-            <div *ngIf="showIncompleteFormNotification" class="notification-card unread">
+            <!-- SHDF Not Started Notification -->
+            <div *ngIf="shdfNotification === 'not_started'" class="notification-card unread">
               <div class="notification-header">
                 <div class="notification-icon-wrapper warning">
                   <i class="fa-solid fa-clipboard-list"></i>
                 </div>
                 <div class="notification-meta">
-                  <span class="notification-time">Just now</span>
+                  <span class="notification-time">Action Required</span>
                   <span class="unread-dot"></span>
                 </div>
               </div>
               <div class="notification-content">
-                <h4 class="notification-title">Complete Your Medical Information</h4>
-                <p class="notification-message">{{ incompleteFormMessage }}</p>
+                <h4 class="notification-title">Complete Your Health Data Form</h4>
+                <p class="notification-message">Please fill out your Student Health Data Form (SHDF). This is required for your health records.</p>
                 <div class="notification-actions">
-                  <button class="btn-action primary" (click)="completeForm()">
+                  <button class="btn-action primary" (click)="goToSHDF()">
                     <i class="fa-solid fa-pen-to-square"></i>
-                    Complete Form
+                    Fill Out SHDF
                   </button>
                 </div>
               </div>
             </div>
 
-            <!-- Empty State -->
-            <div *ngIf="!showIncompleteFormNotification" class="empty-state">
+            <!-- SHDF Comprehensive Pending Notification -->
+            <div *ngIf="shdfNotification === 'comprehensive_pending'" class="notification-card unread" [class.urgent]="shdfDaysRemaining <= 1">
+              <div class="notification-header">
+                <div class="notification-icon-wrapper" [class.warning]="shdfDaysRemaining > 1" [class.danger]="shdfDaysRemaining <= 1">
+                  <i class="fa-solid fa-clock"></i>
+                </div>
+                <div class="notification-meta">
+                  <span class="notification-time" [class.text-danger]="shdfDaysRemaining <= 1">
+                    {{ shdfDaysRemaining <= 0 ? 'Overdue!' : shdfDaysRemaining + ' day(s) left' }}
+                  </span>
+                  <span class="unread-dot"></span>
+                </div>
+              </div>
+              <div class="notification-content">
+                <h4 class="notification-title">Complete Your SHDF - Comprehensive Form</h4>
+                <p class="notification-message">
+                  You completed the basic form. Please complete the comprehensive SHDF within
+                  <strong>{{ shdfDaysRemaining <= 0 ? 'the deadline (overdue)' : shdfDaysRemaining + ' day(s)' }}</strong>.
+                  Deadline: {{ shdfDeadline | date:'MMM d, yyyy' }}
+                </p>
+                <div class="notification-actions">
+                  <button class="btn-action primary" (click)="goToSHDF()">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    Complete Now
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State - SHDF fully completed -->
+            <div *ngIf="shdfNotification === 'none'" class="empty-state">
               <div class="empty-icon">
                 <i class="fa-solid fa-bell-slash"></i>
               </div>
@@ -135,7 +165,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
-          
+
           <div class="panel-body">
             <!-- Loading State -->
             <div *ngIf="notificationsLoading" class="loading-state">
@@ -210,15 +240,22 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
       </div>
 
-      <!-- Incomplete Medical Form Modal -->
+      <!-- SHDF Reminder Modal (shown once per session) -->
       <div *ngIf="showIncompleteFormModal" class="modal-overlay" (click)="closeIncompleteFormModal()">
         <div class="incomplete-form-modal" (click)="$event.stopPropagation()">
-          <div class="modal-icon warning">
+          <div class="modal-icon" [class.warning]="shdfNotification === 'not_started'" [class.danger]="shdfDaysRemaining <= 1">
             <i class="fa-solid fa-clipboard-list"></i>
           </div>
-          <h2>Complete Your Medical Information</h2>
-          <p class="modal-description">{{ incompleteFormMessage }}</p>
-          <p class="modal-note">Completing your medical information helps us provide better healthcare services.</p>
+          <h2>{{ shdfNotification === 'not_started' ? 'Complete Your Health Data Form' : 'SHDF Deadline Reminder' }}</h2>
+          <p class="modal-description">
+            <ng-container *ngIf="shdfNotification === 'not_started'">
+              Please fill out your Student Health Data Form (SHDF). This is required for your health records and QR code generation.
+            </ng-container>
+            <ng-container *ngIf="shdfNotification === 'comprehensive_pending'">
+              You have <strong>{{ shdfDaysRemaining <= 0 ? 'passed the deadline' : shdfDaysRemaining + ' day(s) remaining' }}</strong> to complete your comprehensive SHDF form.
+              Deadline: <strong>{{ shdfDeadline | date:'MMMM d, yyyy' }}</strong>
+            </ng-container>
+          </p>
           <div class="modal-actions">
             <button class="btn-secondary" (click)="closeIncompleteFormModal()">Later</button>
             <button class="btn-primary" (click)="completeFormFromModal()">Complete Now</button>
@@ -243,33 +280,40 @@ export class StudentLayoutComponent implements OnInit {
   activeBadge: any = null;
   popupBadgeKey: string | null = null;
   isFirstBadgeSyncDone = false;
-  
-  // Medical form notification
+
+  // SHDF notification state
+  shdfNotification: 'not_started' | 'comprehensive_pending' | 'none' = 'none';
+  shdfDaysRemaining = 0;
+  shdfDeadline: Date | null = null;
+  notificationCount = 0;
+  showIncompleteFormModal = false;
+
+  // Keep for backward compat (used in old modal template)
   showIncompleteFormNotification = false;
   incompleteFormMessage = '';
-  showIncompleteFormModal = false;
 
   constructor(
     private studentService: StudentService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private shdService: SHDFService
   ) {}
 
   ngOnInit(): void {
     this.loadBadgeNotifications();
-    this.checkMedicalFormCompletionAndShowModal();
+    this.checkSHDFStatus();
   }
 
-  toggleSidebar(): void { 
-    this.isCollapsed = !this.isCollapsed; 
+  toggleSidebar(): void {
+    this.isCollapsed = !this.isCollapsed;
   }
-  
-  openMobile(): void { 
-    this.mobileOpen = true; 
+
+  openMobile(): void {
+    this.mobileOpen = true;
   }
-  
-  closeMobile(): void { 
-    this.mobileOpen = false; 
+
+  closeMobile(): void {
+    this.mobileOpen = false;
   }
 
   logout(): void {
@@ -434,84 +478,59 @@ export class StudentLayoutComponent implements OnInit {
     return `student_badges_${type}_${studentId}`;
   }
 
-  checkMedicalFormCompletion(): void {
+  checkSHDFStatus(): void {
     const currentUser = this.authService.currentUserValue;
-    if (!currentUser?.user_id) return;
+    const studentId = currentUser?.student_info?.student_id;
+    if (!studentId) return;
 
-    this.studentService.getStudentMedicalData(currentUser.user_id).subscribe({
-      next: (response) => {
-        if (response.success && response.data?.personal_info) {
-          const personalInfo = response.data.personal_info;
-          const missingFields: string[] = [];
-
-          // Check required fields
-          if (!personalInfo.address) missingFields.push('Contact Information (Address)');
-          if (!personalInfo.medical_history || personalInfo.medical_history.length === 0) {
-            missingFields.push('Medical History');
+    this.shdService.getStatus(studentId).subscribe({
+      next: (status: SHDFStatus) => {
+        if (status.is_fully_compliant) {
+          this.shdfNotification = 'none';
+          this.notificationCount = 0;
+        } else if (status.basic_completed && !status.comprehensive_completed) {
+          this.shdfNotification = 'comprehensive_pending';
+          this.notificationCount = 1;
+          if (status.comprehensive_deadline) {
+            this.shdfDeadline = new Date(status.comprehensive_deadline);
+            const diff = this.shdfDeadline.getTime() - new Date().getTime();
+            this.shdfDaysRemaining = Math.ceil(diff / (1000 * 60 * 60 * 24));
           }
-
-          // Show notification if any fields are missing
-          if (missingFields.length > 0) {
-            this.showIncompleteFormNotification = true;
-            this.incompleteFormMessage = `Please complete your Personal Medical Information Form. Missing: ${missingFields.join(', ')}`;
-          } else {
-            this.showIncompleteFormNotification = false;
-          }
+          this.showModalOnce(currentUser!.user_id);
+        } else {
+          this.shdfNotification = 'not_started';
+          this.notificationCount = 1;
+          this.showModalOnce(currentUser!.user_id);
         }
       },
       error: () => {
-        // Silently fail - don't show error for this check
+        this.shdfNotification = 'not_started';
+        this.notificationCount = 1;
+        const u = this.authService.currentUserValue;
+        if (u?.user_id) this.showModalOnce(u.user_id);
       }
     });
   }
 
-  checkMedicalFormCompletionAndShowModal(): void {
-    const currentUser = this.authService.currentUserValue;
-    if (!currentUser?.user_id) return;
-
-    // Check if modal was already shown in this session
-    const modalShownKey = `medical_form_modal_shown_${currentUser.user_id}`;
-    const modalShown = sessionStorage.getItem(modalShownKey);
-
-    if (modalShown) {
-      // Just update notification, don't show modal again
-      this.checkMedicalFormCompletion();
-      return;
+  private showModalOnce(userId: number): void {
+    const key = `shdf_modal_shown_${userId}`;
+    if (!sessionStorage.getItem(key)) {
+      this.showIncompleteFormModal = true;
+      sessionStorage.setItem(key, 'true');
     }
+  }
 
-    this.studentService.getStudentMedicalData(currentUser.user_id).subscribe({
-      next: (response) => {
-        if (response.success && response.data?.personal_info) {
-          const personalInfo = response.data.personal_info;
-          const missingFields: string[] = [];
-
-          // Check required fields
-          if (!personalInfo.address) missingFields.push('Contact Information (Address)');
-          if (!personalInfo.medical_history || personalInfo.medical_history.length === 0) {
-            missingFields.push('Medical History');
-          }
-
-          // Show notification and modal if any fields are missing
-          if (missingFields.length > 0) {
-            this.showIncompleteFormNotification = true;
-            this.incompleteFormMessage = `Please complete your Personal Medical Information Form. Missing: ${missingFields.join(', ')}`;
-            
-            // Show modal on first login
-            this.showIncompleteFormModal = true;
-            sessionStorage.setItem(modalShownKey, 'true');
-          } else {
-            this.showIncompleteFormNotification = false;
-          }
-        }
-      },
-      error: () => {
-        // Silently fail - don't show error for this check
-      }
-    });
+  goToSHDF(): void {
+    this.showNotificationsPanel = false;
+    const currentUser = this.authService.currentUserValue;
+    const studentId = currentUser?.student_info?.student_id;
+    if (studentId) {
+      this.router.navigate(['/shdf', studentId, 'basic']);
+    }
   }
 
   dismissNotification(): void {
-    this.showIncompleteFormNotification = false;
+    this.notificationCount = 0;
   }
 
   closeIncompleteFormModal(): void {
@@ -519,12 +538,11 @@ export class StudentLayoutComponent implements OnInit {
   }
 
   completeForm(): void {
-    this.showNotificationsPanel = false;
-    this.router.navigate(['/shdf', 'basic']);
+    this.goToSHDF();
   }
 
   completeFormFromModal(): void {
     this.showIncompleteFormModal = false;
-    this.router.navigate(['/shdf', 'basic']);
+    this.goToSHDF();
   }
 }

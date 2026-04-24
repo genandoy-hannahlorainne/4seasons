@@ -100,7 +100,6 @@ import { AdviserService } from '../../../../core/services/adviser.service';
           <!-- Account Card -->
           <div class="others-card card">
             <div class="card-title">Account</div>
-            <button type="button" class="other-link" (click)="changePassword()">Change Password</button>
             <button type="button" class="other-link" (click)="requestPasswordChange()">Request Password Reset from Admin</button>
             <button type="button" class="other-link" (click)="openEditModal()">Update Information</button>
           </div>
@@ -119,6 +118,14 @@ import { AdviserService } from '../../../../core/services/adviser.service';
         <div class="modal-error" *ngIf="editError">{{ editError }}</div>
 
         <div class="form-group">
+          <label>Employee ID</label>
+          <input type="text" [(ngModel)]="editForm.employeeId" class="form-control" placeholder="Enter employee ID">
+        </div>
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input type="date" [(ngModel)]="editForm.birthDate" class="form-control">
+        </div>
+        <div class="form-group">
           <label>Email Address *</label>
           <input type="email" [(ngModel)]="editForm.email" class="form-control" placeholder="Enter email address">
         </div>
@@ -132,36 +139,6 @@ import { AdviserService } from '../../../../core/services/adviser.service';
           <button class="btn btn-primary" (click)="saveProfile()" [disabled]="saving">
             {{ saving ? 'Saving...' : 'Save Changes' }}
           </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Change Password Modal -->
-    <div class="modal-overlay" *ngIf="showPasswordModal" (click)="closePasswordModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <button class="close-btn" (click)="closePasswordModal()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-        <h3>Change Password</h3>
-
-        <div class="modal-error" *ngIf="passwordError">{{ passwordError }}</div>
-
-        <div class="form-group">
-          <label>Current Password *</label>
-          <input type="password" [(ngModel)]="passwordForm.currentPassword" class="form-control" placeholder="Enter current password">
-        </div>
-        <div class="form-group">
-          <label>New Password *</label>
-          <input type="password" [(ngModel)]="passwordForm.newPassword" class="form-control" placeholder="Min 6 characters">
-        </div>
-        <div class="form-group">
-          <label>Confirm Password *</label>
-          <input type="password" [(ngModel)]="passwordForm.confirmPassword" class="form-control" placeholder="Re-enter new password">
-        </div>
-
-        <div class="modal-actions">
-          <button class="btn btn-secondary" (click)="closePasswordModal()">Cancel</button>
-          <button class="btn btn-primary" (click)="submitPasswordChange()">Change Password</button>
         </div>
       </div>
     </div>
@@ -205,14 +182,10 @@ import { AdviserService } from '../../../../core/services/adviser.service';
 export class AdviserProfileComponent implements OnInit {
   editMode = false;
   showEditModal = false;
-  showPasswordModal = false;
   showRequestPasswordModal = false;
   showLogoutModal = false;
   saving = false;
   submittingRequest = false;
-  passwordLoading = false;
-  passwordError = '';
-  passwordSuccess = '';
   editError = '';
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
@@ -223,18 +196,12 @@ export class AdviserProfileComponent implements OnInit {
     email: '',
     phone: '',
     advisoryClass: '',
-    birthDate: '',
-    employeeId: '',
+    birthDate: 'Loading...',
+    employeeId: 'Loading...',
     avatar: 'assets/user-female.png'
   };
 
-  editForm = { email: '', phone: '' };
-
-  passwordForm = {
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  };
+  editForm = { email: '', phone: '', employeeId: '', birthDate: '' };
 
   passwordRequestReason = '';
   passwordRequestNewPassword = '';
@@ -257,30 +224,53 @@ export class AdviserProfileComponent implements OnInit {
       this.profileData.fullName = currentUser.full_name || 'Adviser';
       this.profileData.email = currentUser.email || '';
       this.profileData.phone = currentUser.phone || '';
-      this.profileData.birthDate = (currentUser as any).birth_date || 'Not set';
-      this.profileData.employeeId = (currentUser as any).employee_id || 'Not set';
+      // Get employee_id from adviser_info (always available from /me endpoint)
+      const adviserInfo = (currentUser as any).adviser_info;
+      if (adviserInfo?.employee_id) {
+        this.profileData.employeeId = adviserInfo.employee_id;
+      }
 
       this.adviserService.getAdviserProfile().subscribe({
         next: (response: any) => {
+          console.log('Adviser Profile API Response:', response);
           if (response.success && response.data) {
             const profile = response.data;
+            console.log('Profile Data:', profile);
+            console.log('Employee ID from API:', profile.employee_id);
+            console.log('Birth Date from API:', profile.birth_date);
+
             this.profileData.advisoryClass = profile.advisory_class || 'Not assigned';
             this.profileData.fullName = profile.full_name || this.profileData.fullName;
             this.profileData.email = profile.email || this.profileData.email;
             this.profileData.phone = profile.phone || this.profileData.phone;
-            this.profileData.birthDate = profile.birth_date || this.profileData.birthDate;
-            this.profileData.employeeId = profile.employee_id || this.profileData.employeeId;
+            this.profileData.birthDate = profile.birth_date ? profile.birth_date : 'Not set';
+            // Check employee_id directly, or from adviser_info, or fallback to employee_number
+            const empId = profile.employee_id
+              || profile.adviser_info?.employee_id
+              || profile.employee_number
+              || this.profileData.employeeId;
+            this.profileData.employeeId = (empId && empId !== 'Loading...') ? empId : 'Not set';
+
+            console.log('Profile Data After Update:', this.profileData);
           }
         },
-        error: () => {
+        error: (err) => {
+          console.error('Error loading adviser profile:', err);
           this.profileData.advisoryClass = 'Not assigned';
+          this.profileData.birthDate = 'Not set';
+          this.profileData.employeeId = 'Not set';
         }
       });
     }
   }
 
   openEditModal(): void {
-    this.editForm = { email: this.profileData.email, phone: this.profileData.phone };
+    this.editForm = {
+      email: this.profileData.email,
+      phone: this.profileData.phone,
+      employeeId: this.profileData.employeeId,
+      birthDate: this.profileData.birthDate
+    };
     this.editError = '';
     this.showEditModal = true;
   }
@@ -309,7 +299,9 @@ export class AdviserProfileComponent implements OnInit {
     const updates = {
       full_name: this.profileData.fullName,
       email: this.editForm.email,
-      phone: this.editForm.phone || null
+      phone: this.editForm.phone || null,
+      employee_id: this.editForm.employeeId || null,
+      birth_date: this.editForm.birthDate || null
     };
 
     this.adviserService.updateAdviserProfile(currentUser.user_id, updates).subscribe({
@@ -318,14 +310,21 @@ export class AdviserProfileComponent implements OnInit {
         if (response.success) {
           this.profileData.email = this.editForm.email;
           this.profileData.phone = this.editForm.phone;
+          this.profileData.employeeId = this.editForm.employeeId;
+          this.profileData.birthDate = this.editForm.birthDate;
           this.closeEditModal();
           this.showToast('Profile updated successfully', 'success');
+
+          // Update user object with only User interface fields
           this.authService.updateCurrentUser({
             ...currentUser,
             full_name: updates.full_name,
             email: updates.email,
             phone: updates.phone || undefined
           });
+
+          // Reload profile to get updated adviser data
+          this.loadProfileData();
         } else {
           this.editError = response.message || 'Failed to update profile.';
         }
@@ -333,40 +332,6 @@ export class AdviserProfileComponent implements OnInit {
       error: (err) => {
         this.saving = false;
         this.editError = err.error?.message || 'Error updating profile.';
-      }
-    });
-  }
-
-  changePassword(): void {
-    this.passwordError = '';
-    this.showPasswordModal = true;
-  }
-
-  closePasswordModal(): void {
-    this.showPasswordModal = false;
-    this.passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
-    this.passwordError = '';
-  }
-
-  submitPasswordChange(): void {
-    if (!this.passwordForm.currentPassword || !this.passwordForm.newPassword) {
-      this.passwordError = 'All fields are required.';
-      return;
-    }
-    if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
-      this.passwordError = 'Passwords do not match.';
-      return;
-    }
-    const currentUser = this.authService.currentUserValue;
-    if (!currentUser) return;
-
-    this.authService.changePassword(currentUser.user_id, this.passwordForm.currentPassword, this.passwordForm.newPassword).subscribe({
-      next: () => {
-        this.closePasswordModal();
-        this.showToast('Password changed successfully', 'success');
-      },
-      error: (err) => {
-        this.passwordError = err.error?.message || 'Failed to change password.';
       }
     });
   }

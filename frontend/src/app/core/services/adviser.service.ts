@@ -10,7 +10,7 @@ export interface AdviserDashboardData {
     first_name: string;
     last_name: string;
     full_name: string;
-    employee_number: string;
+    employee_id: string;
     contact_phone: string;
     username: string;
     email: string;
@@ -93,6 +93,7 @@ export class AdviserService {
   }
 
   getAdviserProfile(): Observable<any> {
+    console.log('Calling getAdviserProfile API...');
     return this.http.get<any>(`${environment.apiUrl}/adviser/profile`);
   }
 
