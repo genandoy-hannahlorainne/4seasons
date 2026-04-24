@@ -33,7 +33,7 @@ interface Adviser {
   first_name: string;
   last_name: string;
   full_name: string;
-  employee_number: string;
+  employee_id: string;
   email: string;
 }
 
@@ -71,9 +71,9 @@ interface GradeLevel {
             </button>
           </div>
           <div class="selector-right" *ngIf="selectedSchoolYearId">
-            <button 
-              *ngIf="!isCurrentSchoolYear()" 
-              class="btn-set-current" 
+            <button
+              *ngIf="!isCurrentSchoolYear()"
+              class="btn-set-current"
               (click)="setAsCurrentSchoolYear()"
               [disabled]="settingCurrent">
               <i class="fa-solid fa-check-circle"></i>
@@ -197,20 +197,20 @@ interface GradeLevel {
               <select [(ngModel)]="selectedAdviserId" class="form-select">
                 <option [value]="null">-- Select Adviser --</option>
                 <option *ngFor="let adviser of advisers" [value]="adviser.user_id">
-                  {{ adviser.full_name }} ({{ adviser.employee_number }})
+                  {{ adviser.full_name }} ({{ adviser.employee_id }})
                 </option>
               </select>
             </div>
 
             <div class="adviser-list">
               <h4>Available Advisers:</h4>
-              <div *ngFor="let adviser of advisers" class="adviser-item" 
+              <div *ngFor="let adviser of advisers" class="adviser-item"
                    [class.selected]="selectedAdviserId === adviser.user_id"
                    (click)="selectedAdviserId = adviser.user_id">
                 <div class="adviser-info">
                   <div class="adviser-name">{{ adviser.full_name }}</div>
                   <div class="adviser-details">
-                    {{ adviser.employee_number }} | {{ adviser.email }}
+                    {{ adviser.employee_id }} | {{ adviser.email }}
                   </div>
                 </div>
                 <div class="adviser-sections">
@@ -243,10 +243,10 @@ interface GradeLevel {
           <div class="modal-body">
             <div class="form-group">
               <label>Year Name: <span class="required">*</span></label>
-              <input 
-                type="text" 
-                [(ngModel)]="newYear.year_name" 
-                class="form-input" 
+              <input
+                type="text"
+                [(ngModel)]="newYear.year_name"
+                class="form-input"
                 placeholder="e.g., 2024-2025"
                 (input)="validateYearName()">
               <small class="help-text">Format: YYYY-YYYY (e.g., 2024-2025)</small>
@@ -256,25 +256,25 @@ interface GradeLevel {
             <div class="form-row">
               <div class="form-group">
                 <label>Start Date: <span class="required">*</span></label>
-                <input 
-                  type="date" 
-                  [(ngModel)]="newYear.start_date" 
+                <input
+                  type="date"
+                  [(ngModel)]="newYear.start_date"
                   class="form-input">
               </div>
 
               <div class="form-group">
                 <label>End Date: <span class="required">*</span></label>
-                <input 
-                  type="date" 
-                  [(ngModel)]="newYear.end_date" 
+                <input
+                  type="date"
+                  [(ngModel)]="newYear.end_date"
                   class="form-input">
               </div>
             </div>
 
             <div class="form-group checkbox-group">
               <label>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   [(ngModel)]="newYear.is_active">
                 <span>Set as active school year</span>
               </label>
@@ -320,20 +320,20 @@ interface GradeLevel {
 
             <div class="form-group">
               <label>Section Name: <span class="required">*</span></label>
-              <input 
-                type="text" 
-                [(ngModel)]="newSection.section_name" 
-                class="form-input" 
+              <input
+                type="text"
+                [(ngModel)]="newSection.section_name"
+                class="form-input"
                 placeholder="e.g., Section A, Section B">
               <small class="help-text">Enter the section name (e.g., A, B, C, Diamond, Ruby)</small>
             </div>
 
             <div class="form-group">
               <label>Capacity: <span class="required">*</span></label>
-              <input 
-                type="number" 
-                [(ngModel)]="newSection.capacity" 
-                class="form-input" 
+              <input
+                type="number"
+                [(ngModel)]="newSection.capacity"
+                class="form-input"
                 min="1"
                 max="100"
                 placeholder="50">
@@ -651,7 +651,7 @@ interface GradeLevel {
       padding: 3rem;
       background: white;
       border-radius: 12px;
-      
+
       .spinner {
         width: 50px;
         height: 50px;
@@ -1418,11 +1418,11 @@ export class SchoolYearManagementComponent implements OnInit {
   sections: Section[] = [];
   advisers: Adviser[] = [];
   gradeLevels: GradeLevel[] = [];
-  
+
   selectedSchoolYearId: number | null = null;
   selectedSection: Section | null = null;
   selectedAdviserId: number | null = null;
-  
+
   showAssignModal = false;
   showCreateYearModal = false;
   showCreateSectionModal = false;
@@ -1431,10 +1431,10 @@ export class SchoolYearManagementComponent implements OnInit {
   saving = false;
   settingCurrent = false;
   loadingStudents = false;
-  
+
   selectedSectionForStudents: Section | null = null;
   sectionStudentsData: any = null;
-  
+
   newYear = {
     year_name: '',
     start_date: '',
@@ -1442,13 +1442,13 @@ export class SchoolYearManagementComponent implements OnInit {
     is_active: false
   };
   yearNameError = '';
-  
+
   newSection = {
     section_name: '',
     grade_level_id: null as number | null,
     capacity: 50
   };
-  
+
   message = '';
   messageType: 'success' | 'error' = 'success';
 
@@ -1482,7 +1482,7 @@ export class SchoolYearManagementComponent implements OnInit {
 
   loadSections(): void {
     if (!this.selectedSchoolYearId) return;
-    
+
     this.loading = true;
     this.http.get<any>(`${environment.apiUrl}/admin/sections?school_year_id=${this.selectedSchoolYearId}`).subscribe({
       next: (response) => {

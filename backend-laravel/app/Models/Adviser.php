@@ -22,7 +22,8 @@ class Adviser extends Model
         'hire_date',
         'is_active',
         'grade_level',
-        'section'
+        'section',
+        'birth_date'
     ];
 
     protected function casts(): array

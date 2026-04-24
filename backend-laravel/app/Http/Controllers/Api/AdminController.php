@@ -1265,9 +1265,15 @@ class AdminController extends BaseController
                 }
 
                 if ($roleName === 'Adviser' && $user->adviser) {
-                    $data['employee_number']  = $user->adviser->employee_id;
+                    $data['employee_id']      = $user->adviser->employee_id;
                     $data['contact_phone']    = $user->adviser->contact_phone;
                     $data['department']       = $user->adviser->department;
+
+                    // Debug log
+                    \Log::info('Adviser data for user ' . $user->user_id, [
+                        'employee_id' => $user->adviser->employee_id,
+                        'adviser_id' => $user->adviser->adviser_id
+                    ]);
                 }
 
                 if ($roleName === 'Clinic Staff' && $user->clinicStaff) {
@@ -1647,7 +1653,7 @@ class AdminController extends BaseController
 
             // Convert empty strings to null so nullable rules work correctly
             $input = $request->all();
-            foreach (['email', 'phone', 'employee_number', 'staff_code', 'position'] as $field) {
+            foreach (['email', 'phone', 'employee_id', 'staff_code', 'position'] as $field) {
                 if (isset($input[$field]) && $input[$field] === '') {
                     $input[$field] = null;
                 }
@@ -1659,7 +1665,7 @@ class AdminController extends BaseController
                 'email' => 'nullable|email|unique:users,email',
                 'phone' => 'nullable|string|max:20',
                 // Adviser specific fields
-                'employee_number' => 'required_if:role,adviser|nullable|string|max:50|unique:advisers,employee_id|unique:users,username',
+                'employee_id' => 'required_if:role,adviser|nullable|string|max:50|unique:advisers,employee_id|unique:users,username',
                 // Clinic Staff specific fields
                 'staff_code' => 'required_if:role,clinic_staff|nullable|string|max:20|unique:clinic_staff,staff_code|unique:users,username',
                 'position' => 'required_if:role,clinic_staff|nullable|string|max:100',
@@ -1684,11 +1690,11 @@ class AdminController extends BaseController
 
             $roleId = $roleMapping[$input['role']];
 
-            // Determine username: use staff_code for clinic_staff, employee_number for adviser, email otherwise
+            // Determine username: use staff_code for clinic_staff, employee_id for adviser, email otherwise
             if ($input['role'] === 'clinic_staff') {
                 $username = $input['staff_code'];
             } elseif ($input['role'] === 'adviser') {
-                $username = $input['employee_number'];
+                $username = $input['employee_id'];
             } else {
                 $username = $input['email'];
             }
@@ -1709,7 +1715,7 @@ class AdminController extends BaseController
             if ($input['role'] === 'adviser') {
                 \App\Models\Adviser::create([
                     'user_id'     => $user->user_id,
-                    'employee_id' => $input['employee_number'],
+                    'employee_id' => $input['employee_id'],
                     'is_active'   => true
                 ]);
             } elseif ($input['role'] === 'clinic_staff') {
@@ -2048,7 +2054,7 @@ class AdminController extends BaseController
 
             // Check if this is a new request with user-provided password or old request
             $newPassword = $notification->request_data['new_password'] ?? null;
-            
+
             if ($newPassword) {
                 // New flow: Use user's requested password
                 $user->update([

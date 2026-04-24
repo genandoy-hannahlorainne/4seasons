@@ -23,6 +23,28 @@ Route::get('/health', function () {
     ]);
 });
 
+// Test route to check adviser data
+Route::get('/test-adviser-data', function () {
+    $advisers = \App\Models\Adviser::with('user')->get();
+
+    $result = [];
+    foreach ($advisers as $adviser) {
+        $result[] = [
+            'adviser_id' => $adviser->adviser_id,
+            'user_id' => $adviser->user_id,
+            'employee_id' => $adviser->employee_id,
+            'birth_date' => $adviser->birth_date,
+            'user_name' => $adviser->user ? $adviser->user->full_name : 'No user',
+        ];
+    }
+
+    return response()->json([
+        'success' => true,
+        'count' => count($result),
+        'advisers' => $result
+    ]);
+});
+
 // Debug route to test authentication
 Route::get('/debug/auth', function (Request $request) {
     $user = $request->user();

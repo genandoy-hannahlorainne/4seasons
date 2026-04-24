@@ -118,10 +118,19 @@ class AdviserController extends BaseController
      */
     public function getProfile(Request $request)
     {
+        \Log::info('=== ADVISER PROFILE API CALLED ===');
+
         try {
             $user = $request->user();
-            
+
+            \Log::info('User from request:', [
+                'user_id' => $user ? $user->user_id : 'null',
+                'full_name' => $user ? $user->full_name : 'null',
+                'role_id' => $user ? $user->role_id : 'null'
+            ]);
+
             if (!$this->isAdviserUser($user)) {
+                \Log::warning('User is not an adviser');
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
 
@@ -142,12 +151,24 @@ class AdviserController extends BaseController
                     ->count();
             }
 
+            // Get adviser record for additional fields
+            $adviser = \App\Models\Adviser::where('user_id', $user->user_id)->first();
+
+            \Log::info('Adviser Profile Debug', [
+                'user_id' => $user->user_id,
+                'adviser_found' => $adviser ? 'yes' : 'no',
+                'adviser_id' => $adviser ? $adviser->adviser_id : 'no record',
+                'employee_id' => $adviser ? $adviser->employee_id : 'no adviser record',
+                'birth_date' => $adviser ? $adviser->birth_date : 'no adviser record'
+            ]);
+
             $profileData = [
                 'user_id' => $user->user_id,
                 'full_name' => $user->full_name,
                 'email' => $user->email,
                 'phone' => $user->phone,
-                'employee_number' => $user->employee_number,
+                'employee_id' => $adviser ? $adviser->employee_id : null,
+                'birth_date' => $adviser ? $adviser->birth_date : null,
                 'advisory_class' => $advisoryClass,
                 'student_count' => $studentCount,
                 'section_id' => $section ? $section->id : null,
@@ -157,8 +178,14 @@ class AdviserController extends BaseController
                 'gender' => $user->gender ?? null,
             ];
 
+            \Log::info('Profile data to return:', $profileData);
+
             return $this->sendResponse($profileData, 'Adviser profile retrieved successfully');
         } catch (\Exception $e) {
+            \Log::error('Error in getProfile:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->sendError('Failed to retrieve adviser profile', $e->getMessage());
         }
     }
@@ -170,7 +197,7 @@ class AdviserController extends BaseController
     {
         try {
             $user = $request->user();
-            
+
             if (!$user || $user->role_id !== 3) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
@@ -178,26 +205,45 @@ class AdviserController extends BaseController
             $validator = Validator::make($request->all(), [
                 'full_name' => 'sometimes|string|max:255',
                 'email' => 'sometimes|email|max:255|unique:users,email,' . $user->user_id . ',user_id',
-                'phone' => 'sometimes|nullable|string|max:20'
+                'phone' => 'sometimes|nullable|string|max:20',
+                'employee_id' => 'sometimes|nullable|string|max:50',
+                'birth_date' => 'sometimes|nullable|date'
             ]);
 
             if ($validator->fails()) {
                 return $this->sendError('Validation Error', $validator->errors()->first());
             }
 
-            $updateData = [];
+            // Update user table fields
+            $userUpdateData = [];
             if ($request->has('full_name')) {
-                $updateData['full_name'] = $request->full_name;
+                $userUpdateData['full_name'] = $request->full_name;
             }
             if ($request->has('email')) {
-                $updateData['email'] = $request->email;
+                $userUpdateData['email'] = $request->email;
             }
             if ($request->has('phone')) {
-                $updateData['phone'] = $request->phone;
+                $userUpdateData['phone'] = $request->phone;
             }
 
-            if (!empty($updateData)) {
-                $user->update($updateData);
+            if (!empty($userUpdateData)) {
+                $user->update($userUpdateData);
+            }
+
+            // Update adviser table fields
+            $adviser = \App\Models\Adviser::where('user_id', $user->user_id)->first();
+            if ($adviser) {
+                $adviserUpdateData = [];
+                if ($request->has('employee_id')) {
+                    $adviserUpdateData['employee_id'] = $request->employee_id;
+                }
+                if ($request->has('birth_date')) {
+                    $adviserUpdateData['birth_date'] = $request->birth_date;
+                }
+
+                if (!empty($adviserUpdateData)) {
+                    $adviser->update($adviserUpdateData);
+                }
             }
 
             return $this->sendResponse($user->fresh(), 'Profile updated successfully');
@@ -213,7 +259,7 @@ class AdviserController extends BaseController
     {
         try {
             $user = $request->user();
-            
+
             if (!$this->isAdviserUser($user)) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
@@ -237,7 +283,7 @@ class AdviserController extends BaseController
                     'full_name' => $user->full_name,
                     'email' => $user->email,
                     'phone' => $user->phone,
-                    'employee_number' => $user->employee_number,
+                    'employee_id' => $adviser ? $adviser->employee_id : null,
                     'gender' => $user->gender ?? null,
                 ],
                 'section' => null,
@@ -322,14 +368,14 @@ class AdviserController extends BaseController
     {
         try {
             $user = $request->user();
-            
+
             // Debug logging
             \Log::info('Health heatmap request', [
                 'user' => $user ? $user->user_id : 'null',
                 'role_id' => $user ? $user->role_id : 'null',
                 'token' => $request->bearerToken() ? 'present' : 'missing'
             ]);
-            
+
             if (!$this->isAdviserUser($user)) {
                 \Log::warning('Unauthorized heatmap access', [
                     'user_id' => $user ? $user->user_id : 'null',
@@ -409,7 +455,7 @@ class AdviserController extends BaseController
             foreach ($allSymptoms as $symptom => $data) {
                 $uniqueStudents = array_unique($data['students']);
                 $percentage = $totalStudents > 0 ? round((count($uniqueStudents) / $totalStudents) * 100, 1) : 0;
-                
+
                 $trendingSymptoms[] = [
                     'symptom' => $symptom,
                     'student_count' => count($uniqueStudents),
@@ -476,7 +522,7 @@ class AdviserController extends BaseController
     {
         try {
             $user = $request->user();
-            
+
             if (!$this->isAdviserUser($user)) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
@@ -565,7 +611,7 @@ class AdviserController extends BaseController
     {
         try {
             $user = $request->user();
-            
+
             if (!$this->isAdviserUser($user)) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
@@ -679,7 +725,7 @@ class AdviserController extends BaseController
     {
         try {
             $user = $request->user();
-            
+
             if (!$this->isAdviserUser($user)) {
                 return $this->sendError('Unauthorized', 'User is not an adviser');
             }
@@ -697,9 +743,9 @@ class AdviserController extends BaseController
                 intval($user->user_id),
                 $section
             );
-            
+
             $studentsCollection = $studentsQuery->get();
-            
+
             // Calculate statistics before mapping
             $totalStudents = $studentsCollection->count();
             $clinicVisitsThisMonth = $studentsCollection->sum(function($student) {
