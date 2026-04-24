@@ -50,7 +50,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     grade_level: '',
     section_id: '', // Changed from section to section_id
     // Adviser fields
-    employee_number: '',
+    employee_id: '',
     // Clinic Staff fields
     staff_code: '',
     position: ''
@@ -99,17 +99,17 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     console.log('🔐 Testing authentication...');
     const token = localStorage.getItem('token');
     const user = this.authService.currentUserValue;
-    
+
     console.log('Token:', token ? token.substring(0, 20) + '...' : 'MISSING');
     console.log('User:', user);
     console.log('Is authenticated:', this.authService.isAuthenticated());
-    
+
     if (token) {
       // Test auth endpoint first
       this.adminService.testAuth().subscribe({
         next: (response) => {
           console.log('✅ Auth test successful:', response);
-          
+
           // Now test getAllUsers directly
           this.adminService.getAllUsers().subscribe({
             next: (usersResponse) => {
@@ -159,32 +159,32 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       this.router.navigate(['/login']);
       return;
     }
-    
+
     const currentUser = this.authService.currentUserValue;
     const token = localStorage.getItem('token');
-    
+
     console.log('🔐 Manage Users - Authentication verified');
     console.log('Current user:', currentUser);
     console.log('Token available:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
     console.log('Token in localStorage:', localStorage.getItem('token') ? 'YES' : 'NO');
     console.log('User in localStorage:', localStorage.getItem('currentUser') ? 'YES' : 'NO');
-    
+
     if (currentUser?.role_name?.toLowerCase() !== 'admin') {
       console.error('❌ Not admin user, access denied');
       this.errorMessage = 'Access denied. Admin privileges required.';
       return;
     }
-    
+
     if (!token) {
       console.error('❌ No authentication token found');
       this.errorMessage = 'Authentication token missing. Please login again.';
       this.router.navigate(['/login']);
       return;
     }
-    
+
     console.log('✅ Authenticated as admin, loading users');
     this.loadGradeLevels();
-    
+
     // Auto-refresh users every 30 seconds (startWith(0) handles initial load)
     interval(this.refreshInterval)
       .pipe(
@@ -195,7 +195,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           console.log('🔄 Auto-refresh response:', response);
-          
+
           if (response?.success) {
             this.updateUsersList(response);
           }
@@ -219,13 +219,13 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   loadUsers(): void {
     this.loading = true;
     console.log('👥 Loading users for manage-users component...');
-    
+
     // Check authentication first
     const currentUser = this.authService.currentUserValue;
     const token = localStorage.getItem('token');
     console.log('🔐 Current user in loadUsers:', currentUser);
     console.log('🔐 Token available:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
-    
+
     if (!currentUser || !token) {
       console.error('❌ No authentication token found');
       this.errorMessage = 'Authentication required. Please login again.';
@@ -233,7 +233,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       this.router.navigate(['/login']);
       return;
     }
-    
+
     // Load users directly
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
@@ -245,7 +245,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
           dataUsers: response?.data?.users ? 'present' : 'missing',
           responseKeys: response ? Object.keys(response) : 'no response'
         });
-        
+
         // Handle the response
         if (response?.success) {
           this.updateUsersList(response);
@@ -253,14 +253,14 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
           console.error('❌ API response indicates failure:', response?.message);
           this.errorMessage = response?.message || 'Failed to load users';
         }
-        
+
         this.loading = false;
       },
       error: (err) => {
         console.error('❌ Error loading users:', err);
         console.error('❌ Error status:', err.status);
         console.error('❌ Error details:', err.error);
-        
+
         if (err.status === 401) {
           this.errorMessage = 'Authentication failed. Please login again.';
           this.router.navigate(['/login']);
@@ -269,7 +269,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         } else {
           this.errorMessage = 'Failed to load users. Please try again.';
         }
-        
+
         this.loading = false;
       }
     });
@@ -277,12 +277,12 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   private updateUsersList(response: any): void {
     console.log('👥 updateUsersList called with response:', response);
-    
+
     if (response.success) {
       console.log('✅ Response is successful');
-      
+
       let users: any;
-      
+
       // Handle different response formats
       if (response.data && response.data.users) {
         console.log('📊 Using response.data.users format');
@@ -300,7 +300,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         this.errorMessage = 'Invalid response structure from server';
         return;
       }
-      
+
       // Handle grouped response (when no role filter)
       if (!Array.isArray(users) && typeof users === 'object' && users !== null &&
           ('student' in users || 'adviser' in users || 'clinic_staff' in users || 'admin' in users)) {
@@ -309,30 +309,30 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         console.log('   adviser count:', users.adviser?.length || 0);
         console.log('   clinic_staff count:', users.clinic_staff?.length || 0);
         console.log('   admin count:', users.admin?.length || 0);
-        
+
         this.users = [
-          ...(users.student || []).map((u: any) => ({ 
-            ...u, 
+          ...(users.student || []).map((u: any) => ({
+            ...u,
             roleDisplay: 'Student',
             role: 'student'
           })),
-          ...(users.adviser || []).map((u: any) => ({ 
-            ...u, 
+          ...(users.adviser || []).map((u: any) => ({
+            ...u,
             roleDisplay: 'Faculty/Adviser',
             role: 'adviser'
           })),
-          ...(users.clinic_staff || []).map((u: any) => ({ 
-            ...u, 
+          ...(users.clinic_staff || []).map((u: any) => ({
+            ...u,
             roleDisplay: 'Clinic Staff',
             role: 'clinic_staff'
           })),
-          ...(users.admin || []).map((u: any) => ({ 
-            ...u, 
+          ...(users.admin || []).map((u: any) => ({
+            ...u,
             roleDisplay: 'Admin',
             role: 'admin'
           }))
         ];
-        
+
         console.log('✅ Mapped users array, total count:', this.users.length);
         console.log('✅ Users breakdown:', {
           students: this.users.filter(u => u.role === 'student').length,
@@ -354,10 +354,10 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         this.errorMessage = 'Unexpected data format from server';
         return;
       }
-      
+
       this.filterUsers();
       console.log('✅ Users loaded and filtered:', this.filteredUsers.length);
-      
+
       // Update counts
       this.userCounts = {
         students: this.users.filter(u => u.role === 'student').length,
@@ -387,20 +387,20 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     console.log('🔍 Total users before filter:', this.users.length);
     console.log('🔍 Selected role:', this.selectedRole);
     console.log('🔍 Search query:', this.searchQuery);
-    
+
     this.filteredUsers = this.users.filter(user => {
       const userRole = user.role || user.roleDisplay?.toLowerCase();
       const matchesRole = this.selectedRole === 'all' || userRole === this.selectedRole;
-      const matchesSearch = !this.searchQuery || 
+      const matchesSearch = !this.searchQuery ||
         (user.full_name && user.full_name.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
         (user.username && user.username.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
         (user.email && user.email.toLowerCase().includes(this.searchQuery.toLowerCase()));
-      
+
       console.log(`🔍 User ${user.username}: role=${userRole}, matchesRole=${matchesRole}, matchesSearch=${matchesSearch}`);
-      
+
       return matchesRole && matchesSearch;
     });
-    
+
     console.log('🔍 Filtered users count:', this.filteredUsers.length);
   }
 
@@ -413,6 +413,9 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   viewUser(user: any): void {
+    console.log('👤 Viewing user:', user);
+    console.log('Employee ID:', user.employee_id);
+    console.log('Role:', user.role);
     this.selectedUser = { ...user };
     this.editingUser = { ...user };
     this.showUserModal = true;
@@ -487,7 +490,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   toggleUserStatus(): void {
     if (!this.selectedUser) return;
 
-    const observable = this.selectedUser.is_active ? 
+    const observable = this.selectedUser.is_active ?
       this.adminService.deactivateUser(this.selectedUser.user_id) :
       this.adminService.activateUser(this.selectedUser.user_id);
 
@@ -569,7 +572,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       birth_date: '',
       grade_level: '',
       section_id: '', // Changed from section to section_id
-      employee_number: '',
+      employee_id: '',
       staff_code: '',
       position: ''
     };
@@ -586,7 +589,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.newUser.birth_date = '';
     this.newUser.grade_level = '';
     this.newUser.section_id = '';
-    this.newUser.employee_number = '';
+    this.newUser.employee_id = '';
     this.newUser.staff_code = '';
     this.newUser.position = '';
     this.newUser.full_name = '';
@@ -657,7 +660,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       );
     } else if (this.newUser.role === 'adviser') {
       return !!(
-        this.newUser.employee_number &&
+        this.newUser.employee_id &&
         this.newUser.first_name &&
         this.newUser.last_name
       );
@@ -717,10 +720,10 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
           if (response.success && response.data) {
             const user = response.data.user || response.data;
             this.createSuccessMessage = `Account created successfully! Username: ${user.username || 'N/A'}, Temp Password: ${user.temp_password || 'N/A'}`;
-            
+
             // Reload users list
             this.loadUsers();
-            
+
             // Close modal after 3 seconds
             setTimeout(() => {
               this.closeCreateUserModal();
@@ -840,10 +843,10 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         if (response.success) {
           this.importResults = response;
           this.successMessage = response.message;
-          
+
           // Refresh user list
           this.loadUsers();
-          
+
           // Clear file selection if all successful
           if (response.error_count === 0) {
             setTimeout(() => {

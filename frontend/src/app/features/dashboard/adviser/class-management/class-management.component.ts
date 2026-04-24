@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdviserService } from '../../../../core/services/adviser.service';
+import { StudentProfileModalComponent } from '../student-profile-modal/student-profile-modal.component';
 
 interface ClassRoster {
   section: {
@@ -17,7 +18,7 @@ interface ClassRoster {
 @Component({
   selector: 'app-class-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, StudentProfileModalComponent],
   template: `
     <div class="class-management-container">
       <div class="page-header">
@@ -39,7 +40,7 @@ interface ClassRoster {
         <div class="section-header">
           <h3>{{ classRoster.section.level_name }}, Section {{ classRoster.section.section_name }}</h3>
           <p class="total-students">Total Students: {{ classRoster.total_students }}</p>
-          
+
           <div class="action-buttons" *ngIf="selectedStudents.length > 0">
             <button (click)="openPromotionModal()" class="btn-promote">
               🎓 Promote Selected ({{ selectedStudents.length }})
@@ -55,8 +56,8 @@ interface ClassRoster {
             <thead>
               <tr>
                 <th>
-                  <input type="checkbox" 
-                         [(ngModel)]="selectAll" 
+                  <input type="checkbox"
+                         [(ngModel)]="selectAll"
                          (change)="toggleSelectAll()"
                          title="Select All">
                 </th>
@@ -70,7 +71,7 @@ interface ClassRoster {
             <tbody>
               <tr *ngFor="let student of classRoster.students">
                 <td>
-                  <input type="checkbox" 
+                  <input type="checkbox"
                          [(ngModel)]="student.selected"
                          (change)="updateSelection()">
                 </td>
@@ -119,11 +120,11 @@ interface ClassRoster {
       <div *ngIf="showPromotionModal" class="modal-overlay" (click)="closePromotionModal()">
         <div class="modal-content" (click)="$event.stopPropagation()">
           <h3>{{ isGrade12 ? 'Graduate Students' : 'Promote Students' }}</h3>
-          
+
           <div class="modal-body">
             <p class="info-text">
-              {{ isGrade12 
-                ? 'Mark selected students as graduated. They will no longer be active students.' 
+              {{ isGrade12
+                ? 'Mark selected students as graduated. They will no longer be active students.'
                 : 'Promote selected students to the next grade level for the next school year.' }}
             </p>
 
@@ -176,12 +177,12 @@ interface ClassRoster {
           </div>
 
           <div class="modal-actions">
-            <button (click)="confirmPromotion()" 
+            <button (click)="confirmPromotion()"
                     [disabled]="promoting || (!isGrade12 && (!targetSchoolYearId || !targetSectionId))"
                     class="btn-confirm">
               {{ promoting ? 'Processing...' : (isGrade12 ? 'Graduate Students' : 'Promote Students') }}
             </button>
-            <button (click)="closePromotionModal()" 
+            <button (click)="closePromotionModal()"
                     [disabled]="promoting"
                     class="btn-cancel">
               Cancel
@@ -189,6 +190,13 @@ interface ClassRoster {
           </div>
         </div>
       </div>
+
+      <!-- Student Profile Modal -->
+      <app-student-profile-modal
+        *ngIf="showStudentModal && selectedStudent"
+        [student]="selectedStudent"
+        (close)="closeStudentModal()">
+      </app-student-profile-modal>
     </div>
   `,
   styles: [`
@@ -535,11 +543,11 @@ export class ClassManagementComponent implements OnInit {
   schoolYears: any[] = [];
   selectedSchoolYear: number | null = null;
   classRoster: ClassRoster | null = null;
-  
+
   // Selection
   selectAll = false;
   selectedStudents: any[] = [];
-  
+
   // Promotion Modal
   showPromotionModal = false;
   promoting = false;
@@ -627,15 +635,15 @@ export class ClassManagementComponent implements OnInit {
     this.showPromotionModal = true;
     this.promotionError = '';
     this.promotionSuccess = '';
-    
+
     // Check if current grade is 12
     if (this.classRoster && this.classRoster.section) {
       this.isGrade12 = this.classRoster.section.level_number === 12;
-      
+
       if (!this.isGrade12) {
         // Set target grade level (current + 1)
         this.targetGradeLevel = this.classRoster.section.level_number + 1;
-        
+
         // Auto-select next school year if available
         const currentYear = this.schoolYears.find(y => y.id === this.selectedSchoolYear);
         if (currentYear) {
@@ -664,9 +672,9 @@ export class ClassManagementComponent implements OnInit {
       this.targetSectionId = null;
       return;
     }
-    
+
     console.log('Loading sections for school year:', this.targetSchoolYearId, 'grade:', this.targetGradeLevel);
-    
+
     this.adviserService.getSections(this.targetSchoolYearId, this.targetGradeLevel).subscribe({
       next: (response: any) => {
         if (response.success) {
@@ -701,7 +709,7 @@ export class ClassManagementComponent implements OnInit {
     this.promotionSuccess = '';
 
     const studentIds = this.selectedStudents.map(s => s.student_id);
-    
+
     const promotionData = {
       student_ids: studentIds,
       action: this.isGrade12 ? 'graduate' : 'promote',
@@ -716,10 +724,10 @@ export class ClassManagementComponent implements OnInit {
       next: (response: any) => {
         console.log('Promotion response:', response);
         this.promoting = false;
-        
+
         if (response.success) {
           this.promotionSuccess = response.message;
-          
+
           // Reload class roster after 2 seconds
           setTimeout(() => {
             this.closePromotionModal();
@@ -753,8 +761,65 @@ export class ClassManagementComponent implements OnInit {
     return avg.toFixed(2);
   }
 
+  selectedStudent: any = null;
+  showStudentModal = false;
+
   viewStudentProfile(student: any) {
-    // TODO: Navigate to student profile
-    console.log('View student profile:', student);
+    this.adviserService.getStudentCompleteProfile(student.student_id).subscribe({
+      next: (response: any) => {
+        if (response.success && response.data) {
+          this.selectedStudent = this.mapStudentData(response.data);
+          this.showStudentModal = true;
+        } else {
+          console.error('Failed to load student profile');
+        }
+      },
+      error: (error) => {
+        console.error('Error loading student profile:', error);
+      }
+    });
+  }
+
+  closeStudentModal() {
+    this.showStudentModal = false;
+    this.selectedStudent = null;
+  }
+
+  private mapStudentData(data: any): any {
+    return {
+      name: data.full_name || `${data.first_name} ${data.last_name}`,
+      studentNumber: data.student_number,
+      gradeSection: data.grade_section || `${data.grade_level} - ${data.section}`,
+      gender: data.gender,
+      birthday: data.birth_date,
+      age: data.age || this.calculateAge(data.birth_date),
+      contact: data.phone || data.emergency_contact_phone,
+      vitals: {
+        bloodType: data.blood_type,
+        height: data.height ? `${data.height} cm` : 'N/A',
+        weight: data.weight ? `${data.weight} kg` : 'N/A',
+        bmi: data.bmi
+      },
+      allergies: data.allergies || [],
+      emergencyContact: {
+        name: data.emergency_contact,
+        relation: data.emergency_contact_relation || 'N/A',
+        phone: data.emergency_contact_phone || 'N/A'
+      },
+      recentVisits: data.recent_visits || [],
+      lastVisit: data.last_visit
+    };
+  }
+
+  private calculateAge(birthDate: string): number {
+    if (!birthDate) return 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
   }
 }

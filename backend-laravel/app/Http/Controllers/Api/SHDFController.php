@@ -72,6 +72,20 @@ class SHDFController extends Controller
         ]);
 
         $student = Student::where('student_id', $validated['student_id'])->firstOrFail();
+
+        // Fix unmapped student user_id before policy check
+        $user = $request->user();
+        if ($user && empty($student->user_id) || ($user && (int) $student->user_id !== (int) $user->user_id)) {
+            $role = strtolower($user->role?->role_name ?? '');
+            if ($role === 'student'
+                && !empty($user->username)
+                && !empty($student->student_number)
+                && $user->username === $student->student_number) {
+                $student->update(['user_id' => $user->user_id]);
+                $student->refresh();
+            }
+        }
+
         $this->authorize('submit', $student);
 
         try {
@@ -97,7 +111,7 @@ class SHDFController extends Controller
             'user_role' => $request->user()?->role?->role_name,
             'student_id' => $request->input('student_id'),
         ]);
-        
+
         try {
             $result = $this->shdService->submitComprehensive(
                 $request->validated(),
@@ -128,7 +142,7 @@ class SHDFController extends Controller
         $this->authorize('view', $student);
 
         $status = $this->shdService->getStatus($studentId);
-        
+
         \Log::info('[SHDF Status] Student: ' . $studentId . ' | Status: ' . json_encode($status));
 
         return response()->json($status);
