@@ -3,17 +3,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-image: url('/assets/pdmhs-background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: rgba(83, 129, 178, 0.9);
+  background-blend-mode: multiply;
   padding: 2rem;
+}
+
+.card-logo {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1.25rem;
 }
 
 .success-card {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 2.5rem;
-  max-width: 520px;
+  max-width: 460px;
   width: 100%;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 // ── Header ──────────────────────────────────────────
@@ -22,13 +33,15 @@
   margin-bottom: 1.5rem;
 
   h1 {
+    font-family: 'Epilogue', sans-serif;
     font-size: 1.6rem;
-    font-weight: 700;
-    color: #111827;
+    font-weight: 900;
+    color: #052355;
     margin: 1rem 0 0.4rem;
   }
 
   .subtitle {
+    font-family: 'Albert Sans', sans-serif;
     font-size: 0.95rem;
     color: #6b7280;
     line-height: 1.6;
@@ -171,13 +184,13 @@
   }
 
   .btn-primary {
-    background: #3b82f6;
+    background: #052355;
     color: #fff;
 
     &:hover {
-      background: #2563eb;
+      background: #041b44;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+      box-shadow: 0 4px 12px rgba(5, 35, 85, 0.35);
     }
   }
 
@@ -260,7 +273,12 @@
 // ── Responsive ────────────────────────────────────────
 @media (max-width: 480px) {
   .success-card {
-    padding: 1.75rem 1.25rem;
+    padding: 2rem 1.5rem;
+  }
+
+  .card-logo {
+    width: 70px;
+    height: 70px;
   }
 
   .action-buttons {
