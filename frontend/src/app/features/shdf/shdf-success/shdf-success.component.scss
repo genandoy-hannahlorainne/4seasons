@@ -174,21 +174,22 @@
 
   button {
     flex: 1;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1.25rem;
     border-radius: 8px;
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     border: none;
     transition: all 0.2s ease;
+    white-space: nowrap;
   }
 
   .btn-primary {
-    background: #052355;
+    background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
     color: #fff;
+    box-shadow: 0 2px 6px rgba(5, 35, 85, 0.2);
 
     &:hover {
-      background: #041b44;
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(5, 35, 85, 0.35);
     }
@@ -199,6 +200,7 @@
     color: #64748b;
     border: 1px solid #e2e8f0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    flex: 0 0 auto;
 
     &:hover {
       background: #f8fafc;
