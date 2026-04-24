@@ -25,7 +25,17 @@ class SHDFPolicy
         }
 
         if ($role === 'student') {
-            return (int) $student->user_id === (int) $user->user_id;
+            // Primary check: user_id matches
+            if ((int) $student->user_id === (int) $user->user_id) {
+                return true;
+            }
+            // Fallback: username matches student_number
+            if (!empty($user->username) && !empty($student->student_number)
+                && $user->username === $student->student_number) {
+                $student->update(['user_id' => $user->user_id]);
+                return true;
+            }
+            return false;
         }
 
         return false;
@@ -34,7 +44,7 @@ class SHDFPolicy
     public function submit(User $user, Student $student): bool
     {
         $role = strtolower($user->role?->role_name ?? '');
-        
+
         \Log::info('[SHDF Policy] Submit authorization check', [
             'user_id' => $user->user_id,
             'user_role_raw' => $user->role?->role_name,
@@ -55,19 +65,34 @@ class SHDFPolicy
         }
 
         if ($role === 'student') {
-            $canSubmit = (int) $student->user_id === (int) $user->user_id;
-            \Log::info('[SHDF Policy] Student access check', [
-                'can_submit' => $canSubmit,
+            // Primary check: user_id matches
+            if ((int) $student->user_id === (int) $user->user_id) {
+                \Log::info('[SHDF Policy] Student access granted via user_id match');
+                return true;
+            }
+
+            // Fallback: username matches student_number (handles unmapped accounts)
+            if (!empty($user->username) && !empty($student->student_number)
+                && $user->username === $student->student_number) {
+                \Log::info('[SHDF Policy] Student access granted via username/student_number match, fixing user_id');
+                // Auto-fix the mapping
+                $student->update(['user_id' => $user->user_id]);
+                return true;
+            }
+
+            \Log::warning('[SHDF Policy] Student access denied', [
                 'student_user_id' => $student->user_id,
                 'logged_in_user_id' => $user->user_id,
+                'username' => $user->username,
+                'student_number' => $student->student_number,
             ]);
-            return $canSubmit;
+            return false;
         }
 
         \Log::warning('[SHDF Policy] Access denied - no matching role', [
             'role' => $role,
         ]);
-        
+
         return false;
     }
 }

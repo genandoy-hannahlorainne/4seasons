@@ -37,12 +37,12 @@ class SHDFService
                 'weight_kg' => $validated['weight_kg'] ?? null,
                 'blood_type' => $validated['blood_type'] ?? null,
             ];
-            
+
             // Only add emergency_contact_relation_other if column exists
             if (Schema::hasColumn('students', 'emergency_contact_relation_other')) {
                 $updateData['emergency_contact_relation_other'] = $validated['emergency_contact_relation_other'] ?? null;
             }
-            
+
             Student::where('student_id', $studentId)->update($updateData);
 
             // Calculate BMI if height and weight provided
@@ -61,7 +61,7 @@ class SHDFService
                 [
                     'basic_completed' => true,
                     'basic_completed_at' => now(),
-                    'comprehensive_deadline' => now()->addDays(7), // 7 days to complete
+                    'comprehensive_deadline' => now()->addDays(3), // 3 days to complete
                 ]
             );
 
@@ -228,12 +228,12 @@ class SHDFService
                 'emergency_contact_relation' => $validated['emergency_contact_relation'],
                 'emergency_contact_phone'    => $validated['emergency_contact_phone'],
             ];
-            
+
             // Only add emergency_contact_relation_other if column exists
             if (Schema::hasColumn('students', 'emergency_contact_relation_other')) {
                 $updateData['emergency_contact_relation_other'] = $validated['emergency_contact_relation_other'] ?? null;
             }
-            
+
             Student::where('student_id', $studentId)->update($updateData);
 
             // 2. PhilHealth
