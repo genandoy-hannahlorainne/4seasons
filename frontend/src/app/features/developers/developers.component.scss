@@ -84,6 +84,15 @@
   margin: 0 auto;
 }
 
+.hero-badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
 .capstone-badge-hero {
   display: inline-flex;
   align-items: center;
@@ -98,11 +107,24 @@
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
-  margin-bottom: 1.5rem;
 }
 
 .capstone-badge-hero svg {
   flex-shrink: 0;
+}
+
+.dev-hero-school {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0.6rem 1.5rem;
+  border-radius: 100px;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.95) !important;
 }
 
 .dev-hero-content h1 {
@@ -122,21 +144,6 @@
   max-width: 700px;
   margin-left: auto;
   margin-right: auto;
-}
-
-.dev-hero-school {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  padding: 0.5rem 1.25rem;
-  border-radius: 100px;
-  font-size: 0.85rem !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.95) !important;
-  margin-top: 0.5rem !important;
 }
 
 .developers-section {
@@ -245,9 +252,11 @@
   .brand-name { font-size: 1.25rem; }
   .nav-link { padding: 0.45rem 0.75rem; font-size: 0.82rem; }
   .dev-hero { min-height: 450px; padding: 3rem 1.5rem; }
+  .hero-badges { gap: 0.75rem; }
+  .capstone-badge-hero { font-size: 0.75rem; padding: 0.5rem 1.25rem; }
+  .dev-hero-school { font-size: 0.75rem !important; padding: 0.5rem 1.25rem; }
   .dev-hero-content h1 { font-size: 2.5rem; }
   .dev-hero-content p { font-size: 1.05rem; }
-  .capstone-badge-hero { font-size: 0.75rem; padding: 0.5rem 1.25rem; }
 }
 
 @media (max-width: 480px) {
@@ -258,8 +267,9 @@
   .nav { flex-wrap: wrap; gap: 0.15rem; }
   .nav-link { padding: 0.4rem 0.65rem; font-size: 0.75rem; }
   .dev-hero { min-height: 400px; padding: 2.5rem 1.25rem; }
+  .hero-badges { gap: 0.5rem; }
+  .capstone-badge-hero { font-size: 0.7rem; padding: 0.45rem 1rem; }
+  .dev-hero-school { font-size: 0.7rem !important; padding: 0.45rem 1rem; }
   .dev-hero-content h1 { font-size: 2rem; letter-spacing: -1px; }
   .dev-hero-content p { font-size: 0.95rem; }
-  .capstone-badge-hero { font-size: 0.7rem; padding: 0.45rem 1rem; }
-  .dev-hero-school { font-size: 0.8rem !important; padding: 0.4rem 1rem; }
 }
