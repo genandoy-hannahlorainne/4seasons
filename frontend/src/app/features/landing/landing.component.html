@@ -167,11 +167,14 @@
             </div>
             <div>
               <div class="hours-title">School Opening Hours</div>
-              <div class="hours-status open"><span class="status-dot"></span> Open Today</div>
+              <div class="hours-status" [class.open]="isOpenNow" [class.closed]="!isOpenNow">
+                <span class="status-dot" *ngIf="isOpenNow"></span>
+                {{ isOpenNow ? 'Open Now' : 'Closed Now' }}
+              </div>
             </div>
           </div>
           <div class="hours-list">
-            <div class="hours-item" *ngFor="let day of hours">
+            <div class="hours-item" *ngFor="let day of hours" [class.today]="day.isToday">
               <span class="day-name">{{ day.day }}</span>
               <span class="day-hours" [class.closed]="day.hours === 'CLOSED'">
                 <span class="hours-dot" *ngIf="day.hours !== 'CLOSED'"></span>

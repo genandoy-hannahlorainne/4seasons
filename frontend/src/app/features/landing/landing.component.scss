@@ -77,12 +77,15 @@
 .hours-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:1rem; font-weight:700; color:#fff; }
 .hours-status { display:inline-flex; align-items:center; gap:0.4rem; font-size:0.75rem; font-weight:600; margin-top:0.25rem; }
 .hours-status.open { color:#86efac; }
+.hours-status.closed { color:#fca5a5; }
 .status-dot { width:7px; height:7px; border-radius:50%; background:#4ade80; display:inline-block; animation:pulse 2s infinite; }
 @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 .hours-list { display:flex; flex-direction:column; padding:0.5rem 1.75rem; }
-.hours-item { display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0; border-bottom:1px solid #f1f5f9; }
+.hours-item { display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0; border-bottom:1px solid #f1f5f9; transition:background 0.15s; }
 .hours-item:last-child { border-bottom:none; }
+.hours-item.today { background:#f0f9ff; margin:0 -0.5rem; padding:0.6rem 0.5rem; border-radius:8px; }
 .day-name { font-size:0.85rem; font-weight:600; color:#334155; }
+.hours-item.today .day-name { color:#052355; font-weight:700; }
 .day-hours { display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#475569; font-weight:500; }
 .hours-dot { width:6px; height:6px; border-radius:50%; background:#22c55e; display:inline-block; }
 .closed { color:#ef4444 !important; font-weight:600; }
