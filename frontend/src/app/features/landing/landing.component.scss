@@ -24,6 +24,17 @@
 .hero-character { width:100%; height:auto; display:block; filter:drop-shadow(0 24px 48px rgba(0,0,0,0.35)); animation:float 5s ease-in-out infinite; }
 @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-18px); } }
 
+.about-section { padding:5rem 1.5rem; background:#fff; }
+.about-content { display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center; }
+.about-text { }
+.about-description { font-size:1rem; color:#475569; line-height:1.8; margin:0 0 1.25rem; }
+.about-motto { display:flex; align-items:flex-start; gap:1rem; background:linear-gradient(135deg,#eef4ff,#dbeafe); padding:1.5rem; border-radius:16px; margin-top:2rem; border:1.5px solid #c7d8f0; }
+.about-motto svg { color:#052355; flex-shrink:0; margin-top:0.2rem; }
+.motto-label { font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.25rem; }
+.motto-text { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.1rem; font-weight:700; color:#052355; line-height:1.4; }
+.about-image { display:flex; align-items:center; justify-content:center; }
+.about-logo { width:100%; max-width:360px; height:auto; filter:drop-shadow(0 12px 32px rgba(5,35,85,0.15)); }
+
 .features-section { padding:5rem 1.5rem; background:#f8fafc; }
 .section-inner { max-width:1280px; margin:0 auto; }
 .section-header { text-align:center; margin-bottom:3rem; }
@@ -115,6 +126,13 @@
   .btn-get-started { width:100%; max-width:280px; text-align:center; }
   .hero-image-container { max-width:280px; width:100%; }
 
+  .about-section { padding:4rem 1.25rem; }
+  .about-content { grid-template-columns:1fr; gap:2.5rem; }
+  .about-image { order:-1; }
+  .about-logo { max-width:240px; }
+  .about-motto { padding:1.25rem; }
+  .motto-text { font-size:1rem; }
+
   .features-section { padding:4rem 1.25rem; }
   .section-title { font-size:1.9rem; }
   .roles-grid { grid-template-columns:1fr; gap:1rem; }
@@ -142,6 +160,12 @@
   .brand-name { font-size:1.1rem; }
   .hero-title { font-size:2rem; letter-spacing:-0.5px; }
   .hero-subtitle { font-size:0.95rem; }
+  .about-section { padding:3.5rem 1.25rem; }
+  .about-description { font-size:0.95rem; }
+  .about-logo { max-width:200px; }
+  .about-motto { padding:1rem; }
+  .motto-label { font-size:0.7rem; }
+  .motto-text { font-size:0.95rem; }
   .section-title { font-size:1.65rem; }
   .section-sub { font-size:0.875rem; }
   .role-card h3 { font-size:1rem; }
