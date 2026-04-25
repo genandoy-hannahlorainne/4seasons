@@ -245,7 +245,6 @@ interface UsersResponse {
               <div class="table-header">
                 <span>Name</span>
                 <span>Role</span>
-                <span>Registered</span>
                 <span>Status</span>
               </div>
               <div *ngFor="let user of recentUsers" class="table-row">
@@ -253,7 +252,6 @@ interface UsersResponse {
                 <span class="user-role">
                   <span class="role-badge" [ngClass]="user.role.toLowerCase()">{{ user.role }}</span>
                 </span>
-                <span class="user-date">{{ user.registeredDate }}</span>
                 <span class="user-status">
                   <span class="status-dot" [ngClass]="user.status.toLowerCase()"></span>
                   {{ user.status }}

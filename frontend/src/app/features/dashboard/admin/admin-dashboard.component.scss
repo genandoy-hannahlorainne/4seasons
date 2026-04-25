@@ -613,16 +613,14 @@
   margin-bottom: 1.5rem;
 }
 
-.users-card {
-  grid-column: 1 / -1; /* Span full width */
-}
-
 .card {
   background: white;
   border-radius: 16px;
   padding: 2rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(5, 35, 85, 0.1);
+  display: flex;
+  flex-direction: column;
 
   .card-header {
     display: flex;
@@ -646,6 +644,7 @@
       border-radius: 20px;
       font-size: 0.8rem;
       font-weight: 600;
+      animation: pulse-badge 2s ease-in-out infinite;
     }
 
     .alert-count {
@@ -675,6 +674,11 @@
       }
     }
   }
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 .activity-list {
@@ -738,55 +742,64 @@
   .table-header,
   .table-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: 1.25rem;
-    padding: 1rem 0;
+    grid-template-columns: 2fr 1.2fr 1fr;
+    gap: 1rem;
+    padding: 0.75rem 0;
   }
 
   .table-header {
     font-weight: 700;
     color: #64748b;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     border-bottom: 2px solid #e0f7f4;
   }
 
   .table-row {
     border-bottom: 1px solid #e0f7f4;
     align-items: center;
+    font-size: 0.9rem;
 
     &:last-child { border-bottom: none; }
 
     .user-name {
       font-weight: 600;
       color: #0f172a;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .role-badge {
-      padding: 0.4rem 1rem;
+      padding: 0.3rem 0.75rem;
       border-radius: 20px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 600;
+      display: inline-block;
+      text-align: center;
 
       &.student { background: #d4edda; color: #2e7d32; }
       &.clinic.staff,
       &.clinic-staff { background: #ffebee; color: #c62828; }
-      &.adviser { background: #e3d5f5; color: #7b1fa2; }
+      &.adviser,
+      &.faculty\/adviser { background: #e3d5f5; color: #7b1fa2; }
       &.admin { background: #d0f2ed; color: #0d6e5e; }
     }
 
     .user-date {
       color: #64748b;
-      font-size: 0.95rem;
+      font-size: 0.85rem;
+      display: none; // Hide date in side-by-side view
     }
 
     .user-status {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
+      font-size: 0.85rem;
 
       .status-dot {
-        width: 10px;
-        height: 10px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
 
         &.active { background: #2ecc71; }
