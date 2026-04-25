@@ -230,7 +230,8 @@ interface UsersResponse {
                 </div>
               </div>
               <div *ngIf="activityLog.length === 0" class="no-activity">
-                <span>📭</span> No recent activity
+                <i class="fa-solid fa-inbox"></i>
+                <p>No recent activity</p>
               </div>
             </div>
           </div>
