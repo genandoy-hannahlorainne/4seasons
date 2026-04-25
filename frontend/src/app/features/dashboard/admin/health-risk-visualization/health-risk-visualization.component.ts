@@ -72,7 +72,7 @@ import { takeUntil } from 'rxjs/operators';
             
             <div class="insight-card average-bmi">
               <div class="insight-icon">
-                <img src="assets/icons/average.jpg" alt="Average BMI" class="insight-icon-img">
+                <img src="assets/icons/average.png" alt="Average BMI" class="insight-icon-img">
               </div>
               <div class="insight-content">
                 <div class="insight-title">School Average BMI</div>
