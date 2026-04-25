@@ -18,8 +18,15 @@
     [style.backgroundPosition]="'center'">
     <div class="dev-hero-overlay"></div>
     <div class="dev-hero-content">
-      <h1>Meet the Developers</h1>
-      <p>The team behind the PDMHS Medical Record System</p>
+      <div class="capstone-badge-hero">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+        Capstone Project
+      </div>
+      <h1>Building the Future of<br>Student Healthcare</h1>
+      <p>This system is a capstone project developed by IT students from Polytechnic University of the Philippines (PUP) Taguig Campus.</p>
       <p class="dev-hero-school">PUP Taguig Campus — IT Students</p>
     </div>
   </section>
@@ -27,6 +34,7 @@
   <!-- Developers Grid -->
   <section class="developers-section">
     <div class="section-inner">
+
       <div class="developers-grid">
         <div class="developer-card" *ngFor="let dev of developers">
           <img [src]="dev.image" [alt]="dev.name" class="developer-image">
