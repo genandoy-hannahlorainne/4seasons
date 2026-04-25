@@ -1,15 +1,15 @@
-.landing-container { width:100%; min-height:100vh; display:flex; flex-direction:column; font-family:'Inter',sans-serif; }
+.landing-container { width:100%; min-height:100vh; display:flex; flex-direction:column; font-family:'Inter',sans-serif; overflow-x:hidden; }
 
-.header { background:rgba(255,255,255,0.97); backdrop-filter:blur(12px); padding:0 1.25rem; height:64px; display:flex; align-items:center; position:sticky; top:0; z-index:200; box-shadow:0 1px 0 rgba(5,35,85,0.08),0 2px 12px rgba(0,0,0,0.04); }
+.header { background:rgba(255,255,255,0.97); backdrop-filter:blur(12px); padding:0 1.25rem; height:64px; display:flex; align-items:center; position:sticky; top:0; z-index:200; box-shadow:0 1px 0 rgba(5,35,85,0.08),0 2px 12px rgba(0,0,0,0.04); width:100%; }
 .header-content { max-width:1280px; margin:0 auto; width:100%; display:flex; justify-content:space-between; align-items:center; }
-.header-brand { display:flex; align-items:center; gap:0.75rem; }
-.logo { height:48px; width:auto; }
-.brand-name { font-family:'Poppins',sans-serif; font-size:1.5rem; font-weight:700; color:#052355; letter-spacing:-0.5px; }
-.nav { display:flex; align-items:center; gap:0.25rem; }
+.header-brand { display:flex; align-items:center; gap:0.75rem; flex-shrink:0; }
+.logo { height:48px; width:auto; flex-shrink:0; }
+.brand-name { font-family:'Poppins',sans-serif; font-size:1.5rem; font-weight:700; color:#052355; letter-spacing:-0.5px; white-space:nowrap; }
+.nav { display:flex; align-items:center; gap:0.25rem; flex-wrap:wrap; }
 .nav-link { font-family:'Inter',sans-serif; background:none; border:none; padding:0.5rem 0.875rem; font-size:0.875rem; font-weight:600; color:#475569; cursor:pointer; border-radius:8px; transition:all 0.18s; white-space:nowrap; }
 .nav-link:hover { background:#f1f5f9; color:#052355; }
 
-.hero-section { min-height:100vh; position:relative; display:flex; align-items:center; }
+.hero-section { min-height:100vh; position:relative; display:flex; align-items:center; width:100%; overflow:hidden; }
 .hero-overlay { position:absolute; inset:0; background:linear-gradient(120deg,rgba(3,12,35,0.82) 0%,rgba(5,35,85,0.6) 60%,rgba(5,35,85,0.3) 100%); }
 .hero-content { position:relative; z-index:1; max-width:1280px; margin:0 auto; padding:5rem 2rem; display:flex; align-items:center; justify-content:space-between; gap:3rem; width:100%; }
 .hero-text { flex:1; max-width:600px; }
@@ -126,47 +126,54 @@
 /* ── Mobile ── */
 @media (max-width: 768px) {
   .header { padding:0 1rem; height:60px; }
+  .header-brand { gap:0.5rem; }
   .logo { height:42px; }
-  .brand-name { font-size:1.25rem; }
-  .nav-link { padding:0.45rem 0.75rem; font-size:0.82rem; }
+  .brand-name { font-size:1.15rem; }
+  .nav { gap:0.2rem; }
+  .nav-link { padding:0.4rem 0.7rem; font-size:0.8rem; }
 
-  .hero-content { flex-direction:column; text-align:center; padding:3.5rem 1.25rem 4rem; gap:2rem; }
+  .hero-content { flex-direction:column; text-align:center; padding:3rem 1.25rem; gap:2rem; }
   .hero-text { max-width:100%; }
-  .hero-badge { font-size:0.7rem; }
-  .hero-title { font-size:2.5rem; letter-spacing:-1px; }
-  .hero-subtitle { font-size:1rem; max-width:100%; margin-bottom:2rem; }
-  .hero-actions { justify-content:center; }
-  .btn-get-started { width:100%; max-width:280px; text-align:center; }
-  .hero-image-container { max-width:280px; width:100%; }
+  .hero-badge { font-size:0.7rem; padding:0.35rem 0.875rem; }
+  .hero-title { font-size:2.25rem; letter-spacing:-1px; }
+  .hero-subtitle { font-size:0.95rem; max-width:100%; margin-bottom:1.75rem; }
+  .hero-actions { justify-content:center; width:100%; }
+  .btn-get-started { width:100%; max-width:100%; text-align:center; font-size:0.9rem; padding:0.8rem 1.75rem; }
+  .hero-image-container { max-width:260px; width:100%; }
 
-  .about-section { padding:4rem 1.25rem; }
-  .about-content { grid-template-columns:1fr; gap:2.5rem; margin-bottom:2.5rem; }
+  .about-section { padding:3.5rem 1.25rem; }
+  .about-content { grid-template-columns:1fr; gap:2rem; margin-bottom:2rem; }
   .about-image { order:-1; }
-  .about-logo { max-width:240px; }
-  .about-motto { padding:1.25rem; }
-  .motto-text { font-size:1rem; }
-  .vision-mission-grid { grid-template-columns:1fr; gap:1.5rem; }
-  .vm-card { padding:1.75rem; }
-  .vm-icon { width:56px; height:56px; }
-  .vm-title { font-size:1.15rem; }
+  .about-logo { max-width:220px; }
+  .about-description { font-size:0.95rem; }
+  .about-motto { padding:1.15rem; }
+  .motto-text { font-size:0.95rem; }
+  .vision-mission-grid { grid-template-columns:1fr; gap:1.25rem; }
+  .vm-card { padding:1.5rem; }
+  .vm-icon { width:54px; height:54px; }
+  .vm-title { font-size:1.1rem; }
   .vm-text { font-size:0.9rem; }
   .vm-list li { font-size:0.9rem; }
 
-  .features-section { padding:4rem 1.25rem; }
-  .section-title { font-size:1.9rem; }
+  .features-section { padding:3.5rem 1.25rem; }
+  .section-title { font-size:1.85rem; }
+  .section-sub { font-size:0.9rem; }
   .roles-grid { grid-template-columns:1fr; gap:1rem; }
-  .role-card { padding:1.75rem 1.25rem; }
+  .role-card { padding:1.65rem 1.15rem; }
 
-  .info-section { padding:4rem 1.25rem; }
-  .info-grid { grid-template-columns:1fr; gap:1.25rem; }
-  .clinic-banner { padding:1.25rem 1.5rem; }
-  .contact-items { padding:1rem 1.5rem 1.5rem; }
-  .hours-header { padding:1.25rem 1.5rem; }
-  .hours-list { padding:0.5rem 1.5rem; }
-  .hours-note { margin:0 1.5rem 1.25rem; }
+  .info-section { padding:3.5rem 1.25rem; }
+  .info-grid { grid-template-columns:1fr; gap:1.15rem; }
+  .clinic-banner { padding:1.15rem 1.35rem; }
+  .contact-items { padding:0.95rem 1.35rem 1.35rem; }
+  .contact-item-value { font-size:0.85rem; }
+  .hours-header { padding:1.15rem 1.35rem; }
+  .hours-list { padding:0.45rem 1.35rem; }
+  .hours-item { padding:0.55rem 0; }
+  .hours-note { margin:0 1.35rem 1.15rem; font-size:0.72rem; }
 
-  .footer { padding:1.5rem 1.25rem; }
-  .modal { padding:1.75rem 1.5rem; border-radius:16px; max-height:85vh; }
+  .footer { padding:1.35rem 1.25rem; }
+  .footer-copyright { font-size:0.8rem; }
+  .modal { padding:1.65rem 1.35rem; border-radius:16px; max-height:85vh; }
   .modal-body p { font-size:0.85rem; }
   .modal-body h4 { font-size:0.85rem; }
   .modal-body ul li { font-size:0.85rem; }
@@ -203,4 +210,98 @@
   .modal-body h4 { font-size:0.82rem; }
   .modal-body ul { padding-left:1rem; }
   .modal-body ul li { font-size:0.8rem; line-height:1.65; }
+}
+
+/* ── Extra Small Mobile (Mobile S) ── */
+@media (max-width: 375px) {
+  .header { height:56px; padding:0 0.75rem; }
+  .header-brand { gap:0.4rem; }
+  .logo { height:34px; }
+  .brand-name { font-size:0.95rem; }
+  .nav { gap:0.15rem; justify-content:flex-end; }
+  .nav-link { padding:0.3rem 0.5rem; font-size:0.7rem; }
+  .hero-title { font-size:1.75rem; }
+  .hero-subtitle { font-size:0.9rem; }
+  .hero-badge { font-size:0.65rem; padding:0.35rem 0.875rem; }
+  .btn-get-started { font-size:0.875rem; padding:0.75rem 1.75rem; }
+  .section-title { font-size:1.5rem; }
+  .section-tag { font-size:0.68rem; }
+  .about-logo { max-width:180px; }
+  .vm-card { padding:1.25rem; }
+  .role-card { padding:1.5rem 1rem; }
+}
+
+/* ── 320px (iPhone SE, Galaxy Fold) ── */
+@media (max-width: 320px) {
+  .header { height:52px; padding:0 0.65rem; }
+  .header-brand { gap:0.35rem; }
+  .logo { height:32px; }
+  .brand-name { font-size:0.85rem; }
+  .nav { gap:0.1rem; }
+  .nav-link { padding:0.25rem 0.4rem; font-size:0.65rem; }
+  .hero-title { font-size:1.6rem; }
+  .hero-subtitle { font-size:0.85rem; }
+  .section-title { font-size:1.4rem; }
+}
+
+/* ── Large Desktop ── */
+@media (min-width: 1440px) {
+  .header-content { max-width:1400px; }
+  .hero-content { max-width:1400px; }
+  .section-inner { max-width:1400px; }
+  .hero-title { font-size:4rem; }
+  .hero-subtitle { font-size:1.2rem; }
+  .section-title { font-size:2.5rem; }
+}
+
+/* ── Extra Large Desktop (2K) ── */
+@media (min-width: 1920px) {
+  .header-content { max-width:1600px; }
+  .hero-content { max-width:1600px; padding:6rem 2rem; }
+  .section-inner { max-width:1600px; }
+  .hero-title { font-size:4.5rem; }
+  .hero-subtitle { font-size:1.3rem; }
+  .section-title { font-size:2.75rem; }
+  .about-section { padding:6rem 2rem; }
+  .features-section { padding:6rem 2rem; }
+  .info-section { padding:6rem 2rem; }
+}
+
+/* ── 4K ── */
+@media (min-width: 2560px) {
+  .header { height:80px; padding:0 3rem; }
+  .logo { height:64px; }
+  .brand-name { font-size:2rem; }
+  .nav-link { font-size:1.1rem; padding:0.7rem 1.25rem; }
+  .header-content { max-width:2200px; }
+  .hero-content { max-width:2200px; padding:8rem 3rem; }
+  .section-inner { max-width:2200px; }
+  .hero-title { font-size:5.5rem; }
+  .hero-subtitle { font-size:1.6rem; max-width:900px; }
+  .hero-badge { font-size:0.95rem; padding:0.6rem 1.5rem; }
+  .btn-get-started { font-size:1.2rem; padding:1.25rem 2.75rem; }
+  .section-title { font-size:3.5rem; }
+  .section-sub { font-size:1.2rem; }
+  .section-tag { font-size:0.9rem; }
+  .about-section { padding:8rem 3rem; }
+  .about-logo { max-width:500px; }
+  .about-description { font-size:1.3rem; }
+  .motto-text { font-size:1.4rem; }
+  .vm-card { padding:3rem; }
+  .vm-icon { width:80px; height:80px; }
+  .vm-title { font-size:1.6rem; }
+  .vm-text { font-size:1.2rem; }
+  .vm-list li { font-size:1.2rem; }
+  .features-section { padding:8rem 3rem; }
+  .roles-grid { gap:2.5rem; }
+  .role-card { padding:3rem 2rem; }
+  .role-icon-wrap { width:100px; height:100px; }
+  .role-card h3 { font-size:1.4rem; }
+  .role-card p { font-size:1.1rem; }
+  .info-section { padding:8rem 3rem; }
+  .info-grid { gap:3rem; }
+  .contact-item-value { font-size:1.1rem; }
+  .hours-item { padding:0.8rem 0; }
+  .day-name { font-size:1.1rem; }
+  .day-hours { font-size:1.1rem; }
 }
