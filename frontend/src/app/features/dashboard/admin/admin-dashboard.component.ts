@@ -183,21 +183,21 @@ interface UsersResponse {
             </div>
           </div>
           <div class="stat-card students">
-            <div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+            <div class="stat-icon"><img src="assets/icons/student.png" alt="Students" class="stat-icon-img"></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalStudents }}</div>
               <div class="stat-label">Students</div>
             </div>
           </div>
           <div class="stat-card faculty">
-            <div class="stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+            <div class="stat-icon"><img src="assets/icons/adviser-faculty.png" alt="Faculty/Advisers" class="stat-icon-img"></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalAdvisers }}</div>
               <div class="stat-label">Faculty/Advisers</div>
             </div>
           </div>
           <div class="stat-card staff">
-            <div class="stat-icon"><i class="fa-solid fa-notes-medical"></i></div>
+            <div class="stat-icon"><img src="assets/icons/clinic-staff.png" alt="Clinic Staff" class="stat-icon-img"></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalStaff }}</div>
               <div class="stat-label">Clinic Staff</div>
