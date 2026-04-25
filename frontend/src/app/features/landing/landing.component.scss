@@ -35,19 +35,19 @@
 .about-image { display:flex; align-items:center; justify-content:center; }
 .about-logo { width:100%; max-width:360px; height:auto; filter:drop-shadow(0 12px 32px rgba(5,35,85,0.15)); }
 .vision-mission-grid { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
-.vm-card { background:#fff; border:1.5px solid #e8edf5; border-radius:18px; padding:2rem; box-shadow:0 4px 24px rgba(5,35,85,0.08); transition:all 0.22s; }
+.vm-card { background:#fff; border:1.5px solid #e8edf5; border-radius:18px; padding:2rem; box-shadow:0 4px 24px rgba(5,35,85,0.08); transition:all 0.22s; display:flex; flex-direction:column; height:100%; }
 .vm-card:hover { transform:translateY(-4px); box-shadow:0 12px 40px rgba(5,35,85,0.12); border-color:#c7d8f0; }
-.vm-icon { display:inline-flex; align-items:center; justify-content:center; width:64px; height:64px; background:linear-gradient(135deg,#1e3a8a,#3b82f6); border-radius:16px; color:#fff; margin-bottom:1.25rem; }
+.vm-icon { display:inline-flex; align-items:center; justify-content:center; width:64px; height:64px; background:linear-gradient(135deg,#1e3a8a,#3b82f6); border-radius:16px; color:#fff; margin-bottom:1.25rem; flex-shrink:0; }
 .vm-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.25rem; font-weight:700; color:#052355; margin:0 0 1rem; }
 .vm-text { font-size:0.95rem; color:#475569; line-height:1.75; margin:0 0 1rem; }
 .vm-text:last-child { margin-bottom:0; }
-.vm-list { margin:0; padding-left:1.25rem; list-style:disc; }
+.vm-list { margin:0; padding-left:1.25rem; list-style:disc; flex-grow:1; }
 .vm-list li { font-size:0.95rem; color:#475569; line-height:1.75; margin-bottom:0.75rem; padding-left:0.25rem; }
 .vm-list li:last-child { margin-bottom:0; }
 
-.features-section { padding:5rem 1.5rem; background:#f8fafc; }
+.features-section { padding:5rem 1.5rem; background:#fff; }
 .section-inner { max-width:1280px; margin:0 auto; }
-.section-header { text-align:center; margin-bottom:3rem; }
+.section-header { text-align:left; margin-bottom:3rem; }
 .section-tag { display:inline-block; background:#e8f0fe; color:#052355; font-size:0.72rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:0.35rem 1rem; border-radius:100px; margin-bottom:0.875rem; }
 .section-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:2.25rem; font-weight:800; color:#0f172a; margin:0 0 0.75rem; letter-spacing:-0.8px; }
 .section-sub { color:#64748b; font-size:0.95rem; margin:0; line-height:1.6; }
@@ -61,7 +61,7 @@
 .role-card p { font-size:0.85rem; color:#64748b; margin:0 0 1.25rem; line-height:1.6; }
 .view-more { display:inline-flex; align-items:center; gap:0.4rem; font-size:0.82rem; font-weight:700; color:#052355; }
 
-.info-section { padding:5rem 1.5rem; background:#eef4ff; }
+.info-section { padding:5rem 1.5rem; background:#f8fafc; }
 .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
 .info-card { background:#fff; border-radius:18px; padding:0; border:1.5px solid #dce8f8; overflow:hidden; box-shadow:0 4px 24px rgba(5,35,85,0.08); }
 .clinic-banner { background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%); padding:1.5rem 1.75rem; display:flex; align-items:center; gap:1rem; color:white; }
