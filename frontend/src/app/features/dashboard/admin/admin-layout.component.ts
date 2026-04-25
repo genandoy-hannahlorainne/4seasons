@@ -119,61 +119,63 @@ interface PasswordChangeRequest {
         </div>
       </header>
 
-      <!-- Notification Panel (Facebook-style dropdown) -->
-      <div class="notification-panel" *ngIf="showNotificationPanel">
-        <div class="panel-header">
-          <h3>Notifications</h3>
-          <button class="panel-close" (click)="closeNotificationPanel()">
-            <i class="fa-solid fa-times"></i>
-          </button>
-        </div>
-
-        <div class="panel-tabs">
-          <button
-            class="tab-btn"
-            [class.active]="showAllTab"
-            (click)="showAllTab = true">
-            All
-          </button>
-          <button
-            class="tab-btn"
-            [class.active]="!showAllTab"
-            (click)="showAllTab = false">
-            Unread
-          </button>
-        </div>
-
-        <div class="panel-content">
-          <div class="section-header">
-            <span>Earlier</span>
-            <a href="javascript:void(0)" class="see-all">See all</a>
+      <!-- Notification Panel (Centered Modal) -->
+      <div class="notification-panel-overlay" *ngIf="showNotificationPanel" (click)="closeNotificationPanel()">
+        <div class="notification-panel" (click)="$event.stopPropagation()">
+          <div class="panel-header">
+            <h3>Notifications</h3>
+            <button class="panel-close" (click)="closeNotificationPanel()">
+              <i class="fa-solid fa-times"></i>
+            </button>
           </div>
 
-          <div class="notification-list">
-            <div
-              *ngFor="let request of passwordChangeRequests"
-              class="notification-item password-change-notif">
-              <div class="notif-banner" (click)="openNotificationModal(request)">
-                <div class="banner-header">
-                  <i class="fa-solid fa-key"></i>
-                  <span>1 Password Change Request</span>
-                </div>
-                <div class="banner-body">
-                  <div class="request-main">
-                    <strong>({{ request.request_data.role }})</strong>
+          <div class="panel-tabs">
+            <button
+              class="tab-btn"
+              [class.active]="showAllTab"
+              (click)="showAllTab = true">
+              All
+            </button>
+            <button
+              class="tab-btn"
+              [class.active]="!showAllTab"
+              (click)="showAllTab = false">
+              Unread
+            </button>
+          </div>
+
+          <div class="panel-content">
+            <div class="section-header">
+              <span>Earlier</span>
+              <a href="javascript:void(0)" class="see-all">See all</a>
+            </div>
+
+            <div class="notification-list">
+              <div
+                *ngFor="let request of passwordChangeRequests"
+                class="notification-item password-change-notif">
+                <div class="notif-banner" (click)="openNotificationModal(request)">
+                  <div class="banner-header">
+                    <i class="fa-solid fa-key"></i>
+                    <span>1 Password Change Request</span>
                   </div>
-                  <div class="request-reason">{{ request.request_data.reason }}</div>
-                  <div class="request-footer">
-                    <span>Username: {{ request.request_data.username }}</span>
-                    <span class="time-ago">{{ request.timeAgo }}</span>
+                  <div class="banner-body">
+                    <div class="request-main">
+                      <strong>({{ request.request_data.role }})</strong>
+                    </div>
+                    <div class="request-reason">{{ request.request_data.reason }}</div>
+                    <div class="request-footer">
+                      <span>Username: {{ request.request_data.username }}</span>
+                      <span class="time-ago">{{ request.timeAgo }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div *ngIf="passwordChangeRequests.length === 0" class="no-notifications">
-              <i class="fa-solid fa-bell-slash"></i>
-              <p>No new notifications</p>
+              <div *ngIf="passwordChangeRequests.length === 0" class="no-notifications">
+                <i class="fa-solid fa-bell-slash"></i>
+                <p>No new notifications</p>
+              </div>
             </div>
           </div>
         </div>
