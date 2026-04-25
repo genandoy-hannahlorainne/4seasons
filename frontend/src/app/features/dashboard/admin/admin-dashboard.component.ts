@@ -235,29 +235,6 @@ interface UsersResponse {
             </div>
           </div>
 
-          <!-- Alerts & Warnings -->
-          <div class="card alerts-card">
-            <div class="card-header">
-              <h2>Alerts & Warnings</h2>
-              <span class="alert-count" *ngIf="systemAlerts.length > 0">{{ systemAlerts.length }}</span>
-            </div>
-            <div class="alerts-list">
-              <div *ngFor="let alert of systemAlerts" class="alert-item" [ngClass]="alert.type">
-                <div class="alert-icon">
-                  <i [ngClass]="getAlertIconClass(alert.type)"></i>
-                </div>
-                <div class="alert-content">
-                  <div class="alert-message">{{ alert.message }}</div>
-                  <div class="alert-date">{{ alert.date }}</div>
-                </div>
-                <button class="alert-dismiss" (click)="dismissAlert(alert)">×</button>
-              </div>
-              <div *ngIf="systemAlerts.length === 0" class="no-alerts">
-                <span><i class="fa-solid fa-check"></i></span> No active alerts
-              </div>
-            </div>
-          </div>
-
           <!-- Recent Users -->
           <div class="card users-card">
             <div class="card-header">
@@ -1135,7 +1112,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   };
 
   recentUsers: any[] = [];
-  systemAlerts: any[] = [];
   activityLog: any[] = [];
   emergencyNotifications: any[] = [];
   notificationHistory: any[] = [];
@@ -1448,22 +1424,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       system: 'fa-solid fa-gear'
     };
     return icons[type] || 'fa-solid fa-circle-info';
-  }
-
-  getAlertIconClass(type: string): string {
-    const icons: { [key: string]: string } = {
-      warning: 'fa-solid fa-triangle-exclamation',
-      info: 'fa-solid fa-circle-info',
-      error: 'fa-solid fa-circle-xmark'
-    };
-    return icons[type] || 'fa-solid fa-bell';
-  }
-
-  dismissAlert(alert: any): void {
-    const index = this.systemAlerts.indexOf(alert);
-    if (index > -1) {
-      this.systemAlerts.splice(index, 1);
-    }
   }
 
   viewEmergencyDetails(notification: any): void {

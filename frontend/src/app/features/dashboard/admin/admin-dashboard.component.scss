@@ -734,62 +734,6 @@
   }
 }
 
-.alerts-list {
-  .alert-item {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    padding: 1.25rem;
-    border-radius: 16px;
-    margin-bottom: 1rem;
-
-    &.warning { background: #fff8e1; border-left: 4px solid #ffc107; }
-    &.info { background: #e0f7f4; border-left: 4px solid #4db8a8; }
-    &.error { background: #ffebee; border-left: 4px solid #ff6b6b; }
-
-    .alert-icon { font-size: 1.5rem; }
-
-    .alert-content {
-      flex: 1;
-
-      .alert-message {
-        font-weight: 600;
-        color: #0f172a;
-        margin-bottom: 0.25rem;
-      }
-
-      .alert-date {
-        font-size: 0.9rem;
-        color: #64748b;
-      }
-    }
-
-    .alert-dismiss {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      color: #64748b;
-      cursor: pointer;
-      transition: color 0.2s ease;
-
-      &:hover { color: #0f172a; }
-    }
-  }
-
-  .no-alerts {
-    text-align: center;
-    padding: 3rem;
-    color: #4db8a8;
-    font-weight: 500;
-
-    span {
-      font-size: 2rem;
-      display: block;
-      margin-bottom: 0.75rem;
-    }
-  }
-}
-
 .users-table {
   .table-header,
   .table-row {
