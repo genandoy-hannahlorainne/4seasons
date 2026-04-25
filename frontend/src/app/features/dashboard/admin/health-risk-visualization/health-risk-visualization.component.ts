@@ -254,23 +254,6 @@ import { takeUntil } from 'rxjs/operators';
           </div>
         </div>
 
-        <!-- Recommendations -->
-        <div class="recommendations-section">
-          <h3>Health Recommendations</h3>
-          <div class="recommendations-list">
-            <div *ngFor="let recommendation of getRecommendations()" class="recommendation-item" [ngClass]="recommendation.priority">
-              <div class="recommendation-icon">
-                <i [class]="recommendation.icon"></i>
-              </div>
-              <div class="recommendation-content">
-                <div class="recommendation-title">{{ recommendation.title }}</div>
-                <div class="recommendation-description">{{ recommendation.description }}</div>
-                <div class="recommendation-action">{{ recommendation.action }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Recent Trends -->
         <div class="trends-section" *ngIf="healthData.recent_trends && healthData.recent_trends.length > 0">
           <h3>Recent BMI Update Trends (Last 30 Days)</h3>
@@ -763,77 +746,6 @@ import { takeUntil } from 'rxjs/operators';
           &.low { background: #d4edda; color: #155724; }
           &.moderate { background: #fff3cd; color: #856404; }
           &.high { background: #f8d7da; color: #721c24; }
-        }
-      }
-    }
-
-    .recommendations-section {
-      margin-bottom: 2.5rem;
-      
-      h3 {
-        font-size: 1.3rem;
-        color: #2c3e50;
-        margin-bottom: 1.5rem;
-        font-weight: 600;
-      }
-    }
-
-    .recommendations-list {
-      .recommendation-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 1rem;
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        border-left: 4px solid;
-        
-        &.high {
-          background: #fff5f5;
-          border-color: #e74c3c;
-          
-          .recommendation-icon { color: #e74c3c; }
-        }
-        
-        &.medium {
-          background: #fff8e1;
-          border-color: #f39c12;
-          
-          .recommendation-icon { color: #f39c12; }
-        }
-        
-        &.low {
-          background: #f0f8ff;
-          border-color: #3498db;
-          
-          .recommendation-icon { color: #3498db; }
-        }
-        
-        .recommendation-icon {
-          font-size: 1.5rem;
-          flex-shrink: 0;
-          margin-top: 0.25rem;
-        }
-        
-        .recommendation-content {
-          .recommendation-title {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-          }
-          
-          .recommendation-description {
-            color: #7f8c8d;
-            margin-bottom: 0.5rem;
-            line-height: 1.5;
-          }
-          
-          .recommendation-action {
-            color: #3498db;
-            font-weight: 500;
-            font-size: 0.9rem;
-          }
         }
       }
     }
