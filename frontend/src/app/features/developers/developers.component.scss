@@ -27,7 +27,22 @@
   align-items: center;
 }
 
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .logo { height: 52px; width: auto; }
+
+.brand-name {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #052355;
+  letter-spacing: -0.5px;
+}
+
 .nav { display: flex; gap: 0.25rem; }
 
 .nav-link {
@@ -225,6 +240,10 @@
 }
 
 @media (max-width: 768px) {
+  .header { padding: 0 1rem; height: 60px; }
+  .logo { height: 42px; }
+  .brand-name { font-size: 1.25rem; }
+  .nav-link { padding: 0.45rem 0.75rem; font-size: 0.82rem; }
   .dev-hero { min-height: 450px; padding: 3rem 1.5rem; }
   .dev-hero-content h1 { font-size: 2.5rem; }
   .dev-hero-content p { font-size: 1.05rem; }
@@ -233,6 +252,11 @@
 
 @media (max-width: 480px) {
   .developers-grid { grid-template-columns: 1fr; }
+  .header-brand { gap: 0.5rem; }
+  .logo { height: 38px; }
+  .brand-name { font-size: 1.1rem; }
+  .nav { flex-wrap: wrap; gap: 0.15rem; }
+  .nav-link { padding: 0.4rem 0.65rem; font-size: 0.75rem; }
   .dev-hero { min-height: 400px; padding: 2.5rem 1.25rem; }
   .dev-hero-content h1 { font-size: 2rem; letter-spacing: -1px; }
   .dev-hero-content p { font-size: 0.95rem; }
