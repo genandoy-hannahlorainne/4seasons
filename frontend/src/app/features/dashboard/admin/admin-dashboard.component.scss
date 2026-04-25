@@ -608,7 +608,7 @@
 
 .content-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: 1.5rem;
   margin-bottom: 1.5rem;
 }
@@ -738,90 +738,6 @@
   }
 }
 
-.users-table {
-  .table-header,
-  .table-row {
-    display: grid;
-    grid-template-columns: 2fr 1.2fr 1fr;
-    gap: 1rem;
-    padding: 0.75rem 0;
-  }
-
-  .table-header {
-    font-weight: 700;
-    color: #64748b;
-    font-size: 0.85rem;
-    border-bottom: 2px solid #e0f7f4;
-  }
-
-  .table-row {
-    border-bottom: 1px solid #e0f7f4;
-    align-items: center;
-    font-size: 0.9rem;
-
-    &:last-child { border-bottom: none; }
-
-    .user-name {
-      font-weight: 600;
-      color: #0f172a;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .role-badge {
-      padding: 0.3rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      display: inline-block;
-      text-align: center;
-
-      &.student { background: #d4edda; color: #2e7d32; }
-      &.clinic.staff,
-      &.clinic-staff { background: #ffebee; color: #c62828; }
-      &.adviser,
-      &.faculty\/adviser { background: #e3d5f5; color: #7b1fa2; }
-      &.admin { background: #d0f2ed; color: #0d6e5e; }
-    }
-
-    .user-date {
-      color: #64748b;
-      font-size: 0.85rem;
-      display: none; // Hide date in side-by-side view
-    }
-
-    .user-status {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-
-      .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-
-        &.active { background: #2ecc71; }
-        &.inactive { background: #ff6b6b; }
-      }
-    }
-  }
-}
-
-.no-users {
-  text-align: center;
-  padding: 3rem;
-  color: #64748b;
-  font-weight: 500;
-
-  span {
-    font-size: 2rem;
-    display: block;
-    margin-bottom: 0.75rem;
-  }
-}
-
 @media (max-width: 1200px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -877,16 +793,6 @@
 
   .stats-grid {
     grid-template-columns: 1fr;
-  }
-
-  .users-table .table-header,
-  .users-table .table-row {
-    grid-template-columns: 1fr 1fr;
-
-    .user-date,
-    .user-status {
-      display: none;
-    }
   }
 }
 

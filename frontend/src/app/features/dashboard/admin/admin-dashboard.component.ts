@@ -234,34 +234,6 @@ interface UsersResponse {
               </div>
             </div>
           </div>
-
-          <!-- Recent Users -->
-          <div class="card users-card">
-            <div class="card-header">
-              <h2>Recent Users</h2>
-              <button class="view-all-btn" (click)="navigateTo('/dashboard/admin/manage-users')">View All</button>
-            </div>
-            <div class="users-table" *ngIf="recentUsers.length > 0">
-              <div class="table-header">
-                <span>Name</span>
-                <span>Role</span>
-                <span>Status</span>
-              </div>
-              <div *ngFor="let user of recentUsers" class="table-row">
-                <span class="user-name">{{ user.name }}</span>
-                <span class="user-role">
-                  <span class="role-badge" [ngClass]="user.role.toLowerCase()">{{ user.role }}</span>
-                </span>
-                <span class="user-status">
-                  <span class="status-dot" [ngClass]="user.status.toLowerCase()"></span>
-                  {{ user.status }}
-                </span>
-              </div>
-            </div>
-            <div class="no-users" *ngIf="recentUsers.length === 0">
-              <span>👤</span> No users registered yet
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1109,7 +1081,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     totalAdvisers: 0
   };
 
-  recentUsers: any[] = [];
   activityLog: any[] = [];
   emergencyNotifications: any[] = [];
   notificationHistory: any[] = [];
@@ -1161,7 +1132,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (response?.success && response.data?.users) {
-            this.updateRecentUsersData(response.data);
+            // Data updated via BehaviorSubject
           }
         },
         error: (err) => {
@@ -1219,7 +1190,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
         if (response?.success && response.data?.users) {
           this.usersData$.next(response);
-          this.updateRecentUsersData(response.data);
         } else {
           console.error('❌ Invalid response structure:', response);
         }
@@ -1328,36 +1298,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         console.error('❌ Error loading admin notifications:', err);
       }
     });
-  }
-
-  private updateRecentUsersData(data: any): void {
-    console.log('📊 Updating recent users with data:', data);
-
-    if (!data || !data.users) {
-      console.error('❌ Invalid data structure');
-      return;
-    }
-
-    const students = Array.isArray(data.users?.student) ? data.users.student : [];
-    const advisers = Array.isArray(data.users?.adviser) ? data.users.adviser : [];
-    const clinicStaff = Array.isArray(data.users?.clinic_staff) ? data.users.clinic_staff : [];
-    const admins = Array.isArray(data.users?.admin) ? data.users.admin : [];
-
-    // Combine all users for recent users display
-    const allUsers: User[] = [...students, ...advisers, ...clinicStaff, ...admins];
-
-    // Get recent users (last 10, sorted by creation date)
-    this.recentUsers = allUsers
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, 10)
-      .map(user => ({
-        name: user.full_name || user.username,
-        role: user.role_name,
-        registeredDate: this.formatDate(user.created_at),
-        status: user.is_active ? 'Active' : 'Inactive'
-      }));
-
-    console.log('✅ Recent users updated:', this.recentUsers.length);
   }
 
   private formatRoleName(roleName: string): string {
