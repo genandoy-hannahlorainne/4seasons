@@ -15,6 +15,7 @@ export class LandingComponent {
   activeSection = 'home';
   currentDay: string = '';
   isOpenNow: boolean = false;
+  signupStep: 'initial' | 'contact' = 'initial';
 
   constructor(private router: Router) {
     this.updateCurrentStatus();
