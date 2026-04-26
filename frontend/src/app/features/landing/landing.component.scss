@@ -66,9 +66,11 @@
 .info-section { padding:5rem 1.5rem; background:#f8fafc; }
 .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
 .info-card { background:#fff; border-radius:18px; padding:0; border:1.5px solid #dce8f8; overflow:hidden; box-shadow:0 4px 24px rgba(5,35,85,0.08); }
+.clinic-card { background:#fff; border:1.5px solid #dce8f8; }
 .clinic-banner { background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%); padding:1.5rem 1.75rem; display:flex; align-items:center; gap:1rem; color:white; }
+.clinic-icon-box { display:flex; align-items:center; justify-content:center; width:44px; height:44px; min-width:44px; background:rgba(255,255,255,0.15); border-radius:10px; }
 .clinic-label { font-family:'Plus Jakarta Sans',sans-serif; font-size:1rem; font-weight:700; color:#fff; }
-.clinic-sub { font-size:0.78rem; color:rgba(255,255,255,0.65); margin-top:0.2rem; }
+.clinic-sub { font-size:0.78rem; color:rgba(255,255,255,0.75); margin-top:0.2rem; }
 .contact-items { padding:1.25rem 1.75rem 1.75rem; display:flex; flex-direction:column; gap:1.1rem; }
 .contact-item { display:flex; align-items:flex-start; gap:0.875rem; }
 .contact-item-icon { display:flex; align-items:center; justify-content:center; width:40px; height:40px; min-width:40px; background:#eef4ff; border-radius:10px; color:#052355; }
