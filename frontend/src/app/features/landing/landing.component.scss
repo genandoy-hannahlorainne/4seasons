@@ -141,8 +141,9 @@
   .hero-badge { font-size:0.7rem; padding:0.35rem 0.875rem; }
   .hero-title { font-size:2.25rem; letter-spacing:-1px; }
   .hero-subtitle { font-size:0.95rem; max-width:100%; margin-bottom:1.75rem; }
-  .hero-actions { justify-content:center; width:100%; }
+  .hero-actions { justify-content:center; width:100%; flex-direction:column; }
   .btn-get-started { width:100%; max-width:100%; text-align:center; font-size:0.9rem; padding:0.8rem 1.75rem; }
+  .btn-sign-up { width:100%; padding:0.8rem 1.75rem; font-size:0.9rem; }
   .hero-image-container { max-width:260px; width:100%; }
 
   .about-section { padding:3.5rem 1.25rem; }
