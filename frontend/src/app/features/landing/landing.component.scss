@@ -355,3 +355,62 @@
   .contact-value { font-size:0.8rem; }
   .contact-note { font-size:0.7rem; padding:0.65rem 0.75rem; }
 }
+
+
+/* ── Developers Modal ── */
+.modal-developers { max-height:90vh; overflow-y:auto; text-align:center; }
+.dev-modal-header { padding-bottom:1.5rem; border-bottom:1.5px solid #e8edf5; margin-bottom:1.5rem; }
+.dev-modal-header .hero-badges { display:flex; align-items:center; justify-content:center; gap:0.75rem; flex-wrap:wrap; margin-bottom:1rem; }
+.capstone-badge-hero { display:inline-flex; align-items:center; gap:0.4rem; background:#e8f0fe; border:1px solid #c7d8f0; color:#052355; padding:0.4rem 0.875rem; border-radius:100px; font-size:0.7rem; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; }
+.capstone-badge-hero svg { flex-shrink:0; }
+.dev-modal-header h2 { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.3rem; font-weight:800; color:#0f172a; margin:0 0 0.75rem; }
+.dev-modal-header p { font-size:0.9rem; color:#64748b; margin:0 0 1rem; line-height:1.6; }
+.repo-link-modal { display:inline-flex; align-items:center; gap:0.75rem; background:linear-gradient(135deg,#052355,#0d3a7a); color:#fff; padding:0.75rem 1.25rem; border-radius:10px; text-decoration:none; transition:all 0.22s; box-shadow:0 4px 14px rgba(5,35,85,0.3); }
+.repo-link-modal:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(5,35,85,0.4); }
+.repo-link-modal svg { flex-shrink:0; }
+.repo-info { display:flex; flex-direction:column; align-items:flex-start; gap:0.2rem; }
+.repo-label { font-size:0.75rem; font-weight:700; letter-spacing:0.3px; }
+.repo-url { font-size:0.7rem; font-weight:500; color:rgba(255,255,255,0.8); font-family:'Courier New',monospace; }
+.dev-modal-body { text-align:left; }
+.dev-modal-body h3 { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.1rem; font-weight:700; color:#0f172a; margin:0 0 1.25rem; text-align:center; }
+.developers-grid-modal { display:grid; grid-template-columns:repeat(2,1fr); gap:1.25rem; }
+.developer-card-modal { background:#f8fafc; border-radius:14px; padding:1.5rem 1.25rem; text-align:center; border:1.5px solid #e8edf5; transition:all 0.22s; }
+.developer-card-modal:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(5,35,85,0.1); border-color:#c7d8f0; }
+.developer-image-modal { width:80px; height:80px; border-radius:50%; object-fit:cover; margin:0 auto 0.875rem; border:3px solid #e8f0fe; display:block; }
+.developer-name-modal { font-family:'Plus Jakarta Sans',sans-serif; font-size:0.95rem; font-weight:700; color:#0f172a; margin:0 0 0.25rem; }
+.developer-school-modal { font-size:0.7rem; color:#94a3b8; margin:0 0 0.35rem; font-weight:500; }
+.developer-role-modal { font-size:0.8rem; color:#64748b; margin:0 0 0.75rem; font-weight:500; }
+.developer-github-modal { display:inline-flex; align-items:center; gap:0.35rem; font-size:0.75rem; font-weight:600; color:#052355; text-decoration:none; background:#eef4ff; padding:0.3rem 0.75rem; border-radius:100px; transition:all 0.18s; }
+.developer-github-modal:hover { background:#dbeafe; color:#1e3a8a; }
+
+@media (max-width: 768px) {
+  .developers-grid-modal { grid-template-columns:1fr; gap:1rem; }
+  .dev-modal-header h2 { font-size:1.15rem; }
+  .dev-modal-header p { font-size:0.85rem; }
+  .repo-link-modal { padding:0.65rem 1rem; gap:0.6rem; }
+  .repo-label { font-size:0.7rem; }
+  .repo-url { font-size:0.65rem; }
+  .developer-card-modal { padding:1.25rem 1rem; }
+  .developer-image-modal { width:70px; height:70px; }
+  .developer-name-modal { font-size:0.9rem; }
+  .developer-school-modal { font-size:0.65rem; }
+  .developer-role-modal { font-size:0.75rem; }
+}
+
+@media (max-width: 480px) {
+  .developers-grid-modal { grid-template-columns:1fr; gap:0.875rem; }
+  .dev-modal-header h2 { font-size:1.05rem; }
+  .dev-modal-header p { font-size:0.8rem; }
+  .capstone-badge-hero { font-size:0.65rem; padding:0.35rem 0.75rem; }
+  .repo-link-modal { padding:0.6rem 0.9rem; gap:0.5rem; flex-direction:column; }
+  .repo-link-modal svg { width:16px; height:16px; }
+  .repo-info { align-items:center; }
+  .repo-label { font-size:0.65rem; }
+  .repo-url { font-size:0.6rem; }
+  .developer-card-modal { padding:1.1rem 0.9rem; }
+  .developer-image-modal { width:64px; height:64px; }
+  .developer-name-modal { font-size:0.85rem; }
+  .developer-school-modal { font-size:0.6rem; }
+  .developer-role-modal { font-size:0.7rem; }
+  .developer-github-modal { font-size:0.7rem; padding:0.25rem 0.65rem; }
+}
