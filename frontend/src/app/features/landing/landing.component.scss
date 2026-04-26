@@ -28,7 +28,6 @@
 
 .about-section { padding:5rem 1.5rem; background:#fff; }
 .about-content { display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center; margin-bottom:3rem; }
-.about-text { }
 .about-description { font-size:1rem; color:#475569; line-height:1.8; margin:0 0 1.25rem; }
 .about-motto { display:flex; align-items:flex-start; gap:1rem; background:linear-gradient(135deg,#eef4ff,#dbeafe); padding:1.5rem; border-radius:16px; margin-top:2rem; border:1.5px solid #c7d8f0; }
 .about-motto svg { color:#052355; flex-shrink:0; margin-top:0.2rem; }
@@ -135,17 +134,15 @@
   .brand-name { font-size:1.15rem; }
   .nav { gap:0.2rem; }
   .nav-link { padding:0.4rem 0.7rem; font-size:0.8rem; }
-
   .hero-content { flex-direction:column; text-align:center; padding:3rem 1.25rem; gap:2rem; }
   .hero-text { max-width:100%; }
   .hero-badge { font-size:0.7rem; padding:0.35rem 0.875rem; }
   .hero-title { font-size:2.25rem; letter-spacing:-1px; }
   .hero-subtitle { font-size:0.95rem; max-width:100%; margin-bottom:1.75rem; }
   .hero-actions { justify-content:center; width:100%; flex-direction:column; }
-  .btn-get-started { width:100%; max-width:100%; text-align:center; font-size:0.9rem; padding:0.8rem 1.75rem; }
+  .btn-get-started { width:100%; font-size:0.9rem; padding:0.8rem 1.75rem; }
   .btn-sign-up { width:100%; padding:0.8rem 1.75rem; font-size:0.9rem; }
   .hero-image-container { max-width:260px; width:100%; }
-
   .about-section { padding:3.5rem 1.25rem; }
   .about-content { grid-template-columns:1fr; gap:2rem; margin-bottom:2rem; }
   .about-image { order:-1; }
@@ -159,13 +156,11 @@
   .vm-title { font-size:1.1rem; }
   .vm-text { font-size:0.9rem; }
   .vm-list li { font-size:0.9rem; }
-
   .features-section { padding:3.5rem 1.25rem; }
   .section-title { font-size:1.85rem; }
   .section-sub { font-size:0.9rem; }
   .roles-grid { grid-template-columns:1fr; gap:1rem; }
   .role-card { padding:1.65rem 1.15rem; }
-
   .info-section { padding:3.5rem 1.25rem; }
   .info-grid { grid-template-columns:1fr; gap:1.15rem; }
   .clinic-banner { padding:1.15rem 1.35rem; }
@@ -175,141 +170,31 @@
   .hours-list { padding:0.45rem 1.35rem; }
   .hours-item { padding:0.55rem 0; }
   .hours-note { margin:0 1.35rem 1.15rem; font-size:0.72rem; }
-
   .footer { padding:1.35rem 1.25rem; }
   .footer-copyright { font-size:0.8rem; }
   .modal { padding:1.65rem 1.35rem; border-radius:16px; max-height:85vh; }
   .modal-body p { font-size:0.85rem; }
   .modal-body h4 { font-size:0.85rem; }
   .modal-body ul li { font-size:0.85rem; }
+  .signup-icon, .contact-icon { width:70px; height:70px; }
+  .signup-buttons { gap:0.75rem; }
+  .btn-signup-yes, .btn-signup-no { padding:0.8rem 1.25rem; font-size:0.85rem; }
+  .contact-info-box { padding:1.25rem; gap:1rem; }
+  .contact-note { font-size:0.75rem; padding:0.75rem 0.875rem; }
+  .developers-grid-modal { grid-template-columns:1fr; gap:1rem; }
+  .dev-modal-header h2 { font-size:1.15rem; }
+  .dev-modal-header p { font-size:0.85rem; }
+  .repo-link-modal { padding:0.65rem 1rem; gap:0.6rem; }
+  .repo-label { font-size:0.7rem; }
+  .repo-url { font-size:0.65rem; }
+  .developer-card-modal { padding:1.25rem 1rem; }
+  .developer-image-modal { width:70px; height:70px; }
+  .developer-name-modal { font-size:0.9rem; }
+  .developer-school-modal { font-size:0.65rem; }
+  .developer-role-modal { font-size:0.75rem; }
 }
 
-/* ── Small Mobile ── */
-@media (max-width: 480px) {
-  .header-brand { gap:0.5rem; }
-  .logo { height:38px; }
-  .brand-name { font-size:1.1rem; }
-  .hero-title { font-size:2rem; letter-spacing:-0.5px; }
-  .hero-subtitle { font-size:0.95rem; }
-  .about-section { padding:3.5rem 1.25rem; }
-  .about-description { font-size:0.95rem; }
-  .about-logo { max-width:200px; }
-  .about-motto { padding:1rem; }
-  .motto-label { font-size:0.7rem; }
-  .motto-text { font-size:0.95rem; }
-  .vm-card { padding:1.5rem; }
-  .vm-icon { width:52px; height:52px; }
-  .vm-title { font-size:1.05rem; }
-  .vm-text { font-size:0.875rem; }
-  .vm-list { padding-left:1rem; }
-  .vm-list li { font-size:0.875rem; }
-  .section-title { font-size:1.65rem; }
-  .section-sub { font-size:0.875rem; }
-  .role-card h3 { font-size:1rem; }
-  .hours-item { flex-direction:row; }
-  .day-name { font-size:0.8rem; }
-  .day-hours { font-size:0.8rem; }
-  .modal { padding:1.5rem 1.25rem; }
-  .modal h2 { font-size:1.25rem; }
-  .modal-body p { font-size:0.8rem; line-height:1.65; }
-  .modal-body h4 { font-size:0.82rem; }
-  .modal-body ul { padding-left:1rem; }
-  .modal-body ul li { font-size:0.8rem; line-height:1.65; }
-}
 
-/* ── Extra Small Mobile (Mobile S) ── */
-@media (max-width: 375px) {
-  .header { height:56px; padding:0 0.75rem; }
-  .header-brand { gap:0.4rem; }
-  .logo { height:34px; }
-  .brand-name { font-size:0.95rem; }
-  .nav { gap:0.15rem; justify-content:flex-end; }
-  .nav-link { padding:0.3rem 0.5rem; font-size:0.7rem; }
-  .hero-title { font-size:1.75rem; }
-  .hero-subtitle { font-size:0.9rem; }
-  .hero-badge { font-size:0.65rem; padding:0.35rem 0.875rem; }
-  .btn-get-started { font-size:0.875rem; padding:0.75rem 1.75rem; }
-  .section-title { font-size:1.5rem; }
-  .section-tag { font-size:0.68rem; }
-  .about-logo { max-width:180px; }
-  .vm-card { padding:1.25rem; }
-  .role-card { padding:1.5rem 1rem; }
-}
-
-/* ── 320px (iPhone SE, Galaxy Fold) ── */
-@media (max-width: 320px) {
-  .header { height:52px; padding:0 0.65rem; }
-  .header-brand { gap:0.35rem; }
-  .logo { height:32px; }
-  .brand-name { font-size:0.85rem; }
-  .nav { gap:0.1rem; }
-  .nav-link { padding:0.25rem 0.4rem; font-size:0.65rem; }
-  .hero-title { font-size:1.6rem; }
-  .hero-subtitle { font-size:0.85rem; }
-  .section-title { font-size:1.4rem; }
-}
-
-/* ── Large Desktop ── */
-@media (min-width: 1440px) {
-  .header-content { max-width:1400px; }
-  .hero-content { max-width:1400px; }
-  .section-inner { max-width:1400px; }
-  .hero-title { font-size:4rem; }
-  .hero-subtitle { font-size:1.2rem; }
-  .section-title { font-size:2.5rem; }
-}
-
-/* ── Extra Large Desktop (2K) ── */
-@media (min-width: 1920px) {
-  .header-content { max-width:1600px; }
-  .hero-content { max-width:1600px; padding:6rem 2rem; }
-  .section-inner { max-width:1600px; }
-  .hero-title { font-size:4.5rem; }
-  .hero-subtitle { font-size:1.3rem; }
-  .section-title { font-size:2.75rem; }
-  .about-section { padding:6rem 2rem; }
-  .features-section { padding:6rem 2rem; }
-  .info-section { padding:6rem 2rem; }
-}
-
-/* ── 4K ── */
-@media (min-width: 2560px) {
-  .header { height:80px; padding:0 3rem; }
-  .logo { height:64px; }
-  .brand-name { font-size:2rem; }
-  .nav-link { font-size:1.1rem; padding:0.7rem 1.25rem; }
-  .header-content { max-width:2200px; }
-  .hero-content { max-width:2200px; padding:8rem 3rem; }
-  .section-inner { max-width:2200px; }
-  .hero-title { font-size:5.5rem; }
-  .hero-subtitle { font-size:1.6rem; max-width:900px; }
-  .hero-badge { font-size:0.95rem; padding:0.6rem 1.5rem; }
-  .btn-get-started { font-size:1.2rem; padding:1.25rem 2.75rem; }
-  .section-title { font-size:3.5rem; }
-  .section-sub { font-size:1.2rem; }
-  .section-tag { font-size:0.9rem; }
-  .about-section { padding:8rem 3rem; }
-  .about-logo { max-width:500px; }
-  .about-description { font-size:1.3rem; }
-  .motto-text { font-size:1.4rem; }
-  .vm-card { padding:3rem; }
-  .vm-icon { width:80px; height:80px; }
-  .vm-title { font-size:1.6rem; }
-  .vm-text { font-size:1.2rem; }
-  .vm-list li { font-size:1.2rem; }
-  .features-section { padding:8rem 3rem; }
-  .roles-grid { gap:2.5rem; }
-  .role-card { padding:3rem 2rem; }
-  .role-icon-wrap { width:100px; height:100px; }
-  .role-card h3 { font-size:1.4rem; }
-  .role-card p { font-size:1.1rem; }
-  .info-section { padding:8rem 3rem; }
-  .info-grid { gap:3rem; }
-  .contact-item-value { font-size:1.1rem; }
-  .hours-item { padding:0.8rem 0; }
-  .day-name { font-size:1.1rem; }
-  .day-hours { font-size:1.1rem; }
-}
 
 
 /* ── Sign Up Modal ── */
@@ -336,16 +221,6 @@
 .contact-value { font-size:0.875rem; color:#334155; font-weight:500; line-height:1.5; word-break:break-word; }
 .contact-note { display:flex; align-items:flex-start; gap:0.6rem; font-size:0.8rem; color:#64748b; line-height:1.6; background:#fef3c7; padding:0.875rem 1rem; border-radius:10px; border:1px solid #fde68a; margin:0; }
 .contact-note svg { color:#d97706; flex-shrink:0; margin-top:0.15rem; }
-
-/* ── Mobile Adjustments for Sign Up Modal ── */
-@media (max-width: 768px) {
-  .btn-sign-up { padding:0.7rem 1.5rem; font-size:0.9rem; }
-  .signup-icon, .contact-icon { width:70px; height:70px; }
-  .signup-buttons { gap:0.75rem; }
-  .btn-signup-yes, .btn-signup-no { padding:0.8rem 1.25rem; font-size:0.85rem; }
-  .contact-info-box { padding:1.25rem; gap:1rem; }
-  .contact-note { font-size:0.75rem; padding:0.75rem 0.875rem; }
-}
 
 @media (max-width: 480px) {
   .btn-sign-up { padding:0.65rem 1.25rem; font-size:0.85rem; }
@@ -385,20 +260,6 @@
 .developer-role-modal { font-size:0.8rem; color:#64748b; margin:0 0 0.75rem; font-weight:500; }
 .developer-github-modal { display:inline-flex; align-items:center; gap:0.35rem; font-size:0.75rem; font-weight:600; color:#052355; text-decoration:none; background:#eef4ff; padding:0.3rem 0.75rem; border-radius:100px; transition:all 0.18s; }
 .developer-github-modal:hover { background:#dbeafe; color:#1e3a8a; }
-
-@media (max-width: 768px) {
-  .developers-grid-modal { grid-template-columns:1fr; gap:1rem; }
-  .dev-modal-header h2 { font-size:1.15rem; }
-  .dev-modal-header p { font-size:0.85rem; }
-  .repo-link-modal { padding:0.65rem 1rem; gap:0.6rem; }
-  .repo-label { font-size:0.7rem; }
-  .repo-url { font-size:0.65rem; }
-  .developer-card-modal { padding:1.25rem 1rem; }
-  .developer-image-modal { width:70px; height:70px; }
-  .developer-name-modal { font-size:0.9rem; }
-  .developer-school-modal { font-size:0.65rem; }
-  .developer-role-modal { font-size:0.75rem; }
-}
 
 @media (max-width: 480px) {
   .developers-grid-modal { grid-template-columns:1fr; gap:0.875rem; }

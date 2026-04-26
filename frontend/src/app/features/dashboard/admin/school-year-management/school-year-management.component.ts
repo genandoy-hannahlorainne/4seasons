@@ -47,6 +47,7 @@ interface GradeLevel {
   selector: 'app-school-year-management',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  styleUrls: ['./school-year-management.component.scss'],
   template: `
     <div class="school-year-management">
       <div class="page-header">
@@ -100,10 +101,42 @@ interface GradeLevel {
         <p>Loading sections...</p>
       </div>
 
+      <!-- Grade Level Cards View -->
+      <div *ngIf="!loading && selectedSchoolYearId && !selectedGradeLevelId" class="grade-cards-container">
+        <div class="grade-cards">
+          <div class="grade-card" *ngFor="let grade of gradeLevels" (click)="selectGradeLevel(grade.id)">
+            <div class="card-header">
+              <div class="card-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+              <div class="card-title">{{ grade.level_name }}</div>
+            </div>
+            <div class="card-stats">
+              <div class="stat">
+                <div class="stat-value">{{ getGradeSectionCount(grade.id) }}</div>
+                <div class="stat-label">Sections</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value">{{ getGradeStudentCount(grade.id) }}</div>
+                <div class="stat-label">Students</div>
+              </div>
+            </div>
+            <div class="card-arrow">
+              <i class="fa-solid fa-chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Sections Table -->
-      <div *ngIf="!loading && selectedSchoolYearId" class="sections-container">
+      <div *ngIf="!loading && selectedSchoolYearId && selectedGradeLevelId" class="sections-container">
         <div class="sections-header">
-          <h2>Sections for {{ getSelectedSchoolYearName() }}</h2>
+          <div class="header-top">
+            <button class="btn-back" (click)="selectedGradeLevelId = null">
+              <i class="fa-solid fa-arrow-left"></i> Back to Grades
+            </button>
+            <h2>Sections for {{ getGradeLevelName(selectedGradeLevelId) }}</h2>
+          </div>
           <div class="header-actions">
             <button class="btn-create-section" (click)="openCreateSectionModal()">
               <i class="fa-solid fa-plus"></i>
@@ -111,13 +144,13 @@ interface GradeLevel {
             </button>
             <div class="stats">
               <span class="stat">
-                <strong>{{ sections.length }}</strong> Sections
+                <strong>{{ getFilteredSectionsForGrade().length }}</strong> Sections
               </span>
               <span class="stat">
-                <strong>{{ getAssignedCount() }}</strong> Assigned
+                <strong>{{ getAssignedCountForGrade() }}</strong> Assigned
               </span>
               <span class="stat">
-                <strong>{{ getUnassignedCount() }}</strong> Unassigned
+                <strong>{{ getUnassignedCountForGrade() }}</strong> Unassigned
               </span>
             </div>
           </div>
@@ -137,7 +170,7 @@ interface GradeLevel {
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let section of sections" [class.unassigned]="!section.adviser_id">
+              <tr *ngFor="let section of getFilteredSectionsForGrade()" [class.unassigned]="!section.adviser_id">
                 <td>{{ section.level_name }}</td>
                 <td>{{ section.section_name }}</td>
                 <td>{{ section.capacity }}</td>
@@ -1694,6 +1727,138 @@ interface GradeLevel {
           padding: 0.35rem 0.5rem;
         }
       }
+
+      .grade-cards-container {
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+      }
+
+      .grade-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .grade-card {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+          border-color: #3b82f6;
+        }
+
+        .card-header {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+
+          .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+          }
+
+          .card-title {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 1rem;
+          }
+        }
+
+        .card-stats {
+          display: flex;
+          gap: 1rem;
+          padding-top: 0.5rem;
+          border-top: 1px solid #f3f4f6;
+
+          .stat {
+            flex: 1;
+            text-align: center;
+
+            .stat-value {
+              display: block;
+              font-size: 1.5rem;
+              font-weight: 700;
+              color: #3b82f6;
+            }
+
+            .stat-label {
+              display: block;
+              font-size: 0.75rem;
+              color: #6b7280;
+              margin-top: 0.25rem;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+          }
+        }
+
+        .card-arrow {
+          align-self: flex-end;
+          color: #9ca3af;
+          font-size: 1.2rem;
+          transition: color 0.3s ease;
+        }
+
+        &:hover .card-arrow {
+          color: #3b82f6;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .grade-cards {
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          gap: 1rem;
+        }
+
+        .grade-card {
+          padding: 1rem;
+
+          .card-header {
+            gap: 0.5rem;
+
+            .card-icon {
+              width: 36px;
+              height: 36px;
+              font-size: 1rem;
+            }
+
+            .card-title {
+              font-size: 0.9rem;
+            }
+          }
+
+          .card-stats {
+            gap: 0.75rem;
+
+            .stat {
+              .stat-value {
+                font-size: 1.25rem;
+              }
+
+              .stat-label {
+                font-size: 0.7rem;
+              }
+            }
+          }
+        }
+      }
     }
   `]
 })
@@ -1707,6 +1872,7 @@ export class SchoolYearManagementComponent implements OnInit {
   selectedSection: Section | null = null;
   selectedAdviserId: number | null = null;
   adviserSearchGrade: number | null = null;
+  selectedGradeLevelId: number | null = null;
 
   get filteredAdvisers(): Adviser[] {
     if (!this.adviserSearchGrade) return this.advisers;
@@ -2121,5 +2287,37 @@ export class SchoolYearManagementComponent implements OnInit {
         this.loadingStudents = false;
       }
     });
+  }
+
+  getGradeSectionCount(gradeId: number): number {
+    return this.sections.filter(s => s.grade_level_id === gradeId).length;
+  }
+
+  getGradeStudentCount(gradeId: number): number {
+    const gradeSections = this.sections.filter(s => s.grade_level_id === gradeId);
+    return gradeSections.reduce((sum, section) => sum + (section.current_enrollment || 0), 0);
+  }
+
+  selectGradeLevel(gradeId: number): void {
+    this.selectedGradeLevelId = gradeId;
+  }
+
+  getFilteredSectionsForGrade(): Section[] {
+    if (!this.selectedGradeLevelId) return [];
+    return this.sections.filter(s => s.grade_level_id === this.selectedGradeLevelId);
+  }
+
+  getAssignedCountForGrade(): number {
+    return this.getFilteredSectionsForGrade().filter(s => s.adviser_id).length;
+  }
+
+  getUnassignedCountForGrade(): number {
+    return this.getFilteredSectionsForGrade().filter(s => !s.adviser_id).length;
+  }
+
+  getGradeLevelName(gradeId: number | null): string {
+    if (!gradeId) return '';
+    const grade = this.gradeLevels.find(g => g.id === gradeId);
+    return grade ? grade.level_name : '';
   }
 }
