@@ -9,7 +9,7 @@ interface SchoolYear {
   year_name: string;
   start_date: string;
   end_date: string;
-  is_current: number;
+  is_current: number | string | boolean;
 }
 
 interface Section {
@@ -63,7 +63,7 @@ interface GradeLevel {
             <select [(ngModel)]="selectedSchoolYearId" (change)="onSchoolYearChange()" class="form-select">
               <option [value]="null">-- Select School Year --</option>
               <option *ngFor="let year of schoolYears" [value]="year.id">
-                {{ year.year_name }} {{ year.is_current ? '(Current)' : '' }}
+                {{ year.year_name }} {{ isSchoolYearCurrent(year) ? '(Current)' : '' }}
               </option>
             </select>
             <button class="btn-create-year" (click)="openCreateYearModal()">
@@ -80,9 +80,11 @@ interface GradeLevel {
               <i class="fa-solid fa-check-circle"></i>
               {{ settingCurrent ? 'Setting...' : 'Set as Current School Year' }}
             </button>
-            <span *ngIf="isCurrentSchoolYear()" class="current-badge">
-              <i class="fa-solid fa-star"></i> Current School Year
-            </span>
+            <div *ngIf="isCurrentSchoolYear()" class="current-indicator">
+              <div class="current-badge-enhanced">
+                <span>Current School Year</span>
+              </div>
+            </div>
           </div>
         </div>
         <div class="current-year-info" *ngIf="getCurrentSchoolYear()">
@@ -303,6 +305,74 @@ interface GradeLevel {
             <button class="btn-danger" (click)="confirmRemoveAdviser()" [disabled]="saving">
               <i class="fa-solid fa-user-minus"></i>
               {{ saving ? 'Removing...' : 'Remove Adviser' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Set Current School Year Confirmation Modal -->
+      <div *ngIf="showSetCurrentConfirmModal" class="modal-overlay" (click)="closeSetCurrentConfirmModal()">
+        <div class="modal-content confirm-modal set-current-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Set Current School Year</h3>
+            <button class="close-btn" (click)="closeSetCurrentConfirmModal()">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="confirm-icon current-year-icon">
+              <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <p class="confirm-message">Set "{{ yearToSetAsCurrent?.year_name }}" as the current school year?</p>
+            
+            <div class="confirm-details">
+              <div class="confirm-detail-item">
+                <span class="detail-label">New Current Year</span>
+                <span class="detail-value">{{ yearToSetAsCurrent?.year_name }}</span>
+              </div>
+              <div class="confirm-detail-item">
+                <span class="detail-label">Period</span>
+                <span class="detail-value">{{ yearToSetAsCurrent?.start_date | date:'MMM d, y' }} - {{ yearToSetAsCurrent?.end_date | date:'MMM d, y' }}</span>
+              </div>
+              <div class="confirm-detail-item" *ngIf="getCurrentSchoolYear()">
+                <span class="detail-label">Previous Current</span>
+                <span class="detail-value">{{ getCurrentSchoolYear()?.year_name }}</span>
+              </div>
+            </div>
+
+            <div class="impact-warning">
+              <div class="warning-header">
+                <i class="fa-solid fa-exclamation-triangle"></i>
+                <strong>Important Changes</strong>
+              </div>
+              <ul class="impact-list">
+                <li>
+                  <i class="fa-solid fa-user-plus"></i>
+                  <span>All new student, adviser, and staff accounts will be assigned to <strong>{{ yearToSetAsCurrent?.year_name }}</strong></span>
+                </li>
+                <li>
+                  <i class="fa-solid fa-calendar-alt"></i>
+                  <span>This will determine when the next school year enrollment opens</span>
+                </li>
+                <li>
+                  <i class="fa-solid fa-database"></i>
+                  <span>System reports and dashboards will reflect this as the active academic year</span>
+                </li>
+                <li>
+                  <i class="fa-solid fa-graduation-cap"></i>
+                  <span>Student promotions and grade level assignments will be based on this year</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="confirm-note">
+              <i class="fa-solid fa-info-circle"></i>
+              <span>This action will immediately update the system-wide current school year setting.</span>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeSetCurrentConfirmModal()">Cancel</button>
+            <button class="btn-confirm-current" (click)="confirmSetCurrentSchoolYear()" [disabled]="settingCurrent">
+              <i class="fa-solid fa-check-circle"></i>
+              {{ settingCurrent ? 'Setting Current...' : 'Set as Current Year' }}
             </button>
           </div>
         </div>
@@ -1889,6 +1959,8 @@ export class SchoolYearManagementComponent implements OnInit {
   showCreateYearModal = false;
   showCreateSectionModal = false;
   showStudentsModal = false;
+  showSetCurrentConfirmModal = false;
+  yearToSetAsCurrent: SchoolYear | null = null;
   loading = false;
   saving = false;
   settingCurrent = false;
@@ -1927,8 +1999,9 @@ export class SchoolYearManagementComponent implements OnInit {
       next: (response) => {
         if (response.success) {
           this.schoolYears = response.data;
+          
           // Auto-select current school year
-          const current = this.schoolYears.find(y => y.is_current === 1);
+          const current = this.schoolYears.find(y => this.isSchoolYearCurrent(y));
           if (current) {
             this.selectedSchoolYearId = current.id;
             this.loadSections();
@@ -2086,14 +2159,29 @@ export class SchoolYearManagementComponent implements OnInit {
     return this.sections.filter(s => s.adviser_id === userId);
   }
 
+  isSchoolYearCurrent(schoolYear: SchoolYear): boolean {
+    // Handle various data types that might come from the API
+    const isCurrent = schoolYear.is_current;
+    
+    // Convert to string for consistent comparison
+    const currentStr = String(isCurrent).toLowerCase();
+    
+    return isCurrent === 1 || 
+           currentStr === '1' || 
+           currentStr === 'true';
+  }
+
   getCurrentSchoolYear(): SchoolYear | undefined {
-    return this.schoolYears.find(y => y.is_current === 1);
+    return this.schoolYears.find(y => this.isSchoolYearCurrent(y));
   }
 
   isCurrentSchoolYear(): boolean {
     if (!this.selectedSchoolYearId) return false;
     const year = this.schoolYears.find(y => y.id === this.selectedSchoolYearId);
-    return year?.is_current === 1;
+    
+    if (!year) return false;
+    
+    return this.isSchoolYearCurrent(year);
   }
 
   setAsCurrentSchoolYear(): void {
@@ -2102,18 +2190,23 @@ export class SchoolYearManagementComponent implements OnInit {
     const year = this.schoolYears.find(y => y.id === this.selectedSchoolYearId);
     if (!year) return;
 
-    if (!confirm(`Set "${year.year_name}" as the current school year?\n\nAll new accounts will be assigned to this school year.`)) {
-      return;
-    }
+    // Show confirmation modal instead of simple confirm
+    this.yearToSetAsCurrent = year;
+    this.showSetCurrentConfirmModal = true;
+  }
+
+  confirmSetCurrentSchoolYear(): void {
+    if (!this.yearToSetAsCurrent) return;
 
     this.settingCurrent = true;
-    const data = { school_year_id: this.selectedSchoolYearId };
+    const data = { school_year_id: this.yearToSetAsCurrent.id };
 
     this.http.post<any>(`${environment.apiUrl}/admin/school-years/set-current`, data).subscribe({
       next: (response) => {
         if (response.success) {
-          this.showMessage(`Current school year set to ${year.year_name}`, 'success');
+          this.showMessage(`Current school year set to ${this.yearToSetAsCurrent!.year_name}`, 'success');
           this.loadSchoolYears(); // Reload to update is_current flags
+          this.closeSetCurrentConfirmModal();
         } else {
           this.showMessage(response.message || 'Error setting current school year', 'error');
         }
@@ -2125,6 +2218,11 @@ export class SchoolYearManagementComponent implements OnInit {
         this.settingCurrent = false;
       }
     });
+  }
+
+  closeSetCurrentConfirmModal(): void {
+    this.showSetCurrentConfirmModal = false;
+    this.yearToSetAsCurrent = null;
   }
 
   openCreateYearModal(): void {
