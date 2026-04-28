@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\Log;
 class AbandonExpiredDrills extends Command
 {
     protected $signature = 'drills:abandon-expired';
-    protected $description = 'Mark planned drills as abandoned if their 5-minute start window has passed';
+    protected $description = 'Mark planned drills as abandoned if their 30-minute start window has passed';
 
     public function handle(): void
     {
-        $cutoff = Carbon::now()->subMinutes(5);
+        $cutoff = Carbon::now()->subMinutes(30);
 
         $this->info('Checking for expired drills...');
         $this->info('Cutoff time: ' . $cutoff->toDateTimeString());
