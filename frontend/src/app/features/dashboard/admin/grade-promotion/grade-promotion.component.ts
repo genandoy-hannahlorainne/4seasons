@@ -35,169 +35,239 @@ interface AdviserAssignmentStatus {
     <div class="promotion-container">
       <div class="page-header">
         <h2>Grade Promotion Management</h2>
+        <p>Promote students from one school year to the next</p>
       </div>
 
-      <!-- Important Notice -->
-      <div class="notice-banner">
-        <div class="notice-icon">⚠️</div>
-        <div class="notice-content">
-          <h3>Before Promoting Students</h3>
-          <p>Make sure advisers are assigned to sections for the target school year. Students will be automatically assigned to their new advisers based on their sections.</p>
-          <button class="btn-link" (click)="navigateToSchoolYearManagement()">
-            <i class="fa-solid fa-arrow-right"></i> Go to School Year Management
-          </button>
+      <!-- Setup Card -->
+      <div class="card setup-card">
+        <div class="card-title">
+          <img src="assets/icons/calendar.png" style="width:20px;height:20px;object-fit:contain;flex-shrink:0;" alt="Calendar">
+          Select School Years
         </div>
-      </div>
-
-      <div class="promotion-setup">
-        <div class="form-section">
-          <h3>Select School Years</h3>
-          
+        <div class="year-selectors">
           <div class="form-group">
-            <label>Current School Year (From):</label>
-            <select [(ngModel)]="currentSchoolYearId" (change)="onCurrentYearChange()">
+            <label>From (Current)</label>
+            <select [(ngModel)]="currentSchoolYearId" (change)="onCurrentYearChange()" class="form-select">
               <option value="">-- Select --</option>
-              <option *ngFor="let year of schoolYears" [value]="year.id">
-                {{ year.year_name }}
-              </option>
+              <option *ngFor="let year of schoolYears" [value]="year.id">{{ year.year_name }}</option>
             </select>
           </div>
-
+          <div class="arrow-divider">
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
           <div class="form-group">
-            <label>Target School Year (To):</label>
-            <select [(ngModel)]="targetSchoolYearId" (change)="onTargetYearChange()">
+            <label>To (Target)</label>
+            <select [(ngModel)]="targetSchoolYearId" (change)="onTargetYearChange()" class="form-select">
               <option value="">-- Select --</option>
-              <option *ngFor="let year of schoolYears" [value]="year.id">
-                {{ year.year_name }}
-              </option>
+              <option *ngFor="let year of schoolYears" [value]="year.id">{{ year.year_name }}</option>
             </select>
           </div>
-
-          <button (click)="loadPromotionSummary()" class="btn-primary" [disabled]="isLoadingSummary">
+          <button (click)="loadPromotionSummary()" class="btn-load" [disabled]="isLoadingSummary || !currentSchoolYearId || !targetSchoolYearId">
+            <i class="fa-solid fa-magnifying-glass"></i>
             {{ isLoadingSummary ? 'Loading...' : 'Load Summary' }}
           </button>
         </div>
       </div>
 
-      <div *ngIf="summaryLoaded" class="summary-section">
-        <h3>Promotion Summary</h3>
+      <!-- Summary Section -->
+      <div *ngIf="summaryLoaded">
 
-        <!-- Adviser Assignment Check -->
-        <div class="adviser-check" *ngIf="targetSections && targetSections.length > 0 && adviserAssignmentStatus">
-          <h4>Target Year Section Status</h4>
+        <!-- Top Row: Summary + Capacity side by side -->
+        <div class="two-col-row">
+
+          <!-- Promotion Summary -->
+          <div class="card">
+            <div class="card-title">
+              <i class="fa-solid fa-users"></i>
+              Promotion Summary
+              <span class="badge-total">{{ getTotalStudents() }} total students</span>
+            </div>
+            <div class="summary-grid">
+              <div class="summary-card" *ngFor="let item of promotionSummary">
+                <div class="summary-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="summary-info">
+                  <div class="summary-grade">{{ item.level_name }}</div>
+                  <div class="summary-count">{{ item.total_students }}</div>
+                  <div class="summary-label">students</div>
+                </div>
+              </div>
+              <div *ngIf="promotionSummary?.length === 0" class="empty-state">
+                <i class="fa-solid fa-inbox"></i>
+                <p>No enrolled students found for the selected school year.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Target Year Capacity -->
+          <div class="card">
+            <div class="card-title">
+              <i class="fa-solid fa-table"></i>
+              Target Year Capacity
+              <span class="year-label">{{ getYearName(targetSchoolYearId) }}</span>
+              <div style="margin-left:auto;flex-shrink:0;">
+                <button *ngIf="targetSections?.length === 0" class="btn-copy-trigger" (click)="openCopyModal()">
+                  <i class="fa-solid fa-copy"></i> Copy Sections
+                </button>
+                <button *ngIf="targetSections && targetSections.length > 0" class="btn-copy-trigger secondary" (click)="openCopyModal()">
+                  <i class="fa-solid fa-copy"></i> Re-copy Sections
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="targetSections?.length === 0" class="empty-state warning">
+              <div class="warning-content">
+                <img src="assets/icons/warning.png" style="width:48px;height:48px;object-fit:contain;" alt="Warning">
+                <div class="warning-text">
+                  <strong>No Sections Found</strong>
+                  <p>The target school year <span class="year-highlight">{{ getYearName(targetSchoolYearId) }}</span> has no sections yet. Copy sections from the current year to get started.</p>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="targetSections && targetSections.length > 0" class="capacity-table-wrapper">
+              <table class="capacity-table">
+                <thead>
+                  <tr>
+                    <th>Grade Level</th>
+                    <th>Sections</th>
+                    <th>Capacity</th>
+                    <th>Enrolled</th>
+                    <th>Available</th>
+                    <th>Advisers</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let section of targetSections">
+                    <td><span class="grade-chip">{{ section.level_name }}</span></td>
+                    <td>{{ section.total_sections }}</td>
+                    <td>{{ section.total_capacity }}</td>
+                    <td>{{ section.current_enrollment }}</td>
+                    <td>
+                      <span class="available-badge" [class.low]="(section.total_capacity - section.current_enrollment) < 10">
+                        {{ section.total_capacity - section.current_enrollment }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="adviser-status" [class.partial]="section.sections_without_advisers > 0" [class.full]="section.sections_without_advisers === 0">
+                        {{ section.sections_with_advisers }}/{{ section.total_sections }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Adviser Status -->
+        <div class="card" *ngIf="targetSections && targetSections.length > 0 && adviserAssignmentStatus">
+          <div class="card-title">
+            <i class="fa-solid fa-chalkboard-teacher"></i>
+            Adviser Assignment Status
+          </div>
           <div class="status-grid">
-            <div class="status-card">
-              <div class="status-label">Total Sections</div>
+            <div class="status-card neutral">
               <div class="status-value">{{ getTotalSections() }}</div>
+              <div class="status-label">Total Sections</div>
             </div>
             <div class="status-card success">
-              <div class="status-label">With Advisers</div>
               <div class="status-value">{{ getSectionsWithAdvisers() }}</div>
+              <div class="status-label">With Advisers</div>
             </div>
-            <div class="status-card warning">
-              <div class="status-label">Without Advisers</div>
+            <div class="status-card" [class.warning]="getSectionsWithoutAdvisers() > 0" [class.neutral]="getSectionsWithoutAdvisers() === 0">
               <div class="status-value">{{ getSectionsWithoutAdvisers() }}</div>
+              <div class="status-label">Without Advisers</div>
             </div>
           </div>
           <div class="warning-message" *ngIf="getSectionsWithoutAdvisers() > 0">
             <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>Warning: {{ getSectionsWithoutAdvisers() }} section(s) don't have advisers assigned. Students promoted to these sections won't have advisers.</span>
-            <button class="btn-small" (click)="navigateToSchoolYearManagement()">Assign Advisers</button>
-          </div>
-        </div>
-        
-        <div class="summary-grid">
-          <div class="summary-card" *ngFor="let item of promotionSummary">
-            <h4>{{ item.level_name }}</h4>
-            <p class="count">{{ item.total_students }} students</p>
-          </div>
-          <div *ngIf="promotionSummary?.length === 0" class="empty-state">
-            <p>No enrolled students found for the selected school year.</p>
+            <span>{{ getSectionsWithoutAdvisers() }} section(s) don't have advisers assigned. Students promoted to these sections won't have advisers.</span>
           </div>
         </div>
 
-        <div class="target-capacity">
-          <h4>Target Year Capacity</h4>
-          <div *ngIf="targetSections?.length === 0" class="empty-state warning">
-            <p>⚠️ No sections found for the target school year. You need to create sections first.</p>
-            <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
-              <button class="btn-copy" (click)="copySectionsFromCurrentYear()" [disabled]="isCopyingSections">
-                {{ isCopyingSections ? 'Copying...' : '📋 Copy Sections from ' + getYearName(currentSchoolYearId) }}
-              </button>
-              <button class="btn-link" (click)="navigateToSchoolYearManagement()">Or create manually in School Year Management</button>
-            </div>
+        <!-- Manual Cases -->
+        <div class="card" *ngIf="manualCases.length > 0">
+          <div class="card-title">
+            <i class="fa-solid fa-user-pen"></i>
+            Students Needing Manual Adjustment
+            <span class="badge-total">{{ manualCases.length }}</span>
           </div>
-          <table *ngIf="targetSections && targetSections.length > 0">
-            <thead>
-              <tr>
-                <th>Grade Level</th>
-                <th>Sections</th>
-                <th>Capacity</th>
-                <th>Current</th>
-                <th>Available</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let section of targetSections">
-                <td>{{ section.level_name }}</td>
-                <td>{{ section.total_sections }}</td>
-                <td>{{ section.total_capacity }}</td>
-                <td>{{ section.current_enrollment }}</td>
-                <td>{{ (section.total_capacity - section.current_enrollment) }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="capacity-table-wrapper">
+            <table class="capacity-table">
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Name</th>
+                  <th>Current Grade</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let student of manualCases">
+                  <td>{{ student.student_id }}</td>
+                  <td>{{ student.first_name }} {{ student.last_name }}</td>
+                  <td>{{ student.level_name }}</td>
+                  <td><span [class]="'status-pill status-' + student.enrollment_status">{{ student.enrollment_status }}</span></td>
+                  <td><button (click)="openManualAdjustment(student)" class="btn-small">Adjust</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div class="manual-cases" *ngIf="manualCases.length > 0">
-          <h4>Students Needing Manual Adjustment</h4>
-          <table>
-            <thead>
-              <tr>
-                <th>Student ID</th>
-                <th>Name</th>
-                <th>Current Grade</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let student of manualCases">
-                <td>{{ student.student_id }}</td>
-                <td>{{ student.first_name }} {{ student.last_name }}</td>
-                <td>{{ student.level_name }}</td>
-                <td>
-                  <span [class]="'status-' + student.enrollment_status">
-                    {{ student.enrollment_status }}
-                  </span>
-                </td>
-                <td>
-                  <button (click)="openManualAdjustment(student)" class="btn-small">
-                    Adjust
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="promotion-actions">
-          <button (click)="confirmPromotion()" class="btn-success" [disabled]="isProcessing">
-            {{ isProcessing ? 'Processing...' : 'Execute Promotion' }}
-          </button>
-          <button (click)="cancelPromotion()" class="btn-secondary">
-            Cancel
-          </button>
-        </div>
+        <!-- Actions -->
       </div>
 
-      <div *ngIf="promotionResult" class="result-section" [class.success]="promotionResult.success">
-        <h3>{{ promotionResult.success ? 'Promotion Completed' : 'Promotion Failed' }}</h3>
-        <p>{{ promotionResult.message }}</p>
-        <div *ngIf="promotionResult.stats" class="stats">
-          <p>Total Promoted: {{ promotionResult.stats.promoted_count }}</p>
-          <p>Graduated: {{ promotionResult.stats.graduated_count }}</p>
-          <p>Failed: {{ promotionResult.stats.failed_count }}</p>
+      <!-- Actions (outside summaryLoaded) -->
+      <div *ngIf="summaryLoaded" class="promotion-actions-bar">
+        <button (click)="cancelPromotion()" class="btn-cancel">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
+        <button (click)="confirmPromotion()" class="btn-execute" [disabled]="isProcessing">
+          <i class="fa-solid fa-bolt"></i>
+          {{ isProcessing ? 'Processing...' : 'Execute Promotion' }}
+        </button>
+      </div>
+
+      <!-- Result -->
+      <div *ngIf="promotionResult" class="result-card" [class.success]="promotionResult.success" [class.error]="!promotionResult.success">
+        <div class="result-icon">
+          <i [class]="promotionResult.success ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark'"></i>
+        </div>
+        <div class="result-body">
+          <h3>{{ promotionResult.success ? 'Promotion Completed' : 'Promotion Failed' }}</h3>
+          <p>{{ promotionResult.message }}</p>
+          <div *ngIf="promotionResult.stats" class="result-stats">
+            <div class="result-stat"><span>{{ promotionResult.stats.promoted_count }}</span> Promoted</div>
+            <div class="result-stat"><span>{{ promotionResult.stats.graduated_count }}</span> Graduated</div>
+            <div class="result-stat"><span>{{ promotionResult.stats.failed_count }}</span> Failed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Copy Sections Modal -->
+    <div class="modal-overlay" *ngIf="showCopyModal" (click)="closeCopyModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-copy"></i> Copy Sections</h3>
+          <button class="modal-close" (click)="closeCopyModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <p>This will copy all sections from <strong>{{ getYearName(currentSchoolYearId) }}</strong> to <strong>{{ getYearName(targetSchoolYearId) }}</strong>.</p>
+          <div class="modal-notice">
+            <i class="fa-solid fa-info-circle"></i>
+            Adviser assignments will be cleared and must be re-assigned after copying.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="closeCopyModal()">Cancel</button>
+          <button class="btn-execute" (click)="copySectionsFromCurrentYear()" [disabled]="isCopyingSections">
+            <i class="fa-solid fa-copy"></i>
+            {{ isCopyingSections ? 'Copying...' : 'Copy Sections' }}
+          </button>
         </div>
       </div>
     </div>
@@ -207,311 +277,478 @@ interface AdviserAssignmentStatus {
       padding: 2rem;
       background: #f5f7fa;
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
     }
 
     .page-header {
-      margin-bottom: 2rem;
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      padding: 2rem 1.5rem;
+      padding: 1.75rem 1.5rem;
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
-
-      h2 {
-        font-size: 2rem;
-        color: #ffffff;
-        margin: 0;
-        font-weight: 700;
-      }
+      h2 { font-size: 1.75rem; color: #fff; margin: 0 0 4px; font-weight: 700; }
+      p { color: rgba(255,255,255,0.75); margin: 0; font-size: 0.9rem; }
     }
 
-    .notice-banner {
-      background: linear-gradient(135deg, #eef4ff, #dce8ff);
-      border-left: 4px solid #052355;
+    .two-col-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .two-col-row { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: #fff;
       border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
+      box-shadow: 0 2px 12px rgba(5,35,85,0.08);
+      padding: 1.5rem;
+    }
+
+    .card-title {
       display: flex;
-      gap: 15px;
-      box-shadow: 0 2px 12px rgba(5, 35, 85, 0.1);
-    }
-
-    .notice-icon {
-      font-size: 1.8rem;
-      line-height: 1;
-    }
-
-    .notice-content {
-      flex: 1;
-    }
-
-    .notice-content h3 {
-      margin: 0 0 8px 0;
-      color: #052355;
+      align-items: center;
+      gap: 0.6rem;
       font-size: 1rem;
       font-weight: 700;
+      color: #052355;
+      margin-bottom: 1.25rem;
+      i { color: #5381b2; }
     }
 
-    .notice-content p {
-      margin: 0 0 12px 0;
-      color: #1a2744;
-      line-height: 1.5;
+    .card-title-icon {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      flex-shrink: 0;
     }
 
-    .btn-link {
-      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      color: #ffffff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
+    .badge-total {
+      margin-left: auto;
+      background: #eef4ff;
+      color: #052355;
+      font-size: 0.75rem;
       font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+      padding: 3px 10px;
+      border-radius: 20px;
     }
 
-    .btn-link:hover {
-      opacity: 0.9;
-      transform: translateX(4px);
-      box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
+    .year-label {
+      margin-left: auto;
+      color: #5381b2;
+      font-size: 0.85rem;
+      font-weight: 600;
     }
 
-    .adviser-check {
-      background: #f8f9fa;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-
-    .adviser-check h4 {
-      margin: 0 0 15px 0;
-      color: #2c3e50;
-    }
-
-    .status-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin-bottom: 15px;
-    }
-
-    .status-card {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
-      border: 2px solid #e9ecef;
-    }
-
-    .status-card.success {
-      border-color: #28a745;
-      background: #d4edda;
-    }
-
-    .status-card.warning {
-      border-color: #ffc107;
-      background: #fff3cd;
-    }
-
-    .status-label {
-      font-size: 0.9rem;
-      color: #6c757d;
-      margin-bottom: 8px;
-    }
-
-    .status-value {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #2c3e50;
-    }
-
-    .warning-message {
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      border-radius: 6px;
-      padding: 12px 15px;
+    /* Setup */
+    .year-selectors {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #856404;
-    }
-
-    .warning-message i {
-      font-size: 1.2rem;
-    }
-
-    .warning-message span {
-      flex: 1;
-    }
-
-    .form-section {
-      background: #f5f5f5;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
+      align-items: flex-end;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .form-group {
-      margin-bottom: 15px;
+      flex: 1;
+      min-width: 160px;
+      label { display: block; font-size: 0.8rem; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
     }
 
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-    }
-
-    .form-group select {
+    .form-select {
       width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      padding: 10px 12px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #1a2744;
+      background: #f8fafc;
+      outline: none;
+      transition: border-color 0.2s;
+      &:focus { border-color: #5381b2; background: #fff; }
     }
 
+    .arrow-divider {
+      padding-bottom: 10px;
+      color: #5381b2;
+      font-size: 1.2rem;
+    }
+
+    .btn-load {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #052355, #5381b2);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+      &:disabled { opacity: 0.5; cursor: not-allowed; }
+    }
+
+    /* Summary Grid */
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
     }
 
     .summary-card {
-      background: #e3f2fd;
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
+      background: linear-gradient(135deg, #eef4ff, #dce8ff);
+      border-radius: 10px;
+      padding: 1.25rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border: 1px solid rgba(83,129,178,0.2);
     }
 
-    .summary-card h4 {
-      margin: 0 0 10px 0;
-      color: #1976d2;
+    .summary-icon {
+      width: 40px;
+      height: 40px;
+      background: #052355;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1rem;
+      flex-shrink: 0;
     }
 
-    .summary-card .count {
-      font-size: 24px;
-      font-weight: bold;
-      color: #1565c0;
-      margin: 0;
-    }
+    .summary-grade { font-size: 0.8rem; font-weight: 600; color: #5381b2; }
+    .summary-count { font-size: 1.75rem; font-weight: 800; color: #052355; line-height: 1; }
+    .summary-label { font-size: 0.75rem; color: #6b7280; }
 
-    table {
+    /* Capacity Table */
+    .capacity-table-wrapper { overflow-x: auto; }
+
+    .capacity-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 20px;
+      font-size: 0.9rem;
+      th {
+        background: #f8fafc;
+        color: #6b7280;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 10px 14px;
+        text-align: left;
+        border-bottom: 2px solid #e2e8f0;
+      }
+      td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #1a2744;
+      }
+      tr:last-child td { border-bottom: none; }
+      tr:hover td { background: #f8fafc; }
     }
 
-    table th, table td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    table th {
-      background: #f5f5f5;
+    .grade-chip {
+      background: #eef4ff;
+      color: #052355;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
       font-weight: 600;
     }
 
-    .status-inactive {
-      color: #d32f2f;
+    .available-badge {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      &.low { background: #fee2e2; color: #991b1b; }
     }
 
-    .status-transferred {
-      color: #f57c00;
+    .adviser-status {
+      font-weight: 600;
+      font-size: 0.85rem;
+      &.full { color: #065f46; }
+      &.partial { color: #92400e; }
     }
 
-    .status-dropped {
-      color: #c62828;
+    /* Status Grid */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1rem;
     }
 
-    .empty-state {
-      padding: 20px;
+    .status-card {
+      border-radius: 10px;
+      padding: 1.25rem;
       text-align: center;
-      color: #6c757d;
-      background: #f8f9fa;
+      border: 2px solid transparent;
+      &.neutral { background: #f8fafc; border-color: #e2e8f0; }
+      &.success { background: #d1fae5; border-color: #6ee7b7; }
+      &.warning { background: #fef3c7; border-color: #fcd34d; }
+    }
+
+    .status-value { font-size: 2rem; font-weight: 800; color: #052355; }
+    .status-label { font-size: 0.8rem; color: #6b7280; margin-top: 4px; font-weight: 600; }
+
+    .warning-message {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
       border-radius: 8px;
-      border: 1px dashed #dee2e6;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #92400e;
+      font-size: 0.875rem;
+      i { font-size: 1rem; flex-shrink: 0; }
+      span { flex: 1; }
     }
 
-    .empty-state.warning {
-      background: #fff3cd;
-      border-color: #ffc107;
-      color: #856404;
-      text-align: left;
+    /* Empty State */
+    .empty-state {
+      padding: 2rem;
+      text-align: center;
+      color: #6b7280;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1.5px dashed #e2e8f0;
+      i { font-size: 2rem; margin-bottom: 0.75rem; display: block; color: #cbd5e1; }
+      p { margin: 0; }
+      &.warning {
+        background: #fffbeb;
+        border: 1.5px solid #fcd34d;
+        border-radius: 12px;
+        color: #92400e;
+        text-align: left;
+        padding: 1.25rem 1.5rem;
+        i { color: #f59e0b; }
+      }
     }
 
-    .empty-state p {
-      margin: 0;
+    .warning-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
     }
 
-    .btn-primary, .btn-success, .btn-secondary, .btn-small, .btn-copy {
-      padding: 10px 20px;
-      border: none;
+    .warning-text {
+      flex: 1;
+      strong {
+        display: block;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #92400e;
+        margin-bottom: 4px;
+      }
+      p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #a16207;
+        line-height: 1.5;
+      }
+    }
+
+    .year-highlight {
+      font-weight: 700;
+      color: #92400e;
+      background: #fef3c7;
+      padding: 1px 6px;
       border-radius: 4px;
+    }
+
+    /* Copy trigger button */
+    .btn-copy-trigger {
+      padding: 6px 14px;
+      background: linear-gradient(135deg, #052355, #5381b2);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity 0.2s;
+      &.secondary { background: #f1f5f9; color: #052355; }
+      &:hover { opacity: 0.85; }
     }
 
-    .btn-copy {
-      background: #0288d1;
-      color: white;
+    /* Status pills */
+    .status-pill {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      &.status-inactive { background: #fee2e2; color: #991b1b; }
+      &.status-transferred { background: #fef3c7; color: #92400e; }
+      &.status-dropped { background: #fee2e2; color: #7f1d1d; }
     }
 
-    .btn-copy:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    /* Actions */
+    .promotion-actions-bar {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 0.5rem 0 1rem;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      color: #ffffff;
-      box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+    .btn-execute {
+      padding: 11px 24px;
+      background: linear-gradient(135deg, #166534, #22c55e);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 0.2s;
+      &:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
-    .btn-success {
-      background: #388e3c;
-      color: white;
-    }
-
-    .btn-secondary {
-      background: #757575;
-      color: white;
+    .btn-cancel {
+      padding: 11px 20px;
+      background: #f1f5f9;
+      color: #475569;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      &:hover { background: #e2e8f0; }
     }
 
     .btn-small {
-      background: #1976d2;
-      color: white;
-      padding: 5px 10px;
-      font-size: 12px;
+      padding: 5px 12px;
+      background: #eef4ff;
+      color: #052355;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      &:hover { background: #dce8ff; }
     }
 
-    .promotion-actions {
+    /* Result */
+    .result-card {
+      border-radius: 12px;
+      padding: 1.5rem;
       display: flex;
-      gap: 10px;
-      margin-top: 20px;
+      gap: 1rem;
+      align-items: flex-start;
+      &.success { background: #d1fae5; border-left: 4px solid #22c55e; }
+      &.error { background: #fee2e2; border-left: 4px solid #ef4444; }
     }
 
-    .result-section {
-      padding: 20px;
+    .result-icon {
+      font-size: 2rem;
+      .success & { color: #16a34a; }
+      .error & { color: #dc2626; }
+    }
+
+    .result-body {
+      h3 { margin: 0 0 4px; font-size: 1rem; color: #1a2744; }
+      p { margin: 0 0 12px; color: #475569; font-size: 0.875rem; }
+    }
+
+    .result-stats {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .result-stat {
+      background: rgba(255,255,255,0.6);
       border-radius: 8px;
-      margin-top: 20px;
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      color: #475569;
+      font-weight: 600;
+      span { display: block; font-size: 1.5rem; font-weight: 800; color: #052355; }
     }
 
-    .result-section.success {
-      background: #c8e6c9;
-      border-left: 4px solid #388e3c;
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5,35,85,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(2px);
     }
 
-    .result-section.success h3 {
-      color: #388e3c;
+    .modal {
+      background: #fff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: 0 20px 60px rgba(5,35,85,0.25);
+      overflow: hidden;
     }
 
-    .stats {
-      margin-top: 15px;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.5);
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+      h3 { margin: 0; font-size: 1rem; color: #052355; display: flex; align-items: center; gap: 8px; i { color: #5381b2; } }
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 4px;
       border-radius: 4px;
+      &:hover { color: #052355; background: #f1f5f9; }
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      p { margin: 0 0 1rem; color: #475569; font-size: 0.9rem; line-height: 1.6; }
+    }
+
+    .modal-notice {
+      background: #eef4ff;
+      border-left: 3px solid #5381b2;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      color: #1a2744;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      i { color: #5381b2; flex-shrink: 0; }
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
     }
   `]
 })
@@ -528,6 +765,7 @@ export class GradePromotionComponent implements OnInit {
   isCopyingSections = false;
   summaryLoaded = false;
   promotionResult: any = null;
+  showCopyModal = false;
 
   constructor(
     private adminService: AdminService,
@@ -540,35 +778,17 @@ export class GradePromotionComponent implements OnInit {
 
   loadSchoolYears() {
     this.adminService.getSchoolYears().subscribe(
-      (response: any) => {
-        this.schoolYears = response.data || [];
-      },
-      (error: any) => {
-        console.error('Error loading school years:', error);
-      }
+      (response: any) => { this.schoolYears = response.data || []; },
+      (error: any) => { console.error('Error loading school years:', error); }
     );
   }
 
-  onCurrentYearChange() {
-    this.promotionSummary = null;
-    this.summaryLoaded = false;
-  }
-
-  onTargetYearChange() {
-    this.promotionSummary = null;
-    this.summaryLoaded = false;
-  }
+  onCurrentYearChange() { this.promotionSummary = null; this.summaryLoaded = false; }
+  onTargetYearChange() { this.promotionSummary = null; this.summaryLoaded = false; }
 
   loadPromotionSummary() {
-    if (!this.currentSchoolYearId || !this.targetSchoolYearId) {
-      alert('Please select both school years');
-      return;
-    }
-
-    if (this.currentSchoolYearId == this.targetSchoolYearId) {
-      alert('Current and target school years must be different');
-      return;
-    }
+    if (!this.currentSchoolYearId || !this.targetSchoolYearId) { alert('Please select both school years'); return; }
+    if (this.currentSchoolYearId == this.targetSchoolYearId) { alert('Current and target school years must be different'); return; }
 
     this.isLoadingSummary = true;
     this.summaryLoaded = false;
@@ -592,75 +812,41 @@ export class GradePromotionComponent implements OnInit {
   }
 
   confirmPromotion() {
-    if (!this.currentSchoolYearId || !this.targetSchoolYearId) {
-      alert('Please select both school years');
-      return;
-    }
-
-    if (!confirm('Are you sure you want to execute the promotion? This action cannot be undone.')) {
-      return;
-    }
+    if (!this.currentSchoolYearId || !this.targetSchoolYearId) { alert('Please select both school years'); return; }
+    if (!confirm('Are you sure you want to execute the promotion? This action cannot be undone.')) return;
 
     this.isProcessing = true;
+    const promotionRules: any = { 7: 8, 8: 9, 9: 10, 10: 11, 11: 12, 12: 'graduated' };
 
-    const promotionRules: any = {
-      7: 8,
-      8: 9,
-      9: 10,
-      10: 11,
-      11: 12,
-      12: 'graduated'
-    };
-
-    this.adminService.bulkPromoteStudents(
-      this.currentSchoolYearId,
-      this.targetSchoolYearId,
-      promotionRules,
-      []
-    ).subscribe(
+    this.adminService.bulkPromoteStudents(this.currentSchoolYearId, this.targetSchoolYearId, promotionRules, []).subscribe(
       (response: any) => {
         this.isProcessing = false;
-        this.promotionResult = {
-          success: true,
-          message: 'Promotion completed successfully',
-          stats: response.data || response
-        };
+        this.promotionResult = { success: true, message: 'Promotion completed successfully', stats: response.data || response };
       },
       (error: any) => {
         this.isProcessing = false;
-        this.promotionResult = {
-          success: false,
-          message: 'Error during promotion: ' + (error.error?.error || 'Unknown error')
-        };
+        this.promotionResult = { success: false, message: 'Error during promotion: ' + (error.error?.error || 'Unknown error') };
       }
     );
   }
 
-  cancelPromotion() {
-    this.promotionSummary = null;
-    this.promotionResult = null;
-  }
+  cancelPromotion() { this.promotionSummary = null; this.promotionResult = null; this.summaryLoaded = false; }
 
-  openManualAdjustment(student: any) {
-    // TODO: Open modal for manual adjustment
-    console.log('Open manual adjustment for student:', student);
-  }
+  openManualAdjustment(student: any) { console.log('Open manual adjustment for student:', student); }
+
+  openCopyModal() { this.showCopyModal = true; }
+  closeCopyModal() { this.showCopyModal = false; }
 
   copySectionsFromCurrentYear() {
     if (!this.currentSchoolYearId || !this.targetSchoolYearId) return;
-
-    if (!confirm(`Copy all sections from ${this.getYearName(this.currentSchoolYearId)} to ${this.getYearName(this.targetSchoolYearId)}? Adviser assignments will be cleared and must be re-assigned.`)) {
-      return;
-    }
-
     this.isCopyingSections = true;
 
     this.adminService.copySectionsToYear(this.currentSchoolYearId, this.targetSchoolYearId).subscribe(
       (response: any) => {
         const data = response.data || response;
         this.isCopyingSections = false;
+        this.showCopyModal = false;
         alert(`Done! ${data.copied} sections copied. ${data.skipped} already existed.`);
-        // Reload summary to reflect new sections
         this.loadPromotionSummary();
       },
       (error: any) => {
@@ -672,23 +858,18 @@ export class GradePromotionComponent implements OnInit {
 
   getYearName(yearId: number | null): string {
     if (!yearId) return '';
-    const year = this.schoolYears.find(y => y.id == yearId);
-    return year?.year_name || '';
+    return this.schoolYears.find(y => y.id == yearId)?.year_name || '';
   }
+
+  getTotalStudents(): number {
+    return this.promotionSummary?.reduce((sum, item) => sum + item.total_students, 0) || 0;
+  }
+
+  getTotalSections(): number { return this.adviserAssignmentStatus?.total_sections || 0; }
+  getSectionsWithAdvisers(): number { return this.adviserAssignmentStatus?.sections_with_advisers || 0; }
+  getSectionsWithoutAdvisers(): number { return this.adviserAssignmentStatus?.sections_without_advisers || 0; }
 
   navigateToSchoolYearManagement() {
     this.router.navigate(['/dashboard/admin/school-year-management']);
-  }
-
-  getTotalSections(): number {
-    return this.adviserAssignmentStatus?.total_sections || 0;
-  }
-
-  getSectionsWithAdvisers(): number {
-    return this.adviserAssignmentStatus?.sections_with_advisers || 0;
-  }
-
-  getSectionsWithoutAdvisers(): number {
-    return this.adviserAssignmentStatus?.sections_without_advisers || 0;
   }
 }
