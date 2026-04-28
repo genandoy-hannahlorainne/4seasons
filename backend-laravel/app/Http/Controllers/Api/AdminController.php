@@ -1207,19 +1207,39 @@ class AdminController extends BaseController
      */
     private function generateTempPassword()
     {
+        $minLength = \App\Models\SystemSetting::get('security', 'password_min_length', 6);
+        $requireUppercase = \App\Models\SystemSetting::get('security', 'password_require_uppercase', false);
+        $requireNumbers = \App\Models\SystemSetting::get('security', 'password_require_numbers', false);
+        
         $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $lowercase = 'abcdefghijklmnopqrstuvwxyz';
         $numbers = '0123456789';
         $symbols = '%#@&*';
 
         $password = '';
-        $password .= $uppercase[rand(0, strlen($uppercase) - 1)];
+        $allChars = $lowercase;
+        
+        // Always include at least one lowercase
         $password .= $lowercase[rand(0, strlen($lowercase) - 1)];
-        $password .= $numbers[rand(0, strlen($numbers) - 1)];
+        
+        // Add required character types based on settings
+        if ($requireUppercase) {
+            $password .= $uppercase[rand(0, strlen($uppercase) - 1)];
+            $allChars .= $uppercase;
+        }
+        
+        if ($requireNumbers) {
+            $password .= $numbers[rand(0, strlen($numbers) - 1)];
+            $allChars .= $numbers;
+        }
+        
+        // Add one symbol for security
         $password .= $symbols[rand(0, strlen($symbols) - 1)];
-
-        $allChars = $uppercase . $lowercase . $numbers;
-        for ($i = 0; $i < 4; $i++) {
+        $allChars .= $symbols;
+        
+        // Fill remaining length with random characters
+        $remainingLength = max(0, $minLength - strlen($password));
+        for ($i = 0; $i < $remainingLength; $i++) {
             $password .= $allChars[rand(0, strlen($allChars) - 1)];
         }
 
@@ -1376,8 +1396,9 @@ class AdminController extends BaseController
     public function resetPassword(Request $request, $userId)
     {
         try {
+            $minLength = \App\Models\SystemSetting::get('security', 'password_min_length', 6);
             $validator = Validator::make($request->all(), [
-                'new_password' => 'required|string|min:6',
+                'new_password' => "required|string|min:{$minLength}",
             ]);
 
             if ($validator->fails()) {
