@@ -38,9 +38,9 @@ export class EmergencyDrillService {
     return this.http.put<any>(`${this.apiUrl}/${id}`, drill);
   }
 
-  // Delete drill via dedicated POST endpoint
+  // Delete drill
   deleteDrill(id: number): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/${id}/delete`, {});
+    return this.http.delete<any>(`${this.apiUrl}/${id}`);
   }
 
   // Start drill
