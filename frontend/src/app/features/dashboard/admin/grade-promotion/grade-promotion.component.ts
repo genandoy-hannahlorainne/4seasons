@@ -248,7 +248,36 @@ interface AdviserAssignmentStatus {
       </div>
     </div>
 
-    <!-- Copy Sections Modal -->
+    <!-- Copy Result Modal -->
+    <div class="modal-overlay" *ngIf="showCopyResultModal" (click)="showCopyResultModal = false">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-circle-check" style="color:#22c55e"></i> Sections Copied</h3>
+          <button class="modal-close" (click)="showCopyResultModal = false"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="copy-result-stats">
+            <div class="copy-stat success">
+              <div class="copy-stat-value">{{ copyResultData?.copied }}</div>
+              <div class="copy-stat-label">Sections Copied</div>
+            </div>
+            <div class="copy-stat neutral">
+              <div class="copy-stat-value">{{ copyResultData?.skipped }}</div>
+              <div class="copy-stat-label">Already Existed</div>
+            </div>
+          </div>
+          <div class="modal-notice" style="margin-top:1rem;">
+            <i class="fa-solid fa-info-circle"></i>
+            Adviser assignments have been cleared. Please re-assign advisers to the copied sections.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-execute" (click)="showCopyResultModal = false">
+            <i class="fa-solid fa-check"></i> Done
+          </button>
+        </div>
+      </div>
+    </div>
     <div class="modal-overlay" *ngIf="showCopyModal" (click)="closeCopyModal()">
       <div class="modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
@@ -750,6 +779,24 @@ interface AdviserAssignmentStatus {
       justify-content: flex-end;
       gap: 0.75rem;
     }
+
+    .copy-result-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .copy-stat {
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+      &.success { background: #d1fae5; border: 2px solid #6ee7b7; }
+      &.neutral { background: #f8fafc; border: 2px solid #e2e8f0; }
+    }
+
+    .copy-stat-value { font-size: 2.5rem; font-weight: 800; color: #052355; line-height: 1; }
+    .copy-stat-label { font-size: 0.8rem; font-weight: 600; color: #6b7280; margin-top: 6px; }
   `]
 })
 export class GradePromotionComponent implements OnInit {
@@ -766,6 +813,8 @@ export class GradePromotionComponent implements OnInit {
   summaryLoaded = false;
   promotionResult: any = null;
   showCopyModal = false;
+  showCopyResultModal = false;
+  copyResultData: { copied: number; skipped: number } | null = null;
 
   constructor(
     private adminService: AdminService,
@@ -846,7 +895,8 @@ export class GradePromotionComponent implements OnInit {
         const data = response.data || response;
         this.isCopyingSections = false;
         this.showCopyModal = false;
-        alert(`Done! ${data.copied} sections copied. ${data.skipped} already existed.`);
+        this.copyResultData = { copied: data.copied, skipped: data.skipped };
+        this.showCopyResultModal = true;
         this.loadPromotionSummary();
       },
       (error: any) => {
