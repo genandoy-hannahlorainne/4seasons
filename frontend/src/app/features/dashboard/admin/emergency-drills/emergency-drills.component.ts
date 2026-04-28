@@ -12,9 +12,12 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
   template: `
     <div class="emergency-drills-container">
       <div class="header">
-        <h2>Emergency Drill Management</h2>
+        <div class="header-left">
+          <img src="assets/icons/emergency-drills.png" style="width:36px;height:36px;object-fit:contain;" alt="Emergency Drills">
+          <h2>Emergency Drill Management</h2>
+        </div>
         <button class="btn btn-primary" (click)="showCreateModal = true">
-          <i class="fas fa-plus"></i> Create New Drill
+          <img src="assets/icons/add.png" style="width:16px;height:16px;object-fit:contain;filter:brightness(0) invert(1);" alt="Add"> Create New Drill
         </button>
       </div>
 
@@ -103,7 +106,7 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             </div>
           </div>
           <div class="empty-state" *ngIf="activeDrills.length === 0">
-            <i class="fas fa-clipboard-list"></i>
+            <img src="assets/icons/emergency-drills.png" style="width:56px;height:56px;object-fit:contain;opacity:0.4;" alt="No drills">
             <h3>No Active Drills</h3>
             <p>Create a new drill to get started.</p>
           </div>
@@ -113,11 +116,9 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
           <div class="drill-card completed-card" *ngFor="let drill of completedDrills">
             <div class="drill-header">
               <div class="drill-type-icon" [class]="'type-' + drill.drill_type">
-                <i class="fas" [class.fa-fire]="drill.drill_type === 'fire'"
-                               [class.fa-house-crack]="drill.drill_type === 'earthquake'"
-                               [class.fa-lock]="drill.drill_type === 'lockdown'"
-                               [class.fa-kit-medical]="drill.drill_type === 'medical'"
-                               [class.fa-person-running]="drill.drill_type === 'evacuation'"></i>
+                <img [src]="'assets/icons/' + (drill.drill_type === 'medical' ? 'emergency' : drill.drill_type) + '.png'"
+                     style="width:28px;height:28px;object-fit:contain;"
+                     [alt]="drill.drill_type">
               </div>
               <div class="drill-title-group">
                 <h3>{{ drill.drill_name }}</h3>
@@ -148,7 +149,7 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             </div>
           </div>
           <div class="empty-state" *ngIf="completedDrills.length === 0">
-            <i class="fas fa-check-circle"></i>
+            <img src="assets/icons/emergency-drills.png" style="width:56px;height:56px;object-fit:contain;opacity:0.4;" alt="No drills">
             <h3>No Completed Drills</h3>
             <p>Completed drills will appear here.</p>
           </div>
@@ -288,6 +289,12 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       padding: 2rem 1.5rem;
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
 
       h2 {
         font-size: 2rem;
