@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Auto-abandon planned drills whose 30-minute start window has passed — runs every minute
 Schedule::command('drills:abandon-expired')->everyMinute();
+
+// Scheduled backups - check every minute if backup should run based on settings
+Schedule::command('backup:create-scheduled')->everyMinute();
