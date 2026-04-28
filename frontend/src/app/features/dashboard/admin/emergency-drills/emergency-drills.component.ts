@@ -982,7 +982,16 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
             const scheduledTime = new Date(drill.scheduled_at);
             const expiredTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000);
             
+            console.log('🔍 Checking drill expiration:', {
+              drillName: drill.drill_name,
+              scheduledTime: scheduledTime.toLocaleString(),
+              expiredTime: expiredTime.toLocaleString(),
+              now: now.toLocaleString(),
+              isExpired: now > expiredTime
+            });
+            
             if (now > expiredTime) {
+              console.log('⚠️ Drill expired, showing as abandoned:', drill.drill_name);
               // Create a copy with abandoned status for display purposes
               return { ...drill, status: 'abandoned' as any };
             }
