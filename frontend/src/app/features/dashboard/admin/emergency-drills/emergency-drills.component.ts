@@ -957,8 +957,8 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.loadDrills();
-    // Poll every 30 seconds so abandoned drills move automatically
-    this.pollInterval = setInterval(() => this.loadDrills(), 30000);
+    // Poll every 60 seconds so abandoned drills move automatically
+    this.pollInterval = setInterval(() => this.loadDrills(), 60000);
   }
 
   ngOnDestroy() {
