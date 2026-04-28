@@ -72,8 +72,8 @@ class EmergencyDrill extends Model
             $now = \Carbon\Carbon::now('Asia/Manila');
             $scheduledTime = \Carbon\Carbon::parse($this->scheduled_at)->timezone('Asia/Manila');
 
-            // Allow starting only at or after scheduled time (up to 5 minutes after)
-            $allowedEndTime = $scheduledTime->copy()->addMinutes(5);
+            // Allow starting only at or after scheduled time (up to 30 minutes after)
+            $allowedEndTime = $scheduledTime->copy()->addMinutes(30);
 
             \Log::info('🔍 Model canStart check', [
                 'now' => $now->toDateTimeString(),

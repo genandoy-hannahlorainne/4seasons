@@ -249,9 +249,10 @@ class AuthController extends BaseController
                 return $this->sendError('Unauthorized', [], 401);
             }
 
+            $minLength = \App\Models\SystemSetting::get('security', 'password_min_length', 6);
             $request->validate([
                 'reason' => 'nullable|string|max:500',
-                'new_password' => 'required|string|min:6|max:50'
+                'new_password' => "required|string|min:{$minLength}|max:50"
             ]);
 
             $user->load('role');

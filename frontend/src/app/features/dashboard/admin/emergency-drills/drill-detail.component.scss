@@ -1,0 +1,869 @@
+/* ── Design System Variables ──────────────────────── */
+$primary: #052355;
+$primary-light: #5381b2;
+$primary-gradient: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+$success: #059669;
+$success-light: #d1fae5;
+$warning: #d97706;
+$warning-light: #fef3c7;
+$error: #dc2626;
+$error-light: #fee2e2;
+$info: #2563eb;
+$info-light: #dbeafe;
+$border-color: #e2e8f0;
+$bg-light: #f8fafc;
+$bg-lighter: #f1f5f9;
+$text-color: #1a2744;
+$text-secondary: #64748b;
+$text-muted: #94a3b8;
+
+/* ── Main Container ──────────────────────────────── */
+.drill-detail {
+  padding: 1.5rem;
+  max-width: none;
+  margin: 0;
+  background: #f0f4f8;
+  min-height: 100vh;
+}
+
+/* ── Detail Header ───────────────────────────────── */
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: none;
+  border-bottom: 1px solid $border-color;
+  gap: 2rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.5rem;
+  }
+}
+
+.header-info {
+  flex: 1;
+
+  h2 {
+    margin: 0 0 1rem 0;
+    color: $text-color;
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0.75rem 0 0 0;
+    color: $text-secondary;
+    line-height: 1.6;
+  }
+}
+
+.drill-meta {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.drill-type {
+  background: $info-light;
+  color: $info;
+  padding: 0.5rem 0.875rem;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge {
+  padding: 0.5rem 0.875rem;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.status-planned {
+    background: $info-light;
+    color: $info;
+  }
+
+  &.status-active {
+    background: $success-light;
+    color: $success;
+  }
+
+  &.status-completed {
+    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+    color: #7b1fa2;
+  }
+
+  &.status-abandoned {
+    background: $warning-light;
+    color: $warning;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    width: 100%;
+
+    .btn {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  i {
+    font-size: 0.9375rem;
+  }
+}
+
+.btn-primary {
+  background: $primary-gradient;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+.btn-success {
+  background: linear-gradient(135deg, $success 0%, #047857 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(5, 107, 107, 0.2);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(5, 107, 107, 0.3);
+  }
+}
+
+.btn-secondary {
+  background: $bg-lighter;
+  color: $text-secondary;
+  border: 1px solid $border-color;
+
+  &:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #475569;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+  }
+}
+
+/* ── Info Section ────────────────────────────────── */
+.info-section,
+.participants-section,
+.statistics-section {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: none;
+  border-bottom: 1px solid $border-color;
+  margin-bottom: 0;
+
+  h3 {
+    margin: 0 0 1.5rem 0;
+    color: $text-color;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-weight: 600;
+    color: $text-secondary;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  span {
+    color: $text-color;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+}
+
+/* ── Participants Section ────────────────────────── */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.participants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 1.5rem;
+}
+
+.participant-card {
+  border: 1px solid $border-color;
+  border-radius: 12px;
+  padding: 1.5rem;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+  position: relative;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+
+  &.injured {
+    border-left-color: $error;
+    background: linear-gradient(to right, rgba(220, 38, 38, 0.05) 0%, #ffffff 100%);
+  }
+
+  &.scanned {
+    border-left-color: $warning;
+    background: linear-gradient(to right, rgba(217, 119, 6, 0.05) 0%, #ffffff 100%);
+  }
+
+  &.rescued {
+    border-left-color: $success;
+    background: linear-gradient(to right, rgba(5, 150, 105, 0.05) 0%, #ffffff 100%);
+  }
+}
+
+.participant-info {
+  margin-bottom: 1rem;
+}
+
+.student-name {
+  font-weight: 700;
+  color: $text-color;
+  font-size: 1.0625rem;
+  margin-bottom: 0.5rem;
+}
+
+.student-details {
+  font-size: 0.8125rem;
+  color: $text-secondary;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  span {
+    display: inline;
+  }
+}
+
+.participant-role {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.role-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.role-injured {
+    background: $error-light;
+    color: $error;
+  }
+
+  &.role-rescuer {
+    background: $success-light;
+    color: $success;
+  }
+
+  &.role-evacuee {
+    background: $info-light;
+    color: $info;
+  }
+
+  &.role-observer {
+    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+    color: #7b1fa2;
+  }
+}
+
+.participant-stats {
+  background: $bg-lighter;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.response-time {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.time-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: $info;
+}
+
+.time-label {
+  font-size: 0.75rem;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.participant-injury {
+  background: $error-light;
+  padding: 0.875rem;
+  border-radius: 10px;
+  border-left: 3px solid $error;
+}
+
+.injury-info {
+  font-size: 0.875rem;
+  color: $error;
+  font-weight: 500;
+}
+
+.severity {
+  font-weight: 700;
+  margin-left: 0.25rem;
+
+  &.severity-minor {
+    color: $success;
+  }
+
+  &.severity-moderate {
+    color: $warning;
+  }
+
+  &.severity-severe {
+    color: #fd7e14;
+  }
+
+  &.severity-critical {
+    color: $error;
+  }
+}
+
+.empty-participants {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: $text-muted;
+
+  i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: $border-color;
+    display: block;
+  }
+
+  p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+  }
+}
+
+/* ── Statistics Section ──────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-card {
+  text-align: center;
+  padding: 1.5rem;
+  border: 1px solid $border-color;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, $bg-lighter 100%);
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border-color: #cbd5e1;
+  }
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: $primary;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.8125rem;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* ── Modal Styles ────────────────────────────────── */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.large-modal {
+  max-width: 800px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid $border-color;
+  background: linear-gradient(to right, #ffffff 0%, $bg-lighter 100%);
+
+  h3 {
+    margin: 0;
+    color: $text-color;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: $text-secondary;
+  cursor: pointer;
+  padding: 0.5rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $bg-lighter;
+    color: $text-color;
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* ── Search Section ──────────────────────────────── */
+.search-section {
+  margin-bottom: 1.5rem;
+}
+
+.search-input-group {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  .form-control {
+    flex: 1;
+  }
+
+  .search-btn {
+    white-space: nowrap;
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+.search-help {
+  display: block;
+  margin-top: 0.5rem;
+  color: $text-secondary;
+  font-size: 0.8125rem;
+}
+
+.search-loading {
+  margin-top: 0.75rem;
+  color: $info;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ── Students List ───────────────────────────────── */
+.students-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid $border-color;
+  border-radius: 10px;
+  background: #ffffff;
+  margin-bottom: 1.5rem;
+}
+
+.student-item {
+  padding: 1rem;
+  border-bottom: 1px solid $border-color;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: $bg-lighter;
+  }
+
+  &.selected {
+    background: linear-gradient(to right, #eff6ff 0%, #ffffff 100%);
+    border-left: 4px solid $info;
+  }
+}
+
+.student-info {
+  flex: 1;
+  cursor: pointer;
+}
+
+.student-name {
+  font-weight: 700;
+  color: $text-color;
+  margin-bottom: 0.25rem;
+}
+
+.student-details {
+  font-size: 0.8125rem;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+.student-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 200px;
+}
+
+.injury-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid $border-color;
+}
+
+/* ── No Results / Instructions ───────────────────── */
+.no-results,
+.search-instructions {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  color: $text-secondary;
+  border: 1px solid $border-color;
+  border-radius: 10px;
+  background: $bg-lighter;
+  margin-bottom: 1.5rem;
+
+  p {
+    margin: 0.5rem 0;
+    font-size: 0.9375rem;
+  }
+
+  small {
+    color: $text-muted;
+    font-size: 0.8125rem;
+  }
+}
+
+/* ── Form Controls ───────────────────────────────── */
+.form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  color: $text-color;
+  background: #ffffff;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: $info;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  &:disabled {
+    background: $bg-lighter;
+    color: $text-muted;
+    cursor: not-allowed;
+  }
+}
+
+/* ── Modal Actions ───────────────────────────────── */
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid $border-color;
+}
+
+/* ── Confirmation Modal ──────────────────────────── */
+.confirm-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.confirm-modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease-out;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+.confirm-modal-header {
+  padding: 1.5rem;
+  background: $primary-gradient;
+  border-bottom: none;
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #ffffff;
+    font-weight: 700;
+  }
+}
+
+.confirm-modal-body {
+  padding: 2rem 1.5rem;
+  background: #ffffff;
+
+  p {
+    margin: 0;
+    color: $text-color;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+}
+
+.confirm-modal-actions {
+  padding: 1rem 1.5rem 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  background: #ffffff;
+}
+
+.btn-confirm {
+  background: $primary-gradient;
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9375rem;
+  box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.btn-cancel-confirm {
+  background: $bg-lighter;
+  color: $text-secondary;
+  border: 1px solid $border-color;
+  padding: 0.75rem 2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9375rem;
+
+  &:hover {
+    background: #e2e8f0;
+    color: #475569;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+  }
+}
+
+/* ── Loading State ───────────────────────────────── */
+.loading {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: $text-secondary;
+  font-size: 1rem;
+
+  i {
+    margin-right: 0.5rem;
+  }
+}
+
+/* ── Responsive Design ───────────────────────────── */
+@media (max-width: 768px) {
+  .drill-detail {
+    padding: 1rem;
+  }
+
+  .info-section,
+  .participants-section,
+  .statistics-section {
+    padding: 1.5rem;
+  }
+
+  .detail-header {
+    padding: 1.5rem;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .participants-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .modal-content {
+    max-width: 95vw;
+  }
+
+  .student-actions {
+    min-width: auto;
+    width: 100%;
+  }
+}
