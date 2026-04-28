@@ -245,6 +245,8 @@ $bg-lighter: #f1f5f9;
   min-height: 100vh;
   overflow-x: hidden;
   transition: margin-left $transition;
+  background: #f0f4f8;
+  padding: 0;
 }
 
 .student-layout.collapsed .main-content {

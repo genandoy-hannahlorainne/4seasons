@@ -1,0 +1,281 @@
+<div class="drill-detail" *ngIf="drill">
+  <div class="detail-header">
+    <div class="header-info">
+      <h2>{{ drill.drill_name }}</h2>
+      <div class="drill-meta">
+        <span class="drill-type">{{ drill.drill_type | titlecase }}</span>
+        <span class="status-badge" [class]="'status-' + drill.status">
+          {{ drill.status | titlecase }}
+        </span>
+      </div>
+      <p *ngIf="drill.description">{{ drill.description }}</p>
+    </div>
+    
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+      
+      <button *ngIf="drill.status === 'planned'" 
+              class="btn"
+              [class.btn-success]="canStartDrill()"
+              [class.btn-secondary]="!canStartDrill()"
+              [disabled]="!canStartDrill()"
+              [title]="getStartButtonTooltip()"
+              (click)="startDrill()">
+        <i class="fas fa-play"></i> Start Drill
+      </button>
+      
+      <button *ngIf="drill.status === 'active'" 
+              class="btn btn-primary" 
+              (click)="viewDashboard()">
+        <i class="fas fa-tachometer-alt"></i> Live Dashboard
+      </button>
+    </div>
+  </div>
+
+  <!-- Drill Information -->
+  <div class="info-section">
+    <h3>Drill Information</h3>
+    <div class="info-grid">
+      <div class="info-item">
+        <label>Created:</label>
+        <span>{{ drill.created_at | date:'medium' }}</span>
+      </div>
+      <div class="info-item" *ngIf="drill.scheduled_at">
+        <label>Scheduled:</label>
+        <span>{{ drill.scheduled_at | date:'medium' }}</span>
+      </div>
+      <div class="info-item" *ngIf="drill.started_at">
+        <label>Started:</label>
+        <span>{{ drill.started_at | date:'medium' }}</span>
+      </div>
+      <div class="info-item" *ngIf="drill.ended_at">
+        <label>Ended:</label>
+        <span>{{ drill.ended_at | date:'medium' }}</span>
+      </div>
+      <div class="info-item" *ngIf="drill.duration_seconds">
+        <label>Duration:</label>
+        <span>{{ formatDuration(drill.duration_seconds) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Participants Section -->
+  <div class="participants-section">
+    <div class="section-header">
+      <h3>Participants ({{ drill.participants?.length || 0 }})</h3>
+      <button *ngIf="drill.status === 'planned'" 
+              class="btn btn-primary" 
+              (click)="showAddParticipants = true">
+        <i class="fas fa-plus"></i> Add Participants
+      </button>
+    </div>
+
+    <div class="participants-grid" *ngIf="drill.participants?.length">
+      <div class="participant-card" 
+           *ngFor="let participant of drill.participants"
+           [class.injured]="participant.role === 'injured'"
+           [class.scanned]="participant.status === 'scanned'"
+           [class.rescued]="participant.status === 'rescued'">
+        
+        <div class="participant-info">
+          <div class="student-name">{{ participant.user?.full_name || (participant.student?.first_name + ' ' + (participant.student?.last_name || '')) || 'Unknown User' }}</div>
+          <div class="student-details">
+            <span>Role: {{ participant.user?.role_name || 'Unknown' }}</span>
+            <span *ngIf="participant.student">ID: {{ participant.student?.student_number }}</span>
+            <span *ngIf="participant.student">Grade: {{ participant.student?.current_section?.grade_level?.grade_name || participant.student?.grade_level }}</span>
+            <span *ngIf="participant.student">Section: {{ participant.student?.current_section?.section_name || participant.student?.section }}</span>
+          </div>
+        </div>
+
+        <div class="participant-role">
+          <span class="role-badge" [class]="'role-' + participant.role">
+            {{ participant.role | titlecase }}
+          </span>
+          <span class="status-badge" [class]="'status-' + participant.status">
+            {{ participant.status | titlecase }}
+          </span>
+        </div>
+
+        <div class="participant-stats" *ngIf="participant.response_time_seconds">
+          <div class="response-time">
+            <span class="time-value">{{ participant.response_time_seconds }}s</span>
+            <span class="time-label">Response Time</span>
+          </div>
+        </div>
+
+        <div class="participant-injury" *ngIf="participant.injury_simulation">
+          <div class="injury-info">
+            <strong>Injury:</strong> {{ participant.injury_simulation }}
+            <span class="severity" [class]="'severity-' + participant.severity">
+              ({{ participant.severity | titlecase }})
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-participants" *ngIf="!drill.participants?.length">
+      <i class="fas fa-users"></i>
+      <p>No participants added yet</p>
+      <button *ngIf="drill.status === 'planned'" 
+              class="btn btn-primary" 
+              (click)="showAddParticipants = true">
+        Add Participants
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Section -->
+  <div class="statistics-section" *ngIf="drill.statistics">
+    <h3>Drill Statistics</h3>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ drill.statistics.total_participants }}</div>
+        <div class="stat-label">Total Participants</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ drill.statistics.injured_participants }}</div>
+        <div class="stat-label">Injured</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ drill.statistics.scanned_participants }}</div>
+        <div class="stat-label">Scanned</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ drill.statistics.rescued_participants }}</div>
+        <div class="stat-label">Rescued</div>
+      </div>
+      <div class="stat-card" *ngIf="drill.statistics.average_response_time">
+        <div class="stat-value">{{ drill.statistics.average_response_time | number:'1.0-1' }}s</div>
+        <div class="stat-label">Avg Response</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ drill.statistics.completion_rate | number:'1.0-0' }}%</div>
+        <div class="stat-label">Completion Rate</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Participants Modal -->
+  <div class="modal" *ngIf="showAddParticipants" (click)="closeModal($event)">
+    <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Add Participants</h3>
+        <button class="close-btn" (click)="showAddParticipants = false">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Search Students -->
+        <div class="search-section">
+          <div class="search-input-group">
+            <input type="text" 
+                   [(ngModel)]="searchTerm" 
+                   (keyup.enter)="searchStudents()"
+                   class="form-control" 
+                   placeholder="Search users by name, ID, or username..."
+                   [disabled]="searchLoading">
+            <button class="btn btn-primary search-btn" 
+                    (click)="searchStudents()" 
+                    [disabled]="searchLoading || searchTerm.length < 2">
+              <i class="fas fa-search" *ngIf="!searchLoading"></i>
+              <i class="fas fa-spinner fa-spin" *ngIf="searchLoading"></i>
+              Search
+            </button>
+          </div>
+          <small class="search-help">Type at least 2 characters and click Search or press Enter</small>
+          <div class="search-loading" *ngIf="searchLoading">
+            <i class="fas fa-spinner fa-spin"></i> Searching...
+          </div>
+        </div>
+
+        <!-- Available Students -->
+        <div class="students-list" *ngIf="availableStudents.length">
+          <div class="student-item" 
+               *ngFor="let student of availableStudents"
+               [class.selected]="isStudentSelected(student.user_id)">
+            
+            <div class="student-info" (click)="selectStudent(student)">
+              <div class="student-name">{{ student.full_name || (student.first_name + ' ' + (student.last_name || '')) }}</div>
+              <div class="student-details">
+                Role: {{ student.role_name }} | 
+                <span *ngIf="student.student_number">ID: {{ student.student_number }} | </span>
+                <span *ngIf="student.grade_level">Grade: {{ student.current_section?.grade_level?.grade_name || student.grade_level }} | </span>
+                <span *ngIf="student.section">Section: {{ student.current_section?.section_name || student.section }}</span>
+                <span *ngIf="student.username && !student.student_number">Username: {{ student.username }}</span>
+              </div>
+            </div>
+            
+            <div class="student-actions" *ngIf="isStudentSelected(student.user_id)" (click)="$event.stopPropagation()">
+              <select [(ngModel)]="getSelectedStudent(student.user_id).role" class="form-control" (click)="$event.stopPropagation()">
+                <option value="injured">Injured</option>
+                <option value="rescuer">Rescuer</option>
+                <option value="evacuee">Evacuee</option>
+                <option value="observer">Observer</option>
+              </select>
+              
+              <div *ngIf="getSelectedStudent(student.user_id).role === 'injured'" class="injury-details" (click)="$event.stopPropagation()">
+                <input type="text" 
+                       [(ngModel)]="getSelectedStudent(student.user_id).injury_simulation"
+                       class="form-control" 
+                       placeholder="Injury simulation"
+                       (click)="$event.stopPropagation()">
+                <select [(ngModel)]="getSelectedStudent(student.user_id).severity" class="form-control" (click)="$event.stopPropagation()">
+                  <option value="minor">Minor</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="severe">Severe</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Results -->
+        <div class="no-results" *ngIf="searchTerm.length >= 2 && availableStudents.length === 0">
+          <p>No users found matching "{{ searchTerm }}"</p>
+          <p><small>Try searching by name, username, email, or student number</small></p>
+        </div>
+
+        <!-- Search Instructions -->
+        <div class="search-instructions" *ngIf="searchTerm.length < 2">
+          <p>Type at least 2 characters to search for users...</p>
+          <p><small>You can search for students, advisers, clinic staff, or admin users</small></p>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="showAddParticipants = false">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" 
+                  (click)="addSelectedParticipants()" 
+                  [disabled]="selectedStudents.length === 0 || adding">
+            <i class="fas fa-spinner fa-spin" *ngIf="adding"></i>
+            Add {{ selectedStudents.length }} Participants
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div class="modal confirm-modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
+    <div class="confirm-modal-content" (click)="$event.stopPropagation()">
+      <div class="confirm-modal-header">
+        <h3>{{ confirmTitle }}</h3>
+      </div>
+      <div class="confirm-modal-body">
+        <p>{{ confirmMessage }}</p>
+      </div>
+      <div class="confirm-modal-actions">
+        <button class="btn btn-confirm" (click)="confirmYes()">OK</button>
+        <button class="btn btn-cancel-confirm" (click)="closeConfirmModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="loading" *ngIf="loading">
+  <i class="fas fa-spinner fa-spin"></i> Loading drill details...
+</div>
