@@ -56,8 +56,10 @@ class EmergencyDrillController extends BaseController
                 'drill_name' => 'required|string|max:255',
                 'drill_type' => 'required|in:earthquake,fire,lockdown,medical,evacuation',
                 'description' => 'nullable|string',
-                'scheduled_at' => 'nullable|date',
+                'scheduled_at' => 'nullable|date|after_or_equal:today',
                 'settings' => 'nullable|array'
+            ], [
+                'scheduled_at.after_or_equal' => 'The scheduled date cannot be in the past. Please select today or a future date.'
             ]);
 
             if ($validator->fails()) {
@@ -89,6 +91,27 @@ class EmergencyDrillController extends BaseController
 
         } catch (\Exception $e) {
             return $this->sendError('Failed to create drill', $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a planned drill
+     */
+    public function destroy($id)
+    {
+        try {
+            $drill = EmergencyDrill::findOrFail($id);
+
+            if ($drill->status !== 'planned') {
+                return $this->sendError('Only planned drills can be deleted.', '', 422);
+            }
+
+            $drill->delete();
+
+            return $this->sendResponse([], 'Emergency drill deleted successfully');
+
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to delete drill', $e->getMessage());
         }
     }
 
@@ -133,7 +156,7 @@ class EmergencyDrillController extends BaseController
     {
         // IMMEDIATE VALIDATION - NO EXCEPTIONS, NO TRY-CATCH
         $drill = EmergencyDrill::find($id);
-        
+
         \Log::info('🔥 START DRILL VALIDATION', [
             'drill_id' => $id,
             'drill_found' => !!$drill,
@@ -142,7 +165,7 @@ class EmergencyDrillController extends BaseController
             'scheduled_at_type' => $drill && $drill->scheduled_at ? gettype($drill->scheduled_at) : null,
             'scheduled_at_string' => $drill && $drill->scheduled_at ? $drill->scheduled_at->toDateTimeString() : null,
         ]);
-        
+
         if (!$drill) {
             return response()->json([
                 'success' => false,
@@ -161,14 +184,14 @@ class EmergencyDrillController extends BaseController
         if ($drill->scheduled_at) {
             $now = \Carbon\Carbon::now('Asia/Manila');
             $scheduledTime = \Carbon\Carbon::parse($drill->scheduled_at)->timezone('Asia/Manila');
-            
+
             \Log::info('🕐 TIME COMPARISON', [
                 'now' => $now->toDateTimeString(),
                 'scheduled' => $scheduledTime->toDateTimeString(),
                 'is_before' => $now->lessThan($scheduledTime),
                 'diff_minutes' => $now->diffInMinutes($scheduledTime, false)
             ]);
-            
+
             if ($now->lessThan($scheduledTime)) {
                 $minutesUntil = $now->diffInMinutes($scheduledTime);
                 \Log::warning('❌ BLOCKED - TOO EARLY', ['minutes_until' => $minutesUntil]);
@@ -177,7 +200,7 @@ class EmergencyDrillController extends BaseController
                     'message' => "Cannot start drill. Scheduled for {$scheduledTime->format('g:i A')}. Wait {$minutesUntil} more minutes."
                 ], 403);
             }
-            
+
             $allowedEndTime = $scheduledTime->copy()->addMinutes(30);
             if ($now->greaterThan($allowedEndTime)) {
                 \Log::warning('❌ BLOCKED - TOO LATE');
@@ -191,7 +214,7 @@ class EmergencyDrillController extends BaseController
         }
 
         Log::info('🔥🔥🔥 START METHOD CALLED', ['id' => $id, 'time' => now()->toDateTimeString()]);
-        
+
         try {
             $drill = EmergencyDrill::findOrFail($id);
 

@@ -274,10 +274,16 @@ $mobile-bp: 768px;
 
 /* ── Notifications Panel (Center Modal) ──────────── */
 .notifications-panel-overlay {
-  position: fixed;
-  inset: 0;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
   background: rgba(15, 23, 42, 0.5);
-  z-index: 350;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,6 +298,7 @@ $mobile-bp: 768px;
 }
 
 .notifications-panel {
+  position: relative;
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
@@ -302,6 +309,7 @@ $mobile-bp: 768px;
   flex-direction: column;
   animation: modalSlideUp 0.3s ease-out;
   overflow: hidden;
+  margin: 0 auto;
 }
 
 @keyframes modalSlideUp {

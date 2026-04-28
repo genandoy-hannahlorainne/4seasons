@@ -125,12 +125,13 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::post('/promotion/bulk', [GradePromotionController::class, 'bulk']);
         Route::post('/promotion/copy-sections', [GradePromotionController::class, 'copySections']);
 
-        // School years routes
+        // School years routes - specific routes MUST come before parameterized routes
         Route::get('/school-years', [SchoolYearController::class, 'index']);
         Route::get('/school-years/current', [SchoolYearController::class, 'getCurrent']);
+        Route::get('/school-years/check-current-auto', [SchoolYearController::class, 'checkAutoSetCurrent']);
         Route::post('/school-years', [SchoolYearController::class, 'store']);
-        Route::put('/school-years/{id}', [SchoolYearController::class, 'update']);
         Route::post('/school-years/set-current', [SchoolYearController::class, 'setCurrent']);
+        Route::put('/school-years/{id}', [SchoolYearController::class, 'update']);
     });
 
     // Adviser routes
@@ -215,6 +216,8 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::post('/{id}/scan', [EmergencyDrillController::class, 'scanParticipant']);
         Route::get('/{id}/dashboard', [EmergencyDrillController::class, 'dashboard']);
         Route::get('/{id}/search-users', [EmergencyDrillController::class, 'searchUsers']);
+        Route::delete('/{id}', [EmergencyDrillController::class, 'destroy']);
+        Route::post('/{id}/delete', [EmergencyDrillController::class, 'destroy']);
     });
 
     // Dashboard

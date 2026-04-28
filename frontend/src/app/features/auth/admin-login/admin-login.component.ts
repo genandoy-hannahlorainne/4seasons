@@ -15,7 +15,7 @@ import { environment } from '../../../../environments/environment';
       <div class="admin-login-card">
         <div class="admin-header">
           <div class="admin-icon-wrapper">
-            <img src="assets/icons/admin.png" alt="Admin" class="admin-icon-img" />
+            <img src="assets/icons/it-admin.png" alt="Admin" class="admin-icon-img" />
           </div>
           <h1>Admin Portal</h1>
           <p>Authorized personnel only</p>
@@ -47,12 +47,26 @@ import { environment } from '../../../../environments/environment';
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
               <input 
-                type="password" 
+                [type]="showPassword ? 'text' : 'password'" 
                 id="password" 
                 formControlName="password" 
                 class="form-control"
                 placeholder="Enter password"
                 autocomplete="current-password">
+              <button 
+                type="button" 
+                class="password-toggle" 
+                (click)="togglePasswordVisibility()"
+                tabindex="-1">
+                <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -146,16 +160,18 @@ import { environment } from '../../../../environments/environment';
       }
 
       h1 {
-        font-size: 1.75rem;
-        color: #0d1b2a;
+        font-family: 'Epilogue', sans-serif;
+        font-size: 2rem;
+        color: #052355;
         margin: 0 0 0.4rem;
-        font-weight: 800;
+        font-weight: 900;
         letter-spacing: -0.5px;
       }
 
       p {
-        color: #94a3b8;
-        font-size: 0.875rem;
+        font-family: 'Albert Sans', sans-serif;
+        color: #666;
+        font-size: 0.95rem;
         margin: 0;
         letter-spacing: 0.3px;
       }
@@ -165,11 +181,12 @@ import { environment } from '../../../../environments/environment';
       margin-bottom: 1.25rem;
 
       label {
+        font-family: 'Albert Sans', sans-serif;
         display: block;
         margin-bottom: 0.5rem;
         font-weight: 600;
-        font-size: 0.875rem;
-        color: #1e293b;
+        font-size: 0.95rem;
+        color: #052355;
       }
 
       .input-wrapper {
@@ -190,9 +207,10 @@ import { environment } from '../../../../environments/environment';
 
         .form-control {
           width: 100%;
-          padding: 0.875rem 1rem 0.875rem 2.75rem;
+          padding: 0.875rem 3rem 0.875rem 2.75rem;
           border: 1.5px solid #e2e8f0;
           border-radius: 10px;
+          font-family: 'Albert Sans', sans-serif;
           font-size: 0.95rem;
           color: #0f172a;
           background: #f8fafc;
@@ -201,13 +219,47 @@ import { environment } from '../../../../environments/environment';
 
           &:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: #052355;
             background: #fff;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+            box-shadow: 0 0 0 3px rgba(5, 35, 85, 0.12);
           }
 
           &::placeholder {
             color: #cbd5e1;
+          }
+
+          /* Hide Edge/IE password reveal button */
+          &::-ms-reveal,
+          &::-ms-clear {
+            display: none;
+          }
+        }
+
+        .password-toggle {
+          position: absolute;
+          right: 0.875rem;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #666;
+          transition: color 0.2s ease;
+
+          &:hover {
+            color: #052355;
+          }
+
+          &:focus {
+            outline: none;
+          }
+
+          svg {
+            display: block;
           }
         }
       }
@@ -227,14 +279,15 @@ import { environment } from '../../../../environments/environment';
     }
 
     .btn-login {
+      font-family: 'Albert Sans', sans-serif;
       width: 100%;
-      padding: 0.9rem;
-      background: linear-gradient(135deg, #1e3a5f 0%, #0f3460 100%);
+      padding: 0.75rem;
+      background: #052355;
       color: white;
       border: none;
       border-radius: 10px;
-      font-size: 0.975rem;
-      font-weight: 700;
+      font-size: 1.1rem;
+      font-weight: 600;
       cursor: pointer;
       letter-spacing: 0.3px;
       transition: all 0.25s ease;
@@ -243,12 +296,12 @@ import { environment } from '../../../../environments/environment';
       justify-content: center;
       gap: 0.5rem;
       margin-top: 0.5rem;
-      box-shadow: 0 4px 15px rgba(15, 52, 96, 0.35);
+      box-shadow: 0 4px 15px rgba(5, 35, 85, 0.35);
 
       &:hover:not(:disabled) {
-        background: linear-gradient(135deg, #1a3356 0%, #0d2d54 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(15, 52, 96, 0.45);
+        background: #041b44;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(5, 35, 85, 0.45);
       }
 
       &:active:not(:disabled) {
@@ -282,16 +335,18 @@ import { environment } from '../../../../environments/environment';
       border-top: 1px solid #f1f5f9;
 
       a {
+        font-family: 'Albert Sans', sans-serif;
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
-        color: #94a3b8;
+        color: #666;
         text-decoration: none;
-        font-size: 0.875rem;
+        font-size: 0.95rem;
+        font-weight: 600;
         transition: color 0.2s ease;
 
         &:hover {
-          color: #0f3460;
+          color: #052355;
         }
       }
     }
@@ -301,6 +356,7 @@ export class AdminLoginComponent {
   loginForm: FormGroup;
   loading = false;
   error = '';
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -318,6 +374,10 @@ export class AdminLoginComponent {
     if (currentUser && currentUser.role_name === 'admin') {
       this.router.navigate(['/dashboard/admin']);
     }
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
   onSubmit(): void {

@@ -16,6 +16,7 @@ export class LoginComponent implements OnInit {
   loading = false;
   error = '';
   selectedRole: string = '';
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -39,6 +40,10 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/role-selection']);
       }
     });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
   goBack(): void {

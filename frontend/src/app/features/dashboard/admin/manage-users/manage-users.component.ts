@@ -72,6 +72,40 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     admins: 0
   };
 
+  // Pagination
+  currentPage = 1;
+  pageSize = 10;
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredUsers.length / this.pageSize);
+  }
+
+  get paginatedUsers(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredUsers.slice(start, start + this.pageSize);
+  }
+
+  get pageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages;
+    const current = this.currentPage;
+    const delta = 2;
+    for (let i = Math.max(1, current - delta); i <= Math.min(total, current + delta); i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+  }
+
   // Bulk Import properties
   showBulkImportModal = false;
   selectedFile: File | null = null;
@@ -383,11 +417,6 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   filterUsers(): void {
-    console.log('🔍 Filtering users...');
-    console.log('🔍 Total users before filter:', this.users.length);
-    console.log('🔍 Selected role:', this.selectedRole);
-    console.log('🔍 Search query:', this.searchQuery);
-
     this.filteredUsers = this.users.filter(user => {
       const userRole = user.role || user.roleDisplay?.toLowerCase();
       const matchesRole = this.selectedRole === 'all' || userRole === this.selectedRole;
@@ -395,13 +424,9 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         (user.full_name && user.full_name.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
         (user.username && user.username.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
         (user.email && user.email.toLowerCase().includes(this.searchQuery.toLowerCase()));
-
-      console.log(`🔍 User ${user.username}: role=${userRole}, matchesRole=${matchesRole}, matchesSearch=${matchesSearch}`);
-
       return matchesRole && matchesSearch;
     });
-
-    console.log('🔍 Filtered users count:', this.filteredUsers.length);
+    this.currentPage = 1;
   }
 
   onRoleChange(): void {
