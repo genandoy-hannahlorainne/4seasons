@@ -56,7 +56,7 @@ interface GradeLevel {
       </div>
 
       <!-- School Year Selector -->
-      <div class="school-year-selector">
+      <div class="school-year-selector" *ngIf="!selectedGradeLevelId">
         <div class="selector-header">
           <div class="selector-left">
             <label>Select School Year:</label>
@@ -81,7 +81,7 @@ interface GradeLevel {
               <i class="fa-solid fa-check-circle"></i>
               {{ settingCurrent ? 'Setting...' : 'Set as Current School Year' }}
             </button>
-            
+
             <!-- Show disabled button for future school years -->
             <button
               *ngIf="!isCurrentSchoolYear() && isSchoolYearFuture(getSelectedSchoolYear()!)"
@@ -91,7 +91,7 @@ interface GradeLevel {
               <i class="fa-solid fa-clock"></i>
               Future School Year
             </button>
-            
+
             <!-- Show current badge -->
             <div *ngIf="isCurrentSchoolYear()" class="current-indicator">
               <div class="current-badge-enhanced">
@@ -100,7 +100,7 @@ interface GradeLevel {
             </div>
           </div>
         </div>
-        <div class="current-year-info" *ngIf="getCurrentSchoolYear()">
+        <div class="current-year-info" *ngIf="getCurrentSchoolYear() && !selectedGradeLevelId">
           <i class="fa-solid fa-info-circle"></i>
           <span>
             <strong>Current School Year:</strong> {{ getCurrentSchoolYear()?.year_name }}
@@ -335,7 +335,7 @@ interface GradeLevel {
               <i class="fa-solid fa-calendar-check"></i>
             </div>
             <p class="confirm-message">Set "{{ yearToSetAsCurrent?.year_name }}" as the current school year?</p>
-            
+
             <div class="confirm-details">
               <div class="confirm-detail-item">
                 <span class="detail-label">New Current Year</span>
@@ -402,7 +402,7 @@ interface GradeLevel {
               <i class="fa-solid fa-calendar-star"></i>
             </div>
             <p class="confirm-message">School year "{{ suggestedSchoolYear?.year_name }}" has started!</p>
-            
+
             <div class="confirm-details">
               <div class="confirm-detail-item">
                 <span class="detail-label">School Year</span>
@@ -2140,7 +2140,7 @@ export class SchoolYearManagementComponent implements OnInit {
       next: (response) => {
         if (response.success) {
           this.schoolYears = response.data;
-          
+
           // Auto-select current school year
           const current = this.schoolYears.find(y => this.isSchoolYearCurrent(y));
           if (current) {
@@ -2303,12 +2303,12 @@ export class SchoolYearManagementComponent implements OnInit {
   isSchoolYearCurrent(schoolYear: SchoolYear): boolean {
     // Handle various data types that might come from the API
     const isCurrent = schoolYear.is_current;
-    
+
     // Convert to string for consistent comparison
     const currentStr = String(isCurrent).toLowerCase();
-    
-    return isCurrent === 1 || 
-           currentStr === '1' || 
+
+    return isCurrent === 1 ||
+           currentStr === '1' ||
            currentStr === 'true';
   }
 
@@ -2316,22 +2316,22 @@ export class SchoolYearManagementComponent implements OnInit {
     // Check if the school year's start date has arrived
     const today = new Date();
     const startDate = new Date(schoolYear.start_date);
-    
+
     // Remove time component for date comparison
     today.setHours(0, 0, 0, 0);
     startDate.setHours(0, 0, 0, 0);
-    
+
     return startDate <= today;
   }
 
   isSchoolYearFuture(schoolYear: SchoolYear): boolean {
     const today = new Date();
     const startDate = new Date(schoolYear.start_date);
-    
+
     // Remove time component for date comparison
     today.setHours(0, 0, 0, 0);
     startDate.setHours(0, 0, 0, 0);
-    
+
     return startDate > today;
   }
 
@@ -2347,9 +2347,9 @@ export class SchoolYearManagementComponent implements OnInit {
   isCurrentSchoolYear(): boolean {
     if (!this.selectedSchoolYearId) return false;
     const year = this.schoolYears.find(y => y.id === this.selectedSchoolYearId);
-    
+
     if (!year) return false;
-    
+
     return this.isSchoolYearCurrent(year);
   }
 
