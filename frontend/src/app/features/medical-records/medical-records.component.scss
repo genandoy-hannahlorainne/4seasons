@@ -34,17 +34,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: transparent;PS C:\xampp\htdocs\4seasons\backend-laravel> php artisan drills:abandon-expired
-Checking for expired drills...
-Cutoff time: 2026-04-28 13:58:48
-Planned drills with schedule: 0
-No expired drills found.
-PS C:\xampp\htdocs\4seasons\backend-laravel> php artisan drills:abandon-expired
-Checking for expired drills...
-Cutoff time: 2026-04-28 13:59:21
-Planned drills with schedule: 0
-No expired drills found.
-PS C:\xampp\htdocs\4seasons\backend-laravel>
+  background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
