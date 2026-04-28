@@ -112,11 +112,7 @@ interface PasswordChangeRequest {
         </button>
         <span class="mobile-brand">PDMHS Admin</span>
 
-        <!-- Notification Bell -->
-        <div class="notification-bell" (click)="toggleNotificationPanel()">
-          <i class="fa-solid fa-bell"></i>
-          <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
-        </div>
+
       </header>
 
       <!-- Notification Panel (Centered Modal) -->
@@ -284,12 +280,12 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
         if (response?.success && response?.data?.notifications) {
           const allNotifications = response.data.notifications;
           console.log('All notifications:', allNotifications);
-          
+
           if (!Array.isArray(allNotifications)) {
             console.error('Notifications is not an array:', allNotifications);
             return;
           }
-          
+
           this.passwordChangeRequests = allNotifications
             .filter((n: any) => n.notification_type === 'password_change_request' && n.status === 'Pending')
             .map((n: any) => ({
@@ -416,8 +412,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    if (!target.closest('.notification-bell') && 
-        !target.closest('.notification-panel') && 
+    if (!target.closest('.notification-bell') &&
+        !target.closest('.notification-panel') &&
         !target.closest('.notification-nav-item')) {
       this.closeNotificationPanel();
     }
