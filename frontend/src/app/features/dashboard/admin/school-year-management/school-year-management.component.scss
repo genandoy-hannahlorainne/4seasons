@@ -1,0 +1,581 @@
+.grade-cards-container {
+  padding: 1.5rem 0;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.grade-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 900px;
+  width: 100%;
+}
+
+.grade-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 1.75rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #1e40af);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(59, 130, 246, 0.15);
+    border-color: #3b82f6;
+
+    &::before {
+      opacity: 1;
+    }
+
+    .card-arrow {
+      transform: translateX(4px);
+    }
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #3b82f6, #1e40af);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .card-title {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 1.05rem;
+      letter-spacing: -0.3px;
+    }
+  }
+
+  .card-stats {
+    display: flex;
+    gap: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1.5px solid #e2e8f0;
+
+    .stat {
+      flex: 1;
+      text-align: center;
+
+      .stat-value {
+        display: block;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #3b82f6;
+        line-height: 1;
+      }
+
+      .stat-label {
+        display: block;
+        font-size: 0.7rem;
+        color: #64748b;
+        margin-top: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .card-arrow {
+    align-self: flex-end;
+    color: #cbd5e1;
+    font-size: 1.4rem;
+    transition: all 0.3s ease;
+    margin-top: 0.5rem;
+  }
+
+  &:hover .card-arrow {
+    color: #3b82f6;
+  }
+}
+
+@media (max-width: 768px) {
+  .grade-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    max-width: 100%;
+  }
+
+  .grade-card {
+    padding: 1.25rem;
+
+    .card-header {
+      gap: 0.75rem;
+
+      .card-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 1.2rem;
+      }
+
+      .card-title {
+        font-size: 0.95rem;
+      }
+    }
+
+    .card-stats {
+      gap: 1rem;
+      padding-top: 0.75rem;
+
+      .stat {
+        .stat-value {
+          font-size: 1.5rem;
+        }
+
+        .stat-label {
+          font-size: 0.68rem;
+        }
+      }
+    }
+
+    .card-arrow {
+      font-size: 1.2rem;
+    }
+  }
+
+  /* Responsive current badge for tablets */
+  .current-badge-enhanced {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .grade-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .grade-card {
+    padding: 1rem;
+
+    .card-header {
+      gap: 0.5rem;
+
+      .card-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+      }
+
+      .card-title {
+        font-size: 0.9rem;
+      }
+    }
+
+    .card-stats {
+      gap: 0.75rem;
+      padding-top: 0.5rem;
+
+      .stat {
+        .stat-value {
+          font-size: 1.25rem;
+        }
+
+        .stat-label {
+          font-size: 0.65rem;
+        }
+      }
+    }
+
+    .card-arrow {
+      font-size: 1rem;
+    }
+  }
+
+  /* Responsive current badge for mobile */
+  .current-badge-enhanced {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+
+    span {
+      font-size: 0.9rem;
+    }
+  }
+
+  /* Responsive modal styles */
+  .set-current-modal {
+    max-width: 95%;
+    margin: 0.5rem;
+
+    .impact-warning {
+      padding: 1rem;
+
+      .warning-header {
+        font-size: 0.9rem;
+        gap: 0.5rem;
+      }
+
+      .impact-list li {
+        font-size: 0.85rem;
+        gap: 0.5rem;
+      }
+    }
+
+    .confirm-note {
+      padding: 0.75rem;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #374151;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+  }
+
+  i {
+    font-size: 0.9rem;
+  }
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  h2 {
+    margin: 0;
+    flex: 1;
+  }
+}
+
+/* School Year Selector Styling */
+.form-select {
+  padding: 0.75rem 1rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background-color: #fff;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+
+  &:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  option {
+    padding: 0.5rem;
+    background-color: #fff;
+    color: #1f2937;
+
+    &:checked {
+      background: linear-gradient(#3b82f6, #3b82f6);
+      background-color: #3b82f6;
+      color: white;
+    }
+  }
+
+  option[value]:not([value=""]) {
+    padding-left: 1rem;
+  }
+}
+
+/* Current badge styling */
+.current-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+
+  i {
+    font-size: 0.9rem;
+  }
+}
+
+/* Enhanced current badge styling */
+.current-badge-enhanced {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+  color: white;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
+  border: none;
+  position: relative;
+  overflow: hidden;
+
+  span {
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-shadow: none;
+  }
+
+  /* Subtle highlight effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: subtleShimmer 3s infinite;
+  }
+}
+
+@keyframes subtleShimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Set Current School Year Modal Styles */
+.set-current-modal {
+  max-width: 520px;
+
+  .current-year-icon {
+    i {
+      color: #10b981;
+      background: #ecfdf5;
+    }
+  }
+
+  .impact-warning {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 1.5px solid #f59e0b;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin: 1.25rem 0;
+
+    .warning-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      color: #92400e;
+      font-weight: 700;
+      font-size: 1rem;
+
+      i {
+        font-size: 1.1rem;
+        color: #f59e0b;
+      }
+    }
+
+    .impact-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+
+      li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        color: #78350f;
+        font-size: 0.9rem;
+        line-height: 1.5;
+
+        i {
+          color: #f59e0b;
+          font-size: 0.9rem;
+          margin-top: 0.1rem;
+          flex-shrink: 0;
+        }
+
+        span {
+          flex: 1;
+
+          strong {
+            color: #92400e;
+            font-weight: 700;
+          }
+        }
+      }
+    }
+  }
+
+  .confirm-note {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    border-radius: 6px;
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #1e40af;
+    margin-top: 1rem;
+
+    i {
+      color: #3b82f6;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    span {
+      flex: 1;
+      line-height: 1.5;
+    }
+  }
+
+  .btn-confirm-current {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #059669, #047857);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    i {
+      font-size: 1rem;
+    }
+  }
+}
+
+/* Auto Set Current School Year Modal Styles */
+.auto-set-current-modal {
+  max-width: 480px;
+
+  .auto-current-icon {
+    i {
+      color: #3b82f6;
+      background: #eff6ff;
+    }
+  }
+
+  .auto-set-info {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border: 1.5px solid #3b82f6;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin: 1.25rem 0;
+
+    .info-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      color: #1e40af;
+      font-weight: 700;
+      font-size: 1rem;
+
+      i {
+        font-size: 1.1rem;
+        color: #3b82f6;
+      }
+    }
+
+    p {
+      color: #1e40af;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .auto-set-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+
+      li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        color: #1e40af;
+        font-size: 0.9rem;
+        line-height: 1.5;
+
+        i {
+          color: #10b981;
+          font-size: 0.9rem;
+          margin-top: 0.1rem;
+          flex-shrink: 0;
+        }
+
+        span {
+          flex: 1;
+        }
+      }
+    }
+  }
+}

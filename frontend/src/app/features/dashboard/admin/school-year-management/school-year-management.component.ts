@@ -9,7 +9,7 @@ interface SchoolYear {
   year_name: string;
   start_date: string;
   end_date: string;
-  is_current: number;
+  is_current: number | string | boolean;
 }
 
 interface Section {
@@ -47,6 +47,7 @@ interface GradeLevel {
   selector: 'app-school-year-management',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  styleUrls: ['./school-year-management.component.scss'],
   template: `
     <div class="school-year-management">
       <div class="page-header">
@@ -55,14 +56,14 @@ interface GradeLevel {
       </div>
 
       <!-- School Year Selector -->
-      <div class="school-year-selector">
+      <div class="school-year-selector" *ngIf="!selectedGradeLevelId">
         <div class="selector-header">
           <div class="selector-left">
             <label>Select School Year:</label>
             <select [(ngModel)]="selectedSchoolYearId" (change)="onSchoolYearChange()" class="form-select">
               <option [value]="null">-- Select School Year --</option>
               <option *ngFor="let year of schoolYears" [value]="year.id">
-                {{ year.year_name }} {{ year.is_current ? '(Current)' : '' }}
+                {{ year.year_name }}
               </option>
             </select>
             <button class="btn-create-year" (click)="openCreateYearModal()">
@@ -71,20 +72,30 @@ interface GradeLevel {
             </button>
           </div>
           <div class="selector-right" *ngIf="selectedSchoolYearId">
+            <!-- Show button only if not current and can be set as current -->
             <button
-              *ngIf="!isCurrentSchoolYear()"
+              *ngIf="!isCurrentSchoolYear() && canSetAsCurrentSchoolYear(getSelectedSchoolYear()!)"
               class="btn-set-current"
               (click)="setAsCurrentSchoolYear()"
               [disabled]="settingCurrent">
               <i class="fa-solid fa-check-circle"></i>
               {{ settingCurrent ? 'Setting...' : 'Set as Current School Year' }}
             </button>
-            <span *ngIf="isCurrentSchoolYear()" class="current-badge">
-              <i class="fa-solid fa-star"></i> Current School Year
-            </span>
+
+            <!-- Show disabled button for future school years -->
+            <button
+              *ngIf="!isCurrentSchoolYear() && isSchoolYearFuture(getSelectedSchoolYear()!)"
+              class="btn-set-current-disabled"
+              disabled
+              title="Cannot set future school year as current until start date arrives">
+              <i class="fa-solid fa-clock"></i>
+              Future School Year
+            </button>
+
+
           </div>
         </div>
-        <div class="current-year-info" *ngIf="getCurrentSchoolYear()">
+        <div class="current-year-info" *ngIf="getCurrentSchoolYear() && !selectedGradeLevelId">
           <i class="fa-solid fa-info-circle"></i>
           <span>
             <strong>Current School Year:</strong> {{ getCurrentSchoolYear()?.year_name }}
@@ -100,10 +111,42 @@ interface GradeLevel {
         <p>Loading sections...</p>
       </div>
 
+      <!-- Grade Level Cards View -->
+      <div *ngIf="!loading && selectedSchoolYearId && !selectedGradeLevelId" class="grade-cards-container">
+        <div class="grade-cards">
+          <div class="grade-card" *ngFor="let grade of gradeLevels" (click)="selectGradeLevel(grade.id)">
+            <div class="card-header">
+              <div class="card-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+              <div class="card-title">{{ grade.level_name }}</div>
+            </div>
+            <div class="card-stats">
+              <div class="stat">
+                <div class="stat-value">{{ getGradeSectionCount(grade.id) }}</div>
+                <div class="stat-label">Sections</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value">{{ getGradeStudentCount(grade.id) }}</div>
+                <div class="stat-label">Students</div>
+              </div>
+            </div>
+            <div class="card-arrow">
+              <i class="fa-solid fa-chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Sections Table -->
-      <div *ngIf="!loading && selectedSchoolYearId" class="sections-container">
+      <div *ngIf="!loading && selectedSchoolYearId && selectedGradeLevelId" class="sections-container">
         <div class="sections-header">
-          <h2>Sections for {{ getSelectedSchoolYearName() }}</h2>
+          <div class="header-top">
+            <button class="btn-back" (click)="selectedGradeLevelId = null">
+              <i class="fa-solid fa-arrow-left"></i> Back to Grades
+            </button>
+            <h2>Sections for {{ getGradeLevelName(selectedGradeLevelId) }}</h2>
+          </div>
           <div class="header-actions">
             <button class="btn-create-section" (click)="openCreateSectionModal()">
               <i class="fa-solid fa-plus"></i>
@@ -111,13 +154,13 @@ interface GradeLevel {
             </button>
             <div class="stats">
               <span class="stat">
-                <strong>{{ sections.length }}</strong> Sections
+                <strong>{{ getFilteredSectionsForGrade().length }}</strong> Sections
               </span>
               <span class="stat">
-                <strong>{{ getAssignedCount() }}</strong> Assigned
+                <strong>{{ getAssignedCountForGrade() }}</strong> Assigned
               </span>
               <span class="stat">
-                <strong>{{ getUnassignedCount() }}</strong> Unassigned
+                <strong>{{ getUnassignedCountForGrade() }}</strong> Unassigned
               </span>
             </div>
           </div>
@@ -137,13 +180,13 @@ interface GradeLevel {
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let section of sections" [class.unassigned]="!section.adviser_id">
+              <tr *ngFor="let section of getFilteredSectionsForGrade()" [class.unassigned]="!section.adviser_id">
                 <td>{{ section.level_name }}</td>
                 <td>{{ section.section_name }}</td>
                 <td>{{ section.capacity }}</td>
                 <td>
                   <span class="enrollment-badge" [class.full]="section.current_enrollment >= section.capacity">
-                    {{ section.current_enrollment }} / {{ section.capacity }}
+                    {{ section.current_enrollment }}
                   </span>
                 </td>
                 <td>
@@ -197,19 +240,16 @@ interface GradeLevel {
               </p>
             </div>
 
-            <div class="form-group">
-              <label>Select Adviser:</label>
-              <select [(ngModel)]="selectedAdviserId" class="form-select">
-                <option [value]="null">-- Select Adviser --</option>
-                <option *ngFor="let adviser of advisers" [value]="adviser.user_id">
-                  {{ adviser.full_name }} ({{ adviser.employee_id }})
-                </option>
-              </select>
-            </div>
-
             <div class="adviser-list">
-              <h4>Available Advisers:</h4>
-              <div *ngFor="let adviser of advisers" class="adviser-item"
+              <div class="adviser-filter">
+                <label>Filter by Grade Level:</label>
+                <select [(ngModel)]="adviserSearchGrade" class="form-select">
+                  <option [value]="null">All Grade Levels</option>
+                  <option *ngFor="let grade of gradeLevels" [value]="grade.id">{{ grade.level_name }}</option>
+                </select>
+              </div>
+              <h4>Available Advisers: <span class="adviser-count">{{ filteredAdvisers.length }}</span></h4>
+              <div *ngFor="let adviser of filteredAdvisers" class="adviser-item"
                    [class.selected]="selectedAdviserId === adviser.user_id"
                    (click)="selectedAdviserId = adviser.user_id">
                 <div class="adviser-info">
@@ -227,12 +267,179 @@ interface GradeLevel {
                   </span>
                 </div>
               </div>
+              <div *ngIf="filteredAdvisers.length === 0" class="no-advisers">
+                No advisers found for selected grade level.
+              </div>
             </div>
           </div>
           <div class="modal-footer">
             <button class="btn-cancel" (click)="closeAssignModal()">Cancel</button>
             <button class="btn-save" (click)="assignAdviser()" [disabled]="!selectedAdviserId || saving">
               {{ saving ? 'Assigning...' : 'Assign Adviser' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remove Adviser Confirmation Modal -->
+      <div *ngIf="showRemoveAdviserModal" class="modal-overlay" (click)="closeRemoveAdviserModal()">
+        <div class="modal-content confirm-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Remove Adviser</h3>
+            <button class="close-btn" (click)="closeRemoveAdviserModal()">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="confirm-icon">
+              <i class="fa-solid fa-user-minus"></i>
+            </div>
+            <p class="confirm-message">Are you sure you want to remove the adviser from this section?</p>
+            <div class="confirm-details">
+              <div class="confirm-detail-item">
+                <span class="detail-label">Section</span>
+                <span class="detail-value">{{ sectionToRemoveAdviser?.level_name }} - {{ sectionToRemoveAdviser?.section_name }}</span>
+              </div>
+              <div class="confirm-detail-item">
+                <span class="detail-label">Adviser</span>
+                <span class="detail-value">{{ sectionToRemoveAdviser?.adviser_name }}</span>
+              </div>
+            </div>
+            <p class="confirm-warning">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              This section will be marked as unassigned.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeRemoveAdviserModal()">Cancel</button>
+            <button class="btn-danger" (click)="confirmRemoveAdviser()" [disabled]="saving">
+              <i class="fa-solid fa-user-minus"></i>
+              {{ saving ? 'Removing...' : 'Remove Adviser' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Set Current School Year Confirmation Modal -->
+      <div *ngIf="showSetCurrentConfirmModal" class="modal-overlay" (click)="closeSetCurrentConfirmModal()">
+        <div class="modal-content confirm-modal set-current-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Set Current School Year</h3>
+            <button class="close-btn" (click)="closeSetCurrentConfirmModal()">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="confirm-icon current-year-icon">
+              <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <p class="confirm-message">Set "{{ yearToSetAsCurrent?.year_name }}" as the current school year?</p>
+
+            <div class="confirm-details">
+              <div class="confirm-detail-item">
+                <span class="detail-label">New Current Year</span>
+                <span class="detail-value">{{ yearToSetAsCurrent?.year_name }}</span>
+              </div>
+              <div class="confirm-detail-item">
+                <span class="detail-label">Period</span>
+                <span class="detail-value">{{ yearToSetAsCurrent?.start_date | date:'MMM d, y' }} - {{ yearToSetAsCurrent?.end_date | date:'MMM d, y' }}</span>
+              </div>
+              <div class="confirm-detail-item" *ngIf="getCurrentSchoolYear()">
+                <span class="detail-label">Previous Current</span>
+                <span class="detail-value">{{ getCurrentSchoolYear()?.year_name }}</span>
+              </div>
+            </div>
+
+            <div class="impact-warning">
+              <div class="warning-header">
+                <i class="fa-solid fa-exclamation-triangle"></i>
+                <strong>Important Changes</strong>
+              </div>
+              <ul class="impact-list">
+                <li>
+                  <i class="fa-solid fa-user-plus"></i>
+                  <span>All new student, adviser, and staff accounts will be assigned to <strong>{{ yearToSetAsCurrent?.year_name }}</strong></span>
+                </li>
+                <li>
+                  <i class="fa-solid fa-calendar-alt"></i>
+                  <span>This will determine when the next school year enrollment opens</span>
+                </li>
+                <li>
+                  <i class="fa-solid fa-database"></i>
+                  <span>System reports and dashboards will reflect this as the active academic year</span>
+                </li>
+                <li>
+                  <i class="fa-solid fa-graduation-cap"></i>
+                  <span>Student promotions and grade level assignments will be based on this year</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="confirm-note">
+              <i class="fa-solid fa-info-circle"></i>
+              <span>This action will immediately update the system-wide current school year setting.</span>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeSetCurrentConfirmModal()">Cancel</button>
+            <button class="btn-confirm-current" (click)="confirmSetCurrentSchoolYear()" [disabled]="settingCurrent">
+              <i class="fa-solid fa-check-circle"></i>
+              {{ settingCurrent ? 'Setting Current...' : 'Set as Current Year' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auto Set Current School Year Modal -->
+      <div *ngIf="showAutoSetCurrentModal" class="modal-overlay">
+        <div class="modal-content confirm-modal auto-set-current-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>School Year Started</h3>
+          </div>
+          <div class="modal-body">
+            <div class="confirm-icon auto-current-icon">
+              <i class="fa-solid fa-calendar-star"></i>
+            </div>
+            <p class="confirm-message">School year "{{ suggestedSchoolYear?.year_name }}" has started!</p>
+
+            <div class="confirm-details">
+              <div class="confirm-detail-item">
+                <span class="detail-label">School Year</span>
+                <span class="detail-value">{{ suggestedSchoolYear?.year_name }}</span>
+              </div>
+              <div class="confirm-detail-item">
+                <span class="detail-label">Start Date</span>
+                <span class="detail-value">{{ suggestedSchoolYear?.start_date | date:'MMM d, y' }}</span>
+              </div>
+              <div class="confirm-detail-item">
+                <span class="detail-label">End Date</span>
+                <span class="detail-value">{{ suggestedSchoolYear?.end_date | date:'MMM d, y' }}</span>
+              </div>
+            </div>
+
+            <div class="auto-set-info">
+              <div class="info-header">
+                <i class="fa-solid fa-lightbulb"></i>
+                <strong>Recommendation</strong>
+              </div>
+              <p>Would you like to set this as the current school year? This will:</p>
+              <ul class="auto-set-list">
+                <li>
+                  <i class="fa-solid fa-check"></i>
+                  <span>Make this the active academic year for all new enrollments</span>
+                </li>
+                <li>
+                  <i class="fa-solid fa-check"></i>
+                  <span>Update system reports and dashboards</span>
+                </li>
+                <li>
+                  <i class="fa-solid fa-check"></i>
+                  <span>Enable proper grade level assignments</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeAutoSetCurrentModal()">Not Now</button>
+            <button class="btn-confirm-current" (click)="confirmAutoSetCurrent()" [disabled]="settingCurrent">
+              <i class="fa-solid fa-calendar-check"></i>
+              {{ settingCurrent ? 'Setting Current...' : 'Set as Current Year' }}
             </button>
           </div>
         </div>
@@ -593,6 +800,26 @@ interface GradeLevel {
         }
       }
 
+      .btn-set-current-disabled {
+        background: #6b7280;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: not-allowed;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2);
+        opacity: 0.8;
+
+        i {
+          font-size: 1rem;
+        }
+      }
+
       .current-badge {
         background: linear-gradient(135deg, #ffc107, #ff9800);
         color: white;
@@ -677,7 +904,7 @@ interface GradeLevel {
       background: white;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      overflow: hidden;
+      overflow: visible;
     }
 
     .sections-header {
@@ -701,7 +928,7 @@ interface GradeLevel {
       }
 
       .btn-create-section {
-        background: #3498db;
+        background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
         color: white;
         border: none;
         padding: 0.75rem 1.5rem;
@@ -713,16 +940,15 @@ interface GradeLevel {
         gap: 0.5rem;
         transition: all 0.2s ease;
         white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
 
         &:hover {
-          background: #2980b9;
+          background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+          box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
         }
 
-        i {
-          font-size: 1rem;
-        }
+        i { font-size: 1rem; }
       }
 
       .stats {
@@ -758,6 +984,7 @@ interface GradeLevel {
             font-weight: 600;
             color: #2c3e50;
             border-bottom: 2px solid #e9ecef;
+            white-space: nowrap;
           }
         }
 
@@ -777,6 +1004,8 @@ interface GradeLevel {
             td {
               padding: 1rem;
               color: #2c3e50;
+              white-space: nowrap;
+              vertical-align: middle;
             }
           }
         }
@@ -789,6 +1018,8 @@ interface GradeLevel {
         color: #2e7d32;
         font-weight: 500;
         font-size: 0.9rem;
+        white-space: nowrap;
+        display: inline-block;
 
         &.full {
           background: #ffebee;
@@ -1051,11 +1282,67 @@ interface GradeLevel {
       }
 
       .adviser-list {
+        .adviser-filter {
+          background: linear-gradient(135deg, rgba(5, 35, 85, 0.04) 0%, rgba(83, 129, 178, 0.06) 100%);
+          border: 1.5px solid #d0dff0;
+          border-radius: 10px;
+          padding: 1rem 1.25rem;
+          margin-bottom: 1.25rem;
+
+          label {
+            display: block;
+            font-weight: 700;
+            color: #052355;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.01em;
+          }
+
+          .form-select {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            border: 2px solid #c5d8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #2c3e50;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+
+            &:focus {
+              outline: none;
+              border-color: #052355;
+            }
+          }
+        }
+
         h4 {
-          font-size: 1.1rem;
+          font-size: 1rem;
           color: #2c3e50;
           margin-bottom: 1rem;
           font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          .adviser-count {
+            background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+            color: #fff;
+            border-radius: 12px;
+            padding: 0.15rem 0.65rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+          }
+        }
+
+        .no-advisers {
+          text-align: center;
+          padding: 2rem 1.5rem;
+          color: #7f8c8d;
+          font-size: 0.95rem;
+          background: #f8f9fa;
+          border-radius: 8px;
+          border: 1.5px dashed #dee2e6;
         }
 
         .adviser-item {
@@ -1157,6 +1444,97 @@ interface GradeLevel {
           background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
           box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
         }
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 2px 8px rgba(192, 57, 43, 0.2);
+
+        &:hover:not(:disabled) {
+          background: linear-gradient(135deg, #a93226 0%, #cb4335 100%);
+          box-shadow: 0 4px 12px rgba(192, 57, 43, 0.35);
+        }
+      }
+    }
+
+    .confirm-modal {
+      max-width: 440px;
+
+      .confirm-icon {
+        text-align: center;
+        margin-bottom: 1rem;
+
+        i {
+          font-size: 2rem;
+          color: #e74c3c;
+          background: #fdecea;
+          width: 72px;
+          height: 72px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          overflow: hidden;
+        }
+      }
+
+      .confirm-message {
+        text-align: center;
+        font-size: 1.05rem;
+        color: #2c3e50;
+        font-weight: 500;
+        margin-bottom: 1.25rem;
+      }
+
+      .confirm-details {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+
+        .confirm-detail-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+
+          .detail-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+          }
+
+          .detail-value {
+            font-size: 0.95rem;
+            color: #2c3e50;
+            font-weight: 600;
+            text-align: right;
+          }
+        }
+      }
+
+      .confirm-warning {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #fff8e1;
+        border-left: 4px solid #f39c12;
+        border-radius: 6px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        color: #856404;
+
+        i { color: #f39c12; }
       }
     }
 
@@ -1381,6 +1759,12 @@ interface GradeLevel {
         padding: 1.25rem;
         gap: 0.75rem;
         h1 { font-size: 1.4rem; }
+        p { font-size: 0.95rem; }
+      }
+
+      .school-year-selector {
+        padding: 1rem;
+        margin-bottom: 1rem;
       }
 
       .selector-header {
@@ -1392,30 +1776,51 @@ interface GradeLevel {
         flex-direction: column;
         align-items: flex-start;
         width: 100%;
+        gap: 0.75rem;
 
+        label { font-size: 1rem; }
         .form-select, .btn-create-year { width: 100%; }
       }
 
       .selector-right {
         width: 100%;
-        .btn-set-current { width: 100%; justify-content: center; }
+        .btn-set-current, .current-badge { width: 100%; justify-content: center; }
+      }
+
+      .current-year-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+      }
+
+      .sections-container {
+        border-radius: 8px;
       }
 
       .sections-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
+        padding: 1rem;
+
+        h2 { font-size: 1.2rem; }
 
         .header-actions {
           width: 100%;
           flex-direction: column;
+          gap: 0.75rem;
           .btn-create-section { width: 100%; justify-content: center; }
         }
 
-        .stats { flex-wrap: wrap; }
+        .stats {
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
       }
 
       .sections-table {
+        padding: 0.75rem;
         font-size: 0.8rem;
         th, td { padding: 8px 10px; }
       }
@@ -1431,10 +1836,185 @@ interface GradeLevel {
         button { flex: 1; min-width: 60px; justify-content: center; }
       }
 
+      .modal-overlay {
+        padding: 0.5rem;
+      }
+
       .modal-content {
-        padding: 20px;
-        margin: 1rem;
-        max-width: calc(100% - 2rem);
+        padding: 1rem;
+        margin: 0.5rem;
+        max-width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .school-year-management { padding: 0.75rem; }
+
+      .page-header {
+        padding: 1rem;
+        h1 { font-size: 1.2rem; }
+        p { font-size: 0.85rem; }
+      }
+
+      .school-year-selector {
+        padding: 0.75rem;
+      }
+
+      .sections-header {
+        padding: 0.75rem;
+        h2 { font-size: 1.1rem; }
+      }
+
+      .sections-table {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+        th, td { padding: 6px 8px; }
+      }
+
+      .stats {
+        gap: 0.75rem;
+        .stat { font-size: 0.85rem; }
+      }
+
+      .action-buttons {
+        button {
+          font-size: 0.75rem;
+          padding: 0.35rem 0.5rem;
+        }
+      }
+
+      .grade-cards-container {
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+      }
+
+      .grade-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .grade-card {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+          border-color: #3b82f6;
+        }
+
+        .card-header {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+
+          .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+          }
+
+          .card-title {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 1rem;
+          }
+        }
+
+        .card-stats {
+          display: flex;
+          gap: 1rem;
+          padding-top: 0.5rem;
+          border-top: 1px solid #f3f4f6;
+
+          .stat {
+            flex: 1;
+            text-align: center;
+
+            .stat-value {
+              display: block;
+              font-size: 1.5rem;
+              font-weight: 700;
+              color: #3b82f6;
+            }
+
+            .stat-label {
+              display: block;
+              font-size: 0.75rem;
+              color: #6b7280;
+              margin-top: 0.25rem;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+          }
+        }
+
+        .card-arrow {
+          align-self: flex-end;
+          color: #9ca3af;
+          font-size: 1.2rem;
+          transition: color 0.3s ease;
+        }
+
+        &:hover .card-arrow {
+          color: #3b82f6;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .grade-cards {
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          gap: 1rem;
+        }
+
+        .grade-card {
+          padding: 1rem;
+
+          .card-header {
+            gap: 0.5rem;
+
+            .card-icon {
+              width: 36px;
+              height: 36px;
+              font-size: 1rem;
+            }
+
+            .card-title {
+              font-size: 0.9rem;
+            }
+          }
+
+          .card-stats {
+            gap: 0.75rem;
+
+            .stat {
+              .stat-value {
+                font-size: 1.25rem;
+              }
+
+              .stat-label {
+                font-size: 0.7rem;
+              }
+            }
+          }
+        }
       }
     }
   `]
@@ -1448,11 +2028,28 @@ export class SchoolYearManagementComponent implements OnInit {
   selectedSchoolYearId: number | null = null;
   selectedSection: Section | null = null;
   selectedAdviserId: number | null = null;
+  adviserSearchGrade: number | null = null;
+  selectedGradeLevelId: number | null = null;
+
+  get filteredAdvisers(): Adviser[] {
+    if (!this.adviserSearchGrade) return this.advisers;
+    return this.advisers.filter(a => {
+      const assignedSections = this.getAdviserSections(a.user_id);
+      if (assignedSections.length === 0) return true; // unassigned — always show
+      return assignedSections.some(s => s.grade_level_id === Number(this.adviserSearchGrade));
+    });
+  }
 
   showAssignModal = false;
+  showRemoveAdviserModal = false;
+  sectionToRemoveAdviser: Section | null = null;
   showCreateYearModal = false;
   showCreateSectionModal = false;
   showStudentsModal = false;
+  showSetCurrentConfirmModal = false;
+  showAutoSetCurrentModal = false;
+  yearToSetAsCurrent: SchoolYear | null = null;
+  suggestedSchoolYear: SchoolYear | null = null;
   loading = false;
   saving = false;
   settingCurrent = false;
@@ -1484,6 +2081,53 @@ export class SchoolYearManagementComponent implements OnInit {
     this.loadSchoolYears();
     this.loadAdvisers();
     this.loadGradeLevels();
+    // Temporarily disabled until backend is deployed
+    // this.checkAutoSetCurrent();
+  }
+
+  checkAutoSetCurrent(): void {
+    this.http.get<any>(`${environment.apiUrl}/admin/school-years/check-current-auto`).subscribe({
+      next: (response) => {
+        if (response.success && response.data.suggested_school_year) {
+          this.suggestedSchoolYear = response.data.suggested_school_year;
+          this.showAutoSetCurrentModal = true;
+        }
+      },
+      error: (err) => {
+        // Silently handle error - this is not critical functionality
+        console.log('Auto-check for current school year failed:', err);
+      }
+    });
+  }
+
+  confirmAutoSetCurrent(): void {
+    if (!this.suggestedSchoolYear) return;
+
+    this.settingCurrent = true;
+    const data = { school_year_id: this.suggestedSchoolYear.id };
+
+    this.http.post<any>(`${environment.apiUrl}/admin/school-years/set-current`, data).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.showMessage(`Current school year set to ${this.suggestedSchoolYear!.year_name}`, 'success');
+          this.loadSchoolYears(); // Reload to update is_current flags
+          this.closeAutoSetCurrentModal();
+        } else {
+          this.showMessage(response.message || 'Error setting current school year', 'error');
+        }
+        this.settingCurrent = false;
+      },
+      error: (err) => {
+        console.error('Error setting current school year:', err);
+        this.showMessage('Error setting current school year', 'error');
+        this.settingCurrent = false;
+      }
+    });
+  }
+
+  closeAutoSetCurrentModal(): void {
+    this.showAutoSetCurrentModal = false;
+    this.suggestedSchoolYear = null;
   }
 
   loadSchoolYears(): void {
@@ -1491,8 +2135,9 @@ export class SchoolYearManagementComponent implements OnInit {
       next: (response) => {
         if (response.success) {
           this.schoolYears = response.data;
+
           // Auto-select current school year
-          const current = this.schoolYears.find(y => y.is_current === 1);
+          const current = this.schoolYears.find(y => this.isSchoolYearCurrent(y));
           if (current) {
             this.selectedSchoolYearId = current.id;
             this.loadSections();
@@ -1572,6 +2217,7 @@ export class SchoolYearManagementComponent implements OnInit {
   openAssignModal(section: Section): void {
     this.selectedSection = section;
     this.selectedAdviserId = section.adviser_id;
+    this.adviserSearchGrade = null;
     this.showAssignModal = true;
   }
 
@@ -1611,14 +2257,23 @@ export class SchoolYearManagementComponent implements OnInit {
   }
 
   removeAdviser(section: Section): void {
-    if (!confirm(`Remove adviser from ${section.level_name} - ${section.section_name}?`)) return;
+    this.sectionToRemoveAdviser = section;
+    this.showRemoveAdviserModal = true;
+  }
 
-    const data = {
+  closeRemoveAdviserModal(): void {
+    this.showRemoveAdviserModal = false;
+    this.sectionToRemoveAdviser = null;
+  }
+
+  confirmRemoveAdviser(): void {
+    if (!this.sectionToRemoveAdviser) return;
+    const section = this.sectionToRemoveAdviser;
+
+    this.http.post<any>(`${environment.apiUrl}/admin/sections/assign-adviser`, {
       section_id: section.id,
       adviser_user_id: null
-    };
-
-    this.http.post<any>(`${environment.apiUrl}/admin/sections/assign-adviser`, data).subscribe({
+    }).subscribe({
       next: (response) => {
         if (response.success) {
           this.showMessage('Adviser removed successfully', 'success');
@@ -1626,10 +2281,12 @@ export class SchoolYearManagementComponent implements OnInit {
         } else {
           this.showMessage(response.message || 'Error removing adviser', 'error');
         }
+        this.closeRemoveAdviserModal();
       },
       error: (err) => {
         console.error('Error removing adviser:', err);
         this.showMessage('Error removing adviser', 'error');
+        this.closeRemoveAdviserModal();
       }
     });
   }
@@ -1638,14 +2295,57 @@ export class SchoolYearManagementComponent implements OnInit {
     return this.sections.filter(s => s.adviser_id === userId);
   }
 
+  isSchoolYearCurrent(schoolYear: SchoolYear): boolean {
+    // Handle various data types that might come from the API
+    const isCurrent = schoolYear.is_current;
+
+    // Convert to string for consistent comparison
+    const currentStr = String(isCurrent).toLowerCase();
+
+    return isCurrent === 1 ||
+           currentStr === '1' ||
+           currentStr === 'true';
+  }
+
+  canSetAsCurrentSchoolYear(schoolYear: SchoolYear): boolean {
+    // Check if the school year's start date has arrived
+    const today = new Date();
+    const startDate = new Date(schoolYear.start_date);
+
+    // Remove time component for date comparison
+    today.setHours(0, 0, 0, 0);
+    startDate.setHours(0, 0, 0, 0);
+
+    return startDate <= today;
+  }
+
+  isSchoolYearFuture(schoolYear: SchoolYear): boolean {
+    const today = new Date();
+    const startDate = new Date(schoolYear.start_date);
+
+    // Remove time component for date comparison
+    today.setHours(0, 0, 0, 0);
+    startDate.setHours(0, 0, 0, 0);
+
+    return startDate > today;
+  }
+
+  getSelectedSchoolYear(): SchoolYear | null {
+    if (!this.selectedSchoolYearId) return null;
+    return this.schoolYears.find(y => y.id === this.selectedSchoolYearId) || null;
+  }
+
   getCurrentSchoolYear(): SchoolYear | undefined {
-    return this.schoolYears.find(y => y.is_current === 1);
+    return this.schoolYears.find(y => this.isSchoolYearCurrent(y));
   }
 
   isCurrentSchoolYear(): boolean {
     if (!this.selectedSchoolYearId) return false;
     const year = this.schoolYears.find(y => y.id === this.selectedSchoolYearId);
-    return year?.is_current === 1;
+
+    if (!year) return false;
+
+    return this.isSchoolYearCurrent(year);
   }
 
   setAsCurrentSchoolYear(): void {
@@ -1654,18 +2354,29 @@ export class SchoolYearManagementComponent implements OnInit {
     const year = this.schoolYears.find(y => y.id === this.selectedSchoolYearId);
     if (!year) return;
 
-    if (!confirm(`Set "${year.year_name}" as the current school year?\n\nAll new accounts will be assigned to this school year.`)) {
+    // Check if the school year can be set as current
+    if (!this.canSetAsCurrentSchoolYear(year)) {
+      this.showMessage('Cannot set future school year as current. Please wait until the start date arrives.', 'error');
       return;
     }
 
+    // Show confirmation modal instead of simple confirm
+    this.yearToSetAsCurrent = year;
+    this.showSetCurrentConfirmModal = true;
+  }
+
+  confirmSetCurrentSchoolYear(): void {
+    if (!this.yearToSetAsCurrent) return;
+
     this.settingCurrent = true;
-    const data = { school_year_id: this.selectedSchoolYearId };
+    const data = { school_year_id: this.yearToSetAsCurrent.id };
 
     this.http.post<any>(`${environment.apiUrl}/admin/school-years/set-current`, data).subscribe({
       next: (response) => {
         if (response.success) {
-          this.showMessage(`Current school year set to ${year.year_name}`, 'success');
+          this.showMessage(`Current school year set to ${this.yearToSetAsCurrent!.year_name}`, 'success');
           this.loadSchoolYears(); // Reload to update is_current flags
+          this.closeSetCurrentConfirmModal();
         } else {
           this.showMessage(response.message || 'Error setting current school year', 'error');
         }
@@ -1677,6 +2388,11 @@ export class SchoolYearManagementComponent implements OnInit {
         this.settingCurrent = false;
       }
     });
+  }
+
+  closeSetCurrentConfirmModal(): void {
+    this.showSetCurrentConfirmModal = false;
+    this.yearToSetAsCurrent = null;
   }
 
   openCreateYearModal(): void {
@@ -1839,5 +2555,37 @@ export class SchoolYearManagementComponent implements OnInit {
         this.loadingStudents = false;
       }
     });
+  }
+
+  getGradeSectionCount(gradeId: number): number {
+    return this.sections.filter(s => s.grade_level_id === gradeId).length;
+  }
+
+  getGradeStudentCount(gradeId: number): number {
+    const gradeSections = this.sections.filter(s => s.grade_level_id === gradeId);
+    return gradeSections.reduce((sum, section) => sum + (section.current_enrollment || 0), 0);
+  }
+
+  selectGradeLevel(gradeId: number): void {
+    this.selectedGradeLevelId = gradeId;
+  }
+
+  getFilteredSectionsForGrade(): Section[] {
+    if (!this.selectedGradeLevelId) return [];
+    return this.sections.filter(s => s.grade_level_id === this.selectedGradeLevelId);
+  }
+
+  getAssignedCountForGrade(): number {
+    return this.getFilteredSectionsForGrade().filter(s => s.adviser_id).length;
+  }
+
+  getUnassignedCountForGrade(): number {
+    return this.getFilteredSectionsForGrade().filter(s => !s.adviser_id).length;
+  }
+
+  getGradeLevelName(gradeId: number | null): string {
+    if (!gradeId) return '';
+    const grade = this.gradeLevels.find(g => g.id === gradeId);
+    return grade ? grade.level_name : '';
   }
 }

@@ -12,9 +12,12 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
   template: `
     <div class="emergency-drills-container">
       <div class="header">
-        <h2>Emergency Drill Management</h2>
+        <div class="header-left">
+          <img src="assets/icons/emergency-drills.png" style="width:36px;height:36px;object-fit:contain;" alt="Emergency Drills">
+          <h2>Emergency Drill Management</h2>
+        </div>
         <button class="btn btn-primary" (click)="showCreateModal = true">
-          <i class="fas fa-plus"></i> Create New Drill
+          <img src="assets/icons/add.png" style="width:16px;height:16px;object-fit:contain;filter:brightness(0) invert(1);" alt="Add"> Create New Drill
         </button>
       </div>
 
@@ -27,6 +30,10 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
         <button class="tab-btn" [class.active]="activeTab === 'completed'" (click)="switchTab('completed')">
           Completed Drills
           <span class="tab-count completed" *ngIf="completedDrills.length > 0">{{ completedDrills.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'abandoned'" (click)="switchTab('abandoned')">
+          Abandoned Drills
+          <span class="tab-count abandoned" *ngIf="abandonedDrills.length > 0">{{ abandonedDrills.length }}</span>
         </button>
       </div>
 
@@ -84,6 +91,12 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
               </div>
             </div>
             <div class="drill-actions">
+              <button *ngIf="drill.status === 'planned'"
+                      class="btn btn-sm btn-danger"
+                      (click)="deleteDrill(drill.id)"
+                      title="Delete this drill">
+                <i class="fas fa-trash"></i> Delete
+              </button>
               <button class="btn btn-sm btn-outline" (click)="viewDrill(drill.id)">
                 <i class="fas fa-eye"></i> View
               </button>
@@ -103,7 +116,7 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             </div>
           </div>
           <div class="empty-state" *ngIf="activeDrills.length === 0">
-            <i class="fas fa-clipboard-list"></i>
+            <img src="assets/icons/emergency-drills.png" style="width:56px;height:56px;object-fit:contain;opacity:0.4;" alt="No drills">
             <h3>No Active Drills</h3>
             <p>Create a new drill to get started.</p>
           </div>
@@ -113,11 +126,9 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
           <div class="drill-card completed-card" *ngFor="let drill of completedDrills">
             <div class="drill-header">
               <div class="drill-type-icon" [class]="'type-' + drill.drill_type">
-                <i class="fas" [class.fa-fire]="drill.drill_type === 'fire'"
-                               [class.fa-house-crack]="drill.drill_type === 'earthquake'"
-                               [class.fa-lock]="drill.drill_type === 'lockdown'"
-                               [class.fa-kit-medical]="drill.drill_type === 'medical'"
-                               [class.fa-person-running]="drill.drill_type === 'evacuation'"></i>
+                <img [src]="'assets/icons/' + (drill.drill_type === 'medical' ? 'emergency' : drill.drill_type) + '.png'"
+                     style="width:28px;height:28px;object-fit:contain;"
+                     [alt]="drill.drill_type">
               </div>
               <div class="drill-title-group">
                 <h3>{{ drill.drill_name }}</h3>
@@ -148,9 +159,54 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             </div>
           </div>
           <div class="empty-state" *ngIf="completedDrills.length === 0">
-            <i class="fas fa-check-circle"></i>
+            <img src="assets/icons/emergency-drills.png" style="width:56px;height:56px;object-fit:contain;opacity:0.4;" alt="No drills">
             <h3>No Completed Drills</h3>
             <p>Completed drills will appear here.</p>
+          </div>
+        </ng-container>
+
+        <!-- Abandoned Drills -->
+        <ng-container *ngIf="activeTab === 'abandoned'">
+          <div class="drill-card abandoned-card" *ngFor="let drill of abandonedDrills">
+            <div class="drill-header">
+              <div class="drill-type-icon" [class]="'type-' + drill.drill_type">
+                <img [src]="'assets/icons/' + (drill.drill_type === 'medical' ? 'emergency' : drill.drill_type) + '.png'"
+                     style="width:28px;height:28px;object-fit:contain;"
+                     [alt]="drill.drill_type">
+              </div>
+              <div class="drill-title-group">
+                <h3>{{ drill.drill_name }}</h3>
+                <span class="drill-type-label">{{ drill.drill_type | titlecase }} Drill · {{ drill.created_at | date:'MMM d, y' }}</span>
+              </div>
+              <span class="status-badge status-abandoned">Abandoned</span>
+            </div>
+
+            <div class="abandoned-reason">
+              <img src="assets/icons/warning.png" style="width:16px;height:16px;object-fit:contain;" alt="Warning">
+              <span>This drill was automatically abandoned — the scheduled time window passed without being started.</span>
+            </div>
+
+            <div class="drill-stats-row" *ngIf="drill.statistics">
+              <div class="stat-pill">
+                <span class="stat-pill-value">{{ drill.statistics.total_participants || 0 }}</span>
+                <span class="stat-pill-label"><i class="fas fa-users"></i> Participants</span>
+              </div>
+              <div class="stat-pill" *ngIf="drill.scheduled_at">
+                <span class="stat-pill-value">{{ drill.scheduled_at | date:'MMM d, h:mm a' }}</span>
+                <span class="stat-pill-label">Scheduled</span>
+              </div>
+            </div>
+
+            <div class="drill-actions">
+              <button class="btn btn-view-details" (click)="viewDrill(drill.id)">
+                <i class="fas fa-eye"></i> View Details
+              </button>
+            </div>
+          </div>
+          <div class="empty-state" *ngIf="abandonedDrills.length === 0">
+            <img src="assets/icons/emergency-drills.png" style="width:56px;height:56px;object-fit:contain;opacity:0.4;" alt="No drills">
+            <h3>No Abandoned Drills</h3>
+            <p>Drills that expire without being started will appear here.</p>
           </div>
         </ng-container>
       </div>
@@ -192,7 +248,8 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             <div class="form-group">
               <label>Scheduled Date/Time</label>
               <input type="datetime-local" [(ngModel)]="newDrill.scheduled_at"
-                     name="scheduled_at" class="form-control">
+                     name="scheduled_at" class="form-control"
+                     [min]="getTodayDateTimeLocal()">
             </div>
 
             <div class="modal-actions">
@@ -274,9 +331,37 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       background: #7b1fa2;
     }
 
+    .tab-count.abandoned {
+      background: #b45309;
+    }
+
     .completed-card {
       border-left-color: #7b1fa2 !important;
       background: #fdf8ff;
+    }
+
+    .abandoned-card {
+      border-left-color: #b45309 !important;
+      background: #fffbeb;
+    }
+
+    .status-abandoned {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+
+    .abandoned-reason {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 0.8rem;
+      color: #92400e;
     }
 
     .header {
@@ -288,6 +373,12 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       padding: 2rem 1.5rem;
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
 
       h2 {
         font-size: 2rem;
@@ -831,7 +922,8 @@ export class EmergencyDrillsComponent implements OnInit {
   drills: EmergencyDrill[] = [];
   activeDrills: EmergencyDrill[] = [];
   completedDrills: EmergencyDrill[] = [];
-  activeTab: 'active' | 'completed' = 'active';
+  abandonedDrills: EmergencyDrill[] = [];
+  activeTab: 'active' | 'completed' | 'abandoned' = 'active';
   loading = false;
   typeFilter = '';
   showCreateModal = false;
@@ -873,6 +965,7 @@ export class EmergencyDrillsComponent implements OnInit {
         this.drills = response.data.data || response.data;
         this.activeDrills = this.drills.filter(d => d.status === 'planned' || d.status === 'active');
         this.completedDrills = this.drills.filter(d => d.status === 'completed' || d.status === 'cancelled');
+        this.abandonedDrills = this.drills.filter(d => d.status === 'abandoned');
         this.loading = false;
       },
       error: (error) => {
@@ -882,13 +975,32 @@ export class EmergencyDrillsComponent implements OnInit {
     });
   }
 
-  switchTab(tab: 'active' | 'completed') {
+  switchTab(tab: 'active' | 'completed' | 'abandoned') {
     this.activeTab = tab;
+  }
+
+  getTodayDateTimeLocal(): string {
+    const now = new Date();
+    // Set to start of today (midnight) in local time
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}T00:00`;
   }
 
   createDrill() {
     if (!this.newDrill.drill_name || !this.newDrill.drill_type) {
       return;
+    }
+
+    // Validate that scheduled_at is not in the past (before today)
+    if (this.newDrill.scheduled_at) {
+      const scheduled = new Date(this.newDrill.scheduled_at);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (scheduled < today) {
+        alert('Scheduled date cannot be in the past. Please select today or a future date.');
+        return;
+      }
     }
 
     this.creating = true;
@@ -1051,6 +1163,26 @@ export class EmergencyDrillsComponent implements OnInit {
 
   viewDrill(id: number) {
     this.router.navigate(['/dashboard/admin/emergency-drills', id]);
+  }
+
+  deleteDrill(id: number) {
+    this.confirmTitle = 'Delete Drill';
+    this.confirmMessage = 'Are you sure you want to delete this drill? This cannot be undone.';
+    this.confirmAction = () => {
+      this.drillService.deleteDrill(id).subscribe({
+        next: () => {
+          this.drills = this.drills.filter(d => d.id !== id);
+          this.activeDrills = this.activeDrills.filter(d => d.id !== id);
+          this.closeConfirmModal();
+        },
+        error: (error) => {
+          console.error('Error deleting drill:', error);
+          this.closeConfirmModal();
+          alert('Failed to delete drill.');
+        }
+      });
+    };
+    this.showConfirmModal = true;
   }
 
   viewDashboard(id: number) {

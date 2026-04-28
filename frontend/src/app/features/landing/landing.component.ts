@@ -13,8 +13,31 @@ import { Router, RouterModule } from '@angular/router';
 export class LandingComponent {
   activeModal: string | null = null;
   activeSection = 'home';
+  currentDay: string = '';
+  isOpenNow: boolean = false;
+  signupStep: 'initial' | 'contact' = 'initial';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) {
+    this.updateCurrentStatus();
+  }
+
+  updateCurrentStatus(): void {
+    const now = new Date();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    this.currentDay = days[now.getDay()];
+    
+    // Check if it's a weekday (Monday-Friday)
+    const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
+    
+    // Check if current time is between 8:00 AM and 5:00 PM
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+    const openTime = 8 * 60; // 8:00 AM
+    const closeTime = 17 * 60; // 5:00 PM
+    
+    this.isOpenNow = isWeekday && currentTimeInMinutes >= openTime && currentTimeInMinutes < closeTime;
+  }
 
   navigateToLogin(): void { this.router.navigate(['/role-selection']); }
 
@@ -54,15 +77,53 @@ export class LandingComponent {
 
   selectedRole: typeof this.roles[0] | null = null;
 
-  hours = [
-    { day: 'Monday',    hours: '8:00 AM - 5:00 PM' },
-    { day: 'Tuesday',   hours: '8:00 AM - 5:00 PM' },
-    { day: 'Wednesday', hours: '8:00 AM - 5:00 PM' },
-    { day: 'Thursday',  hours: '8:00 AM - 5:00 PM' },
-    { day: 'Friday',    hours: '8:00 AM - 5:00 PM' },
-    { day: 'Saturday',  hours: 'CLOSED' },
-    { day: 'Sunday',    hours: 'CLOSED' },
+  developers = [
+    {
+      name: 'Hannah Lorainne Genandoy',
+      role: 'Project Manager / Developer',
+      github: 'https://github.com/genandoy-hannahlorainne',
+      githubHandle: 'genandoy-hannahlorainne',
+      image: 'assets/developers/genandoy.jpg'
+    },
+    {
+      name: 'Clarence Villas',
+      role: 'Tech Lead / Developer',
+      github: 'https://github.com/villas-clarence',
+      githubHandle: 'villas-clarence',
+      image: 'assets/developers/villas.jpg'
+    },
+    {
+      name: 'Mikka Kette Esparagoza',
+      role: 'UI/UX Designer / Developer',
+      github: 'https://github.com/esparagoza-mikkakette',
+      githubHandle: 'esparagoza-mikkakette',
+      image: 'assets/developers/esparagoza.jpg'
+    },
+    {
+      name: 'Krislyn Janelle Francisco',
+      role: 'System Analyst / Document Analyst',
+      github: 'https://github.com/francisco-krislynjanelle',
+      githubHandle: 'francisco-krislynjanelle',
+      image: 'assets/developers/francisco.jpg'
+    },
   ];
+
+  get hours() {
+    const schedule = [
+      { day: 'Monday',    hours: '8:00 AM - 5:00 PM' },
+      { day: 'Tuesday',   hours: '8:00 AM - 5:00 PM' },
+      { day: 'Wednesday', hours: '8:00 AM - 5:00 PM' },
+      { day: 'Thursday',  hours: '8:00 AM - 5:00 PM' },
+      { day: 'Friday',    hours: '8:00 AM - 5:00 PM' },
+      { day: 'Saturday',  hours: 'CLOSED' },
+      { day: 'Sunday',    hours: 'CLOSED' },
+    ];
+    
+    return schedule.map(item => ({
+      ...item,
+      isToday: item.day === this.currentDay
+    }));
+  }
 
   openRoleModal(role: typeof this.roles[0]): void {
     this.selectedRole = role;

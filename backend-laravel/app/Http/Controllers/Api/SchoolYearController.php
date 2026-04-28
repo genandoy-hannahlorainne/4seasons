@@ -94,13 +94,22 @@ class SchoolYearController extends BaseController
                 return $this->sendError('Validation Error', $validator->errors()->first());
             }
 
+            $schoolYear = SchoolYear::findOrFail($request->school_year_id);
+            
+            // Check if the school year's start date has arrived
+            $today = now()->startOfDay();
+            $startDate = \Carbon\Carbon::parse($schoolYear->start_date)->startOfDay();
+            
+            if ($startDate->gt($today)) {
+                return $this->sendError('Cannot set future school year as current. Start date: ' . $startDate->format('M d, Y'));
+            }
+
             DB::beginTransaction();
 
             // Remove current flag from all school years
             SchoolYear::where('is_current', true)->update(['is_current' => false]);
 
             // Set the selected school year as current
-            $schoolYear = SchoolYear::findOrFail($request->school_year_id);
             $schoolYear->update(['is_current' => true, 'is_active' => true]);
 
             DB::commit();
@@ -109,6 +118,49 @@ class SchoolYearController extends BaseController
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->sendError('Failed to set current school year', $e->getMessage());
+        }
+    }
+
+    /**
+     * Check for school years that should be automatically set as current
+     */
+    public function checkAutoSetCurrent()
+    {
+        try {
+            \Log::info('checkAutoSetCurrent method called');
+            
+            $today = now()->startOfDay();
+            
+            // Find school years that:
+            // 1. Are not currently set as current
+            // 2. Have a start date that has arrived (today or in the past)
+            // 3. Are active
+            $candidateSchoolYears = SchoolYear::where('is_current', false)
+                ->where('is_active', true)
+                ->whereDate('start_date', '<=', $today)
+                ->orderBy('start_date', 'desc')
+                ->get();
+
+            \Log::info('Candidate school years found: ' . $candidateSchoolYears->count());
+
+            if ($candidateSchoolYears->isEmpty()) {
+                return $this->sendResponse([], 'No school years ready to be set as current');
+            }
+
+            // Return the most recent school year that should be current
+            $suggestedYear = $candidateSchoolYears->first();
+            
+            \Log::info('Suggested school year: ' . $suggestedYear->year_name);
+            
+            return $this->sendResponse([
+                'suggested_school_year' => $suggestedYear,
+                'message' => "School year '{$suggestedYear->year_name}' started on " . 
+                           \Carbon\Carbon::parse($suggestedYear->start_date)->format('M d, Y') . 
+                           ". Would you like to set it as the current school year?"
+            ], 'School year ready to be set as current');
+        } catch (\Exception $e) {
+            \Log::error('checkAutoSetCurrent error: ' . $e->getMessage());
+            return $this->sendError('Failed to check auto-set current', $e->getMessage());
         }
     }
 

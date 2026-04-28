@@ -3,7 +3,7 @@ export interface EmergencyDrill {
   drill_name: string;
   drill_type: 'earthquake' | 'fire' | 'lockdown' | 'medical' | 'evacuation';
   description?: string;
-  status: 'planned' | 'active' | 'completed' | 'cancelled';
+  status: 'planned' | 'active' | 'completed' | 'cancelled' | 'abandoned';
   scheduled_at?: string;
   started_at?: string;
   ended_at?: string;
