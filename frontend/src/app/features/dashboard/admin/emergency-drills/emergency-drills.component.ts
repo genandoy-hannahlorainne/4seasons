@@ -1096,8 +1096,8 @@ export class EmergencyDrillsComponent implements OnInit {
       canStart: now >= scheduledTime
     });
 
-    // Allow starting only at or after scheduled time (up to 30 minutes after)
-    const allowedEndTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000);
+    // Allow starting only at or after scheduled time (up to 5 minutes after)
+    const allowedEndTime = new Date(scheduledTime.getTime() + 5 * 60 * 1000);
 
     return now >= scheduledTime && now <= allowedEndTime;
   }
@@ -1120,13 +1120,13 @@ export class EmergencyDrillsComponent implements OnInit {
 
     const now = new Date();
     const scheduledTime = new Date(drill.scheduled_at);
-    const allowedEndTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000);
+    const allowedEndTime = new Date(scheduledTime.getTime() + 5 * 60 * 1000);
 
     if (now < scheduledTime) {
       const minutesUntil = Math.ceil((scheduledTime.getTime() - now.getTime()) / 60000);
       return `This drill is scheduled for ${scheduledTime.toLocaleString()}. You can start it at the scheduled time. ${minutesUntil} minutes remaining.`;
     } else if (now > allowedEndTime) {
-      return `The scheduled time window for this drill has passed. It was scheduled for ${scheduledTime.toLocaleString()} and could only be started within 30 minutes after.`;
+      return `The scheduled time window for this drill has passed. It was scheduled for ${scheduledTime.toLocaleString()} and could only be started within 5 minutes after.`;
     }
 
     return 'Start this drill';
