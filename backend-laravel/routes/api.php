@@ -216,6 +216,8 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::post('/{id}/scan', [EmergencyDrillController::class, 'scanParticipant']);
         Route::get('/{id}/dashboard', [EmergencyDrillController::class, 'dashboard']);
         Route::get('/{id}/search-users', [EmergencyDrillController::class, 'searchUsers']);
+        Route::delete('/{id}', [EmergencyDrillController::class, 'destroy']);
+        Route::post('/{id}/delete', [EmergencyDrillController::class, 'destroy']);
     });
 
     // Dashboard
