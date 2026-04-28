@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -921,7 +921,7 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
     }
   `]
 })
-export class EmergencyDrillsComponent implements OnInit {
+export class EmergencyDrillsComponent implements OnInit, OnDestroy {
   drills: EmergencyDrill[] = [];
   activeDrills: EmergencyDrill[] = [];
   completedDrills: EmergencyDrill[] = [];
@@ -931,6 +931,7 @@ export class EmergencyDrillsComponent implements OnInit {
   typeFilter = '';
   showCreateModal = false;
   creating = false;
+  private pollInterval: any;
 
   // Confirmation modal
   showConfirmModal = false;
@@ -956,6 +957,12 @@ export class EmergencyDrillsComponent implements OnInit {
 
   ngOnInit() {
     this.loadDrills();
+    // Poll every 60 seconds so abandoned drills move automatically
+    this.pollInterval = setInterval(() => this.loadDrills(), 60000);
+  }
+
+  ngOnDestroy() {
+    clearInterval(this.pollInterval);
   }
 
   loadDrills() {
