@@ -102,15 +102,23 @@ class EmergencyDrillController extends BaseController
         try {
             $drill = EmergencyDrill::findOrFail($id);
 
-            if ($drill->status !== 'planned') {
-                return $this->sendError('Only planned drills can be deleted.', '', 422);
+            if (!in_array($drill->status, ['planned', 'abandoned'])) {
+                return $this->sendError('Only planned or abandoned drills can be deleted.', '', 422);
             }
 
+            // Explicitly delete related records to avoid FK constraint issues
+            $drill->scans()->delete();
+            $drill->participants()->delete();
             $drill->delete();
 
             return $this->sendResponse([], 'Emergency drill deleted successfully');
 
         } catch (\Exception $e) {
+            \Log::error('Failed to delete drill', [
+                'drill_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return $this->sendError('Failed to delete drill', $e->getMessage());
         }
     }

@@ -198,6 +198,9 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             </div>
 
             <div class="drill-actions">
+              <button class="btn btn-sm btn-danger" (click)="deleteDrill(drill.id)" title="Delete this drill">
+                <i class="fas fa-trash"></i> Delete
+              </button>
               <button class="btn btn-view-details" (click)="viewDrill(drill.id)">
                 <i class="fas fa-eye"></i> View Details
               </button>
