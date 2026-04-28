@@ -63,7 +63,7 @@ interface GradeLevel {
             <select [(ngModel)]="selectedSchoolYearId" (change)="onSchoolYearChange()" class="form-select">
               <option [value]="null">-- Select School Year --</option>
               <option *ngFor="let year of schoolYears" [value]="year.id">
-                {{ year.year_name }} {{ isSchoolYearCurrent(year) ? '(Current)' : '' }}
+                {{ year.year_name }}
               </option>
             </select>
             <button class="btn-create-year" (click)="openCreateYearModal()">
@@ -92,12 +92,7 @@ interface GradeLevel {
               Future School Year
             </button>
 
-            <!-- Show current badge -->
-            <div *ngIf="isCurrentSchoolYear()" class="current-indicator">
-              <div class="current-badge-enhanced">
-                <span>Current School Year</span>
-              </div>
-            </div>
+
           </div>
         </div>
         <div class="current-year-info" *ngIf="getCurrentSchoolYear() && !selectedGradeLevelId">
