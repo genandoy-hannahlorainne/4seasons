@@ -112,12 +112,12 @@ jobs:
     - name: Deploy to staging server
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.STAGING_HOST }}
+        host: ${{ secrets.STAGING_URL }}
         username: ${{ secrets.STAGING_USER }}
-        password: ${{ secrets.STAGING_PASSWORD }}
-        port: 22
+        key: ${{ secrets.STAGING_SSH_KEY }}
+        port: ${{ secrets.STAGING_PORT }}
         script: |
-          cd /var/www/4seasons
+          cd ${{ secrets.STAGING_PATH }}
           git pull origin main
           sed -i 's|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:.*|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:main|g' docker-compose.prod.yml
           docker compose -f docker-compose.prod.yml pull
