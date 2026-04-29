@@ -17,7 +17,7 @@ services:
       - app-network
 
   backend:
-    image: notcla/4seasons-backend:latest
+    image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:latest
     ports:
       - "8082:80"
     env_file:

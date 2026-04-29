@@ -113,18 +113,18 @@ jobs:
     - name: Deploy to staging server
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.PRODUCTION_HOST }}
-        username: ${{ secrets.PRODUCTION_USER }}
-        password: ${{ secrets.PRODUCTION_PASSWORD }}
-        port: ${{ secrets.PRODUCTION_PORT || 22 }}
+        host: ${{ secrets.STAGING_HOST }}
+        username: ${{ secrets.STAGING_USER }}
+        key: ${{ secrets.STAGING_SSH_KEY }}
+        port: ${{ secrets.STAGING_PORT || 22 }}
         script: |
-          cd ${{ secrets.PRODUCTION_PATH || '/var/www/4seasons' }}
+          cd ${{ secrets.STAGING_PATH || '/var/www/4seasons' }}
           
           # Pull latest code
           git pull origin main
           
           # Update Docker image reference
-          sed -i 's|image: notcla/4seasons-backend:.*|image: ${{ needs.build-and-push.outputs.image-tag }}|g' docker-compose.prod.yml
+          sed -i 's|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:.*|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:main|g' docker-compose.prod.yml
           
           # Deploy with Docker Compose
           docker compose -f docker-compose.prod.yml pull
@@ -171,7 +171,7 @@ jobs:
       with:
         host: ${{ secrets.PRODUCTION_HOST }}
         username: ${{ secrets.PRODUCTION_USER }}
-        password: ${{ secrets.PRODUCTION_PASSWORD }}
+        key: ${{ secrets.PRODUCTION_SSH_KEY }}
         port: ${{ secrets.PRODUCTION_PORT || 22 }}
         script: |
           cd ${{ secrets.PRODUCTION_PATH || '/var/www/4seasons' }}
@@ -190,7 +190,7 @@ jobs:
           git pull origin main
           
           # Update Docker image reference
-          sed -i 's|image: notcla/4seasons-backend:.*|image: ${{ needs.build-and-push.outputs.image-tag }}|g' docker-compose.prod.yml
+          sed -i 's|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:.*|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:main|g' docker-compose.prod.yml
           
           # Deploy with zero-downtime strategy
           docker compose -f docker-compose.prod.yml pull
