@@ -246,27 +246,3 @@ jobs:
         echo "Staging:      ${{ needs.deploy-staging.result || 'skipped' }}"
         echo "Production:   ${{ needs.deploy-production.result || 'skipped' }}"
         echo "Health Check: ${{ needs.health-check.result || 'skipped' }}"
-
-    - name: Notify via Slack
-      if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        text: |
-          🚀 Deployment Status: ${{ job.status }}
-          🌿 Branch: ${{ github.ref_name }}
-          👤 Triggered by: ${{ github.actor }}
-          Staging: ${{ needs.deploy-staging.result || 'skipped' }}
-          Production: ${{ needs.deploy-production.result || 'skipped' }}
-          Health Check: ${{ needs.health-check.result || 'skipped' }}
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-    
-    - name: Log deployment status (no Slack)
-      if: always()
-      run: |
-        echo "🚀 Deployment Status Summary"
-        echo "Staging:      ${{ needs.deploy-staging.result || 'skipped' }}"
-        echo "Production:   ${{ needs.deploy-production.result || 'skipped' }}"
-        echo "Health Check: ${{ needs.health-check.result || 'skipped' }}"
