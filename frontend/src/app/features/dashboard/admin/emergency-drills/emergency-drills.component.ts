@@ -52,11 +52,24 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       <!-- Drills List -->
       <div class="drills-grid" *ngIf="!loading">
         <ng-container *ngIf="activeTab === 'active'">
-          <div class="drill-card" *ngFor="let drill of activeDrills" [class.active]="drill.status === 'active'">
+          <div class="drill-card active-card" *ngFor="let drill of activeDrills">
             <div class="drill-header">
-              <h3>{{ drill.drill_name }}</h3>
+              <div class="drill-type-icon"
+                   [style.background]="drill.drill_type === 'fire' ? 'linear-gradient(135deg, #ef4444, #f97316)' :
+                                       drill.drill_type === 'earthquake' ? 'linear-gradient(135deg, #f59e0b, #d97706)' :
+                                       drill.drill_type === 'lockdown' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' :
+                                       drill.drill_type === 'medical' ? 'linear-gradient(135deg, #10b981, #059669)' :
+                                       'linear-gradient(135deg, #3b82f6, #2563eb)'">
+                <img [src]="'assets/icons/' + (drill.drill_type === 'medical' ? 'emergency' : drill.drill_type) + '.png'"
+                     style="width:28px;height:28px;object-fit:contain;filter:brightness(0) invert(1);"
+                     [alt]="drill.drill_type">
+              </div>
+              <div class="drill-title-group">
+                <h3>{{ drill.drill_name }}</h3>
+                <span class="drill-type-label">{{ drill.drill_type | titlecase }} Drill · {{ drill.created_at | date:'MMM d, y' }}</span>
+              </div>
               <div class="header-badges">
-                <span class="status-badge" [class]="'status-' + drill.status">
+                <span class="status-badge" [ngClass]="'status-' + drill.status">
                   {{ drill.status | titlecase }}
                 </span>
                 <span *ngIf="drill.scheduled_at && drill.status === 'planned'"
@@ -69,32 +82,26 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
                 </span>
               </div>
             </div>
-            <div class="drill-info">
-              <p><strong>Type:</strong> {{ drill.drill_type | titlecase }}</p>
-              <p><strong>Created:</strong> {{ drill.created_at | date:'short' }}</p>
-              <p *ngIf="drill.scheduled_at"><strong>Scheduled:</strong> {{ drill.scheduled_at | date:'short' }}</p>
-              <p *ngIf="drill.started_at"><strong>Started:</strong> {{ drill.started_at | date:'short' }}</p>
-              <p *ngIf="drill.description">{{ drill.description }}</p>
-            </div>
-            <div class="drill-stats" *ngIf="drill.statistics">
-              <div class="stat">
-                <span class="stat-value">{{ drill.statistics.total_participants || 0 }}</span>
-                <span class="stat-label">Participants</span>
+
+            <div class="drill-stats-row">
+              <div class="stat-pill">
+                <span class="stat-pill-value">{{ drill.statistics?.total_participants || 0 }}</span>
+                <span class="stat-pill-label"><i class="fas fa-users"></i> Participants</span>
               </div>
-              <div class="stat" *ngIf="drill.statistics.scanned_participants">
-                <span class="stat-value">{{ drill.statistics.scanned_participants }}</span>
-                <span class="stat-label">Scanned</span>
+              <div class="stat-pill" *ngIf="drill.scheduled_at">
+                <span class="stat-pill-value">{{ drill.scheduled_at | date:'MMM d' }}</span>
+                <span class="stat-pill-label"><i class="fas fa-calendar"></i> Scheduled</span>
               </div>
-              <div class="stat" *ngIf="drill.statistics.average_response_time">
-                <span class="stat-value">{{ drill.statistics.average_response_time | number:'1.0-1' }}s</span>
-                <span class="stat-label">Avg Response </span>
+              <div class="stat-pill" *ngIf="drill.started_at">
+                <span class="stat-pill-value">{{ drill.started_at | date:'h:mm a' }}</span>
+                <span class="stat-pill-label"><i class="fas fa-play"></i> Started</span>
               </div>
             </div>
-            <div class="drill-actions">
+
+            <div class="drill-actions" style="margin-top:auto;">
               <button *ngIf="drill.status === 'planned'"
                       class="btn btn-sm btn-danger"
-                      (click)="deleteDrill(drill.id)"
-                      title="Delete this drill">
+                      (click)="deleteDrill(drill.id)">
                 <i class="fas fa-trash"></i> Delete
               </button>
               <button class="btn btn-sm btn-outline" (click)="viewDrill(drill.id)">
@@ -125,9 +132,14 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
         <ng-container *ngIf="activeTab === 'completed'">
           <div class="drill-card completed-card" *ngFor="let drill of completedDrills">
             <div class="drill-header">
-              <div class="drill-type-icon" [class]="'type-' + drill.drill_type">
+              <div class="drill-type-icon"
+                   [style.background]="drill.drill_type === 'fire' ? 'linear-gradient(135deg, #ef4444, #f97316)' :
+                                       drill.drill_type === 'earthquake' ? 'linear-gradient(135deg, #f59e0b, #d97706)' :
+                                       drill.drill_type === 'lockdown' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' :
+                                       drill.drill_type === 'medical' ? 'linear-gradient(135deg, #10b981, #059669)' :
+                                       'linear-gradient(135deg, #3b82f6, #2563eb)'">
                 <img [src]="'assets/icons/' + (drill.drill_type === 'medical' ? 'emergency' : drill.drill_type) + '.png'"
-                     style="width:28px;height:28px;object-fit:contain;"
+                     style="width:28px;height:28px;object-fit:contain;filter:brightness(0) invert(1);"
                      [alt]="drill.drill_type">
               </div>
               <div class="drill-title-group">
@@ -137,17 +149,17 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
               <span class="status-badge status-completed">Completed</span>
             </div>
 
-            <div class="drill-stats-row" *ngIf="drill.statistics">
+            <div class="drill-stats-row">
               <div class="stat-pill">
-                <span class="stat-pill-value">{{ drill.statistics.total_participants || 0 }}</span>
+                <span class="stat-pill-value">{{ drill.statistics?.total_participants || 0 }}</span>
                 <span class="stat-pill-label"><i class="fas fa-users"></i> Participants</span>
               </div>
-              <div class="stat-pill" *ngIf="drill.statistics.scanned_participants">
-                <span class="stat-pill-value">{{ drill.statistics.scanned_participants }}</span>
+              <div class="stat-pill">
+                <span class="stat-pill-value">{{ drill.statistics?.scanned_participants || 0 }}</span>
                 <span class="stat-pill-label"><i class="fas fa-qrcode"></i> Scanned</span>
               </div>
-              <div class="stat-pill" *ngIf="drill.statistics.average_response_time">
-                <span class="stat-pill-value">{{ drill.statistics.average_response_time | number:'1.0-1' }}s</span>
+              <div class="stat-pill">
+                <span class="stat-pill-value">{{ drill.statistics?.average_response_time ? (drill.statistics?.average_response_time | number:'1.0-1') + 's' : '—' }}</span>
                 <span class="stat-pill-label"><i class="fas fa-stopwatch"></i> Avg Response</span>
               </div>
             </div>
@@ -169,9 +181,14 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
         <ng-container *ngIf="activeTab === 'abandoned'">
           <div class="drill-card abandoned-card" *ngFor="let drill of abandonedDrills">
             <div class="drill-header">
-              <div class="drill-type-icon" [class]="'type-' + drill.drill_type">
+              <div class="drill-type-icon"
+                   [style.background]="drill.drill_type === 'fire' ? 'linear-gradient(135deg, #ef4444, #f97316)' :
+                                       drill.drill_type === 'earthquake' ? 'linear-gradient(135deg, #f59e0b, #d97706)' :
+                                       drill.drill_type === 'lockdown' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' :
+                                       drill.drill_type === 'medical' ? 'linear-gradient(135deg, #10b981, #059669)' :
+                                       'linear-gradient(135deg, #3b82f6, #2563eb)'">
                 <img [src]="'assets/icons/' + (drill.drill_type === 'medical' ? 'emergency' : drill.drill_type) + '.png'"
-                     style="width:28px;height:28px;object-fit:contain;"
+                     style="width:28px;height:28px;object-fit:contain;filter:brightness(0) invert(1);"
                      [alt]="drill.drill_type">
               </div>
               <div class="drill-title-group">
@@ -343,15 +360,147 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       background: #fdf8ff;
     }
 
+    .active-card {
+      border-left: none !important;
+      background: white !important;
+      border-radius: 12px !important;
+      padding: 1.25rem !important;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08) !important;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      .drill-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 0;
+        height: 56px;
+        overflow: hidden;
+      }
+
+      .drill-title-group {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+
+        h3 {
+          margin: 0 0 2px;
+          font-size: 1rem;
+          font-weight: 700;
+          color: #1e293b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .drill-type-label {
+          font-size: 0.78rem;
+          color: #94a3b8;
+          display: block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      .header-badges {
+        flex-shrink: 0;
+        align-self: flex-start;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .drill-stats-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: stretch;
+      }
+
+      .drill-actions {
+        margin-top: auto;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+
+        .btn { flex: 1; justify-content: center; }
+      }
+    }
+
     .abandoned-card {
       border-left-color: #b45309 !important;
       background: #fffbeb;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      .drill-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 0;
+        height: 56px;
+        overflow: hidden;
+      }
+
+      .drill-title-group {
+        flex: 1;
+        min-width: 0;
+
+        h3 {
+          margin: 0 0 2px;
+          font-size: 1rem;
+          font-weight: 700;
+          color: #1e293b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .drill-type-label {
+          font-size: 0.78rem;
+          color: #94a3b8;
+          display: block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      .status-badge {
+        flex-shrink: 0;
+        align-self: flex-start;
+      }
+
+      .drill-actions {
+        margin-top: auto;
+      }
     }
 
     .status-abandoned {
       background: #fef3c7;
       color: #92400e;
       border: 1px solid #fcd34d;
+    }
+
+    .drill-type-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      i { font-size: 1.2rem; color: white; }
+
+      &.type-fire { background: linear-gradient(135deg, #ef4444, #f97316); }
+      &.type-earthquake { background: linear-gradient(135deg, #f59e0b, #d97706); }
+      &.type-lockdown { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+      &.type-medical { background: linear-gradient(135deg, #10b981, #059669); }
+      &.type-evacuation { background: linear-gradient(135deg, #3b82f6, #2563eb); }
     }
 
     .abandoned-reason {
@@ -431,6 +580,8 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       gap: 20px;
+      align-items: stretch;
+      justify-items: center;
     }
 
     .drill-card {
@@ -545,6 +696,11 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       text-align: center;
       padding: 40px;
       color: #666;
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     .empty-state i {
@@ -810,32 +966,17 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
 
       .drill-header {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 0.75rem;
         margin-bottom: 0;
-      }
-
-      .drill-type-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-
-        i { font-size: 1.2rem; color: white; }
-
-        &.type-fire { background: linear-gradient(135deg, #ef4444, #f97316); }
-        &.type-earthquake { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        &.type-lockdown { background: linear-gradient(135deg, #6366f1, #4f46e5); }
-        &.type-medical { background: linear-gradient(135deg, #10b981, #059669); }
-        &.type-evacuation { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        height: 56px;
+        overflow: hidden;
       }
 
       .drill-title-group {
         flex: 1;
         min-width: 0;
+        overflow: hidden;
 
         h3 {
           margin: 0 0 2px;
@@ -850,23 +991,37 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
         .drill-type-label {
           font-size: 0.78rem;
           color: #94a3b8;
+          display: block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
+      }
+
+      .status-badge {
+        flex-shrink: 0;
+        align-self: flex-start;
       }
 
       .drill-stats-row {
         display: flex;
         gap: 0.5rem;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        align-items: stretch;
       }
 
       .stat-pill {
         flex: 1;
-        min-width: 70px;
+        min-width: 0;
         background: #f8fafc;
         border: 1px solid #e2e8f0;
         border-radius: 8px;
         padding: 0.5rem 0.75rem;
         text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
 
         .stat-pill-value {
           display: block;
@@ -892,7 +1047,7 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       }
 
       .drill-actions {
-        margin-top: 0;
+        margin-top: auto;
       }
 
       .btn-view-details {
@@ -917,6 +1072,78 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(123, 31, 162, 0.25);
         }
+      }
+    }
+
+    @media (max-width: 768px) {
+      .emergency-drills-container {
+        padding: 1rem;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.25rem 1rem;
+
+        h2 { font-size: 1.4rem; }
+
+        .btn-primary { width: 100%; justify-content: center; }
+      }
+
+      .tabs {
+        gap: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+
+        .tab-btn {
+          font-size: 0.8rem;
+          padding: 0.6rem 0.75rem;
+          white-space: nowrap;
+        }
+      }
+
+      .filters {
+        flex-direction: column;
+
+        select { width: 100%; }
+      }
+
+      .drills-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .drill-card {
+        padding: 1rem;
+      }
+
+      .drill-actions {
+        flex-wrap: wrap;
+
+        .btn { flex: 1; justify-content: center; }
+      }
+
+      .completed-card, .abandoned-card {
+        .drill-stats-row { flex-wrap: wrap; }
+        .stat-pill { min-width: calc(50% - 0.25rem); }
+      }
+
+      .modal-content {
+        width: 95%;
+        max-height: 95vh;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header h2 { font-size: 1.2rem; }
+
+      .drills-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .completed-card, .abandoned-card {
+        .stat-pill { min-width: 100%; }
       }
     }
   `]
