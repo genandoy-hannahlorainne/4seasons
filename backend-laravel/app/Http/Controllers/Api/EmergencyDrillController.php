@@ -190,12 +190,14 @@ class EmergencyDrillController extends BaseController
 
         // Check scheduled time IMMEDIATELY
         if ($drill->scheduled_at) {
-            $now = \Carbon\Carbon::now('Asia/Manila');
-            $scheduledTime = \Carbon\Carbon::parse($drill->scheduled_at)->timezone('Asia/Manila');
+            $now = \Carbon\Carbon::now();
+            $scheduledTime = $drill->scheduled_at;
 
             \Log::info('🕐 TIME COMPARISON', [
                 'now' => $now->toDateTimeString(),
+                'now_tz' => $now->timezone->getName(),
                 'scheduled' => $scheduledTime->toDateTimeString(),
+                'scheduled_tz' => $scheduledTime->timezone->getName(),
                 'is_before' => $now->lessThan($scheduledTime),
                 'diff_minutes' => $now->diffInMinutes($scheduledTime, false)
             ]);
@@ -290,21 +292,25 @@ class EmergencyDrillController extends BaseController
             $drill->participants()->update(['assigned_at' => now()]);
 
             // Create notification for admin about drill start
-            \App\Models\Notification::create([
-                'channel' => 'System',
-                'message' => "Emergency drill '{$drill->drill_name}' ({$drill->drill_type}) has been started.",
-                'status' => 'Pending',
-                'priority' => 'urgent',
-                'notification_type' => 'emergency_drill_alert',
-                'request_data' => [
-                    'drill_id' => $drill->id,
-                    'drill_name' => $drill->drill_name,
-                    'drill_type' => $drill->drill_type,
-                    'status' => 'active',
-                    'started_at' => $drill->started_at->toISOString(),
-                    'action' => 'started'
-                ]
-            ]);
+            try {
+                \App\Models\Notification::create([
+                    'channel' => 'System',
+                    'message' => "Emergency drill '{$drill->drill_name}' ({$drill->drill_type}) has been started.",
+                    'status' => 'Pending',
+                    'priority' => 'urgent',
+                    'notification_type' => 'emergency_drill_alert',
+                    'request_data' => [
+                        'drill_id' => $drill->id,
+                        'drill_name' => $drill->drill_name,
+                        'drill_type' => $drill->drill_type,
+                        'status' => 'active',
+                        'started_at' => $drill->started_at->toISOString(),
+                        'action' => 'started'
+                    ]
+                ]);
+            } catch (\Exception $notifEx) {
+                Log::warning('Could not create drill notification: ' . $notifEx->getMessage());
+            }
 
             DB::commit();
 
