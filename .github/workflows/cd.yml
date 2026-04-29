@@ -112,7 +112,7 @@ jobs:
     - name: Deploy to staging server
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.STAGING_URL }}
+        host: ${{ secrets.STAGING_HOST }}
         username: ${{ secrets.STAGING_USER }}
         key: ${{ secrets.STAGING_SSH_KEY }}
         port: ${{ secrets.STAGING_PORT }}
