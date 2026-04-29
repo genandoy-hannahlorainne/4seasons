@@ -27,21 +27,21 @@ jobs:
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
       image-digest: ${{ steps.build.outputs.digest }}
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-    
+
     - name: Log in to Container Registry
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Extract metadata
       id: meta
       uses: docker/metadata-action@v5
@@ -52,7 +52,7 @@ jobs:
           type=ref,event=pr
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
-    
+
     - name: Build and push Docker image
       id: build
       uses: docker/build-push-action@v5
@@ -71,22 +71,22 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
-    
+
     - name: Install dependencies
       working-directory: ./frontend
       run: npm ci
-    
+
     - name: Build production
       working-directory: ./frontend
       run: npm run build
-    
+
     - name: Upload frontend build artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -98,117 +98,103 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-and-push, build-frontend]
     if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
-    environment: staging
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    
+
     - name: Download frontend build artifacts
       uses: actions/download-artifact@v4
       with:
         name: frontend-build
         path: frontend/dist/
-    
+
     - name: Deploy to staging server
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.STAGING_HOST }}
         username: ${{ secrets.STAGING_USER }}
         key: ${{ secrets.STAGING_SSH_KEY }}
-        port: ${{ secrets.STAGING_PORT || 22 }}
+        port: 22
         script: |
-          cd ${{ secrets.STAGING_PATH || '/var/www/4seasons' }}
-          
+          cd /var/www/4seasons
+
           # Pull latest code
           git pull origin main
-          
+
           # Update Docker image reference
           sed -i 's|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:.*|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:main|g' docker-compose.prod.yml
-          
+
           # Deploy with Docker Compose
           docker compose -f docker-compose.prod.yml pull
           docker compose -f docker-compose.prod.yml up -d --remove-orphans
-          
+
           # Wait for services to be healthy
           echo "Waiting for services to be healthy..."
           timeout 300 bash -c 'until docker compose -f docker-compose.prod.yml ps | grep -q "healthy"; do sleep 5; done'
-          
+
           # Run database migrations
           docker compose -f docker-compose.prod.yml exec -T backend php artisan migrate --force
-          
-          # Clear caches
+
+          # Clear and cache configs
           docker compose -f docker-compose.prod.yml exec -T backend php artisan config:clear
           docker compose -f docker-compose.prod.yml exec -T backend php artisan cache:clear
           docker compose -f docker-compose.prod.yml exec -T backend php artisan route:clear
           docker compose -f docker-compose.prod.yml exec -T backend php artisan view:clear
-          
-          # Optimize for production
           docker compose -f docker-compose.prod.yml exec -T backend php artisan config:cache
           docker compose -f docker-compose.prod.yml exec -T backend php artisan route:cache
           docker compose -f docker-compose.prod.yml exec -T backend php artisan view:cache
-          
+
           echo "Staging deployment completed successfully!"
 
   deploy-production:
     runs-on: ubuntu-latest
     needs: [build-and-push, build-frontend, deploy-staging]
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
-    environment: production
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    
+
     - name: Download frontend build artifacts
       uses: actions/download-artifact@v4
       with:
         name: frontend-build
         path: frontend/dist/
-    
+
     - name: Deploy to production server
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.PRODUCTION_HOST }}
         username: ${{ secrets.PRODUCTION_USER }}
         key: ${{ secrets.PRODUCTION_SSH_KEY }}
-        port: ${{ secrets.PRODUCTION_PORT || 22 }}
+        port: 22
         script: |
-          cd ${{ secrets.PRODUCTION_PATH || '/var/www/4seasons' }}
-          
+          cd /var/www/4seasons
+
           # Create backup before deployment
           BACKUP_DIR="/var/backups/4seasons/$(date +%Y%m%d_%H%M%S)"
           mkdir -p $BACKUP_DIR
-          
-          # Backup database
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan backup:run --only-db || echo "Database backup failed"
-          
-          # Backup current deployment
           cp -r . $BACKUP_DIR/ || echo "File backup failed"
-          
+
           # Pull latest code
           git pull origin main
-          
+
           # Update Docker image reference
           sed -i 's|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:.*|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:main|g' docker-compose.prod.yml
-          
-          # Deploy with zero-downtime strategy
+
+          # Deploy with Docker Compose
           docker compose -f docker-compose.prod.yml pull
-          
-          # Start new containers alongside old ones
-          docker compose -f docker-compose.prod.yml up -d --remove-orphans --scale backend=2
-          
-          # Wait for new containers to be healthy
+          docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+          # Wait for services to be healthy
           echo "Waiting for new containers to be healthy..."
-          timeout 300 bash -c 'until [ $(docker compose -f docker-compose.prod.yml ps backend --filter "health=healthy" -q | wc -l) -ge 1 ]; do sleep 5; done'
-          
+          timeout 300 bash -c 'until docker compose -f docker-compose.prod.yml ps | grep -q "healthy"; do sleep 5; done'
+
           # Run database migrations
           docker compose -f docker-compose.prod.yml exec -T backend php artisan migrate --force
-          
-          # Scale down to single instance
-          docker compose -f docker-compose.prod.yml up -d --remove-orphans --scale backend=1
-          
-          # Clear and optimize caches
+
+          # Clear and cache configs
           docker compose -f docker-compose.prod.yml exec -T backend php artisan config:clear
           docker compose -f docker-compose.prod.yml exec -T backend php artisan cache:clear
           docker compose -f docker-compose.prod.yml exec -T backend php artisan route:clear
@@ -216,49 +202,30 @@ jobs:
           docker compose -f docker-compose.prod.yml exec -T backend php artisan config:cache
           docker compose -f docker-compose.prod.yml exec -T backend php artisan route:cache
           docker compose -f docker-compose.prod.yml exec -T backend php artisan view:cache
-          
+
           # Clean up old Docker images
           docker image prune -f
-          
+
           echo "Production deployment completed successfully!"
           echo "Backup stored at: $BACKUP_DIR"
 
   health-check:
     runs-on: ubuntu-latest
     needs: [deploy-staging]
-    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
-    
+    if: always() && needs.deploy-staging.result == 'success'
+
     steps:
     - name: Health check staging
-      if: needs.deploy-staging.result == 'success'
       run: |
         echo "Performing health check on staging environment..."
         for i in {1..10}; do
-          if curl -f --max-time 30 "${{ secrets.STAGING_URL || 'https://staging.4seasons.com' }}/api/health"; then
+          if curl -f --max-time 30 "${{ secrets.STAGING_URL }}/api/health"; then
             echo "✅ Staging health check passed"
-            break
+            exit 0
           else
             echo "❌ Staging health check failed (attempt $i/10)"
             if [ $i -eq 10 ]; then
               echo "::error::Staging health check failed after 10 attempts"
-              exit 1
-            fi
-            sleep 30
-          fi
-        done
-    
-    - name: Health check production
-      if: needs.deploy-production.result == 'success'
-      run: |
-        echo "Performing health check on production environment..."
-        for i in {1..10}; do
-          if curl -f --max-time 30 "${{ secrets.PRODUCTION_URL || 'https://4seasons.com' }}/api/health"; then
-            echo "✅ Production health check passed"
-            break
-          else
-            echo "❌ Production health check failed (attempt $i/10)"
-            if [ $i -eq 10 ]; then
-              echo "::error::Production health check failed after 10 attempts"
               exit 1
             fi
             sleep 30
@@ -269,21 +236,27 @@ jobs:
     runs-on: ubuntu-latest
     needs: [deploy-staging, deploy-production, health-check]
     if: always()
-    
+
     steps:
-    - name: Notify deployment status
+    - name: Log deployment status
+      run: |
+        echo "🚀 Deployment Status Summary"
+        echo "Branch:       ${{ github.ref_name }}"
+        echo "Triggered by: ${{ github.actor }}"
+        echo "Staging:      ${{ needs.deploy-staging.result || 'skipped' }}"
+        echo "Production:   ${{ needs.deploy-production.result || 'skipped' }}"
+        echo "Health Check: ${{ needs.health-check.result || 'skipped' }}"
+
+    - name: Notify via Slack
+      if: secrets.SLACK_WEBHOOK_URL != ''
       uses: 8398a7/action-slack@v3
-      if: always()
       with:
         status: ${{ job.status }}
         channel: '#deployments'
         text: |
           🚀 Deployment Status: ${{ job.status }}
-          
-          📦 Image: ${{ needs.build-and-push.outputs.image-tag }}
           🌿 Branch: ${{ github.ref_name }}
           👤 Triggered by: ${{ github.actor }}
-          
           Staging: ${{ needs.deploy-staging.result || 'skipped' }}
           Production: ${{ needs.deploy-production.result || 'skipped' }}
           Health Check: ${{ needs.health-check.result || 'skipped' }}
