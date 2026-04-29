@@ -113,12 +113,12 @@ jobs:
     - name: Deploy to staging server
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.STAGING_HOST }}
-        username: ${{ secrets.STAGING_USER }}
-        key: ${{ secrets.STAGING_SSH_KEY }}
-        port: ${{ secrets.STAGING_PORT || 22 }}
+        host: ${{ secrets.PRODUCTION_HOST }}
+        username: ${{ secrets.PRODUCTION_USER }}
+        password: ${{ secrets.PRODUCTION_PASSWORD }}
+        port: ${{ secrets.PRODUCTION_PORT || 22 }}
         script: |
-          cd ${{ secrets.STAGING_PATH || '/var/www/4seasons' }}
+          cd ${{ secrets.PRODUCTION_PATH || '/var/www/4seasons' }}
           
           # Pull latest code
           git pull origin main
@@ -171,7 +171,7 @@ jobs:
       with:
         host: ${{ secrets.PRODUCTION_HOST }}
         username: ${{ secrets.PRODUCTION_USER }}
-        key: ${{ secrets.PRODUCTION_SSH_KEY }}
+        password: ${{ secrets.PRODUCTION_PASSWORD }}
         port: ${{ secrets.PRODUCTION_PORT || 22 }}
         script: |
           cd ${{ secrets.PRODUCTION_PATH || '/var/www/4seasons' }}
