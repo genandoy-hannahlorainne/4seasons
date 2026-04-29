@@ -248,9 +248,8 @@ jobs:
         echo "Health Check: ${{ needs.health-check.result || 'skipped' }}"
 
     - name: Notify via Slack
-      if: secrets.SLACK_WEBHOOK_URL != ''
+      if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
       uses: 8398a7/action-slack@v3
-      if: always() && secrets.SLACK_WEBHOOK_URL != ''
       with:
         status: ${{ job.status }}
         channel: '#deployments'
