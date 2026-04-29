@@ -109,10 +109,19 @@ jobs:
         name: frontend-build
         path: frontend/dist/
 
+    - name: Resolve staging host
+      id: staging-host
+      run: |
+        HOST="${{ secrets.STAGING_URL }}"
+        HOST="${HOST#https://}"
+        HOST="${HOST#http://}"
+        HOST="${HOST%%/*}"
+        echo "host=$HOST" >> $GITHUB_OUTPUT
+
     - name: Deploy to staging server
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.STAGING_HOST }}
+        host: ${{ steps.staging-host.outputs.host }}
         username: ${{ secrets.STAGING_USER }}
         key: ${{ secrets.STAGING_SSH_KEY }}
         port: ${{ secrets.STAGING_PORT }}
