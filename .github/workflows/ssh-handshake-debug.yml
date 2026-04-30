@@ -1,0 +1,33 @@
+name: SSH Handshake Debug
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ssh-handshake-debug:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ./deploy_key
+          chmod 600 ./deploy_key
+
+      - name: Run verbose SSH handshake
+        env:
+          HOST: ${{ secrets.SERVER_HOST }}
+          USER: ${{ secrets.SERVER_USER }}
+          PORT: ${{ secrets.SERVER_SSH_PORT }}
+        run: |
+          PORT="${PORT:-22}"
+          set -o pipefail
+          ssh -vvv -oBatchMode=yes -oStrictHostKeyChecking=no -oConnectTimeout=15 -i ./deploy_key -p "$PORT" "$USER@$HOST" exit 2>&1 | tee ssh-handshake.log || true
+          scp -vvv -oBatchMode=yes -oStrictHostKeyChecking=no -i ./deploy_key -P "$PORT" ./ssh-handshake.log "$USER@$HOST:/tmp/" 2>&1 | tee scp.log || true
+
+      - name: Upload debug logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssh-debug-logs
+          path: |
+            ssh-handshake.log
+            scp.log
