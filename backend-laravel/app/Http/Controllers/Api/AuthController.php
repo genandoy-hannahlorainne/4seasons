@@ -297,7 +297,7 @@ class AuthController extends BaseController
         } catch (ValidationException $e) {
             return $this->sendValidationError($e->errors());
         } catch (\Exception $e) {
-            \Log::error('Password change request error', [
+            Log::error('Password change request error', [
                 'user_id' => $request->user()?->user_id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
