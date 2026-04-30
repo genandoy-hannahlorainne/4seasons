@@ -61,8 +61,8 @@ jobs:
             exit 1
           fi
 
-          $COMPOSE_CMD -f docker-compose.prod.yml pull
-          $COMPOSE_CMD -f docker-compose.prod.yml up -d --remove-orphans
+          $COMPOSE_CMD pull
+          $COMPOSE_CMD up -d
 
           BACKEND_CONTAINER="$($COMPOSE_CMD -f docker-compose.prod.yml ps -q backend)"
           if [ -n "$BACKEND_CONTAINER" ]; then
