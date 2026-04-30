@@ -297,7 +297,7 @@ class AuthController extends BaseController
         } catch (ValidationException $e) {
             return $this->sendValidationError($e->errors());
         } catch (\Exception $e) {
-            \Log::error('Password change request error', [
+            Log::error('Password change request error', [
                 'user_id' => $request->user()?->user_id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -326,6 +326,10 @@ class AuthController extends BaseController
                     $student = $this->ensureStudentProfile($user);
                 }
 
+                if ($student) {
+                    $user->setRelation('student', $student);
+                }
+
                 return [
                     'valid' => !!$student,
                     'error' => $student ? '' : 'Student profile not found or inactive'
@@ -335,6 +339,9 @@ class AuthController extends BaseController
                 $adviser = Adviser::where('user_id', $user->user_id)
                                  ->where('is_active', true)
                                  ->first();
+                if ($adviser) {
+                    $user->setRelation('adviser', $adviser);
+                }
                 return [
                     'valid' => true,
                     'error' => $adviser ? '' : ''
@@ -345,6 +352,9 @@ class AuthController extends BaseController
                                    ->where('is_active', true)
                                    ->whereNull('deleted_at')
                                    ->first();
+                if ($staff) {
+                    $user->setRelation('clinicStaff', $staff);
+                }
                 return [
                     'valid' => true,
                     'error' => $staff ? '' : ''
@@ -398,9 +408,11 @@ class AuthController extends BaseController
 
         switch ($roleName) {
             case 'Student':
-                $student = Student::where('user_id', $user->user_id)
-                                 ->where('is_active', true)
-                                 ->first();
+                $student = $user->relationLoaded('student')
+                    ? $user->getRelation('student')
+                    : Student::where('user_id', $user->user_id)
+                        ->where('is_active', true)
+                        ->first();
                 if ($student) {
                     $userInfo['student_info'] = [
                         'student_id' => $student->student_id,
@@ -412,9 +424,11 @@ class AuthController extends BaseController
                 break;
 
             case 'Adviser':
-                $adviser = Adviser::where('user_id', $user->user_id)
-                                 ->where('is_active', true)
-                                 ->first();
+                $adviser = $user->relationLoaded('adviser')
+                    ? $user->getRelation('adviser')
+                    : Adviser::where('user_id', $user->user_id)
+                        ->where('is_active', true)
+                        ->first();
                 if ($adviser) {
                     $userInfo['adviser_info'] = [
                         'adviser_id' => $adviser->adviser_id,
@@ -425,10 +439,12 @@ class AuthController extends BaseController
                 break;
 
             case 'Clinic Staff':
-                $staff = ClinicStaff::where('user_id', $user->user_id)
-                                   ->where('is_active', true)
-                                   ->whereNull('deleted_at')
-                                   ->first();
+                $staff = $user->relationLoaded('clinicStaff')
+                    ? $user->getRelation('clinicStaff')
+                    : ClinicStaff::where('user_id', $user->user_id)
+                        ->where('is_active', true)
+                        ->whereNull('deleted_at')
+                        ->first();
                 if ($staff) {
                     $userInfo['staff_info'] = [
                         'clinic_staff_id' => $staff->clinic_staff_id,

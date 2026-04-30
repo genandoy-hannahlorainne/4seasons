@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class StudentController extends BaseController
 {
@@ -870,6 +871,54 @@ class StudentController extends BaseController
     }
 
     /**
+     * Get lightweight badge summary for authenticated student.
+     */
+    public function getBadgeSummary(Request $request)
+    {
+        try {
+            $authUser = $request->user();
+            if (!$authUser) {
+                return $this->sendError('Unauthorized', [], 401);
+            }
+
+            $student = Student::select(['student_id', 'user_id', 'created_at'])
+                ->where('user_id', $authUser->user_id)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$student) {
+                return $this->sendError('Student not found', [], 404);
+            }
+
+            $lastVisit = $student->medicalVisits()
+                ->orderBy('visit_datetime', 'desc')
+                ->first(['visit_datetime']);
+
+            $currentStreak = 0;
+            if (!$lastVisit) {
+                $startDate = $student->created_at ?? now()->subDays(365);
+                $currentStreak = max(0, (int) now()->diffInDays($startDate, false));
+            } else {
+                $currentStreak = max(0, (int) now()->diffInDays($lastVisit->visit_datetime, false));
+            }
+
+            $badgeData = $this->calculateBadgeStatus($student->student_id, $currentStreak);
+
+            return $this->sendResponse([
+                'badges' => $badgeData['badges'],
+                'badges_unlocked' => $badgeData['badges_unlocked'],
+                'next_badge' => $badgeData['next_badge'],
+                'current_streak_days' => $currentStreak,
+                'last_clinic_visit' => $lastVisit?->visit_datetime,
+            ], 'Badge summary retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve badge summary', [
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Get medical data by user_id (for frontend compatibility)
      */
     public function getMedicalDataByUserId(Request $request)
@@ -999,14 +1048,22 @@ class StudentController extends BaseController
     private function calculateBadgeStatus($studentId, $currentStreak)
     {
         try {
-            // Load badge metadata
-            $metadataPath = base_path('resources/badges/streak/metadata.json');
-            if (!file_exists($metadataPath)) {
+            // Load badge metadata from cache to avoid file IO on hot paths.
+            $badgesMetadata = Cache::remember('badges:streak:metadata', 3600, function () {
+                $metadataPath = base_path('resources/badges/streak/metadata.json');
+                if (!file_exists($metadataPath)) {
+                    return [];
+                }
+
+                $metadata = json_decode(file_get_contents($metadataPath), true);
+                return $metadata['badges'] ?? [];
+            });
+
+            if (empty($badgesMetadata)) {
                 return $this->getDefaultBadgeData();
             }
 
-            $metadata = json_decode(file_get_contents($metadataPath), true);
-            $badges = collect($metadata['badges'])->sortBy('required_streak_days');
+            $badges = collect($badgesMetadata)->sortBy('required_streak_days');
 
             // Determine badge status for each badge
             $badgeStatus = $badges->map(function ($badge) use ($currentStreak) {
