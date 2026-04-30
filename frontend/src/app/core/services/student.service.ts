@@ -161,6 +161,11 @@ export class StudentService {
     return this.http.get<any>(`${environment.apiUrl}/students/medical-data?user_id=${userId}`);
   }
 
+  getBadgeSummary(): Observable<any> {
+    return this.http.get<ApiResponse<any>>(`${environment.apiUrl}/students/badges/summary`)
+      .pipe(map(response => response.data));
+  }
+
   getStudentQRCode(studentId: number): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/students/qr?student_id=${studentId}`);
   }

@@ -162,6 +162,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::get('/search', [StudentController::class, 'search']);
         Route::get('/qr/lookup', [StudentController::class, 'getByQr']);
         Route::get('/medical-data', [StudentController::class, 'getMedicalDataByUserId']);
+        Route::get('/badges/summary', [StudentController::class, 'getBadgeSummary']);
         Route::get('/{student}', [StudentController::class, 'show'])->name('students.show');
         Route::get('/{student}/medical-data', [StudentController::class, 'getMedicalData']);
         Route::put('/{student}/medical-data', [StudentController::class, 'updateMedicalData']);
