@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { map, catchError, finalize, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User } from '../models/user.model';
 
@@ -11,6 +11,10 @@ import { User } from '../models/user.model';
 export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
+  private currentUserRequest$: Observable<User> | null = null;
+  private lastValidatedToken: string | null = null;
+  private lastValidatedAt = 0;
+  private readonly verificationTtlMs = 15000;
 
   constructor(private http: HttpClient) {
     const storedUser = localStorage.getItem('currentUser');
@@ -40,6 +44,7 @@ export class AuthService {
             localStorage.setItem('tokenExpiry', (Date.now() + (24 * 60 * 60 * 1000)).toString()); // 24 hours
 
             this.currentUserSubject.next(userData);
+            this.markValidation(token);
             console.log('✅ Login successful, user stored:', userData);
             console.log('✅ Token stored:', token.substring(0, 20) + '...');
             console.log('✅ Token expiry set:', new Date(Date.now() + (24 * 60 * 60 * 1000)));
@@ -116,7 +121,17 @@ export class AuthService {
 
     // If we have a valid token, use Laravel /me endpoint
     if (token) {
-      return this.http.get<any>(`${environment.apiUrl}/me`)
+      const currentUser = this.currentUserValue;
+
+      if (currentUser && this.hasFreshValidation(token)) {
+        return of(currentUser);
+      }
+
+      if (this.currentUserRequest$) {
+        return this.currentUserRequest$;
+      }
+
+      this.currentUserRequest$ = this.http.get<any>(`${environment.apiUrl}/me`)
         .pipe(
           map(response => {
             console.log('Current user response:', response);
@@ -126,6 +141,7 @@ export class AuthService {
               // Update stored user data
               localStorage.setItem('currentUser', JSON.stringify(userData));
               this.currentUserSubject.next(userData);
+              this.markValidation(token);
               return userData;
             }
             throw new Error('Invalid response format');
@@ -140,8 +156,14 @@ export class AuthService {
             }
 
             return throwError(() => error);
-          })
+          }),
+          finalize(() => {
+            this.currentUserRequest$ = null;
+          }),
+          shareReplay(1)
         );
+
+      return this.currentUserRequest$;
     } else {
       // No token, return current user from storage or error
       const currentUser = this.currentUserValue;
@@ -247,6 +269,7 @@ export class AuthService {
 
             localStorage.setItem('token', newToken);
             localStorage.setItem('tokenExpiry', newExpiry.toString());
+            this.markValidation(newToken);
 
             console.log('✅ Token refreshed successfully');
             return response;
@@ -303,7 +326,19 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('tokenExpiry');
     this.currentUserSubject.next(null);
+    this.currentUserRequest$ = null;
+    this.lastValidatedToken = null;
+    this.lastValidatedAt = 0;
     console.log('🧹 Auth data cleared');
+  }
+
+  private hasFreshValidation(token: string): boolean {
+    return this.lastValidatedToken === token && (Date.now() - this.lastValidatedAt) < this.verificationTtlMs;
+  }
+
+  private markValidation(token: string): void {
+    this.lastValidatedToken = token;
+    this.lastValidatedAt = Date.now();
   }
 
   changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {

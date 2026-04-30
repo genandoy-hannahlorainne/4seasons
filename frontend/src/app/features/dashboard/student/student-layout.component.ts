@@ -280,6 +280,7 @@ export class StudentLayoutComponent implements OnInit {
   activeBadge: any = null;
   popupBadgeKey: string | null = null;
   isFirstBadgeSyncDone = false;
+  badgesLoaded = false;
 
   // SHDF notification state
   shdfNotification: 'not_started' | 'comprehensive_pending' | 'none' = 'none';
@@ -300,7 +301,6 @@ export class StudentLayoutComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadBadgeNotifications();
     this.checkSHDFStatus();
   }
 
@@ -340,6 +340,10 @@ export class StudentLayoutComponent implements OnInit {
     event.stopPropagation();
     this.showBadgesPanel = !this.showBadgesPanel;
     this.showNotificationsPanel = false;
+
+    if (this.showBadgesPanel && !this.badgesLoaded) {
+      this.loadBadgeNotifications();
+    }
   }
 
   loadBadgeNotifications(): void {
@@ -354,21 +358,32 @@ export class StudentLayoutComponent implements OnInit {
       return;
     }
 
-    // Load student's actual badge data instead of all available badges
-    this.studentService.getStudentMedicalData(currentUser.user_id).subscribe({
+    // Use lightweight badge summary endpoint to avoid heavy dashboard startup calls.
+    this.studentService.getBadgeSummary().subscribe({
       next: (response) => {
-        if (response.success && response.data?.badges) {
-          // Only show unlocked/earned badges as notifications
-          this.badgeNotifications = response.data.badges.filter((badge: any) => badge.is_unlocked) || [];
-        } else {
-          this.badgeNotifications = [];
-        }
+        this.badgeNotifications = (response?.badges || []).filter((badge: any) => badge.is_unlocked) || [];
+        this.badgesLoaded = true;
         this.notificationsLoading = false;
       },
-      error: (error) => {
-        this.notificationsError = error?.error?.message || 'Unable to load badge notifications.';
-        this.badgeNotifications = [];
-        this.notificationsLoading = false;
+      error: () => {
+        // Fallback to legacy endpoint for mixed-version environments.
+        this.studentService.getStudentMedicalData(currentUser.user_id).subscribe({
+          next: (legacyResponse) => {
+            if (legacyResponse.success && legacyResponse.data?.badges) {
+              this.badgeNotifications = legacyResponse.data.badges.filter((badge: any) => badge.is_unlocked) || [];
+            } else {
+              this.badgeNotifications = [];
+            }
+            this.badgesLoaded = true;
+            this.notificationsLoading = false;
+          },
+          error: (legacyError) => {
+            this.notificationsError = legacyError?.error?.message || 'Unable to load badge notifications.';
+            this.badgeNotifications = [];
+            this.badgesLoaded = true;
+            this.notificationsLoading = false;
+          }
+        });
       }
     });
   }

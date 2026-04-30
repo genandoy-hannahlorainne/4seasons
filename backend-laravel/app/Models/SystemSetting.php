@@ -10,6 +10,11 @@ class SystemSetting extends Model
     protected $table = 'system_settings';
     protected $fillable = ['section', 'key', 'value', 'type'];
 
+    private static function singleSettingCacheKey(string $section, string $key): string
+    {
+        return "system_settings:{$section}:{$key}";
+    }
+
     /**
      * Get all settings grouped by section.
      */
@@ -29,7 +34,8 @@ class SystemSetting extends Model
      */
     public static function get(string $section, string $key, mixed $default = null): mixed
     {
-        $row = self::where('section', $section)->where('key', $key)->first();
+        $cacheKey = self::singleSettingCacheKey($section, $key);
+        $row = Cache::remember($cacheKey, 300, fn() => self::where('section', $section)->where('key', $key)->first());
         if (!$row) return $default;
         return self::castValue($row->value, $row->type);
     }
@@ -44,6 +50,7 @@ class SystemSetting extends Model
             ['value' => (string) $value]
         );
         Cache::forget('system_settings');
+        Cache::forget(self::singleSettingCacheKey($section, $key));
     }
 
     /**
@@ -56,6 +63,7 @@ class SystemSetting extends Model
                 ['section' => $section, 'key' => $key],
                 ['value' => is_bool($value) ? ($value ? '1' : '0') : (string) $value]
             );
+            Cache::forget(self::singleSettingCacheKey($section, (string) $key));
         }
         Cache::forget('system_settings');
     }
