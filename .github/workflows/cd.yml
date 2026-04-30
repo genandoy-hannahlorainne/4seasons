@@ -4,29 +4,17 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-        - staging
-        - production
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+concurrency:
+  group: 4seasons-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
-      image-digest: ${{ steps.build.outputs.digest }}
 
     steps:
     - name: Checkout repository
@@ -35,194 +23,64 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Log in to Container Registry
+    - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-
-    - name: Build and push Docker image
-      id: build
+    - name: Build and push backend image
       uses: docker/build-push-action@v6
       with:
         context: ./backend-laravel
         file: ./backend-laravel/Dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        platforms: linux/amd64,linux/arm64
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/4seasons-backend:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/4seasons-backend:${{ github.sha }}
+        cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/4seasons-backend:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/4seasons-backend:buildcache,mode=max
 
-  build-frontend:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-
-    - name: Install dependencies
-      working-directory: ./frontend
-      run: npm ci
-
-    - name: Build production
-      working-directory: ./frontend
-      run: npm run build
-
-    - name: Upload frontend build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: frontend-build
-        path: frontend/dist/
-        retention-days: 7
-
-  deploy-staging:
-    runs-on: ubuntu-latest
-    needs: [build-and-push, build-frontend]
-    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download frontend build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: frontend-build
-        path: frontend/dist/
-
-    - name: Resolve staging host
-      id: staging-host
-      run: |
-        HOST="${{ secrets.STAGING_URL }}"
-        HOST="${HOST#https://}"
-        HOST="${HOST#http://}"
-        HOST="${HOST%%/*}"
-        echo "host=$HOST" >> $GITHUB_OUTPUT
-
-    - name: Deploy to staging server
+    - name: Deploy on server via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ steps.staging-host.outputs.host }}
-        username: ${{ secrets.STAGING_USER }}
-        key: ${{ secrets.STAGING_SSH_KEY }}
-        port: ${{ secrets.STAGING_PORT }}
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: true
         script: |
-          cd ${{ secrets.STAGING_PATH }}
-          git pull origin main
-          sed -i 's|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:.*|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:main|g' docker-compose.prod.yml
-          docker compose -f docker-compose.prod.yml pull
-          docker compose -f docker-compose.prod.yml up -d --remove-orphans
-          echo "Waiting for services to be healthy..."
-          timeout 300 bash -c 'until docker compose -f docker-compose.prod.yml ps | grep -q "healthy"; do sleep 5; done'
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan migrate --force
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan config:clear
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan cache:clear
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan route:clear
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan view:clear
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan config:cache
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan route:cache
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan view:cache
-          echo "Staging deployment completed successfully!"
+          set -e
+          cd "${{ secrets.SERVER_DEPLOY_PATH }}"
 
-  deploy-production:
-    runs-on: ubuntu-latest
-    needs: [build-and-push, build-frontend, deploy-staging]
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download frontend build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: frontend-build
-        path: frontend/dist/
-
-    - name: Deploy to production server
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.PRODUCTION_HOST }}
-        username: ${{ secrets.PRODUCTION_USER }}
-        key: ${{ secrets.PRODUCTION_SSH_KEY }}
-        port: 22
-        script: |
-          cd /var/www/4seasons
-          BACKUP_DIR="/var/backups/4seasons/$(date +%Y%m%d_%H%M%S)"
-          mkdir -p $BACKUP_DIR
-          cp -r . $BACKUP_DIR/ || echo "File backup failed"
-          git pull origin main
-          sed -i 's|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:.*|image: ghcr.io/genandoy-hannahlorainne/4seasons-backend:main|g' docker-compose.prod.yml
-          docker compose -f docker-compose.prod.yml pull
-          docker compose -f docker-compose.prod.yml up -d --remove-orphans
-          echo "Waiting for services to be healthy..."
-          timeout 300 bash -c 'until docker compose -f docker-compose.prod.yml ps | grep -q "healthy"; do sleep 5; done'
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan migrate --force
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan config:clear
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan cache:clear
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan route:clear
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan view:clear
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan config:cache
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan route:cache
-          docker compose -f docker-compose.prod.yml exec -T backend php artisan view:cache
-          docker image prune -f
-          echo "Production deployment completed successfully!"
-
-  health-check:
-    runs-on: ubuntu-latest
-    needs: [deploy-staging]
-    if: always() && needs.deploy-staging.result == 'success'
-
-    steps:
-    - name: Health check staging
-      run: |
-        echo "Performing health check on staging..."
-        STAGING_URL="${{ secrets.STAGING_URL }}"
-        # Ensure URL has http:// prefix
-        if [[ "$STAGING_URL" != http://* ]] && [[ "$STAGING_URL" != https://* ]]; then
-          STAGING_URL="http://$STAGING_URL"
-        fi
-        for i in {1..10}; do
-          if curl -f --max-time 30 "$STAGING_URL/api/health"; then
-            echo "Health check passed"
-            exit 0
+          if docker compose version >/dev/null 2>&1; then
+            COMPOSE_CMD="docker compose"
+          elif command -v docker-compose >/dev/null 2>&1; then
+            COMPOSE_CMD="docker-compose"
+          else
+            echo "Neither docker compose nor docker-compose is installed on server"
+            exit 1
           fi
-          echo "Attempt $i/10 failed, retrying in 30s..."
-          sleep 30
-        done
-        echo "Health check failed after 10 attempts"
-        exit 1
 
-  notify:
-    runs-on: ubuntu-latest
-    needs: [deploy-staging, deploy-production, health-check]
-    if: always()
+          $COMPOSE_CMD pull
+          $COMPOSE_CMD up -d --remove-orphans
 
-    steps:
-    - name: Log deployment status
-      run: |
-        echo "Deployment Status Summary"
-        echo "Branch:       ${{ github.ref_name }}"
-        echo "Triggered by: ${{ github.actor }}"
-        echo "Staging:      ${{ needs.deploy-staging.result || 'skipped' }}"
-        echo "Production:   ${{ needs.deploy-production.result || 'skipped' }}"
-        echo "Health Check: ${{ needs.health-check.result || 'skipped' }}"
+          BACKEND_CONTAINER="$($COMPOSE_CMD ps -q backend)"
+          if [ -n "$BACKEND_CONTAINER" ]; then
+            echo "Waiting for backend to become healthy..."
+            for i in $(seq 1 24); do
+              STATUS="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$BACKEND_CONTAINER")"
+              if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "running" ]; then
+                echo "Backend status: $STATUS"
+                break
+              fi
+              if [ "$i" -eq 24 ]; then
+                echo "Backend did not become healthy in time (last status: $STATUS)"
+                docker logs --tail 100 "$BACKEND_CONTAINER" || true
+                exit 1
+              fi
+              echo "Current backend status: $STATUS (attempt $i/24)"
+              sleep 5
+            done
+          fi
+
+          docker image prune -f
