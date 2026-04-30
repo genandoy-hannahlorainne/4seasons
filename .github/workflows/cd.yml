@@ -61,10 +61,10 @@ jobs:
             exit 1
           fi
 
-          $COMPOSE_CMD pull
-          $COMPOSE_CMD up -d --remove-orphans
+          $COMPOSE_CMD -f docker-compose.prod.yml pull
+          $COMPOSE_CMD -f docker-compose.prod.yml up -d --remove-orphans
 
-          BACKEND_CONTAINER="$($COMPOSE_CMD ps -q backend)"
+          BACKEND_CONTAINER="$($COMPOSE_CMD -f docker-compose.prod.yml ps -q backend)"
           if [ -n "$BACKEND_CONTAINER" ]; then
             echo "Waiting for backend to become healthy..."
             for i in $(seq 1 24); do
