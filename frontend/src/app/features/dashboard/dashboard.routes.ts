@@ -10,6 +10,7 @@ import { AdviserHealthStatusComponent } from './adviser/health-status/adviser-he
 import { AdviserProfileComponent } from './adviser/profile/adviser-profile.component';
 import { ClassManagementComponent } from './adviser/class-management/class-management.component';
 import { HealthMonitoringComponent } from './adviser/health-monitoring/health-monitoring.component';
+import { SHDFDownloadComponent } from './adviser/shdf-download/shdf-download.component';
 import { StaffLayoutComponent } from './staff/staff-layout.component';
 import { ClinicDashboardComponent } from './staff/clinic-dashboard.component';
 import { StudentListComponent } from './staff/students/student-list.component';
@@ -63,7 +64,8 @@ export const dashboardRoutes: Routes = [
       { path: 'health-monitoring', component: HealthMonitoringComponent },
       { path: 'students/:id', component: StudentMedicalProfileComponent },
       { path: 'profile', component: AdviserProfileComponent },
-      { path: 'class-management', component: ClassManagementComponent }
+      { path: 'class-management', component: ClassManagementComponent },
+      { path: 'shdf-download', component: SHDFDownloadComponent }
     ]
   },
   {

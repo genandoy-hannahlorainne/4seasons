@@ -1,0 +1,110 @@
+<div class="shdf-download-container">
+  <div class="page-header">
+    <h2>SHDF Download</h2>
+    <p class="subtitle">{{ advisoryClass }} &mdash; {{ schoolYear }}</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row" *ngIf="stats">
+    <div class="stat-card">
+      <span class="stat-value">{{ stats.total }}</span>
+      <span class="stat-label">Total Students</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ stats.basic_completed }}</span>
+      <span class="stat-label">Basic Completed</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ stats.comprehensive_completed }}</span>
+      <span class="stat-label">Comprehensive Completed</span>
+    </div>
+    <div class="stat-card compliant">
+      <span class="stat-value">{{ stats.fully_compliant }}</span>
+      <span class="stat-label">Fully Compliant</span>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="onSearchChange()"
+      placeholder="Search by name, student number, grade or section..."
+      class="search-input"
+    />
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading students...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" *ngIf="error && !loading">
+    <p>{{ error }}</p>
+    <button (click)="loadStudents()" class="btn-retry">Retry</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrapper" *ngIf="!loading && !error">
+    <table class="students-table" *ngIf="filteredStudents.length > 0; else noStudents">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Grade &amp; Section</th>
+          <th>SHDF Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let student of filteredStudents">
+          <td>
+            <div class="student-info">
+              <span class="student-name">{{ student.full_name }}</span>
+              <span class="student-number">{{ student.student_number }}</span>
+            </div>
+          </td>
+          <td>{{ student.grade_level }} - {{ student.section }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(student)">
+              {{ getCompletionStatus(student) }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons" *ngIf="canDownload(student); else noDownload">
+              <button
+                class="btn-download csv"
+                (click)="downloadAsCSV(student)"
+                [disabled]="downloadingStudentId === student.student_id"
+                title="Download as CSV"
+              >
+                <span *ngIf="downloadingStudentId !== student.student_id">CSV</span>
+                <span *ngIf="downloadingStudentId === student.student_id">...</span>
+              </button>
+              <button
+                class="btn-download pdf"
+                (click)="downloadAsPDF(student)"
+                [disabled]="downloadingStudentId === student.student_id"
+                title="Download as PDF"
+              >
+                <span *ngIf="downloadingStudentId !== student.student_id">PDF</span>
+                <span *ngIf="downloadingStudentId === student.student_id">...</span>
+              </button>
+            </div>
+            <ng-template #noDownload>
+              <span class="no-download-hint">SHDF not submitted</span>
+            </ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #noStudents>
+      <div class="empty-state">
+        <p>No students found{{ searchTerm ? ' matching your search' : '' }}.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

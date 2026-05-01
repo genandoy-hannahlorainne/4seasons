@@ -156,4 +156,20 @@ export class AdviserService {
   updateAdviserProfile(userId: number, profileData: any): Observable<any> {
     return this.http.put<any>(`${environment.apiUrl}/adviser/profile`, profileData);
   }
+
+  /**
+   * Returns advisory students with their SHDF completion status.
+   * Used by the SHDF download component.
+   */
+  getAdvisoryStudentsWithSHDF(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/adviser/students-shdf`);
+  }
+
+  /**
+   * Fetches the full SHDF record for a student (current school year).
+   * Used by the SHDF download component for CSV/PDF export.
+   */
+  downloadStudentSHDF(studentId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/shdf/${studentId}`);
+  }
 }

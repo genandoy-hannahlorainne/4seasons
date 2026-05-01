@@ -50,6 +50,10 @@ import { AuthService } from '../../../core/services/auth.service';
             <i class="fa-solid fa-users nav-icon-fa"></i>
             <span class="nav-label">My Class</span>
           </a>
+          <a routerLink="/dashboard/adviser/shdf-download" routerLinkActive="active" class="nav-item" title="SHDF Download" (click)="closeMobile()">
+            <i class="fa-solid fa-file-arrow-down nav-icon-fa"></i>
+            <span class="nav-label">SHDF Download</span>
+          </a>
         </nav>
 
         <div class="sidebar-footer">

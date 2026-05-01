@@ -187,6 +187,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::get('/dashboard', [AdviserController::class, 'getDashboard']);
         Route::get('/students', [AdviserController::class, 'getAdvisoryStudents']);
         Route::get('/advisory-students', [AdviserController::class, 'getAdvisoryStudents']);
+        Route::get('/students-shdf', [AdviserController::class, 'getAdvisoryStudentsWithSHDF']);
         Route::get('/profile', [AdviserController::class, 'getProfile']);
         Route::put('/profile', [AdviserController::class, 'updateProfile']);
         Route::get('/health-heatmap', [AdviserController::class, 'getHealthHeatmap']);

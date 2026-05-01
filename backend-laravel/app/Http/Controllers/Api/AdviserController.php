@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Models\SchoolYear;
+use App\Models\StudentSHDFStatus;
 use App\Models\User;
 use App\Models\Section;
 use App\Models\Student;
@@ -821,6 +823,97 @@ class AdviserController extends BaseController
             return $this->sendResponse($advisoryData, 'Advisory students retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve advisory students', $e->getMessage());
+        }
+    }
+
+    /**
+     * GET /api/adviser/students-shdf
+     * Returns advisory students with their SHDF completion status.
+     */
+    public function getAdvisoryStudentsWithSHDF(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$this->isAdviserUser($user)) {
+                return $this->sendError('Unauthorized', 'User is not an adviser');
+            }
+
+            $section = $this->resolveAdviserSection(intval($user->user_id));
+            $schoolYear = SchoolYear::where('is_current', true)->first();
+
+            $studentsQuery = Student::with(['user'])
+                ->where('is_active', true);
+
+            $studentsQuery = $this->applyAdviserStudentScope(
+                $studentsQuery,
+                intval($user->user_id),
+                $section
+            );
+
+            $studentsCollection = $studentsQuery->get();
+
+            // Bulk-load SHDF statuses for all students in one query
+            $studentIds = $studentsCollection->pluck('student_id')->all();
+            $shdfStatuses = $schoolYear
+                ? StudentSHDFStatus::whereIn('student_id', $studentIds)
+                    ->where('school_year_id', $schoolYear->id)
+                    ->get()
+                    ->keyBy('student_id')
+                : collect();
+
+            $gradeLevelName = $section && $section->gradeLevel
+                ? $section->gradeLevel->level_name
+                : null;
+            $sectionName = $section ? $section->section_name : null;
+            $advisoryClass = ($gradeLevelName && $sectionName)
+                ? $gradeLevelName . ' - ' . $sectionName
+                : 'Not assigned';
+
+            $students = $studentsCollection->map(function ($student) use ($section, $gradeLevelName, $sectionName, $shdfStatuses) {
+                $status = $shdfStatuses->get($student->student_id);
+                $basicCompleted = $status ? (bool) $status->basic_completed : false;
+                $comprehensiveCompleted = $status ? (bool) $status->comprehensive_completed : false;
+                $isFullyCompliant = $basicCompleted && $comprehensiveCompleted;
+
+                $gl = $gradeLevelName ?? ($student->grade_level ?: 'Unknown');
+                $sec = $sectionName ?? ($student->section ?: 'Unknown');
+
+                return [
+                    'student_id'               => $student->student_id,
+                    'student_number'           => $student->student_number,
+                    'full_name'                => trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name),
+                    'first_name'               => $student->first_name,
+                    'last_name'                => $student->last_name,
+                    'gender'                   => $student->gender,
+                    'grade_level'              => $gl,
+                    'section'                  => $sec,
+                    'basic_completed'          => $basicCompleted,
+                    'comprehensive_completed'  => $comprehensiveCompleted,
+                    'is_fully_compliant'       => $isFullyCompliant,
+                ];
+            });
+
+            $total = $students->count();
+            $basicCount = $students->where('basic_completed', true)->count();
+            $comprehensiveCount = $students->where('comprehensive_completed', true)->count();
+            $compliantCount = $students->where('is_fully_compliant', true)->count();
+
+            $responseData = [
+                'students'      => $students->values(),
+                'advisory_class' => $advisoryClass,
+                'school_year'   => $schoolYear ? $schoolYear->year_name : null,
+                'stats' => [
+                    'total'                   => $total,
+                    'basic_completed'         => $basicCount,
+                    'comprehensive_completed' => $comprehensiveCount,
+                    'fully_compliant'         => $compliantCount,
+                ],
+            ];
+
+            return $this->sendResponse($responseData, 'Advisory students with SHDF status retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve advisory students with SHDF status', $e->getMessage());
         }
     }
 }
