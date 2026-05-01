@@ -296,7 +296,7 @@ export class StudentListComponent implements OnInit {
           }
         },
         error: (err) => {
-          console.error('Error loading students:', err);
+          // Error loading students
           this.loading = false;
           this.students = [];
           this.filteredStudents = [];

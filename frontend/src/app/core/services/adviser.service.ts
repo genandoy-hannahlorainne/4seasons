@@ -93,7 +93,7 @@ export class AdviserService {
   }
 
   getAdviserProfile(): Observable<any> {
-    console.log('Calling getAdviserProfile API...');
+    // Calling getAdviserProfile API
     return this.http.get<any>(`${environment.apiUrl}/adviser/profile`);
   }
 

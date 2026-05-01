@@ -476,7 +476,7 @@ export class ClearanceManagementComponent implements OnInit {
           this.loading = false;
         },
         error: (error) => {
-          console.error('Error loading clearances:', error);
+          // Error loading clearances
           this.loading = false;
         }
       });
@@ -506,7 +506,7 @@ export class ClearanceManagementComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('Error updating clearance:', error);
+          // Error updating clearance
         }
       });
   }
@@ -526,7 +526,7 @@ export class ClearanceManagementComponent implements OnInit {
         this.saving = false;
       },
       error: (error) => {
-        console.error('Error saving clearance:', error);
+        // Error saving clearance
         this.saving = false;
       }
     });
@@ -534,7 +534,7 @@ export class ClearanceManagementComponent implements OnInit {
 
   contactParent(clearance: any): void {
     // Implement parent contact functionality
-    console.log('Contact parent for:', clearance.student.name);
+    // Contact parent action
   }
 
   closeModal(): void {

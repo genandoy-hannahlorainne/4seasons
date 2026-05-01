@@ -174,7 +174,7 @@ export class PersonalInfoComponent implements OnInit {
         return;
       }
 
-      console.log('Loading personal info for user:', currentUser.user_id);
+      // Loading personal info for user
 
       // Load student profile and medical data
       const [profileResponse, medicalResponse] = await Promise.all([
@@ -182,16 +182,14 @@ export class PersonalInfoComponent implements OnInit {
         this.studentService.getStudentMedicalData(currentUser.user_id).toPromise()
       ]);
 
-      console.log('Profile response:', profileResponse);
-      console.log('Medical response:', medicalResponse);
+      // Profile and medical responses received
 
       if (profileResponse?.success && medicalResponse?.success) {
         // Handle the actual API response structure
         const profileData = profileResponse.student || profileResponse.profile || profileResponse.data;
         const medicalData = medicalResponse.data;
         
-        console.log('Profile data:', profileData);
-        console.log('Medical data:', medicalData);
+        // Profile data and medical data parsed
         
         if (profileData && medicalData && medicalData.personal_info) {
           this.studentId = Number(medicalData.personal_info.student_id || profileData.student_id || 0) || null;
@@ -234,21 +232,17 @@ export class PersonalInfoComponent implements OnInit {
             this.adviserName = medicalData.personal_info.adviser_name;
           }
           
-          console.log('Successfully loaded data:', {
-            personalInfo: this.personalInfo,
-            medicalRecord: this.medicalRecord,
-            adviserName: this.adviserName
-          });
+          // Successfully loaded data
         } else {
-          console.error('Invalid data structure:', { profileData, medicalData });
+          // Invalid data structure
           this.error = 'Invalid data format received from server';
         }
       } else {
-        console.error('API responses failed:', { profileResponse, medicalResponse });
+        // API responses failed
         this.error = profileResponse?.message || medicalResponse?.message || 'Failed to load personal information';
       }
     } catch (error) {
-      console.error('Error loading personal info:', error);
+      // Error loading personal info
       this.error = 'An error occurred while loading your information';
     } finally {
       this.loading = false;
@@ -281,7 +275,7 @@ export class PersonalInfoComponent implements OnInit {
       // Return in YYYY-MM-DD format for HTML date input
       return date.toISOString().split('T')[0];
     } catch (error) {
-      console.error('Error formatting date:', error);
+      // Error formatting date
       return '';
     }
   }
@@ -343,11 +337,11 @@ export class PersonalInfoComponent implements OnInit {
         }
       };
 
-      console.log('Saving personal info with data:', updatePayload);
+      // Saving personal info
 
       const response = await this.studentService.updateMedicalData(this.studentId, updatePayload).toPromise();
       
-      console.log('Save response:', response);
+      // Save response received
       
       if (response?.success) {
         this.personalInfo = { ...this.editableInfo };
@@ -362,7 +356,7 @@ export class PersonalInfoComponent implements OnInit {
         this.error = response?.message || 'Failed to update contact information';
       }
     } catch (error) {
-      console.error('Error saving changes:', error);
+      // Error saving changes
       this.error = 'An error occurred while saving changes';
     } finally {
       this.saving = false;
@@ -424,7 +418,7 @@ export class PersonalInfoComponent implements OnInit {
         this.error = response?.message || 'Failed to update physical information';
       }
     } catch (error) {
-      console.error('Error saving physical info:', error);
+      // Error saving physical info
       this.error = 'An error occurred while saving physical information';
     } finally {
       this.saving = false;
@@ -491,14 +485,11 @@ export class PersonalInfoComponent implements OnInit {
           }))
       };
 
-      console.log('Saving allergies:', {
-        studentId: this.studentId,
-        allergies: payload.allergies
-      });
+      // Saving allergies
 
       const response = await this.studentService.updateMedicalData(this.studentId, payload).toPromise();
       
-      console.log('Save allergies response:', response);
+      // Save allergies response received
       
       if (response?.success) {
         this.allergiesEditMode = false;
@@ -509,11 +500,11 @@ export class PersonalInfoComponent implements OnInit {
         await this.loadPersonalInfo();
         await this.checkAndShowQRCode();
       } else {
-        console.error('Save allergies failed:', response);
+        // Save allergies failed
         this.error = response?.message || 'Failed to update allergies';
       }
     } catch (error) {
-      console.error('Error saving allergies:', error);
+      // Error saving allergies
       this.error = 'An error occurred while saving allergies';
     } finally {
       this.saving = false;
@@ -594,14 +585,11 @@ export class PersonalInfoComponent implements OnInit {
         }
       };
 
-      console.log('Saving medical history:', {
-        studentId: this.studentId,
-        medicalHistory: payload.medical_history
-      });
+      // Saving medical history
 
       const response = await this.studentService.updateMedicalData(this.studentId, payload).toPromise();
       
-      console.log('Save medical history response:', response);
+      // Save medical history response received
       
       if (response?.success) {
         if (this.medicalRecord) {
@@ -620,7 +608,7 @@ export class PersonalInfoComponent implements OnInit {
         this.error = response?.message || 'Failed to update medical history';
       }
     } catch (error) {
-      console.error('Error saving medical history:', error);
+      // Error saving medical history
       this.error = 'An error occurred while saving medical history';
     } finally {
       this.saving = false;
@@ -658,7 +646,7 @@ export class PersonalInfoComponent implements OnInit {
         }
       }
     } catch (error) {
-      console.error('Error checking QR code:', error);
+      // Error checking QR code
     }
   }
 
@@ -813,7 +801,7 @@ export class PersonalInfoComponent implements OnInit {
         }, 2000);
       }
     } catch (error) {
-      console.error('Error downloading QR code:', error);
+      // Error downloading QR code
       this.error = 'Failed to download QR code';
     }
   }

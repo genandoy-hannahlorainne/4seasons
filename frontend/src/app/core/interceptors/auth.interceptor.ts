@@ -54,7 +54,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     headers['Authorization'] = `Bearer ${token}`;
     // console.log(...); // Removed for production
   } else if (isLaravelApi && !token && !isAuthEndpoint) {
-    console.error('❌ No token available for Laravel API request:', req.url);
+    // No token available for Laravel API request
     // console.log(...); // Removed for production
     // console.log(...); // Removed for production
   } else if (isLaravelApi && isAuthEndpoint) {
@@ -70,7 +70,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           // console.log(...); // Removed for production
         }
       } catch (e) {
-        console.error('❌ Error parsing current user:', e);
+    // Error parsing current user
       }
     }
   } else if (isLaravelApi && !token && !isAuthEndpoint) {
@@ -83,12 +83,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      console.error('🚨 HTTP Error:', {
-        status: error.status,
-        url: req.url,
-        message: error.message,
-        error: error.error
-      });
+      // HTTP Error occurred
       
       // Handle 401 Unauthorized responses (but not for login attempts)
       if (error.status === 401 && isLaravelApi && !isAuthEndpoint) {

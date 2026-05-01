@@ -377,7 +377,7 @@ export class AdviserHealthStatusComponent implements OnInit {
         this.loading = false;
       },
       error: (err: any) => {
-        console.error('Error loading students:', err);
+        // Error loading students
         this.error = 'Failed to load students. Please try again.';
         this.loading = false;
       }

@@ -208,7 +208,9 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
             this.ensureAdviserNameFallback();
           }
         },
-        error: (err) => console.error('Auto-refresh error:', err)
+        error: (err) => {
+          // Auto-refresh error
+        }
       });
   }
 
@@ -295,7 +297,7 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading medical record:', error);
+        // Error loading medical record
         this.error = 'Failed to load medical record. Please try again.';
         this.loading = false;
       }
@@ -317,7 +319,9 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
           this.medicalRecord.personal_info.adviser_contact = legacyContact || this.medicalRecord.personal_info.adviser_contact;
         }
       },
-      error: (err) => console.warn('Adviser fallback fetch failed:', err)
+      error: (err) => {
+        // Adviser fallback fetch failed
+      }
     });
   }
 }

@@ -379,7 +379,7 @@ export class ReportsComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Error loading report data:', err);
+        // Error loading report data
         this.error = 'Failed to load report data. Please try again.';
         this.loading = false;
       }
