@@ -1,9 +1,13 @@
 name: CD Pipeline
 
 on:
-  push:
+  pull_request:
     branches: [ main ]
+    types: [ closed ]
   workflow_dispatch:
+
+env:
+  REGISTRY: docker.io
 
 concurrency:
   group: 4seasons-production
@@ -14,6 +18,7 @@ permissions:
 
 jobs:
   build-and-deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
