@@ -384,19 +384,35 @@ export class SHDFFormComponent implements OnInit {
       payload.append(`immunizations[${k}]`, v === null || v === undefined ? '' : String(v));
     });
 
-    // Medical history
+    // Medical history — send 1/0 for booleans so Laravel accepts them
     Object.entries(raw.medical).forEach(([k, v]) => {
-      payload.append(k, v === null || v === undefined ? '' : String(v));
+      if (typeof v === 'boolean') {
+        payload.append(k, v ? '1' : '0');
+      } else {
+        payload.append(k, v === null || v === undefined ? '' : String(v));
+      }
     });
 
-    // Family history
+    // Family history — send 1/0 for booleans and yes/no radio values
+    const familyYesNoFields = ['smoke_exposure', 'is_4ps_beneficiary', 'is_sbfp_beneficiary'];
     Object.entries(raw.family).forEach(([k, v]) => {
-      payload.append(`family[${k}]`, v === null || v === undefined ? '' : String(v));
+      if (typeof v === 'boolean') {
+        payload.append(`family[${k}]`, v ? '1' : '0');
+      } else if (familyYesNoFields.includes(k)) {
+        // Radio buttons send "yes"/"no" — convert to "1"/"0" for Laravel boolean validation
+        payload.append(`family[${k}]`, (v === 'yes' || v === true || v === '1') ? '1' : '0');
+      } else {
+        payload.append(`family[${k}]`, v === null || v === undefined ? '' : String(v));
+      }
     });
 
-    // Consent
+    // Consent — information_certified is boolean, send 1/0
     Object.entries(raw.consent).forEach(([k, v]) => {
-      payload.append(k, v === null || v === undefined ? '' : String(v));
+      if (typeof v === 'boolean') {
+        payload.append(k, v ? '1' : '0');
+      } else {
+        payload.append(k, v === null || v === undefined ? '' : String(v));
+      }
     });
 
     // Signature file
@@ -427,7 +443,13 @@ export class SHDFFormComponent implements OnInit {
       },
         error: (err: any) => {
         this.loading = false;
-        this.errorMessage = err?.error?.message ?? 'Submission failed. Please try again.';
+        // Log full error details to console for debugging
+        console.error('[SHDF] Submission error status:', err?.status);
+        console.error('[SHDF] Submission error body:', JSON.stringify(err?.error));
+        console.error('[SHDF] Full error:', err);
+        this.errorMessage = err?.error?.message
+          ?? err?.error?.error
+          ?? (err?.status ? `Server error ${err.status}` : 'Submission failed. Please try again.');
         this.scrollToTop();
       },
     });

@@ -39,7 +39,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   
   // Add CORS headers for all requests
   headers['Accept'] = 'application/json';
-  headers['Content-Type'] = 'application/json';
+  
+  // Do NOT set Content-Type for FormData requests — the browser must set it
+  // automatically so it includes the correct multipart boundary.
+  // Only set it explicitly for non-FormData (JSON) requests.
+  if (!(req.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
   
   if (isLaravelApi && token && !isAuthEndpoint) {
     // Check if token is expired before using it

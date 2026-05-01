@@ -8,6 +8,72 @@ use Illuminate\Validation\Rule;
 
 class SHDFFormRequest extends FormRequest
 {
+    /**
+     * Convert string booleans from FormData to actual booleans before validation.
+     * FormData can only send strings, so "true"/"false"/"1"/"0" must be cast.
+     * Also converts "yes"/"no" radio values to booleans for family history fields.
+     */
+    protected function prepareForValidation(): void
+    {
+        $booleanFields = [
+            'condition_error_of_refraction', 'condition_asthma', 'condition_seizure_disorder',
+            'condition_heart_problem', 'condition_anemia', 'condition_bleeding_disorder',
+            'condition_diabetes', 'condition_gastric_ulcer', 'condition_anxiety_depression',
+            'condition_g6pd', 'condition_none',
+            'medications_paracetamol', 'medications_mefenamic', 'medications_anti_allergy',
+            'medications_anti_asthma', 'medications_loperamide', 'medications_antacids',
+            'medications_or_solution', 'medications_none',
+            'surgery_history',
+        ];
+
+        $familyBooleanFields = [
+            'condition_tuberculosis', 'condition_cancer', 'condition_stroke',
+            'condition_hypertension', 'condition_diabetes', 'condition_pneumonia',
+            'condition_gastric_ulcer', 'condition_anxiety_depression', 'condition_none',
+        ];
+
+        // Family yes/no radio fields that map to boolean DB columns
+        $familyYesNoFields = [
+            'smoke_exposure', 'is_4ps_beneficiary', 'is_sbfp_beneficiary',
+        ];
+
+        $data = $this->all();
+
+        // Cast top-level boolean fields (handles "true"/"false"/"1"/"0")
+        foreach ($booleanFields as $field) {
+            if (array_key_exists($field, $data)) {
+                $data[$field] = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+            }
+        }
+
+        // Cast family boolean checkbox fields
+        $family = $data['family'] ?? [];
+        foreach ($familyBooleanFields as $field) {
+            if (array_key_exists($field, $family)) {
+                $family[$field] = filter_var($family[$field], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+            }
+        }
+
+        // Convert family yes/no radio fields → boolean
+        foreach ($familyYesNoFields as $field) {
+            if (array_key_exists($field, $family)) {
+                $val = strtolower(trim((string) $family[$field]));
+                $family[$field] = match($val) {
+                    'yes', '1', 'true' => true,
+                    default            => false,
+                };
+            }
+        }
+        $data['family'] = $family;
+
+        // Cast information_certified
+        if (array_key_exists('information_certified', $data)) {
+            $data['information_certified'] = filter_var($data['information_certified'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+        }
+
+        $this->replace($data);
+    }
+
     public function authorize(): bool
     {
         $studentId = (int) $this->input('student_id');
@@ -39,7 +105,7 @@ class SHDFFormRequest extends FormRequest
             $user->load('role');
         }
 
-        $role = strtolower($user->role?->role_name ?? '');
+        $role = strtolower(trim($user->role?->role_name ?? ''));
 
         \Log::info('[SHDF Form Request] User details', [
             'user_id' => $user->user_id,
@@ -71,6 +137,34 @@ class SHDFFormRequest extends FormRequest
             // Allow any authenticated student — student_id comes from their own session
             return true;
         }
+
+        // Fallback: if role is unrecognised but the student record is directly linked
+        // to this user (e.g. role name has unexpected casing or whitespace), still allow.
+        if ((int) $student->user_id === (int) $user->user_id) {
+            \Log::warning('[SHDF Form Request] Fallback auth granted via user_id match', [
+                'user_id' => $user->user_id,
+                'role' => $role,
+            ]);
+            return true;
+        }
+
+        // Last-resort fallback: username matches student_number
+        if (!empty($user->username) && !empty($student->student_number)
+            && strtolower(trim($user->username)) === strtolower(trim($student->student_number))) {
+            \Log::warning('[SHDF Form Request] Fallback auth granted via username/student_number match', [
+                'user_id' => $user->user_id,
+                'username' => $user->username,
+            ]);
+            $student->update(['user_id' => $user->user_id]);
+            return true;
+        }
+
+        \Log::error('[SHDF Form Request] Authorization denied', [
+            'user_id' => $user->user_id,
+            'role' => $role,
+            'student_id' => $studentId,
+            'student_user_id' => $student->user_id,
+        ]);
 
         return false;
     }

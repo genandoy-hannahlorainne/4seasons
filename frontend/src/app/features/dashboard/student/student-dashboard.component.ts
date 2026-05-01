@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, NavigationEnd, Router } from '@angular/router';
 import { StudentService } from '../../../core/services/student.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { SHDFService, SHDFStatus } from '../../shdf/shdf.service';
 import { BMIUtils } from '../../../shared/utils/bmi-utils';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -51,12 +52,15 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   showComprehensiveModal = false;
   comprehensiveFormStudentId: number | null = null;
 
-
+  // SHDF status
+  shdfStatus: SHDFStatus | null = null;
+  shdfStudentId: number | null = null;
 
   constructor(
     private studentService: StudentService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private shdService: SHDFService
   ) {}
 
   ngOnInit(): void {
@@ -122,6 +126,15 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
           // Set basic info
           this.studentName = `${profile.first_name} ${profile.last_name}`;
           this.studentId = profile.student_number || '';
+
+          // Store student_id and load SHDF status
+          this.shdfStudentId = profile.student_id || null;
+          if (this.shdfStudentId) {
+            this.shdService.getStatus(this.shdfStudentId).subscribe({
+              next: (status) => { this.shdfStatus = status; },
+              error: () => { this.shdfStatus = null; }
+            });
+          }
           
           // Check if grade_level already contains "Grade" prefix
           const gradeLevel = profile.grade_level || '';
