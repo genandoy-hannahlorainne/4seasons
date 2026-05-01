@@ -1,9 +1,8 @@
 name: CD Pipeline
 
 on:
-  pull_request:
+  push:
     branches: [ main ]
-    types: [ closed ]
   workflow_dispatch:
 
 env:
@@ -18,7 +17,7 @@ permissions:
 
 jobs:
   build-and-deploy:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
