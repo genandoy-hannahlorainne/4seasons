@@ -28,7 +28,7 @@ export class StudentListComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading students:', err);
+        // Error loading students
         this.loading = false;
       }
     });

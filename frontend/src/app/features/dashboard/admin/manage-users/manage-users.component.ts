@@ -122,7 +122,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   // Debug methods
   debugReload(): void {
-    console.log('🔄 Force reloading users...');
+    // Force reloading users
     this.users = [];
     this.filteredUsers = [];
     this.userCounts = { students: 0, advisers: 0, clinicStaff: 0, admins: 0 };
@@ -130,13 +130,10 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   debugAuth(): void {
-    console.log('🔐 Testing authentication...');
+    // Testing authentication
     const token = localStorage.getItem('token');
     const user = this.authService.currentUserValue;
-
-    console.log('Token:', token ? token.substring(0, 20) + '...' : 'MISSING');
-    console.log('User:', user);
-    console.log('Is authenticated:', this.authService.isAuthenticated());
+    // Token and user retrieved for auth test
 
     if (token) {
       // Test auth endpoint first
@@ -157,17 +154,17 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
                 'Response Keys: ' + Object.keys(usersResponse).join(', '));
             },
             error: (usersErr) => {
-              console.error('❌ getAllUsers test failed:', usersErr);
+              // getAllUsers test failed
               alert('Authentication successful but getAllUsers failed!\n\n' +
                 'Auth User: ' + (response.user?.username || 'Unknown') + '\n' +
                 'Users API Error: ' + (usersErr.error?.message || usersErr.message || 'Unknown error'));
             }
           });
         },
-        error: (err) => {
-          console.error('❌ Auth test failed:', err);
-          alert('Authentication test failed!\n\nError: ' + (err.error?.message || err.message || 'Unknown error') + '\n\nPlease login again.');
-        }
+          error: (err) => {
+            // Auth test failed
+            alert('Authentication test failed!\n\nError: ' + (err.error?.message || err.message || 'Unknown error') + '\n\nPlease login again.');
+          }
       });
     } else {
       alert('No authentication token found. Please login again.');
@@ -179,7 +176,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       localStorage.removeItem('currentUser');
       localStorage.removeItem('token');
       localStorage.removeItem('tokenExpiry');
-      console.log('🧹 Cleared all auth data');
+      // Cleared all auth data
       alert('Authentication data cleared. Redirecting to login...');
       this.router.navigate(['/login']);
     }
@@ -188,7 +185,6 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Enhanced authentication check
     if (!this.authService.checkAuthenticationStatus()) {
-      console.error('❌ Authentication check failed, redirecting to login');
       this.errorMessage = 'Please login as admin to access this page';
       this.router.navigate(['/login']);
       return;
@@ -197,14 +193,9 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     const currentUser = this.authService.currentUserValue;
     const token = localStorage.getItem('token');
 
-    console.log('🔐 Manage Users - Authentication verified');
-    console.log('Current user:', currentUser);
-    console.log('Token available:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
-    console.log('Token in localStorage:', localStorage.getItem('token') ? 'YES' : 'NO');
-    console.log('User in localStorage:', localStorage.getItem('currentUser') ? 'YES' : 'NO');
+    // Authentication verified for manage-users
 
     if (currentUser?.role_name?.toLowerCase() !== 'admin') {
-      console.error('❌ Not admin user, access denied');
       this.errorMessage = 'Access denied. Admin privileges required.';
       return;
     }
@@ -228,16 +219,13 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
-          console.log('🔄 Auto-refresh response:', response);
-
           if (response?.success) {
             this.updateUsersList(response);
           }
         },
         error: (err) => {
-          console.error('Auto-refresh error:', err);
+          // Auto-refresh error
           if (err.status === 401) {
-            console.error('❌ Authentication failed during auto-refresh');
             this.errorMessage = 'Session expired. Please login again.';
             this.router.navigate(['/login']);
           }
@@ -252,16 +240,14 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   loadUsers(): void {
     this.loading = true;
-    console.log('👥 Loading users for manage-users component...');
+    // Loading users for manage-users component
 
     // Check authentication first
     const currentUser = this.authService.currentUserValue;
     const token = localStorage.getItem('token');
-    console.log('🔐 Current user in loadUsers:', currentUser);
-    console.log('🔐 Token available:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
+    // Current user and token checked
 
     if (!currentUser || !token) {
-      console.error('❌ No authentication token found');
       this.errorMessage = 'Authentication required. Please login again.';
       this.loading = false;
       this.router.navigate(['/login']);
@@ -271,30 +257,16 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     // Load users directly
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
-        console.log('✅ getAllUsers response received:', response);
-        console.log('✅ Response structure:', {
-          success: response?.success,
-          data: response?.data ? 'present' : 'missing',
-          users: response?.users ? 'present' : 'missing',
-          dataUsers: response?.data?.users ? 'present' : 'missing',
-          responseKeys: response ? Object.keys(response) : 'no response'
-        });
-
-        // Handle the response
+        // getAllUsers response received
         if (response?.success) {
           this.updateUsersList(response);
         } else {
-          console.error('❌ API response indicates failure:', response?.message);
           this.errorMessage = response?.message || 'Failed to load users';
         }
-
         this.loading = false;
       },
       error: (err) => {
-        console.error('❌ Error loading users:', err);
-        console.error('❌ Error status:', err.status);
-        console.error('❌ Error details:', err.error);
-
+        // Error loading users
         if (err.status === 401) {
           this.errorMessage = 'Authentication failed. Please login again.';
           this.router.navigate(['/login']);
@@ -310,10 +282,8 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   private updateUsersList(response: any): void {
-    console.log('👥 updateUsersList called with response:', response);
-
+    // updateUsersList called
     if (response.success) {
-      console.log('✅ Response is successful');
 
       let users: any;
 
@@ -338,11 +308,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       // Handle grouped response (when no role filter)
       if (!Array.isArray(users) && typeof users === 'object' && users !== null &&
           ('student' in users || 'adviser' in users || 'clinic_staff' in users || 'admin' in users)) {
-        console.log('📊 Detected grouped response format');
-        console.log('   student count:', users.student?.length || 0);
-        console.log('   adviser count:', users.adviser?.length || 0);
-        console.log('   clinic_staff count:', users.clinic_staff?.length || 0);
-        console.log('   admin count:', users.admin?.length || 0);
+        // Detected grouped response format
 
         this.users = [
           ...(users.student || []).map((u: any) => ({
@@ -367,22 +333,16 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
           }))
         ];
 
-        console.log('✅ Mapped users array, total count:', this.users.length);
-        console.log('✅ Users breakdown:', {
-          students: this.users.filter(u => u.role === 'student').length,
-          advisers: this.users.filter(u => u.role === 'adviser').length,
-          clinicStaff: this.users.filter(u => u.role === 'clinic_staff').length,
-          admins: this.users.filter(u => u.role === 'admin').length
-        });
+        // Mapped users array
       } else if (Array.isArray(users)) {
-        console.log('📊 Detected flat array response format');
+        // Detected flat array response format
         // Handle flat response (when role filter is applied or direct array)
         this.users = users.map((u: any) => ({
           ...u,
           roleDisplay: this.formatRoleName(u.role_name || 'Unknown'),
           role: u.role_name?.toLowerCase() || 'unknown'
         }));
-        console.log('✅ Mapped flat users array, total count:', this.users.length);
+        // Mapped flat users array
       } else {
         console.error('❌ Unexpected users data structure:', users);
         this.errorMessage = 'Unexpected data format from server';
@@ -390,7 +350,6 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       }
 
       this.filterUsers();
-      console.log('✅ Users loaded and filtered:', this.filteredUsers.length);
 
       // Update counts
       this.userCounts = {
@@ -399,9 +358,8 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         clinicStaff: this.users.filter(u => u.role === 'clinic_staff').length,
         admins: this.users.filter(u => u.role === 'admin').length
       };
-      console.log('✅ User counts:', this.userCounts);
     } else {
-      console.error('❌ Response indicates failure:', response?.message);
+      // Response indicates failure
       this.errorMessage = response?.message || 'API request failed';
     }
   }
@@ -646,16 +604,14 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         this.loadingGradeLevels = false;
         if (response.success && response.data) {
           this.gradeLevels = response.data;
-          console.log('✅ Loaded grade levels:', this.gradeLevels);
         } else {
           this.gradeLevels = [];
-          console.error('❌ Failed to load grade levels:', response.message);
         }
       },
       error: (err) => {
         this.loadingGradeLevels = false;
         this.gradeLevels = [];
-        console.error('❌ Error loading grade levels:', err);
+        // Error loading grade levels
       }
     });
   }
@@ -717,7 +673,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
     // For students, use Laravel API
     if (this.newUser.role === 'student') {
-      console.log('📤 Sending student payload:', JSON.stringify(this.newUser));
+      // Sending student payload
       this.adminService.createUser(this.newUser).subscribe({
         next: (response) => {
           this.creatingUser = false;
@@ -732,7 +688,6 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.creatingUser = false;
-          console.error('Full error response:', err.error);
           const errDetail = err.error?.errors || err.error?.message || 'Failed to create student account.';
           this.createErrorMessage = typeof errDetail === 'string' ? errDetail : JSON.stringify(errDetail);
         }
@@ -758,9 +713,8 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          this.creatingUser = false;
-          console.error('Error creating user:', err);
-          this.createErrorMessage = err.error?.message || 'Failed to create user account. Please try again.';
+            this.creatingUser = false;
+            this.createErrorMessage = err.error?.message || 'Failed to create user account. Please try again.';
         }
       });
     }
@@ -797,15 +751,14 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
-    console.log('File selected:', file);
+    // File selected
     if (file) {
       // Accept both text/csv and application/vnd.ms-excel
       if (file.type === 'text/csv' || file.type === 'application/vnd.ms-excel' || file.name.endsWith('.csv')) {
         this.selectedFile = file;
         this.importResults = null;
-        console.log('File accepted:', file.name, file.type);
       } else {
-        console.error('Invalid file type:', file.type);
+        // Invalid file type
         alert('Please select a valid CSV file');
       }
     }
@@ -829,17 +782,17 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.isDragging = false;
 
     const files = event.dataTransfer?.files;
-    console.log('Files dropped:', files);
+    // Files dropped
     if (files && files.length > 0) {
       const file = files[0];
-      console.log('Dropped file:', file.name, file.type);
+      // Dropped file
       // Accept both text/csv and application/vnd.ms-excel
       if (file.type === 'text/csv' || file.type === 'application/vnd.ms-excel' || file.name.endsWith('.csv')) {
         this.selectedFile = file;
         this.importResults = null;
-        console.log('File accepted from drop:', file.name);
+        // File accepted from drop
       } else {
-        console.error('Invalid file type from drop:', file.type);
+        // Invalid file type from drop
         alert('Please drop a valid CSV file');
       }
     }
@@ -857,13 +810,13 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('Starting CSV upload:', this.selectedFile.name);
+    // Starting CSV upload
     this.importing = true;
     this.importResults = null;
 
     this.adminService.bulkImportStudents(this.selectedFile).subscribe({
-      next: (response) => {
-        console.log('Import response:', response);
+        next: (response) => {
+        // Import response received
         this.importing = false;
         if (response.success) {
           this.importResults = response;
@@ -883,7 +836,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error('Import error:', err);
+        // Import error
         this.importing = false;
         this.errorMessage = err.error?.message || 'Failed to import students. Please check your CSV file and try again.';
       }

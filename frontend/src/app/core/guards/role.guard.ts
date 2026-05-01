@@ -42,7 +42,6 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
       const hasRequiredRole = requiredRoles.some(role => role === userRole);
 
       if (hasRequiredRole) {
-        // console.log(...); // Removed for production
         return true;
       }
 

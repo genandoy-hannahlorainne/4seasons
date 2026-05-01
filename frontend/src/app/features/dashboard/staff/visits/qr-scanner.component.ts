@@ -148,7 +148,7 @@ export class QrScannerComponent implements OnInit, OnDestroy {
       this.statusMessage = 'Camera ready. Scanning...';
       this.statusClass = 'scanning';
     } catch (err) {
-      console.error('Error starting scanner:', err);
+      // Error starting scanner
       this.statusMessage = 'Failed to access camera. Please allow camera permissions.';
       this.statusClass = 'error';
     }
@@ -160,7 +160,7 @@ export class QrScannerComponent implements OnInit, OnDestroy {
         await this.html5QrCode.stop();
         this.html5QrCode.clear();
       } catch (err) {
-        console.error('Error stopping scanner:', err);
+        // Error stopping scanner
       }
     }
   }

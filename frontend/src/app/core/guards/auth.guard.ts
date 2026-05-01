@@ -18,7 +18,6 @@ export const authGuard: CanActivateFn = (route, state) => {
   return authService.getCurrentUser().pipe(
     map(user => {
       if (user) {
-        // console.log(...); // Removed for production
         return true;
       }
       // console.warn(...); // Removed for production

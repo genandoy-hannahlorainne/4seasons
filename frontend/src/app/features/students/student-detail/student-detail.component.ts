@@ -32,7 +32,7 @@ export class StudentDetailComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading student:', err);
+        // Error loading student
         this.loading = false;
       }
     });

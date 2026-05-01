@@ -32,7 +32,7 @@ export class AuthService {
     return this.http.post<any>(`${environment.apiUrl}/login`, { username, password })
       .pipe(
         map(response => {
-          console.log('Login response:', response);
+          // Login response received
 
           if (response && response.success && response.data) {
             const userData = response.data.user;
@@ -45,16 +45,13 @@ export class AuthService {
 
             this.currentUserSubject.next(userData);
             this.markValidation(token);
-            console.log('✅ Login successful, user stored:', userData);
-            console.log('✅ Token stored:', token.substring(0, 20) + '...');
-            console.log('✅ Token expiry set:', new Date(Date.now() + (24 * 60 * 60 * 1000)));
+            // Login successful, user stored
 
             // Verify storage immediately
             setTimeout(() => {
               const storedToken = localStorage.getItem('token');
               const storedUser = localStorage.getItem('currentUser');
-              console.log('🔍 Verification - Token in storage:', storedToken ? storedToken.substring(0, 20) + '...' : 'NOT FOUND');
-              console.log('🔍 Verification - User in storage:', storedUser ? 'FOUND' : 'NOT FOUND');
+              // Verification - Token and user in storage
             }, 100);
 
             // Start token refresh and session timeout timers
@@ -66,7 +63,7 @@ export class AuthService {
           throw new Error('Invalid response format');
         }),
         catchError((error: HttpErrorResponse) => {
-          console.error('❌ Login error:', error);
+          // Login error
           this.clearAuthData();
           return throwError(() => error);
         })
@@ -85,12 +82,12 @@ export class AuthService {
       return this.http.post<any>(`${environment.apiUrl}/logout`, {})
         .pipe(
           map(() => {
-            console.log('✅ Logout successful');
+            // Logout successful
             this.clearAuthData();
             return { success: true };
           }),
           catchError((error) => {
-            console.warn('⚠️ Logout API failed, clearing local data anyway:', error);
+            // Logout API failed, clearing local data anyway
             this.clearAuthData();
             return new Observable(observer => {
               observer.next({ success: true });
@@ -99,7 +96,7 @@ export class AuthService {
           })
         );
     } else {
-      console.log('ℹ️ No token found, clearing local data');
+      // No token found, clearing local data
       this.clearAuthData();
 
       return new Observable(observer => {
@@ -114,7 +111,7 @@ export class AuthService {
 
     // Check if token is expired
     if (!this.isTokenValid()) {
-      console.warn('⚠️ Token expired, clearing auth data');
+      // Token expired, clearing auth data
       this.clearAuthData();
       return throwError(() => new Error('Token expired'));
     }
@@ -134,7 +131,7 @@ export class AuthService {
       this.currentUserRequest$ = this.http.get<any>(`${environment.apiUrl}/me`)
         .pipe(
           map(response => {
-            console.log('Current user response:', response);
+            // Current user response received
 
             if (response && response.success && response.data) {
               const userData = response.data;
@@ -147,11 +144,11 @@ export class AuthService {
             throw new Error('Invalid response format');
           }),
           catchError((error: HttpErrorResponse) => {
-            console.error('❌ Get current user failed:', error);
+            // Get current user failed
 
             // If 401, token is invalid
             if (error.status === 401) {
-              console.warn('🚫 Token invalid, clearing auth data');
+              // Token invalid, clearing auth data
               this.clearAuthData();
             }
 
@@ -184,7 +181,7 @@ export class AuthService {
     const isValid = !!user && !!token && this.isTokenValid();
 
     if (!isValid && (user || token)) {
-      console.warn('⚠️ Invalid auth state detected, clearing data');
+      // Invalid auth state detected, clearing data
       this.clearAuthData();
     }
 
@@ -215,14 +212,14 @@ export class AuthService {
     const user = this.currentUserValue;
 
     if (!token || !user) {
-      console.warn('🔐 Authentication check failed - missing token or user');
+      // Authentication check failed - missing token or user
       this.clearAuthData();
       return false;
     }
 
     // Check token expiry
     if (!this.isTokenValid()) {
-      console.warn('🔐 Token expired during authentication check');
+      // Token expired during authentication check
       this.clearAuthData();
       return false;
     }
@@ -245,12 +242,12 @@ export class AuthService {
     if (refreshTime > 0) {
       setTimeout(() => {
         this.refreshToken().subscribe({
-          next: () => {
-            console.log('✅ Token refreshed successfully');
+            next: () => {
+            // Token refreshed successfully
             this.startTokenRefreshTimer(); // Start next refresh cycle
           },
           error: (error) => {
-            console.error('❌ Token refresh failed:', error);
+            // Token refresh failed
             this.logout().subscribe(); // Force logout on refresh failure
           }
         });
@@ -271,13 +268,13 @@ export class AuthService {
             localStorage.setItem('tokenExpiry', newExpiry.toString());
             this.markValidation(newToken);
 
-            console.log('✅ Token refreshed successfully');
+            // Token refreshed successfully
             return response;
           }
           throw new Error('Invalid refresh response');
         }),
         catchError((error: HttpErrorResponse) => {
-          console.error('❌ Token refresh failed:', error);
+          // Token refresh failed
           this.clearAuthData();
           return throwError(() => error);
         })
@@ -329,7 +326,7 @@ export class AuthService {
     this.currentUserRequest$ = null;
     this.lastValidatedToken = null;
     this.lastValidatedAt = 0;
-    console.log('🧹 Auth data cleared');
+    // Auth data cleared
   }
 
   private hasFreshValidation(token: string): boolean {
@@ -352,7 +349,7 @@ export class AuthService {
   updateCurrentUser(updatedUser: User): void {
     localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     this.currentUserSubject.next(updatedUser);
-    console.log('✅ Current user updated:', updatedUser);
+    // Current user updated
   }
 
   // Force change password for first-time login
@@ -363,11 +360,11 @@ export class AuthService {
       confirm_password: newPassword
     }).pipe(
       map(response => {
-        console.log('Force change password response:', response);
+        // Force change password response
         return response;
       }),
       catchError((error: HttpErrorResponse) => {
-        console.error('❌ Force change password error:', error);
+        // Force change password error
         return throwError(() => error);
       })
     );
@@ -380,11 +377,11 @@ export class AuthService {
       new_password: newPassword || ''
     }).pipe(
       map(response => {
-        console.log('Password change request response:', response);
+        // Password change request response
         return response;
       }),
       catchError((error: HttpErrorResponse) => {
-        console.error('❌ Password change request error:', error);
+        // Password change request error
         return throwError(() => error);
       })
     );
