@@ -1,0 +1,123 @@
+<div class="shdf-download">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading students...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-state">
+    <p>{{ error }}</p>
+    <button (click)="loadStudents()" class="btn-retry">Retry</button>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading && !error" class="dashboard-wrap">
+    <!-- Header -->
+    <div class="overview-card">
+      <div class="overview-title">SHDF Download Center</div>
+      <div class="overview-sub">Access and download student health forms</div>
+      <div class="overview-meta">{{ advisoryClass || 'Advisory Class' }} • School Year: {{ schoolYear }}</div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-tile tile-total">
+          <div class="tile-value">{{ stats?.total || 0 }}</div>
+          <div class="tile-label">Total Students</div>
+        </div>
+        <div class="stat-tile tile-basic">
+          <div class="tile-value">{{ stats?.basic_completed || 0 }}</div>
+          <div class="tile-label">Basic Completed</div>
+        </div>
+        <div class="stat-tile tile-comprehensive">
+          <div class="tile-value">{{ stats?.comprehensive_completed || 0 }}</div>
+          <div class="tile-label">Comprehensive Completed</div>
+        </div>
+        <div class="stat-tile tile-fully">
+          <div class="tile-value">{{ stats?.fully_compliant || 0 }}</div>
+          <div class="tile-label">Fully Compliant</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Student Forms</div>
+
+        <div class="search-wrap">
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Search by name, LRN, grade, or section...">
+          <span class="search-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
+        </div>
+      </div>
+
+      <div class="table">
+        <div class="thead">
+          <div>Student Name</div>
+          <div>LRN</div>
+          <div>Grade & Section</div>
+          <div>Status</div>
+          <div class="right">Actions</div>
+        </div>
+
+        <div class="tbody" *ngIf="filteredStudents.length > 0">
+          <div class="trow" *ngFor="let student of filteredStudents">
+            <div class="student-cell">
+              <span class="student-name">{{ student.full_name }}</span>
+            </div>
+            <div class="muted">{{ student.student_number }}</div>
+            <div class="muted">
+              {{ student.grade_level }}
+              <span *ngIf="student.section" class="section-badge">{{ student.section }}</span>
+            </div>
+            <div>
+              <span class="status-pill" [ngClass]="getStatusClass(student)">
+                {{ getCompletionStatus(student) }}
+              </span>
+            </div>
+            <div class="right actions-cell">
+              <div class="action-group" *ngIf="canDownload(student)">
+                <button
+                  type="button"
+                  class="btn-download csv"
+                  (click)="downloadAsCSV(student)"
+                  [disabled]="downloadingStudentId === student.student_id"
+                  title="Download as CSV">
+                  <i class="fa-solid fa-file-csv"></i>
+                  <span class="btn-label">CSV</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-download pdf"
+                  (click)="downloadAsPDF(student)"
+                  [disabled]="downloadingStudentId === student.student_id"
+                  title="Download as PDF">
+                  <i class="fa-solid fa-file-pdf"></i>
+                  <span class="btn-label">PDF</span>
+                </button>
+              </div>
+              <div class="action-disabled" *ngIf="!canDownload(student)">
+                <span class="label-disabled">Form not completed</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty" *ngIf="filteredStudents.length === 0 && students.length > 0">
+          <i class="fa-solid fa-search"></i>
+          <p>No students match your search.</p>
+        </div>
+
+        <div class="empty" *ngIf="students.length === 0">
+          <i class="fa-solid fa-inbox"></i>
+          <p>No students in your advisory class yet.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
