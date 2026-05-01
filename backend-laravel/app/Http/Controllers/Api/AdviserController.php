@@ -726,6 +726,204 @@ class AdviserController extends BaseController
         $days = $timestamp->diffInDays($now);
         return $days . 'd ago';
     }
+    /**
+     * Download SHDF data for a specific student (adviser must own the student)
+     * Returns full SHDF record including basic info and comprehensive form data
+     */
+    public function downloadStudentSHDF(Request $request, int $studentId)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$this->isAdviserUser($user)) {
+                return $this->sendError('Unauthorized', 'User is not an adviser');
+            }
+
+            $section = $this->resolveAdviserSection(intval($user->user_id));
+
+            // Verify the student belongs to this adviser's advisory
+            $studentQuery = Student::with([
+                'philhealth',
+                'immunization',
+                'medicalHistory',
+                'familyHistory',
+                'allergies',
+            ])->where('student_id', $studentId)->where('is_active', true);
+
+            $studentQuery = $this->applyAdviserStudentScope(
+                $studentQuery,
+                intval($user->user_id),
+                $section
+            );
+
+            $student = $studentQuery->first();
+
+            if (!$student) {
+                return $this->sendError('Student not found', 'Student does not belong to your advisory class');
+            }
+
+            // Get current school year
+            $schoolYear = \App\Models\SchoolYear::where('is_current', true)->first();
+            if (!$schoolYear) {
+                return $this->sendError('No current school year found');
+            }
+
+            // Check SHDF status
+            $status = \App\Models\StudentSHDFStatus::where('student_id', $studentId)
+                ->where('school_year_id', $schoolYear->id)
+                ->first();
+
+            if (!$status || !$status->basic_completed) {
+                return $this->sendError('SHDF not completed', 'Student has not completed the basic SHDF form');
+            }
+
+            // Get parental consent
+            $consent = \App\Models\StudentParentalConsent::where('student_id', $studentId)
+                ->where('school_year_id', $schoolYear->id)
+                ->first();
+
+            // Get user email/phone
+            $studentUser = $student->user;
+
+            $data = [
+                'student' => [
+                    'student_id'                     => $student->student_id,
+                    'student_number'                 => $student->student_number,
+                    'first_name'                     => $student->first_name,
+                    'middle_name'                    => $student->middle_name,
+                    'last_name'                      => $student->last_name,
+                    'full_name'                      => trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name),
+                    'birth_date'                     => $student->birth_date ? $student->birth_date->format('Y-m-d') : null,
+                    'gender'                         => $student->gender,
+                    'grade_level'                    => $section && $section->gradeLevel ? $section->gradeLevel->level_name : $student->grade_level,
+                    'section'                        => $section ? $section->section_name : $student->section,
+                    'address'                        => $student->address,
+                    'blood_type'                     => $student->blood_type,
+                    'height_cm'                      => $student->height_cm,
+                    'weight_kg'                      => $student->weight_kg,
+                    'bmi'                            => $student->bmi,
+                    'bmi_category'                   => $student->bmi_category,
+                    'parent_guardian_name'           => $student->parent_guardian_name,
+                    'emergency_contact'              => $student->emergency_contact,
+                    'emergency_contact_relation'     => $student->emergency_contact_relation,
+                    'emergency_contact_phone'        => $student->emergency_contact_phone,
+                    'email'                          => $studentUser ? $studentUser->email : null,
+                    'phone'                          => $studentUser ? $studentUser->phone : null,
+                ],
+                'philhealth'      => $student->philhealth,
+                'immunization'    => $student->immunization,
+                'medical_history' => $student->medicalHistory,
+                'family_history'  => $student->familyHistory,
+                'allergies'       => $student->allergies->map(fn($a) => $a->allergy_name ?? $a->allergy_text)->filter()->values(),
+                'parental_consent' => $consent ? [
+                    'information_certified'    => $consent->information_certified,
+                    'deworming_consent'        => $consent->deworming_consent,
+                    'deworming_refusal_reason' => $consent->deworming_refusal_reason,
+                    'mrtd_consent'             => $consent->mrtd_consent,
+                    'wifa_consent'             => $consent->wifa_consent,
+                    'submitted_at'             => $consent->submitted_at ? $consent->submitted_at->format('Y-m-d H:i:s') : null,
+                ] : null,
+                'status' => [
+                    'basic_completed'              => $status->basic_completed,
+                    'basic_completed_at'           => $status->basic_completed_at ? $status->basic_completed_at->format('Y-m-d H:i:s') : null,
+                    'comprehensive_completed'      => $status->comprehensive_completed,
+                    'comprehensive_completed_at'   => $status->comprehensive_completed_at ? $status->comprehensive_completed_at->format('Y-m-d H:i:s') : null,
+                ],
+                'school_year' => [
+                    'id'        => $schoolYear->id,
+                    'year_name' => $schoolYear->year_name,
+                ],
+                'adviser' => [
+                    'full_name'      => $user->full_name,
+                    'advisory_class' => $section ? (($section->gradeLevel->level_name ?? '') . ' - ' . $section->section_name) : 'N/A',
+                ],
+            ];
+
+            return $this->sendResponse($data, 'SHDF data retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve SHDF data', $e->getMessage());
+        }
+    }
+
+    /**
+     * Get advisory students with SHDF completion status
+     */
+    public function getAdvisoryStudentsWithSHDF(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$this->isAdviserUser($user)) {
+                return $this->sendError('Unauthorized', 'User is not an adviser');
+            }
+
+            $section = $this->resolveAdviserSection(intval($user->user_id));
+
+            $studentsQuery = Student::with(['allergies'])
+                ->where('is_active', true);
+
+            $studentsQuery = $this->applyAdviserStudentScope(
+                $studentsQuery,
+                intval($user->user_id),
+                $section
+            );
+
+            $students = $studentsQuery->orderBy('last_name')->orderBy('first_name')->get();
+
+            $schoolYear = \App\Models\SchoolYear::where('is_current', true)->first();
+            $schoolYearId = $schoolYear ? $schoolYear->id : null;
+
+            // Get SHDF statuses for all students in one query
+            $shdfStatuses = [];
+            if ($schoolYearId) {
+                $statuses = \App\Models\StudentSHDFStatus::whereIn('student_id', $students->pluck('student_id'))
+                    ->where('school_year_id', $schoolYearId)
+                    ->get()
+                    ->keyBy('student_id');
+                $shdfStatuses = $statuses->toArray();
+            }
+
+            $gradeLevelName = $section && $section->gradeLevel ? $section->gradeLevel->level_name : null;
+            $sectionName = $section ? $section->section_name : null;
+
+            $result = $students->map(function ($student) use ($shdfStatuses, $gradeLevelName, $sectionName) {
+                $status = $shdfStatuses[$student->student_id] ?? null;
+                return [
+                    'student_id'              => $student->student_id,
+                    'student_number'          => $student->student_number,
+                    'full_name'               => trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name),
+                    'first_name'              => $student->first_name,
+                    'last_name'               => $student->last_name,
+                    'gender'                  => $student->gender,
+                    'grade_level'             => $gradeLevelName ?? $student->grade_level,
+                    'section'                 => $sectionName ?? $student->section,
+                    'basic_completed'         => $status ? (bool)($status['basic_completed'] ?? false) : false,
+                    'comprehensive_completed' => $status ? (bool)($status['comprehensive_completed'] ?? false) : false,
+                    'is_fully_compliant'      => $status ? ((bool)($status['basic_completed'] ?? false) && (bool)($status['comprehensive_completed'] ?? false)) : false,
+                ];
+            });
+
+            $advisoryClass = 'Not assigned';
+            if ($section && $section->gradeLevel) {
+                $advisoryClass = $section->gradeLevel->level_name . ' - ' . $section->section_name;
+            }
+
+            return $this->sendResponse([
+                'students'      => $result,
+                'advisory_class' => $advisoryClass,
+                'school_year'   => $schoolYear ? $schoolYear->year_name : null,
+                'stats' => [
+                    'total'                   => $students->count(),
+                    'basic_completed'         => collect($result)->where('basic_completed', true)->count(),
+                    'comprehensive_completed' => collect($result)->where('comprehensive_completed', true)->count(),
+                    'fully_compliant'         => collect($result)->where('is_fully_compliant', true)->count(),
+                ],
+            ], 'Advisory students with SHDF status retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve students', $e->getMessage());
+        }
+    }
+
     public function getAdvisoryStudents(Request $request)
     {
         try {

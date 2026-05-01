@@ -152,6 +152,15 @@ export class AdviserService {
     return this.http.get<any>(`${environment.apiUrl}/adviser/health-heatmap?days=${days}`);
   }
 
+  // SHDF Downloads
+  getAdvisoryStudentsWithSHDF(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/adviser/advisory-students-shdf`);
+  }
+
+  downloadStudentSHDF(studentId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/adviser/students/${studentId}/shdf-download`);
+  }
+
   // Profile Management
   updateAdviserProfile(userId: number, profileData: any): Observable<any> {
     return this.http.put<any>(`${environment.apiUrl}/adviser/profile`, profileData);
