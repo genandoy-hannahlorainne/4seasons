@@ -1,9 +1,11 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, RouterOutlet, Router } from '@angular/router';
+import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { StudentService } from '../../../core/services/student.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SHDFService, SHDFStatus } from '../../shdf/shdf.service';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-student-layout',
@@ -265,7 +267,8 @@ import { SHDFService, SHDFStatus } from '../../shdf/shdf.service';
     </div>
   `,
 })
-export class StudentLayoutComponent implements OnInit {
+export class StudentLayoutComponent implements OnInit, OnDestroy {
+  private routerSub?: Subscription;
   isCollapsed = false;
   mobileOpen = false;
   loggingOut = false;
@@ -302,6 +305,19 @@ export class StudentLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     this.checkSHDFStatus();
+
+    // Re-check SHDF status on every navigation so the notification
+    // clears immediately after the student submits the comprehensive form
+    // and navigates back to the dashboard.
+    this.routerSub = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.checkSHDFStatus();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
   }
 
   toggleSidebar(): void {

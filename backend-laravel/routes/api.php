@@ -64,6 +64,54 @@ Route::get('/debug/auth', function (Request $request) {
     ]);
 })->middleware('auth:sanctum');
 
+// Debug route to diagnose SHDF authorization for a specific student
+Route::get('/debug/shdf-auth/{studentId}', function (Request $request, int $studentId) {
+    $user = $request->user();
+    if (!$user) {
+        return response()->json(['error' => 'Not authenticated'], 401);
+    }
+
+    $user->load('role');
+    $student = \App\Models\Student::where('student_id', $studentId)->first();
+
+    $role = strtolower(trim($user->role?->role_name ?? ''));
+
+    $canFix = false;
+    if ($student) {
+        $canFix = (!empty($user->username) && !empty($student->student_number)
+            && strtolower(trim($user->username)) === strtolower(trim($student->student_number)))
+            || (\App\Models\Student::where('user_id', $user->user_id)->value('student_id') == $student->student_id);
+    }
+
+    return response()->json([
+        'user' => [
+            'user_id'    => $user->user_id,
+            'username'   => $user->username,
+            'role_id'    => $user->role_id,
+            'role_name'  => $user->role?->role_name,
+            'role_lower' => $role,
+        ],
+        'student' => $student ? [
+            'student_id'     => $student->student_id,
+            'student_number' => $student->student_number,
+            'user_id'        => $student->user_id,
+            'user_id_match'  => (int) $student->user_id === (int) $user->user_id,
+        ] : null,
+        'auth_result' => [
+            'role_is_student'    => $role === 'student',
+            'role_is_admin'      => $role === 'admin',
+            'role_is_staff'      => in_array($role, ['clinic_staff', 'clinic staff']),
+            'user_id_matches'    => $student ? (int) $student->user_id === (int) $user->user_id : false,
+            'can_fix_mapping'    => $canFix,
+            'would_authorize'    => $role === 'student'
+                || $role === 'admin'
+                || in_array($role, ['clinic_staff', 'clinic staff'])
+                || ($student && (int) $student->user_id === (int) $user->user_id)
+                || $canFix,
+        ],
+    ]);
+})->middleware('auth:sanctum');
+
 // Authentication routes
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
