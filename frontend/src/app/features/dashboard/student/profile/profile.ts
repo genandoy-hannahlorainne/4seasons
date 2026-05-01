@@ -116,7 +116,7 @@ export class StudentProfileComponent implements OnInit {
         day: 'numeric'
       });
     } catch (error) {
-      console.error('Error formatting date:', error);
+      // Error formatting date
       return '';
     }
   }
@@ -124,26 +124,22 @@ export class StudentProfileComponent implements OnInit {
   loadUserProfile(): void {
     this.currentUser = this.authService.currentUserValue;
 
-    console.log('Current User:', this.currentUser);
+    // Current user fetched
 
     if (!this.currentUser || !this.currentUser.user_id) {
       this.errorMessage = 'User not logged in. Please login again.';
-      console.error('No user logged in');
       return;
     }
 
     this.loading = true;
-    console.log('Fetching profile for user_id:', this.currentUser.user_id);
 
     this.studentService.getStudentProfile(this.currentUser.user_id).subscribe({
       next: (response) => {
         this.loading = false;
-        console.log('Profile API Response:', response);
 
         if (response.success && response.profile) {
           const profile = response.profile;
-          console.log('Profile data:', profile);
-          console.log('Phone number from API:', profile.phone, profile.contact_number);
+          // Profile data received
 
           // Convert gender from database format to form format
           const genderMap: any = { 'M': 'male', 'F': 'female', 'Other': 'other' };
@@ -174,23 +170,21 @@ export class StudentProfileComponent implements OnInit {
           });
 
           // Debug log to verify phone number is set
-          console.log('Contact number set to:', profile.contact_number || profile.phone || '');
+          // Contact number set
 
           // Disable form after loading
           this.profileForm.disable();
-          console.log('Form values after patch:', this.profileForm.value);
 
           // Load QR code
           this.loadQRCode();
         } else {
           this.errorMessage = 'Failed to load profile';
-          console.error('API returned success=false');
         }
       },
       error: (err) => {
         this.loading = false;
         this.errorMessage = err.error?.message || 'Error loading profile. Please try again.';
-        console.error('Error loading profile:', err);
+        // Error loading profile
       }
     });
   }
@@ -262,12 +256,10 @@ export class StudentProfileComponent implements OnInit {
   }
 
   onSubmit(): void {
-    console.log('onSubmit called');
-    console.log('Form valid:', !this.profileForm.invalid);
-    console.log('Form values:', this.profileForm.getRawValue());
+    // onSubmit called
 
     if (this.profileForm.invalid) {
-      console.error('Form is invalid');
+      // Form is invalid
       this.errorMessage = 'Please fill in all required fields correctly';
       return;
     }
@@ -287,11 +279,10 @@ export class StudentProfileComponent implements OnInit {
     this.successMessage = '';
 
     const profileData = this.profileForm.getRawValue();
-    console.log('Sending profile data:', profileData);
 
     this.studentService.updateStudentProfile(this.studentId!, profileData).subscribe({
       next: (response) => {
-        console.log('Update response:', response);
+        // Update response received
         this.loading = false;
         if (response.success) {
           this.successMessage = 'Profile updated successfully!';
@@ -310,7 +301,7 @@ export class StudentProfileComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Update error:', err);
+        // Update error
         this.loading = false;
         this.errorMessage = err.error?.message || 'Error updating profile';
       }
@@ -386,11 +377,9 @@ export class StudentProfileComponent implements OnInit {
 
   loadQRCode(): void {
     if (!this.studentId) {
-      console.error('Cannot load QR code: studentId is null');
+      // Cannot load QR code: studentId is null
       return;
     }
-
-    console.log('Loading QR code for student_id:', this.studentId);
     this.qrCodeLoading = true;
 
     // Generate QR code data as JSON string
@@ -404,7 +393,7 @@ export class StudentProfileComponent implements OnInit {
     this.qrCodeData = JSON.stringify(qrData);
     this.qrCodeLoading = false;
 
-    console.log('QR Code data:', this.qrCodeData);
+    // QR Code data generated
   }
 
   viewQRCode(): void {

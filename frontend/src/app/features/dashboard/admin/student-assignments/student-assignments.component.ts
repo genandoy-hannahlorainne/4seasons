@@ -189,12 +189,12 @@ export class StudentAssignmentsComponent implements OnInit {
       next: (result) => {
         this.validationResult = result;
         this.loading = false;
-        console.log('Assignment validation result:', result);
+        // Assignment validation result
       },
       error: (err) => {
         this.errorMessage = 'Failed to validate assignments: ' + (err.error?.message || err.message);
         this.loading = false;
-        console.error('Validation error:', err);
+        // Validation error
       }
     });
   }
@@ -225,7 +225,7 @@ export class StudentAssignmentsComponent implements OnInit {
       error: (err) => {
         this.errorMessage = 'Failed to fix assignments: ' + (err.error?.message || err.message);
         this.loading = false;
-        console.error('Fix error:', err);
+        // Fix error
       }
     });
   }

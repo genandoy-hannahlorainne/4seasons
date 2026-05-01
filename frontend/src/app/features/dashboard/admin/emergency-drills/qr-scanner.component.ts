@@ -499,7 +499,7 @@ export class QrScannerComponent implements OnInit, OnDestroy {
         this.scannedCount = drill.participants?.filter((p: any) => p.status === 'scanned' || p.status === 'rescued').length || 0;
       },
       error: (error) => {
-        console.error('Error loading drill info:', error);
+        // Error loading drill info
         this.showError('Failed to load drill information');
       }
     });
@@ -587,7 +587,7 @@ export class QrScannerComponent implements OnInit, OnDestroy {
           this.searchLoading = false;
         },
         error: (error) => {
-          console.error('Error searching users:', error);
+          // Error searching users
           this.searchResults = [];
           this.searchLoading = false;
         }
@@ -662,7 +662,7 @@ export class QrScannerComponent implements OnInit, OnDestroy {
         this.scannedCount++;
       },
       error: (error) => {
-        console.error('Error scanning user:', error);
+        // Error scanning user
         this.showError(error.error?.message || 'Failed to scan user');
       }
     });

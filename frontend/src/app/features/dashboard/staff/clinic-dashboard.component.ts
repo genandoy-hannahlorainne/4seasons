@@ -71,7 +71,7 @@ export class ClinicDashboardComponent implements OnInit {
           }
         },
         error: (err) => {
-          console.error('Error loading dashboard data:', err);
+          // Error loading dashboard data
           this.loadingVisits = false;
           this.loadingAllergies = false;
         }

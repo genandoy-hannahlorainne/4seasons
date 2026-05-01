@@ -65,7 +65,7 @@ export class SystemSettingsComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading settings:', err);
+        // Error loading settings
         this.errorMessage = 'Failed to load settings';
         this.loading = false;
       }
@@ -99,7 +99,7 @@ export class SystemSettingsComponent implements OnInit {
       },
       error: (err) => {
         this.errorMessage = err.error?.message || err.error?.error || 'Failed to save settings';
-        console.error('Save settings error:', err);
+        // Save settings error
         this.saving = false;
       }
     });
@@ -128,7 +128,7 @@ export class SystemSettingsComponent implements OnInit {
       error: (err: any) => {
         this.loadingBackups = false;
         this.errorMessage = 'Failed to load backup history';
-        console.error('Error loading backups:', err);
+        // Error loading backups
       }
     });
   }
@@ -150,7 +150,7 @@ export class SystemSettingsComponent implements OnInit {
       error: (err: any) => {
         this.creating = false;
         this.errorMessage = 'Failed to create backup. Please try again.';
-        console.error('Error creating backup:', err);
+        // Error creating backup
       }
     });
   }
@@ -185,7 +185,7 @@ export class SystemSettingsComponent implements OnInit {
       },
       error: (err: any) => {
         this.errorMessage = 'Failed to delete backup';
-        console.error('Error deleting backup:', err);
+        // Error deleting backup
         this.deleting = false;
       }
     });
@@ -218,7 +218,7 @@ export class SystemSettingsComponent implements OnInit {
       error: (err: any) => {
         this.restoring = false;
         this.errorMessage = 'Failed to restore backup. Please try again or restore manually.';
-        console.error('Error restoring backup:', err);
+        // Error restoring backup
       }
     });
   }

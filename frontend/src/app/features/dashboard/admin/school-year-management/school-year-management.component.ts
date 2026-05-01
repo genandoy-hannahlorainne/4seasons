@@ -2095,7 +2095,7 @@ export class SchoolYearManagementComponent implements OnInit {
       },
       error: (err) => {
         // Silently handle error - this is not critical functionality
-        console.log('Auto-check for current school year failed:', err);
+        // Auto-check for current school year failed
       }
     });
   }
@@ -2118,7 +2118,7 @@ export class SchoolYearManagementComponent implements OnInit {
         this.settingCurrent = false;
       },
       error: (err) => {
-        console.error('Error setting current school year:', err);
+        // Error setting current school year
         this.showMessage('Error setting current school year', 'error');
         this.settingCurrent = false;
       }
@@ -2145,7 +2145,7 @@ export class SchoolYearManagementComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Error loading school years:', err);
+        // Error loading school years
         this.showMessage('Error loading school years', 'error');
       }
     });
@@ -2163,7 +2163,7 @@ export class SchoolYearManagementComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading sections:', err);
+        // Error loading sections
         this.showMessage('Error loading sections', 'error');
         this.loading = false;
       }
@@ -2178,7 +2178,7 @@ export class SchoolYearManagementComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Error loading advisers:', err);
+        // Error loading advisers
       }
     });
   }
@@ -2192,7 +2192,7 @@ export class SchoolYearManagementComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Error loading grade levels:', err);
+        // Error loading grade levels
       }
     });
   }
@@ -2249,7 +2249,7 @@ export class SchoolYearManagementComponent implements OnInit {
         this.saving = false;
       },
       error: (err) => {
-        console.error('Error assigning adviser:', err);
+        // Error assigning adviser
         this.showMessage('Error assigning adviser', 'error');
         this.saving = false;
       }
@@ -2284,7 +2284,7 @@ export class SchoolYearManagementComponent implements OnInit {
         this.closeRemoveAdviserModal();
       },
       error: (err) => {
-        console.error('Error removing adviser:', err);
+        // Error removing adviser
         this.showMessage('Error removing adviser', 'error');
         this.closeRemoveAdviserModal();
       }
@@ -2383,7 +2383,7 @@ export class SchoolYearManagementComponent implements OnInit {
         this.settingCurrent = false;
       },
       error: (err) => {
-        console.error('Error setting current school year:', err);
+        // Error setting current school year
         this.showMessage('Error setting current school year', 'error');
         this.settingCurrent = false;
       }
@@ -2455,7 +2455,7 @@ export class SchoolYearManagementComponent implements OnInit {
         this.saving = false;
       },
       error: (err) => {
-        console.error('Error creating school year:', err);
+        // Error creating school year
         this.showMessage(err.error?.message || 'Error creating school year', 'error');
         this.saving = false;
       }
@@ -2511,7 +2511,7 @@ export class SchoolYearManagementComponent implements OnInit {
         this.saving = false;
       },
       error: (err) => {
-        console.error('Error creating section:', err);
+        // Error creating section
         this.showMessage(err.error?.message || 'Error creating section', 'error');
         this.saving = false;
       }
@@ -2550,7 +2550,7 @@ export class SchoolYearManagementComponent implements OnInit {
         this.loadingStudents = false;
       },
       error: (err) => {
-        console.error('Error loading section students:', err);
+        // Error loading section students
         this.showMessage('Error loading students', 'error');
         this.loadingStudents = false;
       }

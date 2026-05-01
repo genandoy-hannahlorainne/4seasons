@@ -276,13 +276,12 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   loadNotifications(): void {
     this.adminService.getNotifications().subscribe({
       next: (response) => {
-        console.log('Notifications response:', response);
+        // Notifications response received
         if (response?.success && response?.data?.notifications) {
           const allNotifications = response.data.notifications;
-          console.log('All notifications:', allNotifications);
 
           if (!Array.isArray(allNotifications)) {
-            console.error('Notifications is not an array:', allNotifications);
+            // Notifications is not an array
             return;
           }
 
@@ -295,13 +294,12 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
               created_at: n.created_at
             }));
           this.unreadCount = this.passwordChangeRequests.length;
-          console.log('Password change requests:', this.passwordChangeRequests);
         } else {
-          console.warn('Invalid response structure:', response);
+          // Invalid response structure
         }
       },
       error: (err) => {
-        console.error('Failed to load notifications:', err);
+        // Failed to load notifications
       }
     });
   }
@@ -345,11 +343,9 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     const username = request.request_data?.username || '';
     const hasNewPassword = !!request.request_data?.new_password;
 
-    console.log('Approving password change for notification:', request.notification_id);
-
+    // Approve password change request
     this.adminService.approvePasswordChangeRequest(request.notification_id).subscribe({
       next: (response) => {
-        console.log('Approve password change response:', response);
         if (response?.success) {
           if (hasNewPassword) {
             // New flow: User chose their own password
@@ -366,18 +362,12 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
           this.unreadCount = this.passwordChangeRequests.length;
           this.closeNotificationModal();
         } else {
-          console.error('Failed response:', response);
+          // Failed response
           alert('Failed to approve password change: ' + (response?.message || 'Unknown error'));
         }
       },
       error: (err) => {
-        console.error('Failed to approve password change:', err);
-        console.error('Error details:', {
-          status: err.status,
-          statusText: err.statusText,
-          message: err.message,
-          error: err.error
-        });
+        // Failed to approve password change
         const errorMessage = err.error?.message || err.message || 'Unknown error occurred';
         alert('Error approving password change request: ' + errorMessage);
       }
@@ -402,7 +392,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('Failed to dismiss request:', err);
+          // Failed to dismiss request
           alert('Error dismissing request');
         }
       });

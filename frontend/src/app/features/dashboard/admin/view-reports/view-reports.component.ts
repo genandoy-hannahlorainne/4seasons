@@ -94,7 +94,7 @@ export class ViewReportsComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading report:', err);
+        // Error loading report
         this.errorMessage = 'Failed to load report';
         this.loading = false;
       }

@@ -773,7 +773,7 @@ export class DrillDashboardComponent implements OnInit, OnDestroy {
         this.loadDashboardData();
       },
       error: (error) => {
-        console.error('Error loading drill details:', error);
+        // Error loading drill details
         this.loading = false;
       }
     });
@@ -785,7 +785,7 @@ export class DrillDashboardComponent implements OnInit, OnDestroy {
         this.dashboardData = response.data;
       },
       error: (error) => {
-        console.error('Error loading dashboard data:', error);
+        // Error loading dashboard data
       }
     });
   }
@@ -823,7 +823,7 @@ export class DrillDashboardComponent implements OnInit, OnDestroy {
           this.closeConfirmModal();
         },
         error: (error) => {
-          console.error('Error ending drill:', error);
+          // Error ending drill
           this.closeConfirmModal();
         }
       });
@@ -876,7 +876,7 @@ export class DrillDashboardComponent implements OnInit, OnDestroy {
           this.searchLoading = false;
         },
         error: (error) => {
-          console.error('Error searching users:', error);
+          // Error searching users
           this.searchResults = [];
           this.searchLoading = false;
         }
@@ -945,7 +945,7 @@ export class DrillDashboardComponent implements OnInit, OnDestroy {
         alert(`User scanned successfully! Response time: ${response.data.response_time} seconds`);
       },
       error: (error) => {
-        console.error('Error scanning student:', error);
+        // Error scanning student
         this.scanning = false;
         alert('Error scanning user: ' + (error.error?.message || 'Unknown error'));
       }

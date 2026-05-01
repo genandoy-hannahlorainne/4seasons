@@ -647,7 +647,7 @@ export class VisitFormComponent implements OnInit, OnDestroy {
   }
 
   onQrScanned(qrData: any): void {
-    console.log('QR Data received:', qrData);
+    // QR Data received
     this.closeScanner();
 
     // Extract student_id from QR data
@@ -656,7 +656,7 @@ export class VisitFormComponent implements OnInit, OnDestroy {
     } else if (qrData && qrData.student_number) {
       this.loadStudentByNumber(qrData.student_number);
     } else {
-      console.error('Invalid QR data - no student_id or student_number found');
+      // Invalid QR data - no student_id or student_number found
     }
   }
 
@@ -667,15 +667,14 @@ export class VisitFormComponent implements OnInit, OnDestroy {
         next: (response: any) => {
           if (response.success && response.data.student) {
             this.selectedStudent = this.normalizeStudentData(response.data.student);
-            console.log('Student loaded with clearance:', this.selectedStudent);
           } else {
-            console.error('Failed to load student:', response.message);
+            // Failed to load student
             alert('Student not found');
           }
           this.loading = false;
         },
         error: (error) => {
-          console.error('Error loading student:', error);
+          // Error loading student
           alert('Failed to load student information');
           this.loading = false;
         }
@@ -689,15 +688,14 @@ export class VisitFormComponent implements OnInit, OnDestroy {
         next: (response: any) => {
           if (response.success && response.data.student) {
             this.selectedStudent = this.normalizeStudentData(response.data.student);
-            console.log('Student loaded with clearance:', this.selectedStudent);
           } else {
-            console.error('Failed to load student:', response.message);
+            // Failed to load student
             alert('Student not found');
           }
           this.loading = false;
         },
         error: (error) => {
-          console.error('Error loading student:', error);
+          // Error loading student
           alert('Failed to load student information');
           this.loading = false;
         }
@@ -736,7 +734,7 @@ export class VisitFormComponent implements OnInit, OnDestroy {
             }
           },
           error: (err) => {
-            console.error('Search error:', err);
+            // Search error
             this.searchLoading = false;
             this.searchDone = true;
             this.searchResults = [];
@@ -864,7 +862,7 @@ export class VisitFormComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.loading = false;
-          console.error('Error saving visit:', err);
+          // Error saving visit
           const apiMessage = err?.error?.message || err?.error?.error || null;
           const validationErrors = err?.error?.errors;
           let details = '';

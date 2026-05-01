@@ -1101,25 +1101,21 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Enhanced authentication check
     if (!this.authService.checkAuthenticationStatus()) {
-      console.error('❌ Authentication check failed, redirecting to login');
       alert('Please login as admin to access the admin panel');
       this.router.navigate(['/login']);
       return;
     }
 
     const currentUser = this.authService.currentUserValue;
-
-    console.log('🔐 Admin Dashboard - Authentication verified');
-    console.log('Current user:', currentUser);
+    // Authentication verified for admin dashboard
 
     if (currentUser?.role_name?.toLowerCase() !== 'admin') {
-      console.error('❌ Not admin user, redirecting');
       alert('Access denied. Admin privileges required.');
       this.router.navigate(['/dashboard']);
       return;
     }
 
-    console.log('✅ Authenticated as admin, loading dashboard');
+    // Authenticated as admin, loading dashboard
     this.loadDashboardData();
 
     // Auto-refresh dashboard data every 30 seconds
@@ -1137,9 +1133,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('Auto-refresh error:', err);
+          // Auto-refresh error
           if (err.status === 401) {
-            console.error('❌ Authentication failed during auto-refresh');
             alert('Session expired. Please login again.');
             this.router.navigate(['/login']);
           }
@@ -1158,12 +1153,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   loadDashboardData(): void {
     this.loading = true;
-    console.log('📊 Loading dashboard data...');
+    // Loading dashboard data
 
     // Load dashboard statistics first
     this.adminService.getDashboard().subscribe({
       next: (response) => {
-        console.log('✅ Dashboard response:', response);
+        // Dashboard response received
         if (response?.success && response.data) {
           const dashboardData = response.data;
 
@@ -1175,30 +1170,28 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
               totalAdvisers: dashboardData.current_stats.faculty || 0,
               totalStaff: dashboardData.current_stats.clinic_staff || 0
             };
-            console.log('✅ Updated system stats from dashboard:', this.systemStats);
+            // Updated system stats from dashboard
           }
         }
       },
       error: (err) => {
-        console.error('❌ Error loading dashboard:', err);
+        // Error loading dashboard
       }
     });
 
     // Load users data for recent users display
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
-        console.log('✅ getAllUsers full response:', response);
-
+        // getAllUsers response received
         if (response?.success && response.data?.users) {
           this.usersData$.next(response);
         } else {
-          console.error('❌ Invalid response structure:', response);
+          // Invalid response structure
         }
         this.loading = false;
       },
       error: (err) => {
-        console.error('❌ Error loading users:', err);
-        console.error('❌ Error details:', err.error);
+        // Error loading users
         this.loading = false;
       }
     });
@@ -1206,7 +1199,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     // Load activity logs
     this.adminService.getActivityLogs(5).subscribe({
       next: (response) => {
-        console.log('✅ Activity logs response:', response);
+        // Activity logs response received
         if (response?.success && Array.isArray(response.data?.activities)) {
           this.activityLog = response.data.activities.slice(0, 5).map((activity: any) => ({
             type: activity?.activity_type || 'system',
@@ -1224,14 +1217,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error('❌ Error loading activity logs:', err);
+        // Error loading activity logs
       }
     });
 
     // Load emergency notifications
     this.adminService.getNotifications().subscribe({
       next: (response) => {
-        console.log('✅ Admin notifications response:', response);
+        // Admin notifications response received
         if (response?.success && Array.isArray(response.data?.notifications)) {
           const allNotifications = response.data.notifications.map((notif: any) => {
             return {
@@ -1260,10 +1253,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
           ).slice(0, 10); // Show last 10
 
-          console.log('✅ Password change requests:', this.passwordChangeRequests.length);
-          console.log('✅ Drill alerts:', this.drillAlerts.length);
-          console.log('✅ Emergency notifications:', this.emergencyNotifications.length);
-          console.log('✅ Notification history:', this.notificationHistory.length);
+          // Notifications categorized
         } else if (response?.success && Array.isArray(response.notifications)) {
           // Fallback for direct notifications array
           const allNotifications = response.notifications.map((notif: any) => {
@@ -1289,14 +1279,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
           ).slice(0, 10);
 
-          console.log('✅ Password change requests:', this.passwordChangeRequests.length);
-          console.log('✅ Drill alerts:', this.drillAlerts.length);
-          console.log('✅ Emergency notifications:', this.emergencyNotifications.length);
-          console.log('✅ Notification history:', this.notificationHistory.length);
+          // Notifications categorized and loaded
         }
       },
       error: (err) => {
-        console.error('❌ Error loading admin notifications:', err);
+        // Error loading admin notifications
       }
     });
   }
@@ -1325,7 +1312,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         day: '2-digit'
       });
     } catch (error) {
-      console.error('Error formatting date:', error);
+      // Error formatting date
       return 'N/A';
     }
   }
@@ -1350,7 +1337,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } catch (error) {
-      console.error('Error formatting timestamp:', error);
+      // Error formatting timestamp
       return 'Unknown';
     }
   }
@@ -1367,7 +1354,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   viewEmergencyDetails(notification: any): void {
     // Navigate to detailed view or show modal
-    console.log('Viewing emergency details:', notification);
 
     // Create a detailed modal or alert
     const details = `
@@ -1402,7 +1388,7 @@ Position: ${notification?.staff?.position || 'N/A'}
         }
       },
       error: (err) => {
-        console.error('Failed to mark notification as read:', err);
+        // Failed to mark notification as read
       }
     });
   }
@@ -1427,7 +1413,7 @@ Position: ${notification?.staff?.position || 'N/A'}
           }
         },
         error: (err) => {
-          console.error('Failed to mark all notifications as read:', err);
+          // Failed to mark all notifications as read
         }
       });
     }
@@ -1439,7 +1425,6 @@ Position: ${notification?.staff?.position || 'N/A'}
 
     if (!visitId) {
       alert('Error: Visit ID not found in notification');
-      console.error('Notification object:', notification);
       return;
     }
 
@@ -1453,7 +1438,7 @@ Position: ${notification?.staff?.position || 'N/A'}
           }
         },
         error: (err) => {
-          console.error('Failed to send SMS:', err);
+          // Failed to send SMS
           alert('Failed to send SMS. ' + (err?.error?.message || 'Please try again.'));
         }
       });
@@ -1511,7 +1496,7 @@ ${notification.message || 'N/A'}
         }
       },
       error: (err) => {
-        console.error('Failed to approve password change:', err);
+        // Failed to approve password change
         alert('Error approving password change request');
       }
     });
@@ -1537,7 +1522,7 @@ ${notification.message || 'N/A'}
           }
         },
         error: (err) => {
-          console.error('Failed to dismiss request:', err);
+          // Failed to dismiss request
           alert('Error dismissing request');
         }
       });

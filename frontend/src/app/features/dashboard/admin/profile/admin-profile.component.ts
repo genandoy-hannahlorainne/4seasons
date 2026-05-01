@@ -209,7 +209,7 @@ export class AdminProfileComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Profile update error:', err);
+        // Profile update error
         const errorMessage = err.error?.message || err.message || 'Error updating profile';
         alert(errorMessage);
       }
@@ -266,7 +266,7 @@ export class AdminProfileComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Password change error:', err);
+        // Password change error
         const errorMessage = err.error?.message || err.message || 'Error changing password';
         alert(errorMessage);
       }

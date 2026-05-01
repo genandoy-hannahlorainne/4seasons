@@ -828,7 +828,7 @@ export class GradePromotionComponent implements OnInit {
   loadSchoolYears() {
     this.adminService.getSchoolYears().subscribe(
       (response: any) => { this.schoolYears = response.data || []; },
-      (error: any) => { console.error('Error loading school years:', error); }
+      (error: any) => { /* Error loading school years */ }
     );
   }
 
@@ -853,7 +853,7 @@ export class GradePromotionComponent implements OnInit {
         this.summaryLoaded = true;
       },
       (error: any) => {
-        console.error('Error loading promotion summary:', error);
+        // Error loading promotion summary
         this.isLoadingSummary = false;
         alert('Error loading promotion summary: ' + (error.error?.message || 'Unknown error'));
       }
@@ -881,7 +881,7 @@ export class GradePromotionComponent implements OnInit {
 
   cancelPromotion() { this.promotionSummary = null; this.promotionResult = null; this.summaryLoaded = false; }
 
-  openManualAdjustment(student: any) { console.log('Open manual adjustment for student:', student); }
+  openManualAdjustment(student: any) { /* Open manual adjustment for student */ }
 
   openCopyModal() { this.showCopyModal = true; }
   closeCopyModal() { this.showCopyModal = false; }

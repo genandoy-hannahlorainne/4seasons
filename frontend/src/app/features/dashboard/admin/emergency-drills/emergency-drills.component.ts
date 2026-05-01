@@ -1208,17 +1208,9 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
           if (drill.status === 'planned' && drill.scheduled_at) {
             const scheduledTime = new Date(drill.scheduled_at);
             const expiredTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000);
-            
-            console.log('🔍 Checking drill expiration:', {
-              drillName: drill.drill_name,
-              scheduledTime: scheduledTime.toLocaleString(),
-              expiredTime: expiredTime.toLocaleString(),
-              now: now.toLocaleString(),
-              isExpired: now > expiredTime
-            });
-            
+            // Checking drill expiration
             if (now > expiredTime) {
-              console.log('⚠️ Drill expired, showing as abandoned:', drill.drill_name);
+              // Drill expired, showing as abandoned
               // Create a copy with abandoned status for display purposes
               return { ...drill, status: 'abandoned' as any };
             }
@@ -1232,7 +1224,7 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading drills:', error);
+        // Error loading drills
         this.loading = false;
       }
     });
@@ -1276,12 +1268,11 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
         : undefined
     };
 
-    console.log('🕐 Creating drill with scheduled_at:', payload.scheduled_at);
-    console.log('🕐 Current browser time:', new Date().toISOString());
+    // Creating drill with scheduled_at
 
     this.drillService.createDrill(payload).subscribe({
       next: (response) => {
-        console.log('✅ Drill created, scheduled_at from server:', response.data.scheduled_at);
+        // Drill created
         this.drills.unshift(response.data);
         this.activeDrills.unshift(response.data);
         this.showCreateModal = false;
@@ -1289,7 +1280,7 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
         this.creating = false;
       },
       error: (error) => {
-        console.error('Error creating drill:', error);
+        // Error creating drill
         this.creating = false;
       }
     });
@@ -1302,18 +1293,7 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
       const now = new Date();
       const scheduledTime = new Date(drill.scheduled_at);
 
-      console.log('🚨 START DRILL ATTEMPT:', {
-        drillId: id,
-        now: now.toISOString(),
-        nowLocal: now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }),
-        scheduledTime: scheduledTime.toISOString(),
-        scheduledLocal: scheduledTime.toLocaleString('en-US', { timeZone: 'Asia/Manila' }),
-        scheduledRaw: drill.scheduled_at,
-        canStart: this.canStartDrill(drill),
-        nowTimestamp: now.getTime(),
-        scheduledTimestamp: scheduledTime.getTime(),
-        diff: (now.getTime() - scheduledTime.getTime()) / 1000 / 60 + ' minutes'
-      });
+      // Start drill attempt
 
       if (!this.canStartDrill(drill)) {
         alert(this.getStartButtonTooltip(drill));
@@ -1330,7 +1310,7 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
           this.closeConfirmModal();
         },
         error: (error) => {
-          console.error('Error starting drill:', error);
+          // Error starting drill
           const errorMessage = error?.error?.message || 'Failed to start drill';
           alert(errorMessage);
           this.closeConfirmModal();
@@ -1348,14 +1328,7 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
     const now = new Date();
     const scheduledTime = new Date(drill.scheduled_at);
 
-    console.log('🕐 Can start check:', {
-      now: now.toISOString(),
-      nowLocal: now.toLocaleString(),
-      scheduledTime: scheduledTime.toISOString(),
-      scheduledLocal: scheduledTime.toLocaleString(),
-      canStart: now >= scheduledTime
-    });
-
+    // Can start check
     // Allow starting only at or after scheduled time (up to 30 minutes after)
     const allowedEndTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000);
 
@@ -1403,7 +1376,7 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
           this.closeConfirmModal();
         },
         error: (error) => {
-          console.error('Error ending drill:', error);
+          // Error ending drill
           this.closeConfirmModal();
         }
       });
@@ -1439,7 +1412,7 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
           this.closeConfirmModal();
         },
         error: (error) => {
-          console.error('Error deleting drill:', error);
+          // Error deleting drill
           this.closeConfirmModal();
           alert('Failed to delete drill.');
         }

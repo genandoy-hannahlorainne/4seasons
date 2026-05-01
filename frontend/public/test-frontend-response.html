@@ -13,7 +13,6 @@
             
             try {
                 // Step 1: Login
-                console.log('Step 1: Logging in...');
                 const loginResponse = await fetch('/api/login', {
                     method: 'POST',
                     headers: {
@@ -27,7 +26,6 @@
                 });
                 
                 const loginData = await loginResponse.json();
-                console.log('Login response:', loginData);
                 
                 if (!loginData.success) {
                     throw new Error('Login failed: ' + loginData.message);
@@ -39,7 +37,6 @@
                 resultsDiv.innerHTML += `<p><strong>Login:</strong> ✅ Success (User ID: ${userId})</p>`;
                 
                 // Step 2: Get Profile
-                console.log('Step 2: Getting profile...');
                 const profileResponse = await fetch(`/api/students/${userId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -48,7 +45,6 @@
                 });
                 
                 const profileData = await profileResponse.json();
-                console.log('Profile response:', profileData);
                 
                 resultsDiv.innerHTML += `<p><strong>Profile API Response:</strong></p>`;
                 resultsDiv.innerHTML += `<pre>${JSON.stringify(profileData, null, 2)}</pre>`;
