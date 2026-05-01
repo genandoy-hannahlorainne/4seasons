@@ -214,7 +214,7 @@ export class VisitsHistoryComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading visit history:', error);
+        // Error loading visit history
         this.error = 'Failed to load visit history. Please try again.';
         this.loading = false;
       }

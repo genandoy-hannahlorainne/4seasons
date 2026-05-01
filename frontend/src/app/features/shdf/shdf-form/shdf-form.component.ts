@@ -338,7 +338,7 @@ export class SHDFFormComponent implements OnInit {
     // Validate the form
     if (this.form.invalid) {
       this.errorMessage = this.getErrorMessage();
-      console.error('Form validation errors:', this.getFormValidationErrors());
+      // Form validation errors (removed debug log)
 
       // Find which step has errors and navigate to it
       const errors = this.getFormValidationErrors();
@@ -405,12 +405,7 @@ export class SHDFFormComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    // Debug: Log the payload contents
-    console.log('[SHDF Submit] Student ID:', this.studentId);
-    console.log('[SHDF Submit] Form data being sent:');
-    for (let pair of payload.entries()) {
-      console.log(pair[0] + ': ' + pair[1]);
-    }
+    // Debug: payload contents removed for production
 
     // Use submitComprehensive for the comprehensive form
     this.shdService.submitComprehensive(payload).subscribe({
@@ -430,10 +425,9 @@ export class SHDFFormComponent implements OnInit {
           }, 2000);
         }
       },
-      error: (err: any) => {
+        error: (err: any) => {
         this.loading = false;
         this.errorMessage = err?.error?.message ?? 'Submission failed. Please try again.';
-        console.error('Submission error:', err);
         this.scrollToTop();
       },
     });

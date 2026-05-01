@@ -37,14 +37,14 @@ export class VisitListComponent {
   }
 
   viewProfile(studentId: number) {
-    console.log('View profile:', studentId);
+    // View profile action
   }
 
   newVisit(studentId?: number) {
-    console.log('New visit:', studentId);
+    // New visit action
   }
 
   viewAllVisits(studentId: number) {
-    console.log('View all visits:', studentId);
+    // View all visits action
   }
 }

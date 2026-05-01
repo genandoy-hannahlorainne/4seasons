@@ -26,7 +26,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
       // Case-insensitive role check for admin access
       const userRole = user.role_name?.toLowerCase();
       if (userRole !== 'admin') {
-        console.error(`🔒 SECURITY VIOLATION: User '${user.username}' with role '${user.role_name}' attempted unauthorized admin access`);
+        // Security: Unauthorized admin access attempt
 
         // Redirect based on user's actual role
         const roleRoutes: { [key: string]: string } = {
@@ -44,7 +44,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
       return true;
     }),
     catchError(error => {
-      console.error('🔒 Admin Guard: Backend verification error:', error);
+      // Admin Guard: Backend verification error
       authService.logout().subscribe();
       router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
       return of(false);

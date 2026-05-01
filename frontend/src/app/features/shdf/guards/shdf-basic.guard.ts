@@ -11,19 +11,18 @@ export const canAccessBasicForm: CanActivateFn = (route: ActivatedRouteSnapshot)
   const shdService = inject(SHDFService);
   const studentId = Number(route.paramMap.get('studentId'));
 
-  console.log('[SHDF Guard] Checking basic form access for student:', studentId);
+  // Checking basic form access for student
 
   if (!studentId) {
-    console.log('[SHDF Guard] No student ID, redirecting to dashboard');
+    // No student ID, redirecting to dashboard
     router.navigate(['/dashboard/student']);
     return false;
   }
 
   return shdService.getStatus(studentId).pipe(
     map((status: SHDFStatus) => {
-      console.log('[SHDF Guard] Status received:', status);
+      // Status received
       if (status.basic_completed) {
-        console.log('[SHDF Guard] Basic completed, blocking access and redirecting to success');
         // Already completed - redirect to success page
         router.navigate(['/shdf', studentId, 'success'], {
           queryParams: {
@@ -34,11 +33,11 @@ export const canAccessBasicForm: CanActivateFn = (route: ActivatedRouteSnapshot)
         });
         return false;
       }
-      console.log('[SHDF Guard] Basic not completed, allowing access');
+      // Basic not completed, allowing access
       return true;
     }),
     catchError((err: any) => {
-      console.error('[SHDF Guard] Status check failed:', err);
+      // Status check failed
       // If status check fails, allow access (no status record yet)
       return of(true);
     })
