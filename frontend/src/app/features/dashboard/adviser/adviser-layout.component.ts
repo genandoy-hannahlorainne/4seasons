@@ -42,6 +42,10 @@ import { AuthService } from '../../../core/services/auth.service';
             <i class="fa-solid fa-chart-line nav-icon-fa"></i>
             <span class="nav-label">Health Monitor</span>
           </a>
+          <a routerLink="/dashboard/adviser/shdf-download" routerLinkActive="active" class="nav-item" title="SHDF Download" (click)="closeMobile()">
+            <i class="fa-solid fa-download nav-icon-fa"></i>
+            <span class="nav-label">Download SHDF</span>
+          </a>
           <a routerLink="/dashboard/adviser/alerts" routerLinkActive="active" class="nav-item" title="Alerts" (click)="closeMobile()">
             <i class="fa-solid fa-bell nav-icon-fa"></i>
             <span class="nav-label">Alerts</span>
