@@ -105,9 +105,13 @@
     </div>
 
     <div class="action-buttons">
-      <button class="btn-primary" [routerLink]="['/shdf', studentId]">View My SHDF</button>
+      <button class="btn-primary" (click)="viewShdf()">View My SHDF</button>
       <button class="btn-secondary" (click)="goToDashboard()">Back to Dashboard</button>
     </div>
+
+    <p class="countdown-text">
+      Redirecting to dashboard in <strong>{{ countdown }}</strong> second{{ countdown !== 1 ? 's' : '' }}...
+    </p>
 
   </div>
 

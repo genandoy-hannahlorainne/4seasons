@@ -292,3 +292,16 @@
     font-size: 1.35rem;
   }
 }
+
+// ── Countdown ─────────────────────────────────────────
+.countdown-text {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 0;
+
+  strong {
+    color: #6b7280;
+    font-weight: 700;
+  }
+}

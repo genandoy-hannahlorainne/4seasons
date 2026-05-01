@@ -107,11 +107,30 @@ class SHDFController extends Controller
      */
     public function storeComprehensive(SHDFFormRequest $request): JsonResponse
     {
+        $user = $request->user();
+
         \Log::info('[SHDF Controller] Comprehensive submission attempt', [
-            'user_id' => $request->user()?->user_id,
-            'user_role' => $request->user()?->role?->role_name,
+            'user_id' => $user?->user_id,
+            'user_role' => $user?->role?->role_name,
             'student_id' => $request->input('student_id'),
         ]);
+
+        // Fix unmapped student user_id before policy check (mirrors storeBasic logic)
+        $studentId = (int) $request->input('student_id');
+        if ($studentId && $user) {
+            $student = Student::where('student_id', $studentId)->first();
+            if ($student) {
+                $role = strtolower(trim($user->role?->role_name ?? ''));
+                if ($role === 'student'
+                    && (empty($student->user_id) || (int) $student->user_id !== (int) $user->user_id)
+                    && !empty($user->username)
+                    && !empty($student->student_number)
+                    && strtolower(trim($user->username)) === strtolower(trim($student->student_number))) {
+                    $student->update(['user_id' => $user->user_id]);
+                    $student->refresh();
+                }
+            }
+        }
 
         try {
             $result = $this->shdService->submitComprehensive(

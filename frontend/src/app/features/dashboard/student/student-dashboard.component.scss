@@ -576,6 +576,27 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
       margin-bottom: $spacing-md;
     }
 
+    .shdf-complete-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #dcfce7;
+      color: #15803d;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      border: 1px solid #bbf7d0;
+      margin-bottom: $spacing-sm;
+    }
+
+    .shdf-done-text {
+      color: $color-text-muted;
+      font-size: $font-size-sm;
+      line-height: 1.6;
+      margin: 0;
+    }
+
     .btn-shdf {
       width: 100%;
       padding: $spacing-sm $spacing-md;
@@ -599,6 +620,14 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
       &:active {
         transform: translateY(0);
+      }
+
+      &.btn-shdf-pending {
+        background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+
+        &:hover {
+          box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        }
       }
     }
   }
