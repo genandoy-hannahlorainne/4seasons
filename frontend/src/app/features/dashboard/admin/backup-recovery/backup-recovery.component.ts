@@ -40,7 +40,7 @@ export class BackupRecoveryComponent implements OnInit {
       error: (err: any) => {
         this.loading = false;
         this.error = 'Failed to load backup history';
-        console.error('Error loading backups:', err);
+        // Error loading backups
       }
     });
   }
@@ -62,7 +62,7 @@ export class BackupRecoveryComponent implements OnInit {
       error: (err: any) => {
         this.creating = false;
         this.error = 'Failed to create backup. Please try again.';
-        console.error('Error creating backup:', err);
+        // Error creating backup
       }
     });
   }
@@ -84,7 +84,7 @@ export class BackupRecoveryComponent implements OnInit {
       },
       error: (err: any) => {
         this.error = 'Failed to delete backup';
-        console.error('Error deleting backup:', err);
+        // Error deleting backup
       }
     });
   }
@@ -117,7 +117,7 @@ export class BackupRecoveryComponent implements OnInit {
       error: (err: any) => {
         this.loading = false;
         this.error = 'Failed to restore backup. Please try again or restore manually.';
-        console.error('Error restoring backup:', err);
+        // Error restoring backup
       }
     });
   }

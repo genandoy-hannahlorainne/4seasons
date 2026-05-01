@@ -46,7 +46,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
       }
 
       // User doesn't have required role - DENY ACCESS and log security violation
-      console.error(`🔒 SECURITY VIOLATION: User '${user.username}' with role '${userRole}' attempted unauthorized access to route requiring [${requiredRoles.join(', ')}]`);
+        // Security: Unauthorized access attempt
 
       // Redirect based on user's actual role
       const roleRoutes: { [key: string]: string } = {
@@ -61,7 +61,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
       return false;
     }),
     catchError(error => {
-      console.error('🔒 Role Guard: Backend verification error:', error);
+      // Role Guard: Backend verification error
       authService.logout().subscribe();
       router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
       return of(false);

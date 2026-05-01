@@ -840,7 +840,7 @@ export class HealthRiskVisualizationComponent implements OnInit, OnDestroy {
           this.loading = false;
         },
         error: (err) => {
-          console.error('Error loading health data:', err);
+          // Error loading health data
           this.error = 'Failed to load health risk data. Please try again.';
           this.loading = false;
         }

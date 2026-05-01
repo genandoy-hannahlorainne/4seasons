@@ -247,12 +247,11 @@ export class AdviserProfileComponent implements OnInit {
 
       this.adviserService.getAdviserProfile().subscribe({
         next: (response: any) => {
-          console.log('Adviser Profile API Response:', response);
+          // Adviser profile API response received
           if (response.success && response.data) {
             const profile = response.data;
-            console.log('Profile Data:', profile);
-            console.log('Employee ID from API:', profile.employee_id);
-            console.log('Birth Date from API:', profile.birth_date);
+            // Profile data retrieved from API
+            // Employee ID and birth date available
 
             this.profileData.advisoryClass = profile.advisory_class || 'Not assigned';
             this.profileData.fullName = profile.full_name || this.profileData.fullName;
@@ -267,11 +266,11 @@ export class AdviserProfileComponent implements OnInit {
               || this.profileData.employeeId;
             this.profileData.employeeId = (empId && empId !== 'Loading...') ? empId : 'Not set';
 
-            console.log('Profile Data After Update:', this.profileData);
+          // Profile data updated
           }
         },
         error: (err) => {
-          console.error('Error loading adviser profile:', err);
+        // Error loading adviser profile
           this.profileData.advisoryClass = 'Not assigned';
           this.profileData.birthDate = 'Not set';
           this.profileData.employeeId = 'Not set';

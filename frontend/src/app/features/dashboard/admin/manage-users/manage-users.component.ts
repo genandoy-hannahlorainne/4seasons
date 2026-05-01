@@ -139,12 +139,12 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       // Test auth endpoint first
       this.adminService.testAuth().subscribe({
         next: (response) => {
-          console.log('✅ Auth test successful:', response);
+          // Auth test successful
 
           // Now test getAllUsers directly
           this.adminService.getAllUsers().subscribe({
             next: (usersResponse) => {
-              console.log('✅ getAllUsers test successful:', usersResponse);
+              // getAllUsers test successful
               alert('Authentication and API test successful!\n\n' +
                 'Auth User: ' + (response.user?.username || 'Unknown') + '\n' +
                 'Auth Role: ' + (response.user?.role || 'Unknown') + '\n\n' +
@@ -201,13 +201,13 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     }
 
     if (!token) {
-      console.error('❌ No authentication token found');
+      // No authentication token found
       this.errorMessage = 'Authentication token missing. Please login again.';
       this.router.navigate(['/login']);
       return;
     }
 
-    console.log('✅ Authenticated as admin, loading users');
+    // Authenticated as admin, loading users
     this.loadGradeLevels();
 
     // Auto-refresh users every 30 seconds (startWith(0) handles initial load)
@@ -289,18 +289,13 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
       // Handle different response formats
       if (response.data && response.data.users) {
-        console.log('📊 Using response.data.users format');
+        // Using response.data.users format
         users = response.data.users;
       } else if (response.users) {
-        console.log('📊 Using response.users format');
+        // Using response.users format
         users = response.users;
       } else {
-        console.error('❌ No users data found in response structure:', {
-          hasData: !!response.data,
-          hasUsers: !!response.users,
-          dataKeys: response.data ? Object.keys(response.data) : 'no data',
-          responseKeys: Object.keys(response)
-        });
+        // No users data found in response structure
         this.errorMessage = 'Invalid response structure from server';
         return;
       }
@@ -344,7 +339,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         }));
         // Mapped flat users array
       } else {
-        console.error('❌ Unexpected users data structure:', users);
+        // Unexpected users data structure
         this.errorMessage = 'Unexpected data format from server';
         return;
       }
@@ -396,9 +391,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   viewUser(user: any): void {
-    console.log('👤 Viewing user:', user);
-    console.log('Employee ID:', user.employee_id);
-    console.log('Role:', user.role);
+    // Viewing user
     this.selectedUser = { ...user };
     this.editingUser = { ...user };
     this.showUserModal = true;

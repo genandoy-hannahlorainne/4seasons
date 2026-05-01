@@ -571,7 +571,7 @@ export class ClassManagementComponent implements OnInit {
         this.schoolYears = response.data || [];
       },
       error: (error) => {
-        console.error('Error loading school years:', error);
+        // Error loading school years
       }
     });
   }
@@ -588,12 +588,12 @@ export class ClassManagementComponent implements OnInit {
           this.classRoster = response.data;
         } else {
           this.classRoster = null;
-          console.error('Failed to load class roster:', response.message);
+          // Failed to load class roster
         }
         this.clearSelection();
       },
       error: (error) => {
-        console.error('Error loading class roster:', error);
+        // Error loading class roster
         this.classRoster = null;
         this.clearSelection();
       }
@@ -673,20 +673,20 @@ export class ClassManagementComponent implements OnInit {
       return;
     }
 
-    console.log('Loading sections for school year:', this.targetSchoolYearId, 'grade:', this.targetGradeLevel);
+    // Loading sections for school year and grade
 
     this.adviserService.getSections(this.targetSchoolYearId, this.targetGradeLevel).subscribe({
       next: (response: any) => {
         if (response.success) {
           this.targetSections = response.data || [];
-          console.log('Loaded sections:', this.targetSections);
+          // Sections loaded
         } else {
           this.targetSections = [];
         }
         this.targetSectionId = null;
       },
       error: (error) => {
-        console.error('Error loading sections:', error);
+        // Error loading sections
         this.targetSections = [];
         this.targetSectionId = null;
       }
@@ -718,11 +718,11 @@ export class ClassManagementComponent implements OnInit {
       to_section_id: this.targetSectionId
     };
 
-    console.log('Promoting students:', promotionData);
+    // Promoting students
 
     this.adviserService.promoteStudents(promotionData).subscribe({
       next: (response: any) => {
-        console.log('Promotion response:', response);
+        // Promotion response received
         this.promoting = false;
 
         if (response.success) {
@@ -738,7 +738,7 @@ export class ClassManagementComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error promoting students:', error);
+        // Error promoting students
         this.promoting = false;
         this.promotionError = error.error?.message || 'An error occurred while promoting students';
       }
@@ -771,11 +771,11 @@ export class ClassManagementComponent implements OnInit {
           this.selectedStudent = this.mapStudentData(response.data);
           this.showStudentModal = true;
         } else {
-          console.error('Failed to load student profile');
+          // Failed to load student profile
         }
       },
       error: (error) => {
-        console.error('Error loading student profile:', error);
+        // Error loading student profile
       }
     });
   }

@@ -782,7 +782,7 @@ export class HealthMonitoringComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading heatmap:', err);
+        // Error loading heatmap
         this.error = 'Failed to load health data. Please try again.';
         this.loading = false;
       }

@@ -534,7 +534,7 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('Auto-refresh error:', err);
+          // Auto-refresh error
         }
       });
   }
@@ -552,7 +552,7 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.adviserService.getAdviserNotifications().subscribe({
       next: (response) => {
-        console.log('✅ Notifications response:', response);
+        // Notifications response received
         
         // Handle both Laravel API format (response.data.notifications) and legacy format (response.notifications)
         let notifications = [];
@@ -568,11 +568,11 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
         }
         
         this.alerts = this.normalizeNotifications(notifications);
-        console.log('✅ Loaded', this.alerts.length, 'notifications');
+        // Notifications loaded
         this.loading = false;
       },
       error: (err) => {
-        console.error('❌ Error loading notifications:', err);
+        // Error loading notifications
         this.loading = false;
       }
     });

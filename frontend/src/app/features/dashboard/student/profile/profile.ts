@@ -259,7 +259,7 @@ export class StudentProfileComponent implements OnInit {
     // onSubmit called
 
     if (this.profileForm.invalid) {
-      console.error('Form is invalid');
+      // Form is invalid
       this.errorMessage = 'Please fill in all required fields correctly';
       return;
     }

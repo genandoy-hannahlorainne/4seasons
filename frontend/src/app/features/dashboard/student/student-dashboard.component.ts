@@ -105,13 +105,13 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
           profile = response.profile;
         } else if (response.success && response.data && response.data.profile) {
           profile = response.data.profile;
-          console.log('📋 Using response.data.profile');
+          // Using response.data.profile
         } else if (response.profile) {
           profile = response.profile;
-          console.log('📋 Using response.profile (no success check)');
+          // Using response.profile (no success check)
         } else if (response.data && response.data.profile) {
           profile = response.data.profile;
-          console.log('📋 Using response.data.profile (no success check)');
+          // Using response.data.profile (no success check)
         }
 
           // Selected profile parsed
@@ -207,7 +207,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
             // Vitals set
           } else {
-            console.warn('⚠️ No personal_info in medical data');
+            // No personal_info in medical data
             // Use default values when no vitals are available
             this.height = '--';
             this.weight = '--';
@@ -261,16 +261,11 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('❌ Error loading medical data:', {
-          status: error.status,
-          message: error.message,
-          error: error.error,
-          url: error.url
-        });
+        // Error loading medical data
 
         // Don't set error state here - medical data is secondary
         // Dashboard should still show basic student info
-        console.warn('⚠️ Medical data failed to load, but continuing with basic profile');
+        // Medical data failed to load, but continuing with basic profile
         this.loading = false;
       }
     });
@@ -335,12 +330,12 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
               this.loadFormComponent();
             }, 100);
           } else {
-            console.error('Student ID not found');
+            // Student ID not found
             this.error = 'Unable to load SHDF form. Student ID not found.';
           }
         },
         error: (error) => {
-          console.error('Error loading student profile for SHDF:', error);
+          // Error loading student profile for SHDF
           this.error = 'Unable to load SHDF form.';
         }
       });
@@ -349,11 +344,11 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
   async loadFormComponent(): Promise<void> {
     if (!this.formContainer) {
-      console.error('Form container not found');
+      // Form container not found
       return;
     }
     
-    console.log('Loading form component...');
+    // Loading form component
     
     // Clear any existing component
     this.formContainer.clear();
@@ -363,7 +358,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
       const { SHDFFormComponent } = await import('../../shdf/shdf-form/shdf-form.component');
       this.formComponentRef = this.formContainer.createComponent(SHDFFormComponent);
       
-      console.log('Form component created');
+      // Form component created
       
       // Set inputs
       this.formComponentRef.instance.studentId = this.comprehensiveFormStudentId;
@@ -381,7 +376,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
       // Trigger change detection
       this.formComponentRef.changeDetectorRef.detectChanges();
     } catch (error) {
-      console.error('Error loading form component:', error);
+      // Error loading form component
       this.error = 'Failed to load form component';
     }
   }

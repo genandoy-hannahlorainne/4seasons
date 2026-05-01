@@ -698,7 +698,7 @@ export class VisitsListComponent implements OnInit {
         this.filterVisits();
       },
       error: (err) => {
-        console.error('Error loading visits:', err);
+        // Error loading visits
         this.loading = false;
         this.error = 'Failed to load visits. Please try again.';
       }

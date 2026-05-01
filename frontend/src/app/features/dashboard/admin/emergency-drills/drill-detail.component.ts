@@ -70,7 +70,7 @@ export class DrillDetailComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading drill details:', error);
+        // Error loading drill details
         this.loading = false;
       }
     });
@@ -105,7 +105,7 @@ export class DrillDetailComponent implements OnInit {
           this.closeConfirmModal();
         },
         error: (error) => {
-          console.error('Error starting drill:', error);
+          // Error starting drill
           const errorMessage = error?.error?.message || 'Failed to start drill';
           alert(errorMessage);
           this.closeConfirmModal();
@@ -187,7 +187,7 @@ export class DrillDetailComponent implements OnInit {
         this.searchLoading = false;
       },
       error: (error: any) => {
-        console.error('Error searching users:', error);
+        // Error searching users
         this.availableStudents = [];
         this.searchLoading = false;
       }
@@ -236,7 +236,7 @@ export class DrillDetailComponent implements OnInit {
         this.loadDrillDetails();
       },
       error: (error: any) => {
-        console.error('Error adding participants:', error);
+        // Error adding participants
         this.adding = false;
         alert('Failed to add participants');
       }

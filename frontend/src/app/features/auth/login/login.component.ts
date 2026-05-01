@@ -100,7 +100,7 @@ export class LoginComponent implements OnInit {
         if (userRole !== expectedRole) {
           this.authService.logout();
           this.error = `You selected to login as "${expectedRole}" but this account belongs to "${userRole}". Please use the correct account for ${expectedRole}.`;
-          console.error(`🔒 SECURITY VIOLATION: Login attempt with mismatched role. Selected: ${expectedRole}, Actual: ${userRole}, User: ${username}`);
+          // Security: Role mismatch detected
           return;
         }
 
@@ -126,7 +126,7 @@ export class LoginComponent implements OnInit {
         // Check if error is from backend role validation
         if (err.status === 403) {
           this.error = err.error?.message || 'Access denied. Your account profile is incomplete or inactive.';
-          console.error('🔒 SECURITY VIOLATION: Backend role validation failed', err.error);
+          // Security: Backend role validation failed
         } else {
           this.error = err.error?.message || 'Invalid username or password. Please check your credentials and try again.';
         }

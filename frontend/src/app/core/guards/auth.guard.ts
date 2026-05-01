@@ -25,7 +25,7 @@ export const authGuard: CanActivateFn = (route, state) => {
       return false;
     }),
     catchError(error => {
-      console.error('🔒 Auth Guard: Backend verification error:', error);
+      // Auth Guard: Backend verification error
       authService.logout().subscribe();
       router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
       return of(false);
