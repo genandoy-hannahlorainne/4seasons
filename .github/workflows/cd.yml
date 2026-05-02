@@ -51,9 +51,10 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SERVER_SSH_PORT }}
-        source: "nginx/*.conf,docker-compose.yml"
+        source: "nginx/*.conf,docker-compose.prod.yml"
         target: "${{ secrets.SERVER_DEPLOY_PATH }}"
+        timeout: 60s
+        debug: true
 
     - name: Deploy on server via SSH
       uses: appleboy/ssh-action@v1.0.3
@@ -61,11 +62,17 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SERVER_SSH_PORT }}
+        timeout: 60s
+        command_timeout: 10m
+        debug: true
         script_stop: true
         script: |
           set -e
           cd "${{ secrets.SERVER_DEPLOY_PATH }}"
+
+          mv docker-compose.prod.yml docker-compose.yml || true
+
+          mv docker-compose.prod.yml docker-compose.yml || true
 
           if docker compose version >/dev/null 2>&1; then
             COMPOSE_CMD="docker compose"
