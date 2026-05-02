@@ -25,18 +25,18 @@ interface Alert {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="health-monitoring">
+      <div class="dashboard-wrap">
       <div class="page-header">
-        <div>
-          <h1 class="page-title">Class Health Monitoring</h1>
-          <p class="page-subtitle">{{ advisoryClass }} • {{ totalStudents }} Students</p>
-        </div>
-        <div class="header-actions">
-          <select [(ngModel)]="selectedDays" (change)="loadHeatmap()" class="days-select">
-            <option [value]="7">Last 7 Days</option>
-            <option [value]="14">Last 14 Days</option>
-            <option [value]="30">Last 30 Days</option>
-          </select>
-        </div>
+        <h1 class="page-title">Class Health Monitoring</h1>
+        <p class="page-subtitle">{{ advisoryClass }} • {{ totalStudents }} Students</p>
+      </div>
+
+      <div class="toolbar-row">
+        <select [(ngModel)]="selectedDays" (change)="loadHeatmap()" class="days-select">
+          <option [value]="7">Last 7 Days</option>
+          <option [value]="14">Last 14 Days</option>
+          <option [value]="30">Last 30 Days</option>
+        </select>
       </div>
 
       <div *ngIf="loading" class="loading-state">
@@ -79,11 +79,18 @@ interface Alert {
             </div>
 
             <div class="heatmap-container">
+              <!-- Day-of-week headers -->
+              <div class="calendar-dow-row">
+                <div class="dow-header" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">{{ d }}</div>
+              </div>
+
+              <!-- Calendar grid: cells are placed by CSS grid-column based on weekday -->
               <div class="heatmap-grid">
                 <div
                   *ngFor="let day of visitsByDate"
                   class="heatmap-cell"
                   [ngClass]="getHeatmapClass(day.percentage)"
+                  [style.grid-column]="getDayOfWeek(day.date)"
                   [title]="getTooltip(day)"
                   (click)="selectDay(day)">
                   <div class="cell-date">{{ formatDate(day.date) }}</div>
@@ -214,7 +221,8 @@ interface Alert {
             </div>
           </div>
         </div>
-      </div>
+      </div><!-- /.content -->
+      </div><!-- /.dashboard-wrap -->
     </div>
   `,
   styles: [`
@@ -222,18 +230,24 @@ interface Alert {
       padding: 2rem;
       background: #f5f7fa;
       min-height: 100vh;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .dashboard-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     .page-header {
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       border-radius: 12px;
       padding: 2rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       color: white;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .page-title {
@@ -244,15 +258,22 @@ interface Alert {
     }
 
     .page-subtitle {
-      color: rgba(255,255,255,0.8);
-      font-weight: 500;
+      color: rgba(255,255,255,0.85);
       margin: 0;
       font-size: 0.9rem;
+      opacity: 0.85;
+    }
+
+    .toolbar-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1.5rem;
     }
 
     .header-actions {
       display: flex;
       gap: 1rem;
+      padding-top: 0.25rem;
     }
 
     .days-select {
@@ -264,6 +285,12 @@ interface Alert {
       font-size: 0.875rem;
       cursor: pointer;
       outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 2rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.6rem center;
 
       option { background: #052355; color: white; }
 
@@ -306,6 +333,7 @@ interface Alert {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
+      width: 100%;
     }
 
     .alerts-section {
@@ -363,6 +391,8 @@ interface Alert {
       border-radius: 12px;
       padding: 1.5rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .card-header {
@@ -405,6 +435,7 @@ interface Alert {
       grid-template-columns: 1fr 320px;
       gap: 1.5rem;
       align-items: start;
+      width: 100%;
     }
 
     /* ── Donut Card ── */
@@ -486,44 +517,68 @@ interface Alert {
 
     .heatmap-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Day-of-week header row */
+    .calendar-dow-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .dow-header {
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.4rem 0;
     }
 
     .heatmap-cell {
       background: #f9fafb;
-      border: 2px solid #e5e7eb;
+      border: 1.5px solid #e5e7eb;
       border-radius: 10px;
-      padding: 1rem;
+      padding: 0.6rem 0.4rem;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
-      
+      min-height: 90px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        z-index: 1;
       }
-      
+
       &.heat-none {
         background: #f9fafb;
         border-color: #e5e7eb;
       }
-      
+
       &.heat-low {
         background: #dbeafe;
         border-color: #93c5fd;
       }
-      
+
       &.heat-medium {
         background: #fef3c7;
         border-color: #fcd34d;
       }
-      
+
       &.heat-high {
         background: #fed7aa;
         border-color: #fb923c;
       }
-      
+
       &.heat-critical {
         background: #fecaca;
         border-color: #f87171;
@@ -531,21 +586,22 @@ interface Alert {
     }
 
     .cell-date {
-      font-size: 0.85rem;
+      font-size: 0.72rem;
       font-weight: 600;
       color: #6b7280;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.3rem;
     }
 
     .cell-value {
-      font-size: 1.8rem;
+      font-size: 1.35rem;
       font-weight: 800;
       color: #1f2937;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.15rem;
+      line-height: 1;
     }
 
     .cell-count {
-      font-size: 0.8rem;
+      font-size: 0.68rem;
       color: #9ca3af;
     }
 
@@ -726,8 +782,10 @@ interface Alert {
 
     @media (max-width: 768px) {
       .health-monitoring { padding: 1rem; }
-      .page-header { flex-direction: column; }
-      .heatmap-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+      .toolbar-row { justify-content: flex-start; }
+      .heatmap-grid { gap: 0.3rem; }
+      .heatmap-cell { min-height: 70px; padding: 0.4rem 0.2rem; }
+      .cell-value { font-size: 1rem; }
       .details-stats { grid-template-columns: 1fr; }
       .trending-bar { width: 80px; }
     }
@@ -818,6 +876,12 @@ export class HealthMonitoringComponent implements OnInit {
 
   selectDay(day: HeatmapDay): void {
     this.selectedDay = day;
+  }
+
+  getDayOfWeek(dateStr: string): number {
+    // Returns 1-7 (Sun=1 … Sat=7) for CSS grid-column
+    const date = new Date(dateStr);
+    return date.getDay() + 1;
   }
 
   getSymptomsList(day: HeatmapDay): any[] {
