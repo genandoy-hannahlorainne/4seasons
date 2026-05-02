@@ -85,11 +85,11 @@
                 <button
                   type="button"
                   class="btn-download csv"
-                  (click)="downloadAsCSV(student)"
+                  (click)="downloadAsExcel(student)"
                   [disabled]="downloadingStudentId === student.student_id"
-                  title="Download as CSV">
-                  <i class="fa-solid fa-file-csv"></i>
-                  <span class="btn-label">CSV</span>
+                  title="Download as Excel">
+                  <i class="fa-solid fa-file-excel"></i>
+                  <span class="btn-label">Excel</span>
                 </button>
                 <button
                   type="button"
