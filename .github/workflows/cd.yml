@@ -70,8 +70,13 @@ jobs:
           set -e
           cd "${{ secrets.SERVER_DEPLOY_PATH }}"
 
-          mv docker-compose.prod.yml docker-compose.yml || true
-
+          mkdir -p nginx
+          if [ -f api.studentcare.site.conf ]; then
+            mv api.studentcare.site.conf nginx/
+          fi
+          if [ -f studentcare.site.conf ]; then
+            mv studentcare.site.conf nginx/
+          fi
           mv docker-compose.prod.yml docker-compose.yml || true
 
           if docker compose version >/dev/null 2>&1; then
