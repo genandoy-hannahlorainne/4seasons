@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Mail;
+use App\Services\MailService;
 use Illuminate\Support\Facades\Log;
 
 class AdminController extends BaseController
@@ -266,21 +266,16 @@ class AdminController extends BaseController
 
             // Send email notification if email is provided
             if ($request->email) {
-                try {
-                    $emailData = [
-                        'username' => $user->username,
-                        'full_name' => $student->full_name,
-                        'student_number' => $student->student_number,
-                        'grade_section' => $section->gradeLevel->level_name . ' - ' . $section->section_name,
-                        'email' => $request->email,
-                        'temp_password' => $tempPassword
-                    ];
+                $emailData = [
+                    'username' => $user->username,
+                    'full_name' => $student->full_name,
+                    'student_number' => $student->student_number,
+                    'grade_section' => $section->gradeLevel->level_name . ' - ' . $section->section_name,
+                    'email' => $request->email,
+                    'temp_password' => $tempPassword
+                ];
 
-                    Mail::to($request->email)->send(new UserAccountCreated($emailData, $tempPassword, 'Student'));
-                } catch (\Exception $e) {
-                    // Log email error but don't fail the student creation
-                    Log::warning('Failed to send account creation email: ' . $e->getMessage());
-                }
+                MailService::sendAccountCreatedEmail($request->email, $emailData, $tempPassword, 'Student');
             }
 
             return $this->sendResponse([
@@ -1633,18 +1628,14 @@ class AdminController extends BaseController
             DB::commit();
 
             if ($request->email) {
-                try {
-                    Mail::to($request->email)->send(new UserAccountCreated([
-                        'username'      => $user->username,
-                        'full_name'     => $student->full_name,
-                        'student_number'=> $student->student_number,
-                        'grade_section' => $section->gradeLevel->level_name . ' - ' . $section->section_name,
-                        'email'         => $request->email,
-                        'temp_password' => $tempPassword,
-                    ], $tempPassword, 'Student'));
-                } catch (\Exception $e) {
-                    Log::warning('Failed to send account creation email: ' . $e->getMessage());
-                }
+                MailService::sendAccountCreatedEmail($request->email, [
+                    'username'      => $user->username,
+                    'full_name'     => $student->full_name,
+                    'student_number'=> $student->student_number,
+                    'grade_section' => $section->gradeLevel->level_name . ' - ' . $section->section_name,
+                    'email'         => $request->email,
+                    'temp_password' => $tempPassword,
+                ], $tempPassword, 'Student');
             }
 
             return $this->sendResponse([
@@ -1752,22 +1743,15 @@ class AdminController extends BaseController
             DB::commit();
 
             // Send email notification
-            try {
-                $emailData = [
-                    'username' => $user->username,
-                    'full_name' => $user->full_name,
-                    'email' => $input['email'] ?? null,
-                    'temp_password' => $tempPassword,
-                    'role' => ucfirst(str_replace('_', ' ', $input['role']))
-                ];
+            $emailData = [
+                'username' => $user->username,
+                'full_name' => $user->full_name,
+                'email' => $input['email'] ?? null,
+                'temp_password' => $tempPassword,
+                'role' => ucfirst(str_replace('_', ' ', $input['role']))
+            ];
 
-                if (!empty($input['email'])) {
-                    Mail::to($input['email'])->send(new UserAccountCreated($emailData, $tempPassword, ucfirst(str_replace('_', ' ', $input['role']))));
-                }
-            } catch (\Exception $e) {
-                // Log email error but don't fail the user creation
-                Log::warning('Failed to send account creation email: ' . $e->getMessage());
-            }
+            MailService::sendAccountCreatedEmail($input['email'] ?? null, $emailData, $tempPassword, ucfirst(str_replace('_', ' ', $input['role'])));
 
             return $this->sendResponse([
                 'user' => [
@@ -1893,6 +1877,20 @@ class AdminController extends BaseController
 
                     // Update section enrollment
                     $section->increment('current_enrollment');
+
+                    // Send email notification if email is provided
+                    if (!empty($studentData['email'])) {
+                        $emailData = [
+                            'username' => $user->username,
+                            'full_name' => $user->full_name,
+                            'student_number' => $studentData['student_number'],
+                            'grade_section' => $section->gradeLevel->level_name . ' - ' . $section->section_name,
+                            'email' => $studentData['email'],
+                            'temp_password' => $tempPassword
+                        ];
+
+                        MailService::sendAccountCreatedEmail($studentData['email'], $emailData, $tempPassword, 'Student');
+                    }
 
                     $results['successful']++;
 
