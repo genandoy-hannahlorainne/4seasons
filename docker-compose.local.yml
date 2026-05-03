@@ -6,7 +6,7 @@ services:
     ports:
       - "8082:80"
     env_file:
-      - ./backend-laravel/.env.local
+      - ./backend-laravel/.env.docker
     environment:
       - APP_ENV=local
       - APP_KEY=base64:F7xSMYbmECxKhU/++3Xkc2eCu73jBsMXGRgFs7SYeBI=
