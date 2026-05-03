@@ -234,6 +234,13 @@ jobs:
     - name: Start services with Docker Compose
       run: |
         cp backend-laravel/.env.example backend-laravel/.env
+        cp backend-laravel/.env.example backend-laravel/.env.docker
+        echo "DB_CONNECTION=mysql" >> backend-laravel/.env.docker
+        echo "DB_HOST=mysql" >> backend-laravel/.env.docker
+        echo "DB_PORT=3306" >> backend-laravel/.env.docker
+        echo "DB_DATABASE=4seasons" >> backend-laravel/.env.docker
+        echo "DB_USERNAME=root" >> backend-laravel/.env.docker
+        echo "DB_PASSWORD=secret" >> backend-laravel/.env.docker
         echo "DB_CONNECTION=mysql" >> backend-laravel/.env
         echo "DB_HOST=mysql" >> backend-laravel/.env
         echo "DB_PORT=3306" >> backend-laravel/.env
