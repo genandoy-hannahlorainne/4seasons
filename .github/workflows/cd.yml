@@ -88,6 +88,22 @@ jobs:
             exit 1
           fi
 
+          # Disable IPv6 on Docker daemon to fix registry pull failures
+          if [ ! -f /etc/docker/daemon.json ]; then
+            echo '{"ipv6": false}' | sudo tee /etc/docker/daemon.json > /dev/null
+            sudo systemctl restart docker
+            sleep 5
+          elif ! grep -q '"ipv6"' /etc/docker/daemon.json; then
+            sudo python3 -c "
+import json, sys
+with open('/etc/docker/daemon.json') as f: d = json.load(f)
+d['ipv6'] = False
+with open('/etc/docker/daemon.json', 'w') as f: json.dump(d, f)
+"
+            sudo systemctl restart docker
+            sleep 5
+          fi
+
           $COMPOSE_CMD pull
           $COMPOSE_CMD up -d
 
