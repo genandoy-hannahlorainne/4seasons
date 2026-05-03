@@ -88,13 +88,13 @@ jobs:
             exit 1
           fi
 
-          # Disable IPv6 on Docker daemon to fix registry pull failures
+          # Fix DNS and IPv6 issues for Docker registry pulls
           if [ ! -f /etc/docker/daemon.json ]; then
-            echo '{"ipv6": false}' | sudo tee /etc/docker/daemon.json > /dev/null
+            echo '{"ipv6": false, "dns": ["1.1.1.1", "8.8.8.8"]}' | sudo tee /etc/docker/daemon.json > /dev/null
             sudo systemctl restart docker || true
             sleep 10
-          elif ! grep -q '"ipv6"' /etc/docker/daemon.json; then
-            sudo sed -i 's/^{/{"ipv6": false,/' /etc/docker/daemon.json
+          elif ! grep -q '"dns"' /etc/docker/daemon.json; then
+            sudo sed -i 's/^{/{"ipv6": false, "dns": ["1.1.1.1", "8.8.8.8"],/' /etc/docker/daemon.json
             sudo systemctl restart docker || true
             sleep 10
           fi
