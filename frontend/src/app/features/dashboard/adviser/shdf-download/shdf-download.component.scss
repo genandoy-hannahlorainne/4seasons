@@ -281,6 +281,12 @@
     font-size: 0.9rem;
   }
 
+  .mobile-label {
+    display: none;
+    font-weight: 600;
+    color: #444;
+  }
+
   .section-badge {
     display: inline-block;
     background: #f0f0f0;
@@ -401,17 +407,68 @@
     padding: 1rem;
 
     .overview-card {
-      padding: 1.5rem;
+      padding: 1.25rem;
     }
 
-    .table-card .table .thead,
-    .table-card .table .tbody .trow {
-      grid-template-columns: 1fr 1fr 1fr;
+    .stats-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
 
-      div:nth-child(4),
-      div:nth-child(5) {
-        grid-column: span 3;
-        margin-top: 0.5rem;
+    .table-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+
+      .search-wrap {
+        max-width: 100%;
+      }
+    }
+
+    /* Hide the desktop column header row */
+    .table .thead {
+      display: none;
+    }
+
+    /* Each row becomes a card */
+    .table .tbody .trow {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      background: #fff;
+
+      /* Student name — prominent */
+      .student-cell .student-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a2744;
+      }
+
+      /* LRN — small muted line */
+      .muted {
+        font-size: 0.82rem;
+        color: #666;
+      }
+
+      .mobile-label {
+        display: inline;
+      }
+
+      /* Status pill on its own line */
+      .status-pill {
+        align-self: flex-start;
+      }
+
+      /* Actions row — right-aligned */
+      .actions-cell {
+        justify-content: flex-start;
+        margin-top: 0.25rem;
+      }
+
+      .label-disabled {
+        font-size: 0.8rem;
+        color: #999;
       }
     }
   }
