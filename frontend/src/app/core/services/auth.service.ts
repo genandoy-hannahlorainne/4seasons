@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { map, catchError, finalize, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User } from '../models/user.model';
+import { PushNotificationService } from './push-notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,7 @@ export class AuthService {
   private lastValidatedAt = 0;
   private readonly verificationTtlMs = 15000;
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private pushNotificationService: PushNotificationService) {
     const storedUser = localStorage.getItem('currentUser');
     this.currentUserSubject = new BehaviorSubject<User | null>(
       storedUser ? JSON.parse(storedUser) : null
@@ -58,6 +59,13 @@ export class AuthService {
             this.startTokenRefreshTimer();
             this.startSessionTimeoutWarning();
 
+            // Subscribe to push notifications for adviser users
+            if (this.isAdviserUser(userData)) {
+              this.pushNotificationService.init().catch(() => {
+                // Push init failed silently — non-critical
+              });
+            }
+
             return userData;
           }
           throw new Error('Invalid response format');
@@ -76,6 +84,9 @@ export class AuthService {
 
   logout(): Observable<any> {
     const token = localStorage.getItem('token');
+
+    // Unsubscribe from push notifications before clearing auth data
+    this.pushNotificationService.unsubscribeAll().catch(() => {});
 
     // Call Laravel logout endpoint if we have a token
     if (token) {
@@ -385,5 +396,13 @@ export class AuthService {
         return throwError(() => error);
       })
     );
+  }
+
+  private isAdviserUser(user: User): boolean {
+    if (!user) return false;
+    // role_id 3 = adviser (matches backend isAdviserUser logic)
+    if (user.role_id === 3) return true;
+    const roleName = (user.role_name ?? '').toLowerCase();
+    return roleName.includes('adviser');
   }
 }

@@ -6,6 +6,7 @@ use App\Models\MedicalVisit;
 use App\Models\Notification;
 use App\Models\Student;
 use App\Models\Vital;
+use App\Services\WebPushService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -244,6 +245,16 @@ class MedicalVisitController extends BaseController
             if (!$visit) {
                 return $this->sendError('Failed to create medical visit', [], 500);
             }
+
+            // Fire push notification to the student's adviser.
+            // Done outside the transaction so a push failure never rolls back the visit.
+            $this->dispatchAdviserPush(
+                $request->student_id,
+                $visit->student ? trim($visit->student->first_name . ' ' . $visit->student->last_name) : 'Unknown Student',
+                $request->input('visit_type'),
+                $request->chief_complaint,
+                $visit->visit_id
+            );
 
             // Load relationships for response
             $visit->load(['student.user', 'clinicStaff.user', 'vitals']);
@@ -634,6 +645,62 @@ class MedicalVisitController extends BaseController
             return $this->sendError('Failed to retrieve emergency visits', [
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Send a Web Push notification to the adviser of the given student.
+     * Called after the DB transaction so a push failure never rolls back the visit.
+     */
+    private function dispatchAdviserPush(int $studentId, string $studentName, string $visitType, ?string $complaint, int $visitId): void
+    {
+        try {
+            $student = Student::with('currentAdviser.user')->find($studentId);
+            if (!$student) {
+                return;
+            }
+
+            // Resolve adviser user_id via the student's current_adviser_id
+            $adviserUserId = null;
+
+            if ($student->current_adviser_id) {
+                $adviser = \App\Models\Adviser::find($student->current_adviser_id);
+                $adviserUserId = $adviser?->user_id;
+            }
+
+            if (!$adviserUserId) {
+                return;
+            }
+
+            $isEmergency = strtolower($visitType) === 'emergency';
+            $body = $isEmergency
+                ? "{$studentName} has an EMERGENCY visit. Immediate attention may be needed."
+                : "{$studentName} visited the clinic. Reason: " . ($complaint ?? 'General visit');
+
+            $payload = [
+                'title'   => $isEmergency ? '🚨 Emergency Clinic Visit' : '🏥 Clinic Visit Notification',
+                'body'    => $body,
+                'icon'    => '/assets/icons/school-clinic.png',
+                'badge'   => '/assets/icons/notification.png',
+                'tag'     => "visit-{$visitId}",
+                'data'    => [
+                    'visit_id'   => $visitId,
+                    'student_id' => $studentId,
+                    'url'        => '/adviser/notifications',
+                ],
+                'actions' => [
+                    ['action' => 'view', 'title' => 'View Details'],
+                    ['action' => 'dismiss', 'title' => 'Dismiss'],
+                ],
+                'requireInteraction' => $isEmergency,
+            ];
+
+            app(WebPushService::class)->sendToUser($adviserUserId, $payload);
+        } catch (\Throwable $e) {
+            Log::error('WebPush dispatch failed for adviser: ' . $e->getMessage(), [
+                'student_id' => $studentId,
+                'visit_id'   => $visitId,
+            ]);
         }
     }
 
