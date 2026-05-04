@@ -131,11 +131,11 @@ $mobile-bp: 768px;
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 18px;
+  gap: 20px;
+  padding: 20px 30px;
   color: $text-color;
   text-decoration: none;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   transition: background $transition, color $transition;
   cursor: pointer;

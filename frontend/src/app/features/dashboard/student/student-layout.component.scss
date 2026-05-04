@@ -1,6 +1,6 @@
 /* ── Design System Variables ──────────────────────── */
-$sidebar-expanded: 262px;
-$sidebar-collapsed: 70px;
+$sidebar-expanded: 360px;
+$sidebar-collapsed: 90px;
 $sidebar-bg: #f8f9fa;
 $sidebar-active: rgba(5, 35, 85, 0.1);
 $sidebar-hover: rgba(5, 35, 85, 0.06);
@@ -198,8 +198,8 @@ $bg-lighter: #f1f5f9;
 }
 
 .logout-icon {
-  font-size: 18px;
-  width: 18px;
+  font-size: 34px;
+  width: 34px;
   text-align: center;
   flex-shrink: 0;
 }
