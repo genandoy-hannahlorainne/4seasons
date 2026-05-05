@@ -93,24 +93,11 @@ jobs:
           NEEDS_RESTART=false
 
           if [ ! -f "$DAEMON_JSON" ]; then
-            echo '{"ipv6": false, "fixed-cidr-v6": ""}' | sudo tee "$DAEMON_JSON" > /dev/null
+            echo '{"ipv6": false}' | sudo tee "$DAEMON_JSON" > /dev/null
             NEEDS_RESTART=true
-          else
-            # Merge ipv6:false into existing daemon.json using python (always available)
-            sudo python3 -c "
-import json, sys
-with open('$DAEMON_JSON') as f:
-    d = json.load(f)
-changed = False
-if d.get('ipv6') != False:
-    d['ipv6'] = False
-    changed = True
-if changed:
-    with open('$DAEMON_JSON', 'w') as f:
-        json.dump(d, f, indent=2)
-    sys.exit(1)
-sys.exit(0)
-" && true || NEEDS_RESTART=true
+          elif ! sudo python3 -c "import json,sys; d=json.load(open('$DAEMON_JSON')); sys.exit(0 if d.get('ipv6')==False else 1)"; then
+            sudo python3 -c "import json; f='$DAEMON_JSON'; d=json.load(open(f)); d['ipv6']=False; open(f,'w').write(json.dumps(d,indent=2))"
+            NEEDS_RESTART=true
           fi
 
           if [ "$NEEDS_RESTART" = "true" ]; then
