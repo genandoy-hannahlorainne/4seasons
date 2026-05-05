@@ -201,7 +201,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
     });
 
     // Staff routes
-    Route::prefix('staff')->group(function () {
+    Route::prefix('staff')->middleware('role:clinic_staff')->group(function () {
         Route::get('/students', [StudentController::class, 'index']);
         Route::get('/sections', [AdminController::class, 'getSections']);
         Route::get('/dashboard', [DashboardController::class, 'getClinicOverview']);
