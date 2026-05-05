@@ -340,6 +340,11 @@ export class AuthService {
     // Auth data cleared
   }
 
+  // Public method for interceptor to clear auth data
+  public clearAuth(): void {
+    this.clearAuthData();
+  }
+
   private hasFreshValidation(token: string): boolean {
     return this.lastValidatedToken === token && (Date.now() - this.lastValidatedAt) < this.verificationTtlMs;
   }

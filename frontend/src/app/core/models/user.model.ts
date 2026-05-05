@@ -8,7 +8,7 @@ export interface User {
   full_name?: string;
   is_active?: boolean;
   password_must_change?: boolean;
-  
+
   // Role-specific information from Laravel API
   admin_info?: {
     is_admin: boolean;
@@ -27,9 +27,10 @@ export interface User {
   staff_info?: {
     clinic_staff_id: number;
     staff_id: string;
+    staff_code?: string;
     position?: string;
   };
-  
+
   // Legacy fields (for backward compatibility)
   advisory_class?: string;
 }
