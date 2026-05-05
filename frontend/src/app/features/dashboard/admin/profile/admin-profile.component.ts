@@ -41,7 +41,7 @@ import { AdminService } from '../../../../core/services/admin.service';
           </div>
 
           <div class="profile-settings-actions">
-            
+
           </div>
         </div>
 
@@ -97,7 +97,7 @@ import { AdminService } from '../../../../core/services/admin.service';
       <div class="modal-content" (click)="$event.stopPropagation()">
         <button class="close-btn" (click)="closePasswordModal()">×</button>
         <h3>Change Password</h3>
-        
+
         <div class="form-group">
           <label>Current Password *</label>
           <input type="password" [(ngModel)]="passwordForm.currentPassword" class="form-control" placeholder="Enter current password">
@@ -192,8 +192,8 @@ export class AdminProfileComponent implements OnInit {
           // Update local storage with new user data
           const currentUser = this.authService.currentUserValue;
           if (currentUser) {
-            const updatedUser = { 
-              ...currentUser, 
+            const updatedUser = {
+              ...currentUser,
               full_name: updates.full_name,
               email: updates.email,
               phone: updates.phone || undefined
@@ -201,7 +201,7 @@ export class AdminProfileComponent implements OnInit {
             localStorage.setItem('currentUser', JSON.stringify(updatedUser));
             this.authService.updateCurrentUser(updatedUser);
           }
-          
+
           alert('Profile updated successfully');
           this.editMode = false;
         } else {
@@ -275,9 +275,9 @@ export class AdminProfileComponent implements OnInit {
 
   logout(): void {
     this.showLogoutModal = true;
-    setTimeout(() => {
-      this.authService.logout();
-      window.location.replace('/login');
-    }, 1500);
+    this.authService.logout().subscribe({
+      complete: () => window.location.replace('/login'),
+      error: () => window.location.replace('/login'),
+    });
   }
 }
