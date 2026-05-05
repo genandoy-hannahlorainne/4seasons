@@ -88,18 +88,42 @@ jobs:
             exit 1
           fi
 
-          # Disable IPv6 on Docker daemon to fix registry pull failures
-          if [ ! -f /etc/docker/daemon.json ]; then
-            echo '{"ipv6": false}' | sudo tee /etc/docker/daemon.json > /dev/null
-            sudo systemctl restart docker || true
-            sleep 10
-          elif ! grep -q '"ipv6"' /etc/docker/daemon.json; then
-            sudo sed -i 's/^{/{"ipv6": false,/' /etc/docker/daemon.json
-            sudo systemctl restart docker || true
-            sleep 10
+          # Disable IPv6 on Docker daemon to fix registry pull failures over IPv6
+          DAEMON_JSON=/etc/docker/daemon.json
+          NEEDS_RESTART=false
+
+          if [ ! -f "$DAEMON_JSON" ]; then
+            echo '{"ipv6": false, "fixed-cidr-v6": ""}' | sudo tee "$DAEMON_JSON" > /dev/null
+            NEEDS_RESTART=true
+          else
+            # Merge ipv6:false into existing daemon.json using python (always available)
+            sudo python3 -c "
+import json, sys
+with open('$DAEMON_JSON') as f:
+    d = json.load(f)
+changed = False
+if d.get('ipv6') != False:
+    d['ipv6'] = False
+    changed = True
+if changed:
+    with open('$DAEMON_JSON', 'w') as f:
+        json.dump(d, f, indent=2)
+    sys.exit(1)
+sys.exit(0)
+" && true || NEEDS_RESTART=true
           fi
 
-          $COMPOSE_CMD pull
+          if [ "$NEEDS_RESTART" = "true" ]; then
+            echo "Restarting Docker daemon to apply IPv6 disable..."
+            sudo systemctl restart docker
+            sleep 15
+          fi
+
+          $COMPOSE_CMD pull || {
+            echo "Pull failed, retrying after 15s..."
+            sleep 15
+            $COMPOSE_CMD pull
+          }
           $COMPOSE_CMD up -d
 
           BACKEND_CONTAINER="$($COMPOSE_CMD ps -q backend)"
