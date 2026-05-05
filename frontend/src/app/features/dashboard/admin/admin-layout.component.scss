@@ -303,6 +303,28 @@ $mobile-bp: 768px;
   .hamburger { display: none; }
   .brand-text { display: block !important; opacity: 1 !important; max-width: 200px !important; }
   .nav-label { display: block !important; opacity: 1 !important; max-width: 200px !important; }
+
+  /* Show × close button in sidebar brand when sidebar is open */
+  .admin-shell.mobile-open .sidebar .hamburger {
+    display: flex;
+    background: rgba(5, 35, 85, 0.08);
+    border: 1px solid rgba(5, 35, 85, 0.15);
+    border-radius: 8px;
+    padding: 7px;
+  }
+
+  /* Fix nav alignment on mobile — never center */
+  .nav-item {
+    justify-content: flex-start !important;
+    padding: 12px 18px !important;
+    gap: 12px !important;
+  }
+
+  .sidebar-brand {
+    justify-content: flex-start !important;
+    padding: 12px 16px !important;
+    gap: 10px !important;
+  }
 }
 
 /* ── Logout overlay ── */

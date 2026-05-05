@@ -44,7 +44,7 @@ interface PasswordChangeRequest {
         <div class="sidebar-brand">
           <img src="assets/pdmhs-logo.png" alt="PDMHS Logo" class="brand-logo" (click)="toggleSidebar()" style="cursor:pointer">
           <span class="brand-text">PDMHS<br><small>Admin Panel</small></span>
-          <button class="hamburger" (click)="toggleSidebar()" title="Toggle sidebar">
+          <button class="hamburger" (click)="mobileOpen ? closeMobile() : toggleSidebar()" title="Toggle sidebar">
             <span></span><span></span><span></span>
           </button>
         </div>

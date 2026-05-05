@@ -31,7 +31,7 @@ import { AuthService } from '../../../core/services/auth.service';
             PDMHS
             <br><small>Clinic Staff</small>
           </div>
-          <button class="hamburger" (click)="toggleSidebar()">
+          <button class="hamburger" (click)="mobileOpen ? toggleMobile() : toggleSidebar()">
             <span></span>
             <span></span>
             <span></span>
