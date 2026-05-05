@@ -91,8 +91,8 @@ jobs:
           # Force IPv4-only on Docker daemon to fix registry pull failures over IPv6
           DAEMON_JSON=/etc/docker/daemon.json
           echo "Applying Docker daemon IPv4-only config..."
-          sudo tee "$DAEMON_JSON" > /dev/null << 'DOCKEREOF'
-          {"ipv6": false, "ip6tables": false}
+          sudo tee "$DAEMON_JSON" > /dev/null <<'DOCKEREOF'
+{"ipv6": false, "ip6tables": false}
 DOCKEREOF
           sudo systemctl restart docker
           # Wait until Docker is fully back up
