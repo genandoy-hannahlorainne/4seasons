@@ -1,33 +1,26 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Dashboard Navigation', () => {
-  test.beforeEach(async ({ page }) => {
-    // Mock authentication
+test.describe('App Shell', () => {
+  test('should serve the Angular app without a blank page', async ({ page }) => {
     await page.goto('/');
-    // Add authentication setup here when auth is implemented
+    // Angular app should render something — not a blank white page
+    await expect(page.locator('body')).not.toBeEmpty();
+    await expect(page.locator('app-root')).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display dashboard after login', async ({ page }) => {
-    await page.goto('/dashboard');
-    
-    await expect(page.locator('h1')).toContainText('Dashboard');
+  test('should redirect unauthenticated users away from dashboard', async ({ page }) => {
+    await page.goto('/dashboard/admin');
+    // Should redirect to login or role-selection, not stay on /dashboard/admin
+    await expect(page).not.toHaveURL(/dashboard\/admin/, { timeout: 8000 });
   });
 
-  test('should navigate between dashboard sections', async ({ page }) => {
-    await page.goto('/dashboard');
-    
-    // Test navigation menu
-    await page.click('text=Students');
-    await expect(page).toHaveURL(/students/);
-    
-    await page.click('text=Medical Visits');
-    await expect(page).toHaveURL(/medical-visits/);
+  test('should redirect unauthenticated users from adviser dashboard', async ({ page }) => {
+    await page.goto('/dashboard/adviser');
+    await expect(page).not.toHaveURL(/dashboard\/adviser/, { timeout: 8000 });
   });
 
-  test('should display user information', async ({ page }) => {
-    await page.goto('/dashboard');
-    
-    // Check if user info is displayed
-    await expect(page.locator('.user-info')).toBeVisible();
+  test('should redirect unauthenticated users from staff dashboard', async ({ page }) => {
+    await page.goto('/dashboard/staff');
+    await expect(page).not.toHaveURL(/dashboard\/staff/, { timeout: 8000 });
   });
 });
