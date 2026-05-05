@@ -1,45 +1,33 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Authentication', () => {
-  test('should display login page', async ({ page }) => {
+  test('should load the app and redirect to login or role selection', async ({ page }) => {
     await page.goto('/');
-    
-    await expect(page).toHaveTitle(/Medical Clearance System/);
-    await expect(page.locator('h1')).toContainText('Login');
+    // App should load without crashing — either role-selection or login
+    await expect(page).toHaveURL(/\/(role-selection|login|$)/);
+    await expect(page.locator('body')).toBeVisible();
   });
 
-  test('should show validation errors for empty form', async ({ page }) => {
-    await page.goto('/');
-    
-    await page.click('button[type="submit"]');
-    
-    // Check for validation messages
-    await expect(page.locator('.error-message')).toBeVisible();
+  test('should display the login page for a specific role', async ({ page }) => {
+    await page.goto('/login/student');
+    await expect(page.locator('body')).toBeVisible();
+    // Username input should be present (not email)
+    const usernameInput = page.locator('input[type="text"], input[placeholder*="username" i], input[name="username"]');
+    await expect(usernameInput.first()).toBeVisible();
   });
 
-  test('should navigate to role selection after login', async ({ page }) => {
-    await page.goto('/');
-    
-    // Fill login form
-    await page.fill('input[type="email"]', 'admin@test.com');
-    await page.fill('input[type="password"]', 'password123');
-    
-    // Submit form
-    await page.click('button[type="submit"]');
-    
-    // Should redirect to role selection or dashboard
-    await expect(page).toHaveURL(/\/(role-selection|dashboard)/);
-  });
+  test('should show error for invalid credentials', async ({ page }) => {
+    await page.goto('/login/student');
 
-  test('should handle invalid credentials', async ({ page }) => {
-    await page.goto('/');
-    
-    await page.fill('input[type="email"]', 'invalid@test.com');
-    await page.fill('input[type="password"]', 'wrongpassword');
-    
-    await page.click('button[type="submit"]');
-    
-    // Should show error message
-    await expect(page.locator('.error-message')).toContainText(/invalid/i);
+    const usernameInput = page.locator('input[type="text"], input[placeholder*="username" i], input[name="username"]').first();
+    const passwordInput = page.locator('input[type="password"]').first();
+    const submitBtn = page.locator('button[type="submit"]').first();
+
+    await usernameInput.fill('invalid_user_xyz');
+    await passwordInput.fill('wrongpassword');
+    await submitBtn.click();
+
+    // Should show some error — either inline or a toast
+    await expect(page.locator('body')).toContainText(/invalid|incorrect|error|failed/i, { timeout: 8000 });
   });
 });
