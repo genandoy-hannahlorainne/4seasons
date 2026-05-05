@@ -335,8 +335,8 @@ export class StaffProfileComponent implements OnInit {
   logout(): void {
     this.showLogoutModal = true;
     this.authService.logout().subscribe({
-      complete: () => window.location.replace('/login'),
-      error: () => window.location.replace('/login'),
+      complete: () => window.location.replace('/role-selection'),
+      error: () => window.location.replace('/role-selection'),
     });
   }
 }

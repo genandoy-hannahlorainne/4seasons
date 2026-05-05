@@ -350,14 +350,13 @@ class AuthController extends BaseController
             case 'Clinic Staff':
                 $staff = ClinicStaff::where('user_id', $user->user_id)
                                    ->where('is_active', true)
-                                   ->whereNull('deleted_at')
                                    ->first();
                 if ($staff) {
                     $user->setRelation('clinicStaff', $staff);
                 }
                 return [
-                    'valid' => true,
-                    'error' => $staff ? '' : ''
+                    'valid' => !!$staff,
+                    'error' => $staff ? '' : 'Clinic staff profile not found or inactive'
                 ];
 
             case 'Admin':
@@ -443,7 +442,6 @@ class AuthController extends BaseController
                     ? $user->getRelation('clinicStaff')
                     : ClinicStaff::where('user_id', $user->user_id)
                         ->where('is_active', true)
-                        ->whereNull('deleted_at')
                         ->first();
                 if ($staff) {
                     $userInfo['staff_info'] = [
