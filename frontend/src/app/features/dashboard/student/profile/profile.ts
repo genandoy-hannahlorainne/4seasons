@@ -314,12 +314,10 @@ export class StudentProfileComponent implements OnInit {
 
   logout(): void {
     this.showLogoutModal = true;
-
-    // Logout after showing the modal
-    setTimeout(() => {
-      this.authService.logout();
-      window.location.replace('/login');
-    }, 1500);
+    this.authService.logout().subscribe({
+      complete: () => window.location.replace('/login'),
+      error: () => window.location.replace('/login'),
+    });
   }
 
   changePassword(): void {
