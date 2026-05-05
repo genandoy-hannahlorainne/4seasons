@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\SchoolYearController;
 use App\Http\Controllers\Api\StudentBadgeController;
 use App\Http\Controllers\Api\GradePromotionController;
 use App\Http\Controllers\Api\SHDFController;
+use App\Http\Controllers\Api\PushSubscriptionController;
 
 // Health check route for CI/CD
 Route::get('/health', function () {
@@ -111,6 +112,9 @@ Route::get('/debug/shdf-auth/{studentId}', function (Request $request, int $stud
         ],
     ]);
 })->middleware('auth:sanctum');
+
+// VAPID public key — no auth needed so the frontend can subscribe before login
+Route::get('/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey']);
 
 // Authentication routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -294,5 +298,11 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::post('/basic', [SHDFController::class, 'storeBasic']); // Stage 1
         Route::post('/comprehensive', [SHDFController::class, 'storeComprehensive']); // Stage 2
         Route::get('/{studentId}/{schoolYearId}', [SHDFController::class, 'showByYear']);
+    });
+
+    // Push notification subscriptions
+    Route::prefix('push')->group(function () {
+        Route::post('/subscribe', [PushSubscriptionController::class, 'subscribe']);
+        Route::delete('/unsubscribe', [PushSubscriptionController::class, 'unsubscribe']);
     });
 });
