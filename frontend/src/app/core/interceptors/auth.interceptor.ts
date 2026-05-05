@@ -1,52 +1,47 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 import { catchError, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
+  const authService = inject(AuthService);
   const token = localStorage.getItem('token');
   const tokenExpiry = localStorage.getItem('tokenExpiry');
-  
-  // Debug logging for all requests
-  // console.log(...); // Removed for production
-  // console.log(...); // Removed for production
-  
+
   // Check if token is expired
   const isTokenExpired = () => {
     if (!tokenExpiry) return true;
     return Date.now() >= parseInt(tokenExpiry, 10);
   };
-  
-  // Clear expired auth data
+
+  // Clear expired auth data — must use authService to also clear the BehaviorSubject
   const clearExpiredAuth = () => {
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('token');
-    localStorage.removeItem('tokenExpiry');
-    // console.warn(...); // Removed for production
+    authService.clearAuth();
   };
-  
+
   // Treat both old XAMPP and Docker :8081 endpoints as legacy PHP API.
   const isLegacyApi = req.url.includes('/backend/api') || req.url.includes('localhost:8081/api');
   const isLaravelApi = req.url.includes('/api') && !isLegacyApi;
-  
+
   // Skip auth for login and register endpoints
   const isAuthEndpoint = req.url.includes('/login') || req.url.includes('/register') || req.url.includes('/debug/') || req.url.endsWith('/health');
-  
+
   // console.log(...); // Removed for production
-  
+
   let headers: any = {};
-  
+
   // Add CORS headers for all requests
   headers['Accept'] = 'application/json';
-  
+
   // Do NOT set Content-Type for FormData requests — the browser must set it
   // automatically so it includes the correct multipart boundary.
   // Only set it explicitly for non-FormData (JSON) requests.
   if (!(req.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
-  
+
   if (isLaravelApi && token && !isAuthEndpoint) {
     // Check if token is expired before using it
     if (isTokenExpired()) {
@@ -55,7 +50,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       router.navigate(['/login']);
       return throwError(() => new Error('Token expired'));
     }
-    
+
     // Use Bearer token for Laravel API (except auth endpoints)
     headers['Authorization'] = `Bearer ${token}`;
     // console.log(...); // Removed for production
@@ -83,30 +78,30 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     // Laravel API request without token - this will likely fail
     // console.warn(...); // Removed for production
   }
-  
+
   // Clone request with headers
   const authReq = req.clone({ setHeaders: headers });
-  
+
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       // HTTP Error occurred
-      
+
       // Handle 401 Unauthorized responses (but not for login attempts)
       if (error.status === 401 && isLaravelApi && !isAuthEndpoint) {
         // console.warn(...); // Removed for production
-        
+
         // Clear stored auth data
         clearExpiredAuth();
-        
+
         // Redirect to login
         router.navigate(['/login']);
       }
-      
+
       // Handle CORS errors
       if (error.status === 0) {
         // console.error('🌐 CORS or Network error detected:', error);
       }
-      
+
       return throwError(() => error);
     })
   );

@@ -452,7 +452,7 @@ class DashboardController extends BaseController
     {
         try {
             $user = $request->user();
-            if (!$user || strtolower($user->role?->role_name ?? '') !== 'clinic_staff') {
+            if (!$user || strtolower($user->role?->role_name ?? '') !== 'clinic staff') {
                 return $this->sendError('Unauthorized', 'User is not clinic staff');
             }
 
