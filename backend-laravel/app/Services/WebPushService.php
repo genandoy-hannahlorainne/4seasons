@@ -32,6 +32,11 @@ class WebPushService
     {
         $subscriptions = PushSubscription::where('user_id', $userId)->get();
 
+        if ($subscriptions->isEmpty()) {
+            Log::info("WebPush: No push subscriptions found for user_id={$userId}. User may not have granted permission yet.");
+            return;
+        }
+
         foreach ($subscriptions as $subscription) {
             $this->send($subscription, $payload);
         }
