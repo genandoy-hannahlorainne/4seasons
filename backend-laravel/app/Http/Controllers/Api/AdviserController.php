@@ -663,7 +663,7 @@ class AdviserController extends BaseController
                     return null;
                 }
 
-                $timestamp = $row->visit_datetime ? now()->parse($row->visit_datetime) : now();
+                $timestamp = $row->visit_datetime ? \Carbon\Carbon::parse($row->visit_datetime)->setTimezone(config('app.timezone')) : now();
                 $visitType = (string)($row->visit_type ?? 'Visit');
                 $messageSource = trim((string)($row->notes ?: $row->chief_complaint ?: 'Student visited clinic for assessment.'));
                 $previewText = mb_substr($messageSource, 0, 100) . (mb_strlen($messageSource) > 100 ? '...' : '');
@@ -684,6 +684,7 @@ class AdviserController extends BaseController
                     'fullMessage' => $messageSource,
                     'timeAgo' => $this->formatTimeAgo($timestamp),
                     'fullDate' => $timestamp->format('M d, Y \a\t h:i A'),
+                    'createdAt' => $timestamp->toISOString(),
                     'visitType' => ucfirst(strtolower($visitType)),
                     'priority' => $isUrgent ? 'urgent' : 'normal',
                     'isRead' => false,
