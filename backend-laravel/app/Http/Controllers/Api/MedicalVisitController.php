@@ -27,39 +27,39 @@ class MedicalVisitController extends BaseController
                     }]);
                 }])
                 ->orderBy('visit_datetime', 'desc');
-            
+
             // Filter by student if provided
             if ($request->has('student_id')) {
                 $query->where('student_id', $request->get('student_id'));
             }
-            
+
             // Filter by date range
             if ($request->has('date_from')) {
                 $query->whereDate('visit_datetime', '>=', $request->get('date_from'));
             }
-            
+
             if ($request->has('date_to')) {
                 $query->whereDate('visit_datetime', '<=', $request->get('date_to'));
             }
-            
+
             // Filter by emergency visits (check visit_type instead of is_emergency)
             if ($request->has('emergency_only') && $request->get('emergency_only') === 'true') {
                 $query->where('visit_type', 'Emergency');
             }
-            
+
             // Filter by visit type
             if ($request->has('visit_type')) {
                 $query->where('visit_type', $request->get('visit_type'));
             }
-            
+
             $visits = $query->paginate(20);
-            
+
             // Transform the data to include student information
             $visits->getCollection()->transform(function ($visit) {
                 $student = $visit->student;
                 $section = $student ? $student->currentSection : null;
                 $gradeLevel = $section ? $section->gradeLevel : null;
-                
+
                 return [
                     'visit_id' => $visit->visit_id,
                     'student_id' => $visit->student_id,
@@ -83,9 +83,9 @@ class MedicalVisitController extends BaseController
                     ] : null
                 ];
             });
-            
+
             return $this->sendResponse($visits, 'Medical visits retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve medical visits', [
                 'error' => $e->getMessage()
@@ -449,9 +449,9 @@ class MedicalVisitController extends BaseController
     {
         try {
             $medicalVisit->load(['student.user', 'clinicStaff.user', 'vitals']);
-            
+
             return $this->sendResponse($medicalVisit, 'Medical visit retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve medical visit', [
                 'error' => $e->getMessage()
@@ -500,21 +500,21 @@ class MedicalVisitController extends BaseController
             $query = $student->medicalVisits()
                            ->with(['clinicStaff.user', 'vitals'])
                            ->orderBy('visit_datetime', 'desc');
-            
+
             // Get statistics
             $totalVisits = $student->medicalVisits()->count();
             $thisMonthVisits = $student->medicalVisits()
                                      ->whereMonth('visit_datetime', now()->month)
                                      ->whereYear('visit_datetime', now()->year)
                                      ->count();
-            
+
             $lastVisit = $student->medicalVisits()
                                ->orderBy('visit_datetime', 'desc')
                                ->first();
-            
+
             // Get paginated visits
             $visits = $query->paginate(10);
-            
+
             $response = [
                 'visits' => $visits,
                 'statistics' => [
@@ -529,9 +529,9 @@ class MedicalVisitController extends BaseController
                     ] : null
                 ]
             ];
-            
+
             return $this->sendResponse($response, 'Student medical visits retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve student visits', [
                 'error' => $e->getMessage()
@@ -550,20 +550,20 @@ class MedicalVisitController extends BaseController
                                ->with(['clinicStaff.user', 'vitals'])
                                ->orderBy('visit_datetime', 'desc')
                                ->get();
-            
+
             // Calculate comprehensive statistics
             $totalVisits = $allVisits->count();
             $thisMonthVisits = $allVisits->filter(function($visit) {
-                return $visit->visit_datetime->month === now()->month && 
+                return $visit->visit_datetime->month === now()->month &&
                        $visit->visit_datetime->year === now()->year;
             })->count();
-            
+
             $emergencyVisits = $allVisits->where('visit_type', 'Emergency')->count();
             $routineVisits = $allVisits->where('visit_type', 'Routine')->count();
-            
+
             // Get last visit details
             $lastVisit = $allVisits->first();
-            
+
             // Group visits by month for chart data
             $visitsByMonth = $allVisits->groupBy(function($visit) {
                 return $visit->visit_datetime->format('Y-m');
@@ -574,7 +574,7 @@ class MedicalVisitController extends BaseController
                     'emergency_count' => $visits->where('visit_type', 'Emergency')->count()
                 ];
             })->values();
-            
+
             // Get recent visits (last 5)
             $recentVisits = $allVisits->take(5)->map(function($visit) {
                 return [
@@ -591,7 +591,7 @@ class MedicalVisitController extends BaseController
                     ] : null
                 ];
             });
-            
+
             $response = [
                 'statistics' => [
                     'total_visits' => $totalVisits,
@@ -614,9 +614,9 @@ class MedicalVisitController extends BaseController
                     'emergency' => $emergencyVisits
                 ]
             ];
-            
+
             return $this->sendResponse($response, 'Student visit history retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve visit history', [
                 'error' => $e->getMessage()
@@ -631,16 +631,16 @@ class MedicalVisitController extends BaseController
     {
         try {
             $days = $request->get('days', 7); // Default to last 7 days
-            
+
             $visits = MedicalVisit::with(['student.user', 'clinicStaff.user'])
                                 ->where('visit_type', 'Emergency')
                                 ->where('visit_datetime', '>=', now()->subDays($days))
                                 ->orderBy('visit_datetime', 'desc')
                                 ->limit(20)
                                 ->get();
-            
+
             return $this->sendResponse($visits, 'Emergency visits retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve emergency visits', [
                 'error' => $e->getMessage()
@@ -655,18 +655,13 @@ class MedicalVisitController extends BaseController
     private function dispatchAdviserPush(int $studentId, string $studentName, string $visitType, ?string $complaint, int $visitId): void
     {
         try {
-            $student = Student::with('currentAdviser.user')->find($studentId);
+            $student = Student::find($studentId);
             if (!$student) {
                 return;
             }
 
-            // Resolve adviser user_id via the student's current_adviser_id
-            $adviserUserId = null;
-
-            if ($student->current_adviser_id) {
-                $adviser = \App\Models\Adviser::find($student->current_adviser_id);
-                $adviserUserId = $adviser?->user_id;
-            }
+            // current_adviser_id on students is a user_id foreign key (see Student::currentAdviser relationship)
+            $adviserUserId = $student->current_adviser_id;
 
             if (!$adviserUserId) {
                 return;
@@ -712,7 +707,7 @@ class MedicalVisitController extends BaseController
         try {
             $days = $request->get('days', 30); // Default to last 30 days
             $startDate = now()->subDays($days);
-            
+
             $stats = [
                 'total_visits' => MedicalVisit::where('visit_datetime', '>=', $startDate)->count(),
                 // Note: is_emergency and follow_up_required columns don't exist in actual database
@@ -731,9 +726,9 @@ class MedicalVisitController extends BaseController
                                              ->orderBy('date')
                                              ->get()
             ];
-            
+
             return $this->sendResponse($stats, 'Visit statistics retrieved successfully');
-            
+
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve statistics', [
                 'error' => $e->getMessage()
