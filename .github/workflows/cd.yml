@@ -48,13 +48,16 @@ jobs:
       working-directory: ./frontend
       run: npm run build
 
-    - name: Deploy frontend to Cloudflare Pages
-      uses: cloudflare/wrangler-action@v3
+    - name: Deploy frontend to server
+      uses: appleboy/scp-action@v0.1.7
       with:
-        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        wranglerVersion: '3.90.0'
-        command: pages deploy frontend/dist/frontend/browser --project-name=4seasons --branch=main
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "frontend/dist/frontend/browser/*"
+        target: "${{ secrets.SERVER_DEPLOY_PATH }}/frontend-dist"
+        strip_components: 3
+        timeout: 60s
 
     - name: Build and push backend image
       uses: docker/build-push-action@v6
@@ -110,19 +113,6 @@ jobs:
             echo "Neither docker compose nor docker-compose is installed on server"
             exit 1
           fi
-
-          # Force IPv4-only on Docker daemon to fix registry pull failures over IPv6
-          DAEMON_JSON=/etc/docker/daemon.json
-          echo "Applying Docker daemon IPv4-only config..."
-          echo '{"ipv6": false, "ip6tables": false}' | sudo tee "$DAEMON_JSON" > /dev/null
-          sudo systemctl restart docker
-          # Wait until Docker is fully back up
-          timeout 30 bash -c 'until sudo docker info > /dev/null 2>&1; do sleep 2; done'
-          echo "Docker daemon restarted successfully"
-
-          # Also block IPv6 at the OS level for docker registry connections
-          sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1 || true
-          sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1 || true
 
           $COMPOSE_CMD pull || {
             echo "Pull failed, retrying after 15s..."
