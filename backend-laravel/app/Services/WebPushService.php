@@ -118,37 +118,48 @@ class WebPushService
     /**
      * Sign data with an EC private key (P-256).
      * The private key should be a base64url-encoded raw 32-byte scalar.
+     *
+     * OpenSSL 3.x is strict about DER encoding. We work around this by
+     * generating a throwaway P-256 key, exporting its PKCS8 DER, then
+     * splicing our 32-byte private scalar into the correct offset.
      */
     private function signWithEcPrivateKey(string $data, string $privateKeyBase64Url): string
     {
         $rawKey = $this->base64UrlDecode($privateKeyBase64Url);
 
-        // Build SEC1 ECPrivateKey DER (RFC 5915) — minimal form without public key
-        // SEQUENCE {
-        //   INTEGER 1                  (version)
-        //   OCTET STRING <32 bytes>    (privateKey)
-        //   [0] OID 1.2.840.10045.3.1.7  (namedCurve = P-256)
-        // }
-        $oidP256   = "\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07"; // OID P-256
-        $namedCurve = "\xa0\x0a\x30\x08" . $oidP256;              // [0] SEQUENCE { OID }
-        $version    = "\x02\x01\x01";                              // INTEGER 1
-        $privOctet  = "\x04\x20" . $rawKey;                        // OCTET STRING (32 bytes)
+        // Generate a throwaway P-256 key and export as PKCS8 PEM
+        $tmpKey = openssl_pkey_new([
+            'curve_name'       => 'prime256v1',
+            'private_key_type' => OPENSSL_KEYTYPE_EC,
+        ]);
+        if (!$tmpKey) {
+            throw new \RuntimeException('WebPush: Failed to generate ephemeral EC key.');
+        }
 
-        $inner = $version . $privOctet . $namedCurve;
-        $der   = "\x30" . chr(strlen($inner)) . $inner;            // SEQUENCE { ... }
+        openssl_pkey_export($tmpKey, $tmpPem);
 
-        $pem = "-----BEGIN EC PRIVATE KEY-----\n"
+        // Decode PKCS8 DER from the PEM
+        $lines = array_filter(explode("\n", $tmpPem), fn($l) => strpos($l, '---') === false);
+        $der   = base64_decode(implode('', $lines));
+
+        // Find the 32-byte private scalar — it follows the \x04\x20 tag+length in SEC1
+        $pos = strpos($der, "\x04\x20");
+        if ($pos === false) {
+            throw new \RuntimeException('WebPush: Could not locate private key scalar in PKCS8 DER.');
+        }
+
+        // Replace the 32 bytes with our VAPID private key
+        $der = substr($der, 0, $pos + 2) . $rawKey . substr($der, $pos + 2 + 32);
+
+        $pem = "-----BEGIN PRIVATE KEY-----\n"
             . chunk_split(base64_encode($der), 64, "\n")
-            . "-----END EC PRIVATE KEY-----";
+            . "-----END PRIVATE KEY-----";
 
         $privateKey = openssl_pkey_get_private($pem);
         if (!$privateKey) {
-            // Collect OpenSSL errors for better diagnostics
             $errs = [];
-            while ($e = openssl_error_string()) {
-                $errs[] = $e;
-            }
-            throw new \RuntimeException('WebPush: Failed to load EC private key. Check VAPID_PRIVATE_KEY. OpenSSL: ' . implode(' | ', $errs));
+            while ($e = openssl_error_string()) $errs[] = $e;
+            throw new \RuntimeException('WebPush: Failed to load EC private key. OpenSSL: ' . implode(' | ', $errs));
         }
 
         openssl_sign($data, $derSignature, $privateKey, OPENSSL_ALGO_SHA256);
