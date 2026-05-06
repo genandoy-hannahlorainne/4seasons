@@ -256,18 +256,50 @@ class WebPushService
 
     private function rawPublicKeyToPem(string $rawKey): \OpenSSLAsymmetricKey
     {
-        // Build SubjectPublicKeyInfo DER for P-256
-        $oid = "\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07"; // P-256 OID
-        $ecOid = "\x06\x07\x2a\x86\x48\xce\x3d\x02\x01";   // EC OID
-        $algId = "\x30\x13" . $ecOid . "\x30\x08" . $oid;
-        $bitString = "\x03" . chr(strlen($rawKey) + 1) . "\x00" . $rawKey;
-        $spki = "\x30" . chr(strlen($algId) + strlen($bitString)) . $algId . $bitString;
+        // Correct SubjectPublicKeyInfo DER for P-256 (prime256v1).
+        // This is the standard fixed header used by all P-256 public keys.
+        //
+        // Verified byte-by-byte:
+        //   30 59          — SEQUENCE (89 bytes total)
+        //     30 13        — SEQUENCE AlgorithmIdentifier (19 bytes)
+        //       06 07 2a 86 48 ce 3d 02 01   — OID id-ecPublicKey (7 bytes value)
+        //       06 08 2a 86 48 ce 3d 03 01 07 — OID prime256v1 (8 bytes value)
+        //     03 42 00     — BIT STRING (66 bytes, 0 unused bits)
+        //       <65 bytes uncompressed point>
+        //
+        // AlgorithmIdentifier inner content:
+        //   OID id-ecPublicKey: 06 07 + 7 bytes = 9 bytes
+        //   OID prime256v1:     06 08 + 8 bytes = 10 bytes
+        //   total = 19 bytes  → wrapper is 30 13
+        //
+        // BIT STRING: 03 42 00 + 65 bytes = 68 bytes
+        // Outer SEQUENCE content: 2+19 + 68 = 89 bytes → 30 59
+
+        $spki =
+            "\x30\x59"                                          // SEQUENCE 89 bytes
+            . "\x30\x13"                                        // SEQUENCE 19 bytes (AlgorithmIdentifier)
+            .   "\x06\x07\x2a\x86\x48\xce\x3d\x02\x01"        // OID id-ecPublicKey
+            .   "\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07"    // OID prime256v1
+            . "\x03\x42\x00"                                    // BIT STRING, 66 bytes, 0 unused
+            . $rawKey;                                          // 65-byte uncompressed point
 
         $pem = "-----BEGIN PUBLIC KEY-----\n"
             . chunk_split(base64_encode($spki), 64, "\n")
             . "-----END PUBLIC KEY-----";
 
-        return openssl_pkey_get_public($pem);
+        $key = openssl_pkey_get_public($pem);
+
+        if ($key === false) {
+            $errs = [];
+            while ($e = openssl_error_string()) {
+                $errs[] = $e;
+            }
+            throw new \RuntimeException(
+                'WebPush: Failed to parse recipient public key. OpenSSL: ' . implode(' | ', $errs)
+            );
+        }
+
+        return $key;
     }
 
     /**
