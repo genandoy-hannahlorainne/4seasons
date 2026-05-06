@@ -121,24 +121,34 @@ class WebPushService
      */
     private function signWithEcPrivateKey(string $data, string $privateKeyBase64Url): string
     {
-        // Convert base64url private key to PEM
         $rawKey = $this->base64UrlDecode($privateKeyBase64Url);
 
-        // Build DER-encoded EC private key (SEC1 format for P-256)
-        // OID for P-256: 1.2.840.10045.3.1.7
-        $oid = "\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07";
-        $ecPrivKey = "\x30\x77"                    // SEQUENCE
-            . "\x02\x01\x01"                       // version = 1
-            . "\x04\x20" . $rawKey                 // privateKey (32 bytes)
-            . "\xa0\x0a" . "\x30\x08" . $oid;      // parameters (named curve)
+        // Build SEC1 ECPrivateKey DER (RFC 5915) — minimal form without public key
+        // SEQUENCE {
+        //   INTEGER 1                  (version)
+        //   OCTET STRING <32 bytes>    (privateKey)
+        //   [0] OID 1.2.840.10045.3.1.7  (namedCurve = P-256)
+        // }
+        $oidP256   = "\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07"; // OID P-256
+        $namedCurve = "\xa0\x0a\x30\x08" . $oidP256;              // [0] SEQUENCE { OID }
+        $version    = "\x02\x01\x01";                              // INTEGER 1
+        $privOctet  = "\x04\x20" . $rawKey;                        // OCTET STRING (32 bytes)
+
+        $inner = $version . $privOctet . $namedCurve;
+        $der   = "\x30" . chr(strlen($inner)) . $inner;            // SEQUENCE { ... }
 
         $pem = "-----BEGIN EC PRIVATE KEY-----\n"
-            . chunk_split(base64_encode($ecPrivKey), 64, "\n")
+            . chunk_split(base64_encode($der), 64, "\n")
             . "-----END EC PRIVATE KEY-----";
 
         $privateKey = openssl_pkey_get_private($pem);
         if (!$privateKey) {
-            throw new \RuntimeException('WebPush: Failed to load EC private key. Check VAPID_PRIVATE_KEY.');
+            // Collect OpenSSL errors for better diagnostics
+            $errs = [];
+            while ($e = openssl_error_string()) {
+                $errs[] = $e;
+            }
+            throw new \RuntimeException('WebPush: Failed to load EC private key. Check VAPID_PRIVATE_KEY. OpenSSL: ' . implode(' | ', $errs));
         }
 
         openssl_sign($data, $derSignature, $privateKey, OPENSSL_ALGO_SHA256);
