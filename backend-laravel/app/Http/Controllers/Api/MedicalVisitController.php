@@ -656,16 +656,12 @@ class MedicalVisitController extends BaseController
     {
         try {
             $student = Student::find($studentId);
-            if (!$student) {
+            if (!$student || !$student->current_adviser_id) {
                 return;
             }
 
-            // current_adviser_id on students is a user_id foreign key (see Student::currentAdviser relationship)
-            $adviserUserId = $student->current_adviser_id;
-
-            if (!$adviserUserId) {
-                return;
-            }
+            // current_adviser_id stores users.user_id (same as sections.adviser_id FK)
+            $adviserUserId = (int) $student->current_adviser_id;
 
             $isEmergency = strtolower($visitType) === 'emergency';
             $body = $isEmergency
@@ -691,6 +687,8 @@ class MedicalVisitController extends BaseController
             ];
 
             app(WebPushService::class)->sendToUser($adviserUserId, $payload);
+
+            Log::info("WebPush: dispatched to user_id={$adviserUserId} for student_id={$studentId}, visit_id={$visitId}");
         } catch (\Throwable $e) {
             Log::error('WebPush dispatch failed for adviser: ' . $e->getMessage(), [
                 'student_id' => $studentId,
