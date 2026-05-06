@@ -4,7 +4,7 @@ FROM php:8.2-apache
 RUN printf 'Types: deb\nURIs: http://ftp.us.debian.org/debian\nSuites: trixie trixie-updates\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n' > /etc/apt/sources.list.d/debian.sources \
     && apt-get update \
     && apt-get install -y --no-install-recommends git unzip libzip-dev curl \
-    && docker-php-ext-install pdo pdo_mysql mysqli zip \
+    && docker-php-ext-install pdo pdo_mysql mysqli zip bcmath \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && a2enmod rewrite headers \
