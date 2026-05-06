@@ -14,7 +14,8 @@ export class PushNotificationService {
 
   /**
    * Register the service worker and subscribe to push notifications.
-   * Call this after a successful login for adviser users.
+   * Call this after a successful login for adviser users, and on app startup
+   * when the user is already authenticated.
    */
   async init(): Promise<void> {
     if (!this.isSupported()) {
@@ -23,8 +24,18 @@ export class PushNotificationService {
     }
 
     try {
-      this.registration = await navigator.serviceWorker.register(this.swPath, { scope: '/' });
-      console.info('PushNotifications: service worker registered.');
+      // Reuse an existing registration if available — avoids redundant re-registration
+      const existing = await navigator.serviceWorker.getRegistration(this.swPath);
+      if (existing) {
+        this.registration = existing;
+        console.info('PushNotifications: reusing existing service worker registration.');
+      } else {
+        this.registration = await navigator.serviceWorker.register(this.swPath, { scope: '/' });
+        console.info('PushNotifications: service worker registered.');
+      }
+
+      // Wait for the SW to be ready before subscribing
+      await navigator.serviceWorker.ready;
     } catch (err) {
       console.warn('PushNotifications: service worker registration failed.', err);
       return;
@@ -33,7 +44,7 @@ export class PushNotificationService {
     // Ask for permission if not already granted
     const permission = await this.requestPermission();
     if (permission !== 'granted') {
-      console.info('PushNotifications: permission not granted.');
+      console.info('PushNotifications: permission not granted (current state: ' + Notification.permission + ').');
       return;
     }
 
