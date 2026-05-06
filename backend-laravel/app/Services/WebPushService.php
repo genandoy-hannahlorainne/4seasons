@@ -3,26 +3,36 @@
 namespace App\Services;
 
 use App\Models\PushSubscription;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Minishlink\WebPush\WebPush;
+use Minishlink\WebPush\Subscription;
 
 /**
- * Sends Web Push notifications using the VAPID protocol.
- *
- * We implement VAPID signing manually so we don't need the
- * minishlink/web-push package (which requires ext-gmp).
+ * Sends Web Push notifications using the minishlink/web-push package.
+ * The laravel-notification-channels/webpush package bundles this library.
  */
 class WebPushService
 {
-    private string $vapidPublicKey;
-    private string $vapidPrivateKey;
-    private string $vapidSubject;
+    private ?WebPush $webPush = null;
 
-    public function __construct()
+    private function getWebPush(): WebPush
     {
-        $this->vapidPublicKey  = config('webpush.vapid_public_key', '');
-        $this->vapidPrivateKey = config('webpush.vapid_private_key', '');
-        $this->vapidSubject    = config('webpush.vapid_subject', 'mailto:admin@studentcare.site');
+        if ($this->webPush) {
+            return $this->webPush;
+        }
+
+        $auth = [
+            'VAPID' => [
+                'subject'    => config('webpush.vapid_subject', 'mailto:admin@studentcare.site'),
+                'publicKey'  => config('webpush.vapid_public_key'),
+                'privateKey' => config('webpush.vapid_private_key'),
+            ],
+        ];
+
+        $this->webPush = new WebPush($auth);
+        $this->webPush->setDefaultOptions(['TTL' => 86400]);
+
+        return $this->webPush;
     }
 
     /**
@@ -33,7 +43,7 @@ class WebPushService
         $subscriptions = PushSubscription::where('user_id', $userId)->get();
 
         if ($subscriptions->isEmpty()) {
-            Log::info("WebPush: No push subscriptions found for user_id={$userId}. User may not have granted permission yet.");
+            Log::info("WebPush: No subscriptions found for user_id={$userId}. User may not have granted permission yet.");
             return;
         }
 
@@ -47,283 +57,37 @@ class WebPushService
      */
     public function send(PushSubscription $subscription, array $payload): void
     {
-        if (empty($this->vapidPublicKey) || empty($this->vapidPrivateKey)) {
+        if (empty(config('webpush.vapid_public_key')) || empty(config('webpush.vapid_private_key'))) {
             Log::warning('WebPush: VAPID keys not configured. Skipping push notification.');
             return;
         }
 
         try {
-            $body = json_encode($payload);
-            $endpoint = $subscription->endpoint;
+            $webPush = $this->getWebPush();
 
-            // Build VAPID JWT
-            $vapidHeaders = $this->buildVapidHeaders($endpoint);
-
-            $headers = array_merge($vapidHeaders, [
-                'Content-Type'     => 'application/json',
-                'Content-Encoding' => 'aes128gcm',
-                'TTL'              => '86400',
+            $sub = Subscription::create([
+                'endpoint'        => $subscription->endpoint,
+                'contentEncoding' => 'aesgcm',
+                'keys'            => [
+                    'p256dh' => $subscription->p256dh_key,
+                    'auth'   => $subscription->auth_key,
+                ],
             ]);
 
-            // If we have encryption keys, encrypt the payload
-            if ($subscription->p256dh_key && $subscription->auth_key) {
-                [$encryptedBody, $encryptionHeaders] = $this->encryptPayload(
-                    $body,
-                    $subscription->p256dh_key,
-                    $subscription->auth_key
-                );
-                $headers = array_merge($headers, $encryptionHeaders);
-                $body = $encryptedBody;
-            }
+            $webPush->queueNotification($sub, json_encode($payload));
 
-            $response = Http::withHeaders($headers)
-                ->withBody($body, 'application/octet-stream')
-                ->post($endpoint);
-
-            if ($response->status() === 410 || $response->status() === 404) {
-                // Subscription expired — remove it
-                $subscription->delete();
-                Log::info("WebPush: Removed expired subscription for user {$subscription->user_id}");
-            } elseif (!$response->successful()) {
-                Log::warning("WebPush: Push failed for user {$subscription->user_id}", [
-                    'status'   => $response->status(),
-                    'endpoint' => substr($endpoint, 0, 60) . '...',
-                ]);
+            foreach ($webPush->flush() as $report) {
+                if ($report->isSuccess()) {
+                    Log::info("WebPush: Push sent successfully to user {$subscription->user_id}");
+                } elseif ($report->isSubscriptionExpired()) {
+                    $subscription->delete();
+                    Log::info("WebPush: Removed expired subscription for user {$subscription->user_id}");
+                } else {
+                    Log::warning("WebPush: Push failed for user {$subscription->user_id}: " . $report->getReason());
+                }
             }
         } catch (\Throwable $e) {
-            Log::error("WebPush: Exception sending push to user {$subscription->user_id}: " . $e->getMessage());
+            Log::error("WebPush: Exception for user {$subscription->user_id}: " . $e->getMessage());
         }
-    }
-
-    /**
-     * Build VAPID Authorization and Crypto-Key headers.
-     */
-    private function buildVapidHeaders(string $endpoint): array
-    {
-        $parsed   = parse_url($endpoint);
-        $audience = $parsed['scheme'] . '://' . $parsed['host'];
-
-        $header = $this->base64UrlEncode(json_encode(['typ' => 'JWT', 'alg' => 'ES256']));
-        $claims = $this->base64UrlEncode(json_encode([
-            'aud' => $audience,
-            'exp' => time() + 43200, // 12 hours
-            'sub' => $this->vapidSubject,
-        ]));
-
-        $signingInput = $header . '.' . $claims;
-        $signature    = $this->signWithEcPrivateKey($signingInput, $this->vapidPrivateKey);
-
-        $jwt = $signingInput . '.' . $signature;
-
-        return [
-            'Authorization' => "vapid t={$jwt}, k={$this->vapidPublicKey}",
-        ];
-    }
-
-    /**
-     * Sign data with an EC private key (P-256).
-     * The private key should be a base64url-encoded raw 32-byte scalar.
-     *
-     * OpenSSL 3.x is strict about DER encoding. We work around this by
-     * generating a throwaway P-256 key, exporting its PKCS8 DER, then
-     * splicing our 32-byte private scalar into the correct offset.
-     */
-    private function signWithEcPrivateKey(string $data, string $privateKeyBase64Url): string
-    {
-        $rawKey = $this->base64UrlDecode($privateKeyBase64Url);
-
-        // Generate a throwaway P-256 key and export as PKCS8 PEM
-        $tmpKey = openssl_pkey_new([
-            'curve_name'       => 'prime256v1',
-            'private_key_type' => OPENSSL_KEYTYPE_EC,
-        ]);
-        if (!$tmpKey) {
-            throw new \RuntimeException('WebPush: Failed to generate ephemeral EC key.');
-        }
-
-        openssl_pkey_export($tmpKey, $tmpPem);
-
-        // Decode PKCS8 DER from the PEM
-        $lines = array_filter(explode("\n", $tmpPem), fn($l) => strpos($l, '---') === false);
-        $der   = base64_decode(implode('', $lines));
-
-        // Find the 32-byte private scalar — it follows the \x04\x20 tag+length in SEC1
-        $pos = strpos($der, "\x04\x20");
-        if ($pos === false) {
-            throw new \RuntimeException('WebPush: Could not locate private key scalar in PKCS8 DER.');
-        }
-
-        // Replace the 32 bytes with our VAPID private key
-        $der = substr($der, 0, $pos + 2) . $rawKey . substr($der, $pos + 2 + 32);
-
-        $pem = "-----BEGIN PRIVATE KEY-----\n"
-            . chunk_split(base64_encode($der), 64, "\n")
-            . "-----END PRIVATE KEY-----";
-
-        $privateKey = openssl_pkey_get_private($pem);
-        if (!$privateKey) {
-            $errs = [];
-            while ($e = openssl_error_string()) $errs[] = $e;
-            throw new \RuntimeException('WebPush: Failed to load EC private key. OpenSSL: ' . implode(' | ', $errs));
-        }
-
-        openssl_sign($data, $derSignature, $privateKey, OPENSSL_ALGO_SHA256);
-
-        // Convert DER signature to raw r||s (64 bytes) for JWT
-        return $this->base64UrlEncode($this->derToRaw($derSignature));
-    }
-
-    /**
-     * Convert DER-encoded ECDSA signature to raw r||s format.
-     */
-    private function derToRaw(string $der): string
-    {
-        // DER: 30 len 02 rLen r 02 sLen s
-        $offset = 2; // skip SEQUENCE tag + length
-        $offset++; // skip INTEGER tag
-        $rLen = ord($der[$offset++]);
-        $r = substr($der, $offset, $rLen);
-        $offset += $rLen;
-        $offset++; // skip INTEGER tag
-        $sLen = ord($der[$offset++]);
-        $s = substr($der, $offset, $sLen);
-
-        // Pad/trim to 32 bytes each
-        $r = str_pad(ltrim($r, "\x00"), 32, "\x00", STR_PAD_LEFT);
-        $s = str_pad(ltrim($s, "\x00"), 32, "\x00", STR_PAD_LEFT);
-
-        return $r . $s;
-    }
-
-    /**
-     * Encrypt the push payload using AES-128-GCM (RFC 8291 / aes128gcm).
-     * Returns [encryptedBody, headers].
-     */
-    private function encryptPayload(string $plaintext, string $p256dhBase64Url, string $authBase64Url): array
-    {
-        $recipientPublicKey = $this->base64UrlDecode($p256dhBase64Url);
-        $authSecret         = $this->base64UrlDecode($authBase64Url);
-
-        // Generate ephemeral EC key pair
-        $ephemeralKey = openssl_pkey_new([
-            'curve_name'       => 'prime256v1',
-            'private_key_type' => OPENSSL_KEYTYPE_EC,
-        ]);
-        $ephemeralDetails = openssl_pkey_get_details($ephemeralKey);
-
-        // Get raw ephemeral public key (uncompressed, 65 bytes)
-        $ephemeralPublicKeyRaw = $this->ecKeyToRaw($ephemeralDetails);
-
-        // Compute ECDH shared secret
-        $recipientKey = $this->rawPublicKeyToPem($recipientPublicKey);
-        openssl_dh_compute_key($sharedSecret, $recipientKey, $ephemeralKey);
-
-        // HKDF to derive content encryption key and nonce (RFC 8291)
-        $salt = random_bytes(16);
-
-        $prk = $this->hkdf($authSecret, $sharedSecret, "WebPush: auth\x00", 32);
-        $keyInfo   = "Content-Encoding: aes128gcm\x00" . "\x00\x01" . $recipientPublicKey . $ephemeralPublicKeyRaw;
-        $nonceInfo = "Content-Encoding: nonce\x00"     . "\x00\x01" . $recipientPublicKey . $ephemeralPublicKeyRaw;
-
-        $contentKey   = $this->hkdf($salt, $prk, $keyInfo, 16);
-        $contentNonce = $this->hkdf($salt, $prk, $nonceInfo, 12);
-
-        // Pad plaintext (add \x02 delimiter, no padding for simplicity)
-        $paddedPlaintext = $plaintext . "\x02";
-
-        // Encrypt with AES-128-GCM
-        $tag       = '';
-        $encrypted = openssl_encrypt($paddedPlaintext, 'aes-128-gcm', $contentKey, OPENSSL_RAW_DATA, $contentNonce, $tag, '', 16);
-
-        // Build aes128gcm content (salt || rs || keyid_len || keyid || ciphertext || tag)
-        $rs = pack('N', strlen($paddedPlaintext) + 16 + 1); // record size
-        $keyIdLen = pack('C', strlen($ephemeralPublicKeyRaw));
-        $body = $salt . $rs . $keyIdLen . $ephemeralPublicKeyRaw . $encrypted . $tag;
-
-        return [$body, ['Content-Encoding' => 'aes128gcm']];
-    }
-
-    private function ecKeyToRaw(array $details): string
-    {
-        // OpenSSL gives us x and y as binary strings
-        $x = $details['ec']['x'];
-        $y = $details['ec']['y'];
-        // Pad to 32 bytes each
-        $x = str_pad($x, 32, "\x00", STR_PAD_LEFT);
-        $y = str_pad($y, 32, "\x00", STR_PAD_LEFT);
-        return "\x04" . $x . $y; // uncompressed point
-    }
-
-    private function rawPublicKeyToPem(string $rawKey): \OpenSSLAsymmetricKey
-    {
-        // Correct SubjectPublicKeyInfo DER for P-256 (prime256v1).
-        // This is the standard fixed header used by all P-256 public keys.
-        //
-        // Verified byte-by-byte:
-        //   30 59          — SEQUENCE (89 bytes total)
-        //     30 13        — SEQUENCE AlgorithmIdentifier (19 bytes)
-        //       06 07 2a 86 48 ce 3d 02 01   — OID id-ecPublicKey (7 bytes value)
-        //       06 08 2a 86 48 ce 3d 03 01 07 — OID prime256v1 (8 bytes value)
-        //     03 42 00     — BIT STRING (66 bytes, 0 unused bits)
-        //       <65 bytes uncompressed point>
-        //
-        // AlgorithmIdentifier inner content:
-        //   OID id-ecPublicKey: 06 07 + 7 bytes = 9 bytes
-        //   OID prime256v1:     06 08 + 8 bytes = 10 bytes
-        //   total = 19 bytes  → wrapper is 30 13
-        //
-        // BIT STRING: 03 42 00 + 65 bytes = 68 bytes
-        // Outer SEQUENCE content: 2+19 + 68 = 89 bytes → 30 59
-
-        $spki =
-            "\x30\x59"                                          // SEQUENCE 89 bytes
-            . "\x30\x13"                                        // SEQUENCE 19 bytes (AlgorithmIdentifier)
-            .   "\x06\x07\x2a\x86\x48\xce\x3d\x02\x01"        // OID id-ecPublicKey
-            .   "\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07"    // OID prime256v1
-            . "\x03\x42\x00"                                    // BIT STRING, 66 bytes, 0 unused
-            . $rawKey;                                          // 65-byte uncompressed point
-
-        $pem = "-----BEGIN PUBLIC KEY-----\n"
-            . chunk_split(base64_encode($spki), 64, "\n")
-            . "-----END PUBLIC KEY-----";
-
-        $key = openssl_pkey_get_public($pem);
-
-        if ($key === false) {
-            $errs = [];
-            while ($e = openssl_error_string()) {
-                $errs[] = $e;
-            }
-            throw new \RuntimeException(
-                'WebPush: Failed to parse recipient public key. OpenSSL: ' . implode(' | ', $errs)
-            );
-        }
-
-        return $key;
-    }
-
-    /**
-     * HKDF-SHA256 key derivation.
-     */
-    private function hkdf(string $salt, string $ikm, string $info, int $length): string
-    {
-        $prk = hash_hmac('sha256', $ikm, $salt, true);
-        $t   = '';
-        $okm = '';
-        for ($i = 1; strlen($okm) < $length; $i++) {
-            $t    = hash_hmac('sha256', $t . $info . chr($i), $prk, true);
-            $okm .= $t;
-        }
-        return substr($okm, 0, $length);
-    }
-
-    private function base64UrlEncode(string $data): string
-    {
-        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-    }
-
-    private function base64UrlDecode(string $data): string
-    {
-        return base64_decode(strtr($data, '-_', '+/') . str_repeat('=', (4 - strlen($data) % 4) % 4));
     }
 }
