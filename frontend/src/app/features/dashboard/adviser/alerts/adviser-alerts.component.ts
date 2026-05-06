@@ -18,6 +18,7 @@ interface Alert {
   fullMessage: string;
   timeAgo: string;
   fullDate: string;
+  createdAt: string;
   visitType: string;
   priority: 'urgent' | 'normal';
   isRead: boolean;
@@ -48,20 +49,20 @@ interface Alert {
       <div *ngIf="!loading">
         <!-- Alert Filters -->
         <div class="alert-filters" *ngIf="alerts.length > 0">
-          <button 
-            class="filter-btn" 
+          <button
+            class="filter-btn"
             [class.active]="activeFilter === 'all'"
             (click)="setFilter('all')">
             All ({{ alerts.length }})
           </button>
-          <button 
-            class="filter-btn" 
+          <button
+            class="filter-btn"
             [class.active]="activeFilter === 'recent'"
             (click)="setFilter('recent')">
             Recent ({{ recentCount }})
           </button>
-          <button 
-            class="filter-btn" 
+          <button
+            class="filter-btn"
             [class.active]="activeFilter === 'unread'"
             (click)="setFilter('unread')">
             Unread ({{ unreadCount }})
@@ -70,13 +71,13 @@ interface Alert {
 
         <!-- Alerts List -->
         <div class="alerts-list" *ngIf="filteredAlerts.length > 0">
-          <div 
-            *ngFor="let alert of filteredAlerts" 
-            class="alert-item" 
+          <div
+            *ngFor="let alert of filteredAlerts"
+            class="alert-item"
             [class.unread]="!alert.isRead"
             [class.expanded]="alert.isExpanded"
             (click)="toggleAlert(alert)">
-            
+
             <div class="alert-preview">
               <div class="alert-avatar">
                 <div class="avatar-placeholder">
@@ -87,7 +88,7 @@ interface Alert {
                   <span *ngIf="alert.priority === 'normal'">i</span>
                 </span>
               </div>
-              
+
               <div class="alert-content">
                 <div class="alert-header-row">
                   <span class="alert-sender">{{ alert.senderName }}</span>
@@ -98,13 +99,13 @@ interface Alert {
                 </div>
                 <div class="alert-preview-text">{{ alert.previewText }}</div>
               </div>
-              
+
               <div class="alert-indicator">
                 <span class="unread-dot" *ngIf="!alert.isRead"></span>
                 <span class="expand-icon">{{ alert.isExpanded ? '▲' : '▼' }}</span>
               </div>
             </div>
-            
+
             <!-- Expanded Full Message -->
             <div class="alert-full-message" *ngIf="alert.isExpanded">
               <div class="message-divider"></div>
@@ -460,13 +461,9 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
   get filteredAlerts(): Alert[] {
     switch (this.activeFilter) {
       case 'recent':
-        // Show alerts from last 7 days
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        return this.alerts.filter(a => {
-          const alertDate = this.parseTimeAgo(a.timeAgo);
-          return alertDate >= sevenDaysAgo;
-        });
+        return this.alerts.filter(a => new Date(a.createdAt) >= sevenDaysAgo);
       case 'unread':
         return this.alerts.filter(a => !a.isRead);
       default:
@@ -477,43 +474,17 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
   get recentCount(): number {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return this.alerts.filter(a => {
-      const alertDate = this.parseTimeAgo(a.timeAgo);
-      return alertDate >= sevenDaysAgo;
-    }).length;
+    return this.alerts.filter(a => new Date(a.createdAt) >= sevenDaysAgo).length;
   }
 
   get unreadCount(): number {
     return this.alerts.filter(a => !a.isRead).length;
   }
 
-  // Helper to parse timeAgo string to Date
-  private parseTimeAgo(timeAgo: string): Date {
-    const now = new Date();
-    const match = timeAgo.match(/(\d+)([smhd])/);
-    
-    if (!match) return now;
-    
-    const value = parseInt(match[1]);
-    const unit = match[2];
-    
-    switch (unit) {
-      case 's': // seconds
-        return new Date(now.getTime() - value * 1000);
-      case 'm': // minutes
-        return new Date(now.getTime() - value * 60 * 1000);
-      case 'h': // hours
-        return new Date(now.getTime() - value * 60 * 60 * 1000);
-      case 'd': // days
-        return new Date(now.getTime() - value * 24 * 60 * 60 * 1000);
-      default:
-        return now;
-    }
-  }
 
   ngOnInit(): void {
     this.loadAlerts();
-    
+
     // Auto-refresh notifications every 30 seconds
     interval(this.refreshInterval)
       .pipe(
@@ -553,7 +524,7 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
     this.adviserService.getAdviserNotifications().subscribe({
       next: (response) => {
         // Notifications response received
-        
+
         // Handle both Laravel API format (response.data.notifications) and legacy format (response.notifications)
         let notifications = [];
         if (response?.success && response.data?.notifications) {
@@ -566,7 +537,7 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
           // Direct notifications array (legacy fallback)
           notifications = response.notifications;
         }
-        
+
         this.alerts = this.normalizeNotifications(notifications);
         // Notifications loaded
         this.loading = false;
