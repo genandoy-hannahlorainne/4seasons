@@ -24,7 +24,7 @@ services:
     extra_hosts:
       - "dbaas-db-3809521-do-user-34366867-0.k.db.ondigitalocean.com:152.42.176.6"
     env_file:
-      - ./backend-laravel/.env.prod
+      - ./.env
     depends_on:
       redis:
         condition: service_started
