@@ -48,6 +48,6 @@ class Adviser extends Model
 
     public function students()
     {
-        return $this->hasMany(Student::class, 'current_adviser_id', 'adviser_id');
+        return $this->hasMany(Student::class, 'current_adviser_id', 'user_id');
     }
 }
