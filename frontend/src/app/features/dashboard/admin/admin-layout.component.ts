@@ -52,54 +52,54 @@ interface PasswordChangeRequest {
         <nav class="sidebar-nav">
           <a routerLink="/dashboard/admin" routerLinkActive="active"
              [routerLinkActiveOptions]="{exact: true}" class="nav-item" title="Dashboard" (click)="closeMobile()">
-            <img src="assets/icons/dashboard.png" class="nav-icon" alt="Dashboard">
+            <i class="bi bi-speedometer2 nav-icon"></i>
             <span class="nav-label">Dashboard</span>
           </a>
 
           <!-- Notification Bell in Sidebar -->
           <button class="nav-item notification-nav-item" (click)="toggleNotificationPanel()" title="Notifications">
-            <img src="assets/icons/bell.png" class="nav-icon" alt="Notifications">
+            <i class="bi bi-bell-fill nav-icon"></i>
             <span class="nav-label">Notifications</span>
             <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
           </button>
 
           <a routerLink="/dashboard/admin/manage-users" routerLinkActive="active" class="nav-item" title="Users" (click)="closeMobile()">
-            <img src="assets/icons/users.jpg" class="nav-icon" alt="Users">
+            <i class="bi bi-people-fill nav-icon"></i>
             <span class="nav-label">Users</span>
           </a>
           <a routerLink="/dashboard/admin/manage-sections" routerLinkActive="active" class="nav-item" title="Sections" (click)="closeMobile()">
-            <img src="assets/icons/sections.png" class="nav-icon" alt="Sections">
+            <i class="bi bi-grid-fill nav-icon"></i>
             <span class="nav-label">Sections</span>
           </a>
           <a routerLink="/dashboard/admin/school-year-management" routerLinkActive="active" class="nav-item" title="School Years" (click)="closeMobile()">
-            <img src="assets/icons/school-years.png" class="nav-icon" alt="School Years">
+            <i class="bi bi-calendar-fill nav-icon"></i>
             <span class="nav-label">School Years</span>
           </a>
           <a routerLink="/dashboard/admin/grade-promotion" routerLinkActive="active" class="nav-item" title="Grade Promotion" (click)="closeMobile()">
-            <img src="assets/icons/grade-promotion.png" class="nav-icon" alt="Grade Promotion">
+            <i class="bi bi-arrow-up-circle-fill nav-icon"></i>
             <span class="nav-label">Grade Promotion</span>
           </a>
           <a routerLink="/dashboard/admin/emergency-drills" routerLinkActive="active" class="nav-item" title="Emergency Drills" (click)="closeMobile()">
-            <img src="assets/icons/emergency-drills.png" class="nav-icon" alt="Emergency Drills">
+            <i class="bi bi-exclamation-triangle-fill nav-icon"></i>
             <span class="nav-label">Emergency Drills</span>
           </a>
           <a routerLink="/dashboard/admin/settings" routerLinkActive="active" class="nav-item" title="Settings" (click)="closeMobile()">
-            <img src="assets/icons/settings.png" class="nav-icon" alt="Settings">
+            <i class="bi bi-gear-fill nav-icon"></i>
             <span class="nav-label">Settings</span>
           </a>
           <a routerLink="/dashboard/admin/reports" routerLinkActive="active" class="nav-item" title="Reports" (click)="closeMobile()">
-            <img src="assets/icons/reports.png" class="nav-icon" alt="Reports">
+            <i class="bi bi-bar-chart-fill nav-icon"></i>
             <span class="nav-label">Reports</span>
           </a>
         </nav>
 
         <div class="sidebar-footer">
           <a routerLink="/dashboard/admin/profile" routerLinkActive="active" class="nav-item" title="Profile" (click)="closeMobile()">
-            <img src="assets/icons/profile.png" class="nav-icon" alt="Profile">
+            <i class="bi bi-person-circle nav-icon"></i>
             <span class="nav-label">Profile</span>
           </a>
           <button class="nav-item logout-btn" (click)="logout()" title="Logout">
-            <img src="assets/icons/logout.jpg" class="nav-icon" alt="Logout">
+            <i class="bi bi-box-arrow-right nav-icon"></i>
             <span class="nav-label">Logout</span>
           </button>
         </div>
@@ -271,6 +271,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.pollSubscription?.unsubscribe();
+    document.body.style.overflow = '';
   }
 
   loadNotifications(): void {
@@ -317,6 +318,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   toggleNotificationPanel(): void {
+    this.closeMobile();
     this.showNotificationPanel = !this.showNotificationPanel;
   }
 
@@ -410,8 +412,14 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   toggleSidebar(): void { this.isCollapsed = !this.isCollapsed; }
-  openMobile(): void { this.mobileOpen = true; }
-  closeMobile(): void { this.mobileOpen = false; }
+  openMobile(): void {
+    this.mobileOpen = true;
+    document.body.style.overflow = 'hidden';
+  }
+  closeMobile(): void {
+    this.mobileOpen = false;
+    document.body.style.overflow = '';
+  }
 
   logout(): void {
     this.loggingOut = true;

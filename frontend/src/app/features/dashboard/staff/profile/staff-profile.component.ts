@@ -20,7 +20,8 @@ import { StaffService } from '../../../../core/services/staff.service';
         <div class="profile-settings card" role="region" aria-label="Profile Settings">
           <div class="profile-settings-left">
             <div class="profile-avatar">
-              <img [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
+              <img *ngIf="profileData.avatar" [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
+              <i *ngIf="!profileData.avatar" class="bi bi-person-circle" style="font-size:64px;color:#052355;"></i>
             </div>
           </div>
 
@@ -45,7 +46,7 @@ import { StaffService } from '../../../../core/services/staff.service';
             <div class="contact-header">
               <div class="card-title">Contact Information</div>
               <button type="button" class="btn btn-outline edit-btn" (click)="openEditModal()">
-                <img src="assets/edit-icon.png" alt="" class="edit-btn-icon">
+                <i class="bi bi-pencil-fill edit-btn-icon"></i>
                 <span>Edit</span>
               </button>
             </div>
@@ -54,7 +55,7 @@ import { StaffService } from '../../../../core/services/staff.service';
               <label>Email Address</label>
               <div class="input-with-icon">
                 <span class="input-icon" aria-hidden="true">
-                  <img src="assets/message-icon.png" alt="" class="input-icon-img">
+                  <i class="bi bi-envelope-fill input-icon-img"></i>
                 </span>
                 <input type="email" [value]="profileData.email" class="form-control" readonly placeholder="Not provided">
               </div>
@@ -64,7 +65,7 @@ import { StaffService } from '../../../../core/services/staff.service';
               <label>Phone Number</label>
               <div class="input-with-icon">
                 <span class="input-icon" aria-hidden="true">
-                  <img src="assets/contact-icon.png" alt="" class="input-icon-img">
+                  <i class="bi bi-telephone-fill input-icon-img"></i>
                 </span>
                 <input type="tel" [value]="profileData.phone" class="form-control" readonly placeholder="Not provided">
               </div>
@@ -166,7 +167,7 @@ export class StaffProfileComponent implements OnInit {
     phone: '',
     position: 'Clinic Staff',
     staffCode: '',
-    avatar: 'assets/icons/clinic-staff.png'
+    avatar: ''
   };
 
   editForm = { email: '', phone: '', staffCode: '' };

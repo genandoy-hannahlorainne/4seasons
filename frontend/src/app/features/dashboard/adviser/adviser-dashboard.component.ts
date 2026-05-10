@@ -73,7 +73,7 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
           <div class="students-grid" *ngIf="advisoryStudents.length > 0">
             <div *ngFor="let student of advisoryStudents" class="student-card">
               <div class="student-avatar">
-                <img [src]="getAvatarUrl(student)" [alt]="student.full_name">
+                <i [class]="getAvatarUrl(student)" style="font-size:40px;color:#052355;"></i>
               </div>
               <div class="student-info">
                 <div class="student-name">{{ student.full_name }}</div>
@@ -563,7 +563,7 @@ export class AdviserDashboardComponent implements OnInit {
   }
 
   getAvatarUrl(student: AdvisedStudent): string {
-    return student.gender === 'F' ? 'assets/user-female.png' : 'assets/user-male.png';
+    return 'bi bi-person-circle';
   }
 
   viewStudent(student: AdvisedStudent): void {
@@ -593,7 +593,7 @@ export class AdviserDashboardComponent implements OnInit {
             name: profile.full_name || `${profile.first_name} ${profile.last_name}`,
             studentNumber: profile.student_number,
             gradeSection: `${profile.grade_level || ''} - ${profile.section || ''}`.trim().replace(/^-\s*|-\s*$/, ''),
-            avatar: (profile.gender === 'F' || profile.gender === 'Female') ? 'assets/user-female.png' : 'assets/user-male.png',
+            avatar: '',
             gender: profile.gender === 'F' ? 'Female' : (profile.gender === 'M' ? 'Male' : profile.gender || 'N/A'),
             birthday: birthDate
               ? birthDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })

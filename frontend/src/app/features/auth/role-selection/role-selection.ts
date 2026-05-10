@@ -16,4 +16,8 @@ export class RoleSelection {
     // Navigate to the actual login page with the role
     this.router.navigate(['/login'], { queryParams: { role } });
   }
+
+  goToMainSite() {
+    this.router.navigate(['/']);
+  }
 }
