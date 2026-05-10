@@ -35,7 +35,9 @@
 .motto-text { font-family:'Plus Jakarta Sans',sans-serif; font-size:1.1rem; font-weight:700; color:#052355; line-height:1.4; }
 .about-image { display:flex; align-items:center; justify-content:center; }
 .about-logo { width:100%; max-width:360px; height:auto; filter:drop-shadow(0 12px 32px rgba(5,35,85,0.15)); }
-.vision-mission-grid { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
+.vision-mission-grid { display:grid; gap:2rem; }
+.vm-top { grid-template-columns:1fr 1fr; max-width:900px; margin:0 auto 2rem; }
+.vm-bottom { grid-template-columns:repeat(3,1fr); }
 .vm-card { background:#fff; border:1.5px solid #e8edf5; border-radius:18px; padding:2rem; box-shadow:0 4px 24px rgba(5,35,85,0.08); transition:all 0.22s; display:flex; flex-direction:column; height:100%; }
 .vm-card:hover { transform:translateY(-4px); box-shadow:0 12px 40px rgba(5,35,85,0.12); border-color:#c7d8f0; }
 .vm-icon { display:inline-flex; align-items:center; justify-content:center; width:64px; height:64px; background:linear-gradient(135deg,#1e3a8a,#3b82f6); border-radius:16px; color:#fff; margin-bottom:1.25rem; flex-shrink:0; }
@@ -151,6 +153,8 @@
   .about-motto { padding:1.15rem; }
   .motto-text { font-size:0.95rem; }
   .vision-mission-grid { grid-template-columns:1fr; gap:1.25rem; }
+  .vm-top { max-width:100%; margin-bottom:1.25rem; }
+  .vm-bottom { grid-template-columns:1fr; }
   .vm-card { padding:1.5rem; }
   .vm-icon { width:54px; height:54px; }
   .vm-title { font-size:1.1rem; }
