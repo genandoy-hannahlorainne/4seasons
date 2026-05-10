@@ -113,6 +113,28 @@
   }
 }
 
+.back-to-site {
+  text-align: center;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.back-btn {
+  font-family: 'Albert Sans', sans-serif;
+  font-size: 0.85rem;
+  color: #64748b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0;
+
+  &:hover {
+    color: #052355;
+  }
+}
+
 .admin-link {
   text-align: center;
   margin-top: 1.5rem;
