@@ -45,6 +45,41 @@ $mobile-bp: 768px;
   border-bottom: 1px solid rgba(5, 35, 85, 0.1);
   overflow: hidden;
   transition: padding $transition;
+  min-width: 0;
+}
+
+.brand-logo {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #fff;
+  padding: 2px;
+  object-fit: contain;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.brand-text {
+  color: #1a2744;
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.3;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity $transition, max-width $transition;
+  max-width: 220px;
+  min-width: 0;
+
+  small {
+    font-weight: 400;
+    font-size: 15px;
+    opacity: 0.6;
+  }
+}
+
+.hamburger {
+  flex-shrink: 0;
 }
 
 .admin-shell.collapsed .sidebar-brand {
@@ -131,8 +166,8 @@ $mobile-bp: 768px;
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 20px 30px;
+  gap: 12px;
+  padding: 10px 20px;
   color: $text-color;
   text-decoration: none;
   font-size: 18px;
@@ -160,7 +195,7 @@ $mobile-bp: 768px;
 
 .admin-shell.collapsed .nav-item {
   justify-content: center;
-  padding: 20px 0;
+  padding: 10px 0;
   border-left: none;
   border-right: none;
   gap: 0;
@@ -172,10 +207,15 @@ $mobile-bp: 768px;
 }
 
 .nav-icon {
-  width: 34px;
-  height: 34px;
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
   object-fit: contain;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .logout-icon {
@@ -238,7 +278,31 @@ $mobile-bp: 768px;
 @media (max-width: $mobile-bp) {
   .sidebar {
     transform: translateX(-100%);
-    width: $sidebar-expanded !important;
+    width: 280px !important;
+    z-index: 300;
+  }
+
+  .sidebar-brand {
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .brand-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .brand-text {
+    font-size: 17px;
+    max-width: 160px;
+
+    small {
+      font-size: 13px;
+    }
+  }
+
+  .hamburger {
+    display: none;
   }
 
   .admin-shell.mobile-open .sidebar {
@@ -251,6 +315,11 @@ $mobile-bp: 768px;
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
     z-index: 299;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    padding-top: 52px;
   }
 
   .mobile-topbar {

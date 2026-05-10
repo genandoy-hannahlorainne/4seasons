@@ -20,7 +20,8 @@ import { AdminService } from '../../../../core/services/admin.service';
         <div class="profile-settings card" role="region" aria-label="Profile Settings">
           <div class="profile-settings-left">
             <div class="profile-avatar">
-              <img [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
+              <img *ngIf="profileData.avatar" [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
+              <i *ngIf="!profileData.avatar" class="bi bi-person-circle" style="font-size:64px;color:#052355;"></i>
             </div>
           </div>
 
@@ -51,7 +52,7 @@ import { AdminService } from '../../../../core/services/admin.service';
               <div class="card-title">Contact Information</div>
               <div class="contact-actions">
                 <button *ngIf="!editMode" type="button" class="btn btn-outline edit-btn" (click)="enableEdit()">
-                  <img src="assets/edit-icon.png" alt="" class="edit-btn-icon">
+                  <i class="bi bi-pencil-fill edit-btn-icon"></i>
                   <span>Edit</span>
                 </button>
                 <button *ngIf="editMode" type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancel</button>
@@ -62,7 +63,7 @@ import { AdminService } from '../../../../core/services/admin.service';
               <label for="email">Email Address</label>
               <div class="input-with-icon">
                 <span class="input-icon" aria-hidden="true">
-                  <img src="assets/message-icon.png" alt="" class="input-icon-img">
+                  <i class="bi bi-envelope-fill input-icon-img"></i>
                 </span>
                 <input type="email" id="email" [(ngModel)]="profileData.email" class="form-control" [disabled]="!editMode">
               </div>
@@ -72,7 +73,7 @@ import { AdminService } from '../../../../core/services/admin.service';
               <label for="phone">Phone Number</label>
               <div class="input-with-icon">
                 <span class="input-icon" aria-hidden="true">
-                  <img src="assets/contact-icon.png" alt="" class="input-icon-img">
+                  <i class="bi bi-telephone-fill input-icon-img"></i>
                 </span>
                 <input type="tel" id="phone" [(ngModel)]="profileData.phone" class="form-control" [disabled]="!editMode">
               </div>
@@ -140,7 +141,7 @@ export class AdminProfileComponent implements OnInit {
     phone: '',
     role: 'System Administrator',
     username: '',
-    avatar: 'assets/user-male.png'
+    avatar: ''
   };
 
   passwordForm = {

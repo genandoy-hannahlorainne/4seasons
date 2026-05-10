@@ -34,14 +34,16 @@ interface AdviserAssignmentStatus {
   template: `
     <div class="promotion-container">
       <div class="page-header">
-        <h2>Grade Promotion Management</h2>
-        <p>Promote students from one school year to the next</p>
+        <div>
+          <h2>Grade Promotion Management</h2>
+          <p>Promote students from one school year to the next</p>
+        </div>
       </div>
 
       <!-- Setup Card -->
       <div class="card setup-card">
         <div class="card-title">
-          <img src="assets/icons/calendar.png" style="width:20px;height:20px;object-fit:contain;flex-shrink:0;" alt="Calendar">
+          <i class="bi bi-calendar-fill" style="width:20px;height:20px;flex-shrink:0;color:#5381b2;"></i>
           Select School Years
         </div>
         <div class="year-selectors">
@@ -116,7 +118,7 @@ interface AdviserAssignmentStatus {
 
             <div *ngIf="targetSections?.length === 0" class="empty-state warning">
               <div class="warning-content">
-                <img src="assets/icons/warning.png" style="width:48px;height:48px;object-fit:contain;" alt="Warning">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size:48px;color:#f59e0b;flex-shrink:0;"></i>
                 <div class="warning-text">
                   <strong>No Sections Found</strong>
                   <p>The target school year <span class="year-highlight">{{ getYearName(targetSchoolYearId) }}</span> has no sections yet. Copy sections from the current year to get started.</p>
@@ -313,11 +315,17 @@ interface AdviserAssignmentStatus {
 
     .page-header {
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      padding: 1.75rem 1.5rem;
+      padding: 2rem 1.5rem;
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
-      h2 { font-size: 1.75rem; color: #fff; margin: 0 0 4px; font-weight: 700; }
-      p { color: rgba(255,255,255,0.75); margin: 0; font-size: 0.9rem; }
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      h2 { font-size: 2rem; color: #fff; margin: 0 0 4px; font-weight: 700; }
+      p { color: rgba(255,255,255,0.8); margin: 0; font-size: 1.1rem; }
     }
 
     .two-col-row {
