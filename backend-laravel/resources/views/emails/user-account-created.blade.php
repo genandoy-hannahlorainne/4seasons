@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Your Account Has Been Created - StudentCare+</title>
+    <title>Your Account Has Been Created - StudentCare+ PDMHS</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -22,26 +22,45 @@
         }
         .header {
             background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-            padding: 36px 32px 28px;
+            padding: 32px;
             text-align: center;
         }
-        .header .logo-text {
-            font-size: 26px;
+        .header img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: contain;
+            background: #fff;
+            padding: 6px;
+            margin-bottom: 14px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .header .system-name {
+            font-size: 22px;
             font-weight: 800;
             color: #ffffff;
             letter-spacing: -0.5px;
         }
-        .header .logo-sub {
+        .header .system-tagline {
             font-size: 13px;
-            color: rgba(255,255,255,0.75);
+            color: rgba(255,255,255,0.8);
             margin-top: 4px;
+        }
+        .header .school-name {
+            font-size: 12px;
+            color: rgba(255,255,255,0.65);
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
         }
         .header .badge {
             display: inline-block;
             background: rgba(255,255,255,0.15);
             border: 1px solid rgba(255,255,255,0.3);
             color: #fff;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             padding: 4px 14px;
             border-radius: 100px;
@@ -53,15 +72,16 @@
             padding: 36px 32px;
         }
         .greeting {
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 700;
             color: #052355;
             margin-bottom: 12px;
         }
         .intro {
-            font-size: 15px;
+            font-size: 14.5px;
             color: #475569;
             margin-bottom: 28px;
+            line-height: 1.7;
         }
         .credentials-box {
             background: #f8fafc;
@@ -71,7 +91,7 @@
             margin-bottom: 24px;
         }
         .credentials-box h3 {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             color: #052355;
             text-transform: uppercase;
@@ -159,9 +179,15 @@
         .sign-off {
             font-size: 14px;
             color: #475569;
-            margin-top: 8px;
+            margin-top: 20px;
+            line-height: 1.8;
         }
         .sign-off strong { color: #052355; }
+        .divider {
+            border: none;
+            border-top: 1.5px solid #e2e8f0;
+            margin: 24px 0;
+        }
         .footer {
             background: #f8fafc;
             border-top: 1.5px solid #e2e8f0;
@@ -169,29 +195,38 @@
             padding: 20px 32px;
             font-size: 12px;
             color: #94a3b8;
+            line-height: 1.7;
         }
         .footer a { color: #5381b2; text-decoration: none; }
     </style>
 </head>
 <body>
     <div class="wrapper">
+
+        <!-- Header -->
         <div class="header">
-            <div class="logo-text">StudentCare+</div>
-            <div class="logo-sub">President Diosdado Macapagal High School</div>
+            <img src="https://studentcare.site/assets/team4seasons-logo.png" alt="StudentCare+ Logo">
+            <div class="system-name">StudentCare+</div>
+            <div class="system-tagline">Clinic Management, Simplified</div>
+            <div class="school-name">President Diosdado Macapagal High School</div>
             <div class="badge">Account Created</div>
         </div>
 
+        <!-- Body -->
         <div class="content">
             <div class="greeting">
-                Hello, {{ $userData['full_name'] ?? (($userData['first_name'] ?? '') . ' ' . ($userData['last_name'] ?? '')) }}!
+                Dear {{ $userData['full_name'] ?? (($userData['first_name'] ?? '') . ' ' . ($userData['last_name'] ?? '')) }},
             </div>
+
             <p class="intro">
-                Your <strong>{{ ucfirst(str_replace('_', ' ', $role)) }}</strong> account has been created on the StudentCare+ Clinic Management System.
-                Use the credentials below to log in for the first time.
+                We are pleased to inform you that your <strong>{{ ucfirst(str_replace('_', ' ', $role)) }}</strong> account
+                has been successfully created on the <strong>StudentCare+ PDMHS Clinic Management System</strong>.
+                Please find your login credentials below. You are required to change your password upon your first login.
             </p>
 
+            <!-- Credentials -->
             <div class="credentials-box">
-                <h3>🔐 Your Login Credentials</h3>
+                <h3>Login Credentials</h3>
                 <div class="credential-row">
                     <span class="credential-label">Username</span>
                     <span class="credential-value">{{ $userData['username'] }}</span>
@@ -204,63 +239,75 @@
                     <span class="credential-label">Role</span>
                     <span class="credential-value">{{ ucfirst(str_replace('_', ' ', $role)) }}</span>
                 </div>
+                <div class="credential-row">
+                    <span class="credential-label">System Access URL</span>
+                    <span class="credential-value">studentcare.site</span>
+                </div>
             </div>
 
+            <!-- Security Notice -->
             <div class="warning-box">
-                <h4>⚠️ Important Security Notice</h4>
+                <h4>Important Security Notice</h4>
                 <ul>
-                    <li>You <strong>must change your password</strong> on your first login.</li>
-                    <li>Do not share your credentials with anyone.</li>
-                    <li>Contact the system administrator if you have trouble logging in.</li>
+                    <li>You are required to <strong>change your password</strong> upon your first login.</li>
+                    <li>Do not share your login credentials with anyone.</li>
+                    <li>If you did not expect this email or encounter any issues, please contact the system administrator immediately.</li>
                 </ul>
             </div>
 
             @if($role === 'student')
             <div class="info-section">
-                <h3>📋 Student Information</h3>
+                <h3>Student Information</h3>
                 <ul>
-                    <li><strong>Student Number:</strong> {{ $userData['student_number'] ?? 'N/A' }}</li>
+                    <li><strong>Student Number (LRN):</strong> {{ $userData['student_number'] ?? 'N/A' }}</li>
                     <li><strong>Grade &amp; Section:</strong> {{ $userData['grade_section'] ?? 'N/A' }}</li>
-                    <li><strong>Email:</strong> {{ $userData['email'] ?? 'N/A' }}</li>
+                    <li><strong>Email Address:</strong> {{ $userData['email'] ?? 'N/A' }}</li>
                 </ul>
             </div>
             @endif
 
             @if($role === 'adviser')
             <div class="info-section">
-                <h3>👨‍🏫 Faculty Information</h3>
+                <h3>Faculty Information</h3>
                 <ul>
                     <li><strong>Employee Number:</strong> {{ $userData['employee_number'] ?? 'N/A' }}</li>
-                    <li><strong>Email:</strong> {{ $userData['email'] ?? 'N/A' }}</li>
+                    <li><strong>Email Address:</strong> {{ $userData['email'] ?? 'N/A' }}</li>
                 </ul>
             </div>
             @endif
 
             @if($role === 'clinic_staff')
             <div class="info-section">
-                <h3>🏥 Clinic Staff Information</h3>
+                <h3>Clinic Staff Information</h3>
                 <ul>
                     <li><strong>Staff Code:</strong> {{ $userData['staff_code'] ?? 'N/A' }}</li>
                     <li><strong>Position:</strong> {{ $userData['position'] ?? 'N/A' }}</li>
-                    <li><strong>Email:</strong> {{ $userData['email'] ?? 'N/A' }}</li>
+                    <li><strong>Email Address:</strong> {{ $userData['email'] ?? 'N/A' }}</li>
                 </ul>
             </div>
-            @endifw
+            @endif
 
-            <a href="https://studentcare.site" class="cta-btn">Login to StudentCare+</a>
+            <a href="https://studentcare.site" class="cta-btn">Access StudentCare+ System</a>
+
+            <hr class="divider">
 
             <p class="sign-off">
-                If you have any questions, contact the IT administrator.<br><br>
-                Best regards,<br>
-                <strong>StudentCare+ Capstone Team</strong><br>
-                President Diosdado Macapagal High School
+                Should you have any questions or require assistance, please do not hesitate to contact the system administrator.<br><br>
+                Respectfully yours,<br><br>
+                <strong>StudentCare+ PDMHS Clinic Management System Team</strong><br>
+                President Diosdado Macapagal High School<br>
+                <a href="https://studentcare.site" style="color:#5381b2;">studentcare.site</a>
             </p>
         </div>
 
+        <!-- Footer -->
         <div class="footer">
-            <p>This is an automated message. Please do not reply to this email.</p>
-            <p style="margin-top:6px;">&copy; {{ date('Y') }} StudentCare+ &mdash; PDMHS Clinic Management System. All rights reserved.</p>
+            <p>This is a system-generated message. Please do not reply to this email.</p>
+            <p style="margin-top:6px;">
+                &copy; {{ date('Y') }} StudentCare+ &mdash; PDMHS Clinic Management System. All rights reserved.
+            </p>
         </div>
+
     </div>
 </body>
 </html>
