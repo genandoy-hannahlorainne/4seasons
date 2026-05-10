@@ -14,7 +14,7 @@ import { BMIUtils } from '../../../../shared/utils/bmi-utils';
         <!-- Header -->
         <div class="modal-header">
           <div class="student-avatar">
-            <img [src]="student?.avatar || 'assets/user-male.png'" [alt]="student?.name">
+            <i class="bi bi-person-circle" style="font-size:56px;color:#052355;"></i>
           </div>
           <div class="student-header-info">
             <h2>{{ student?.name }}</h2>

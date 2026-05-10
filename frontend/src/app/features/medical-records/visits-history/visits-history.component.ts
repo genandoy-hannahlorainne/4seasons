@@ -54,7 +54,7 @@ interface VisitHistoryData {
         <div class="visits-summary">
           <div class="summary-card">
             <div class="summary-icon">
-              <img src="assets/icons/visit.png" alt="Total Visits">
+              <i class="bi bi-clipboard2-pulse-fill" style="font-size:28px;color:#052355;"></i>
             </div>
             <div class="summary-content">
               <div class="summary-value">{{ visitHistory.statistics.total_visits }}</div>
@@ -64,7 +64,7 @@ interface VisitHistoryData {
           
           <div class="summary-card">
             <div class="summary-icon">
-              <img src="assets/icons/recent-visit.png" alt="This Month">
+              <i class="bi bi-calendar-check-fill" style="font-size:28px;color:#052355;"></i>
             </div>
             <div class="summary-content">
               <div class="summary-value">{{ visitHistory.statistics.this_month_visits }}</div>
@@ -74,7 +74,7 @@ interface VisitHistoryData {
           
           <div class="summary-card">
             <div class="summary-icon">
-              <img src="assets/icons/my-medical.png" alt="Last Visit">
+              <i class="bi bi-clock-history" style="font-size:28px;color:#052355;"></i>
             </div>
             <div class="summary-content">
               <div class="summary-value">{{ getLastVisitText() }}</div>

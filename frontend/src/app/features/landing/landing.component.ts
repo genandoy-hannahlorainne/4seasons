@@ -60,17 +60,17 @@ export class LandingComponent {
   roles = [
     {
       id: 'student', title: 'Student',
-      icon: `<img src="assets/icons/student.png" alt="Student" style="width:72px;height:72px;object-fit:contain;display:block;">`,
+      icon: `<i class="bi bi-person-fill" style="font-size:72px;color:#052355;display:block;"></i>`,
       features: ['View personal health records','Access SHDF (Student Health Data Form)','View medical visit history','Track immunization records','View allergy information','Access family medical history']
     },
     {
       id: 'clinic-staff', title: 'Clinic Staff',
-      icon: `<img src="assets/icons/clinic-staff.png" alt="Clinic Staff" style="width:72px;height:72px;object-fit:contain;display:block;">`,
+      icon: `<i class="bi bi-heart-pulse-fill" style="font-size:72px;color:#052355;display:block;"></i>`,
       features: ['Manage student medical visits','Record vital signs and diagnoses','Manage student health records','Handle emergency drill participation','Generate health reports','Manage parental consent forms']
     },
     {
       id: 'adviser', title: 'Adviser',
-      icon: `<img src="assets/icons/adviser-faculty.png" alt="Adviser" style="width:72px;height:72px;object-fit:contain;display:block;">`,
+      icon: `<i class="bi bi-person-badge-fill" style="font-size:72px;color:#052355;display:block;"></i>`,
       features: ['View section student health records','Monitor student medical visits','Track SHDF submission status','Manage emergency drill records','View student health summaries','Coordinate with clinic staff']
     }
   ];

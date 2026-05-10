@@ -25,7 +25,7 @@ export class StudentMedicalProfileComponent implements OnInit {
     blood_type: '',
     email: '',
     phone: '',
-    avatar: 'assets/user-male.png'
+    avatar: ''
   };
 
   vitalsHistory: any[] = [];
@@ -83,7 +83,7 @@ export class StudentMedicalProfileComponent implements OnInit {
             blood_type: studentData.blood_type || '',
             email: studentData.email || studentData.user?.email || '',
             phone: studentData.phone || studentData.user?.phone || '',
-            avatar: studentData.avatar || (studentData.gender === 'F' ? 'assets/user-female.png' : 'assets/user-male.png')
+            avatar: studentData.avatar || ''
           };
 
           const visits = payload.medical_visits || payload.medicalVisits || [];

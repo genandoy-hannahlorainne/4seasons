@@ -39,31 +39,31 @@ import { filter } from 'rxjs/operators';
         <nav class="sidebar-nav">
           <a routerLink="/dashboard/student" routerLinkActive="active"
              [routerLinkActiveOptions]="{exact: true}" class="nav-item" title="Dashboard" (click)="closeMobile()">
-            <img src="assets/icons/dashboard.png" class="nav-icon" alt="Dashboard">
+            <i class="bi bi-speedometer2 nav-icon"></i>
             <span class="nav-label">Dashboard</span>
           </a>
           <a routerLink="/dashboard/student/medical-records" routerLinkActive="active" class="nav-item" title="My Medical Records" (click)="closeMobile()">
-            <img src="assets/icons/my-medical.png" class="nav-icon" alt="Medical Records">
+            <i class="bi bi-heart-pulse-fill nav-icon"></i>
             <span class="nav-label">My Medical</span>
           </a>
           <button class="nav-item notification" (click)="toggleNotifications($event)" title="Notifications">
-            <img src="assets/icons/notification.png" class="nav-icon" alt="Notifications">
+            <i class="bi bi-bell-fill nav-icon"></i>
             <span class="nav-label">Notifications</span>
             <span *ngIf="notificationCount > 0" class="notif-count">{{ notificationCount }}</span>
           </button>
           <button class="nav-item" (click)="toggleBadges($event)" title="Badges">
-            <img src="assets/icons/badge.png" class="nav-icon" alt="Badges">
+            <i class="bi bi-award-fill nav-icon"></i>
             <span class="nav-label">Badges</span>
           </button>
         </nav>
 
         <div class="sidebar-footer">
           <a routerLink="/dashboard/student/profile" routerLinkActive="active" class="nav-item" title="Profile" (click)="closeMobile()">
-            <img src="assets/icons/profile.png" class="nav-icon" alt="Profile">
+            <i class="bi bi-person-circle nav-icon"></i>
             <span class="nav-label">Profile</span>
           </a>
           <button class="nav-item logout-btn" (click)="logout()" title="Logout">
-            <img src="assets/icons/logout.jpg" class="nav-icon" alt="Logout">
+            <i class="bi bi-box-arrow-right nav-icon"></i>
             <span class="nav-label">Logout</span>
           </button>
         </div>

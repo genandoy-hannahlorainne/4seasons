@@ -23,9 +23,9 @@
       <div class="hero-text">
         <div class="hero-badge">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-          PDMHS Medical Record System
+          PDMHS Clinic Management System
         </div>
-        <h1 class="hero-title">Student Health<br><span>Made Simple</span></h1>
+        <h1 class="hero-title">StudentCare+<br><span>Clinic Management, Simplified</span></h1>
         <p class="hero-subtitle">A secure and efficient platform for managing student health records at President Diosdado Macapagal High School.</p>
         <div class="hero-actions">
           <button class="btn-get-started" (click)="navigateToLogin()">Login</button>
@@ -49,7 +49,7 @@
             Established in 2007, PDMHS is committed to providing quality education and fostering holistic development for every student.
           </p>  
           <div class="about-motto">
-            <img src="assets/icons/motto.png" alt="Motto" style="width:24px;height:24px;object-fit:contain;flex-shrink:0;">
+            <i class="bi bi-quote" style="font-size:24px;flex-shrink:0;color:#052355;"></i>
             <div>
               <div class="motto-label">Our Motto</div>
               <div class="motto-text">Empowering Young Minds, Touching Lives</div>
@@ -61,33 +61,69 @@
         </div>
       </div>
       
-      <div class="vision-mission-grid">
+      <div class="vision-mission-grid vm-top">
         <div class="vm-card">
           <div class="vm-icon">
-            <img src="assets/icons/vision.png" alt="Vision" style="width:28px;height:28px;object-fit:contain;">
+            <i class="bi bi-eye-fill" style="font-size:28px;"></i>
           </div>
           <h3 class="vm-title">Vision</h3>
           <p class="vm-text">
-            We dream of Filipinos who passionately love their country and whose values and competencies enable them to realize their full potential and contribute meaningfully to building the nation.
-          </p>
-          <p class="vm-text">
-            As a learner-centered public institution, the Department of Education continuously improves itself to better serve its stakeholders.
+            A leading high school that yields world-class learners who are God-fearing, morally upright, socially responsible, intellectually and physically sound, and civic-spirited, life-skilled individuals.
           </p>
         </div>
 
         <div class="vm-card">
           <div class="vm-icon">
-            <img src="assets/icons/mission.png" alt="Mission" style="width:28px;height:28px;object-fit:contain;">
+            <i class="bi bi-bullseye" style="font-size:28px;"></i>
           </div>
           <h3 class="vm-title">Mission</h3>
           <p class="vm-text">
-            To protect and promote the right of every Filipino to quality, equitable, culture-based, and complete basic education where:
+            To provide world-class, quality, accessible, secondary education attuned with the latest innovations capable of transforming the learners to be humane, globally competitive and productive citizens.
           </p>
+        </div>
+      </div>
+
+      <div class="vision-mission-grid vm-bottom">
+        <div class="vm-card">
+          <div class="vm-icon">
+            <i class="bi bi-rocket-takeoff-fill" style="font-size:28px;"></i>
+          </div>
+          <h3 class="vm-title">Thrust</h3>
           <ul class="vm-list">
-            <li>Students learn in a child-friendly, gender-sensitive, safe, and motivating environment.</li>
-            <li>Teachers facilitate learning and constantly nurture every learner.</li>
-            <li>Administrators and staff, as stewards of the institution, ensure an enabling and supportive environment for effective learning to happen.</li>
-            <li>Family, community, and other stakeholders are actively engaged and share responsibility for developing life-long learners.</li>
+            <li><strong>F = Future-Oriented:</strong> Well prepared and resilient for the years ahead, no matter what adversities may be encountered.</li>
+            <li><strong>G = Goal-Driven:</strong> Focused on specific objectives and targets that must be achieved for the common good of others and betterment of oneself.</li>
+            <li><strong>D = Delivers Excellence:</strong> Does not only settle for the good but makes sure that excellence is being delivered in all aspects of services to its clientele.</li>
+          </ul>
+        </div>
+
+        <div class="vm-card">
+          <div class="vm-icon">
+            <i class="bi bi-book-fill" style="font-size:28px;"></i>
+          </div>
+          <h3 class="vm-title">Philosophy</h3>
+          <ul class="vm-list">
+            <li>World-class instruction</li>
+            <li>Updated curriculum</li>
+            <li>Continuous faculty and staff development</li>
+            <li>Harmonious parent-teacher and community relations</li>
+            <li>Collaborative relationship with the local government</li>
+            <li>Progressive administrative system</li>
+            <li>Productive classroom-based research</li>
+            <li>Empowered student leadership</li>
+            <li>Independent and harmonious faculty leadership</li>
+          </ul>
+        </div>
+
+        <div class="vm-card">
+          <div class="vm-icon">
+            <i class="bi bi-heart-fill" style="font-size:28px;"></i>
+          </div>
+          <h3 class="vm-title">Core Values</h3>
+          <ul class="vm-list">
+            <li>Maka-Diyos</li>
+            <li>Maka-tao</li>
+            <li>Makakalikasan</li>
+            <li>Makabansa</li>
           </ul>
         </div>
       </div>
@@ -124,7 +160,7 @@
         <div class="info-card clinic-card">
           <div class="clinic-banner">
             <div class="clinic-icon-box">
-              <img src="assets/icons/school-clinic.png" alt="School Clinic" style="width:24px;height:24px;object-fit:contain;">
+              <i class="bi bi-hospital-fill" style="font-size:24px;color:white;"></i>
             </div>
             <div>
               <div class="clinic-label">PDMHS School Clinic</div>
@@ -165,7 +201,7 @@
         <div class="info-card">
           <div class="hours-header">
             <div class="hours-icon">
-              <img src="assets/icons/opening-hours.png" alt="Opening Hours" style="width:22px;height:22px;object-fit:contain;">
+              <i class="bi bi-clock-fill" style="font-size:22px;color:white;"></i>
             </div>
             <div>
               <div class="hours-title">School Opening Hours</div>
@@ -491,13 +527,13 @@
       </div>
       <h2>Building the Future of Student Healthcare</h2>
       <p>This system is a capstone project developed by IT students from Polytechnic University of the Philippines (PUP) Taguig Campus.</p>
-      <a href="https://github.com/genandoy-hannahlorainne/4seasons.git" target="_blank" rel="noopener noreferrer" class="repo-link-modal">
+      <a href="https://github.com/PUPT-4seasons-2026/4seasons" target="_blank" rel="noopener noreferrer" class="repo-link-modal">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
         </svg>
         <div class="repo-info">
           <span class="repo-label">View Source Code</span>
-          <span class="repo-url">github.com/genandoy-hannahlorainne/4seasons</span>
+          <span class="repo-url">github.com/PUPT-4seasons-2026/4seasons</span>
         </div>
       </a>
     </div>

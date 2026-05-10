@@ -12,7 +12,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(5, 20, 50, 0.55);
+    background: transparent;
   }
 }
 
@@ -96,10 +96,9 @@
   box-shadow: 0 4px 14px rgba(5, 35, 85, 0.3);
 
   .role-icon {
-    width: 32px;
-    height: 32px;
+    font-size: 28px;
     flex-shrink: 0;
-    filter: brightness(0) invert(1);
+    color: white;
   }
 
   &:hover {
@@ -110,6 +109,28 @@
 
   &:active {
     transform: translateY(0);
+  }
+}
+
+.back-to-site {
+  text-align: center;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.back-btn {
+  font-family: 'Albert Sans', sans-serif;
+  font-size: 0.85rem;
+  color: #64748b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0;
+
+  &:hover {
+    color: #052355;
   }
 }
 
