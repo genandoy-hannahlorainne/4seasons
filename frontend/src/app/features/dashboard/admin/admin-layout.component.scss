@@ -131,8 +131,8 @@ $mobile-bp: 768px;
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 20px 30px;
+  gap: 12px;
+  padding: 10px 20px;
   color: $text-color;
   text-decoration: none;
   font-size: 18px;
@@ -160,7 +160,7 @@ $mobile-bp: 768px;
 
 .admin-shell.collapsed .nav-item {
   justify-content: center;
-  padding: 20px 0;
+  padding: 10px 0;
   border-left: none;
   border-right: none;
   gap: 0;
