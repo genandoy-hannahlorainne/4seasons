@@ -318,6 +318,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   toggleNotificationPanel(): void {
+    this.closeMobile();
     this.showNotificationPanel = !this.showNotificationPanel;
   }
 
