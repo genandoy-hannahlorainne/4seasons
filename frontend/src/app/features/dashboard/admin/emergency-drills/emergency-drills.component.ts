@@ -13,8 +13,10 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
     <div class="emergency-drills-container">
       <div class="header">
         <div class="header-left">
-          <i class="bi bi-exclamation-triangle-fill" style="font-size:36px;color:white;"></i>
-          <h2>Emergency Drill Management</h2>
+          <div>
+            <h2>Emergency Drill Management</h2>
+            <p>Create and monitor emergency drills across all grade levels</p>
+          </div>
         </div>
         <button class="btn btn-primary" (click)="showCreateModal = true">
           <i class="bi bi-plus-circle-fill" style="font-size:16px;"></i> Create New Drill
@@ -538,8 +540,14 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       h2 {
         font-size: 2rem;
         color: #ffffff;
-        margin: 0;
+        margin: 0 0 4px;
         font-weight: 700;
+      }
+
+      p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+        margin: 0;
       }
 
       .btn-primary {
