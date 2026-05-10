@@ -33,7 +33,7 @@ class UserAccountCreated extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Account Has Been Created - Medical Record System',
+            subject: 'Your Account Has Been Created - StudentCare+ PDMHS',
         );
     }
 
