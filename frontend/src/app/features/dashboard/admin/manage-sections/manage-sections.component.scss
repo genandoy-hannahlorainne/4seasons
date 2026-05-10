@@ -363,12 +363,57 @@
 }
 
 .confirm-modal {
-  max-width: 380px;
-  text-align: center;
+  max-width: 460px;
 
-  h3 { margin-bottom: 12px; }
-  p { color: #555; margin-bottom: 8px; }
-  .warning-text { color: #b45309; font-size: 0.85rem; }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    h3 { margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; }
+  }
+
+  p { color: #555; margin-bottom: 0.5rem; }
+  .warning-text {
+    color: #b45309;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #fef3c7;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+    text-align: left;
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.4rem;
+    }
+
+    textarea, input[type="password"] {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: #052355;
+      }
+    }
+  }
 }
 
 .loading { text-align: center; padding: 40px; color: #666; }
