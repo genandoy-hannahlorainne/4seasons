@@ -79,19 +79,37 @@ export class PushNotificationService {
     if (!this.registration) return;
 
     try {
+      const vapidKey = await this.fetchVapidPublicKey();
+      if (!vapidKey) {
+        console.warn('PushNotifications: VAPID public key not available.');
+        return;
+      }
+
+      const applicationServerKey = this.urlBase64ToUint8Array(vapidKey);
+
       // Check if already subscribed
       let sub = await this.registration.pushManager.getSubscription();
 
-      if (!sub) {
-        const vapidKey = await this.fetchVapidPublicKey();
-        if (!vapidKey) {
-          console.warn('PushNotifications: VAPID public key not available.');
-          return;
-        }
+      if (sub) {
+        // Check if the existing subscription was made with the current VAPID key.
+        // If the key changed (e.g. old legacy FCM endpoint), unsubscribe and re-subscribe.
+        const existingKey = sub.options?.applicationServerKey;
+        const existingKeyBase64 = existingKey
+          ? btoa(String.fromCharCode(...new Uint8Array(existingKey)))
+          : null;
+        const newKeyBase64 = btoa(String.fromCharCode(...applicationServerKey));
 
+        if (existingKeyBase64 !== newKeyBase64) {
+          console.info('PushNotifications: VAPID key changed, re-subscribing.');
+          await sub.unsubscribe();
+          sub = null;
+        }
+      }
+
+      if (!sub) {
         sub = await this.registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: this.urlBase64ToUint8Array(vapidKey),
+          applicationServerKey,
         });
       }
 
