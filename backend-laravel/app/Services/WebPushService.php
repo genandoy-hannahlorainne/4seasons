@@ -67,7 +67,7 @@ class WebPushService
 
             $sub = Subscription::create([
                 'endpoint'        => $subscription->endpoint,
-                'contentEncoding' => 'aesgcm',
+                'contentEncoding' => 'aes128gcm',
                 'keys'            => [
                     'p256dh' => $subscription->p256dh_key,
                     'auth'   => $subscription->auth_key,
