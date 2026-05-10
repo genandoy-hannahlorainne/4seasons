@@ -118,6 +118,31 @@
       </select>
     </div>
 
+    <!-- Adviser change confirmation fields — shown only when editing and adviser changed -->
+    <div *ngIf="isEditing && adviserChanged()" class="adviser-change-notice">
+      <div class="notice-banner">
+        <i class="bi bi-person-badge-fill"></i>
+        Adviser assignment is being changed. Please provide a reason and your password.
+      </div>
+      <div class="form-group">
+        <label>Reason for adviser change <span class="required">*</span></label>
+        <textarea
+          [(ngModel)]="adviserChangeReason"
+          rows="2"
+          placeholder="Explain why the adviser is being changed..."
+          class="form-control">
+        </textarea>
+      </div>
+      <div class="form-group">
+        <label>Enter your password to confirm <span class="required">*</span></label>
+        <input
+          type="password"
+          [(ngModel)]="adviserChangePassword"
+          placeholder="Your account password"
+          class="form-control">
+      </div>
+    </div>
+
     <div class="form-group">
       <label>Capacity</label>
       <input type="number" [(ngModel)]="form.capacity" min="1" max="200" class="form-control">

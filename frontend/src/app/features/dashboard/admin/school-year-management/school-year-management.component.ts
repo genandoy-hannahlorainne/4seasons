@@ -271,10 +271,32 @@ interface GradeLevel {
                 No advisers found for selected grade level.
               </div>
             </div>
+
+            <!-- Reason and password confirmation -->
+            <div class="assign-confirm-fields" *ngIf="selectedAdviserId">
+              <div class="assign-notice">
+                <i class="bi bi-person-badge-fill"></i>
+                Please provide a reason and your password to confirm this assignment.
+              </div>
+              <div class="form-group" style="margin-top:1rem;">
+                <label>Reason for assignment <span style="color:#dc3545">*</span></label>
+                <textarea [(ngModel)]="assignReason" rows="2"
+                  placeholder="Explain why this adviser is being assigned..."
+                  class="form-select" style="resize:vertical;"></textarea>
+              </div>
+              <div class="form-group" style="margin-top:0.75rem;">
+                <label>Your password <span style="color:#dc3545">*</span></label>
+                <input type="password" [(ngModel)]="assignPassword"
+                  placeholder="Enter your account password"
+                  class="form-select">
+              </div>
+            </div>
+
           </div>
           <div class="modal-footer">
             <button class="btn-cancel" (click)="closeAssignModal()">Cancel</button>
-            <button class="btn-save" (click)="assignAdviser()" [disabled]="!selectedAdviserId || saving">
+            <button class="btn-save" (click)="assignAdviser()"
+              [disabled]="!selectedAdviserId || !assignReason.trim() || !assignPassword.trim() || saving">
               {{ saving ? 'Assigning...' : 'Assign Adviser' }}
             </button>
           </div>
@@ -2041,6 +2063,8 @@ export class SchoolYearManagementComponent implements OnInit {
   }
 
   showAssignModal = false;
+  assignReason = '';
+  assignPassword = '';
   showRemoveAdviserModal = false;
   sectionToRemoveAdviser: Section | null = null;
   showCreateYearModal = false;
@@ -2225,15 +2249,27 @@ export class SchoolYearManagementComponent implements OnInit {
     this.showAssignModal = false;
     this.selectedSection = null;
     this.selectedAdviserId = null;
+    this.assignReason = '';
+    this.assignPassword = '';
   }
 
   assignAdviser(): void {
     if (!this.selectedSection || !this.selectedAdviserId) return;
+    if (!this.assignReason.trim()) {
+      this.showMessage('Please provide a reason for the adviser assignment.', 'error');
+      return;
+    }
+    if (!this.assignPassword.trim()) {
+      this.showMessage('Please enter your password to confirm.', 'error');
+      return;
+    }
 
     this.saving = true;
     const data = {
       section_id: this.selectedSection.id,
-      adviser_user_id: this.selectedAdviserId
+      adviser_user_id: this.selectedAdviserId,
+      reason: this.assignReason,
+      password: this.assignPassword
     };
 
     this.http.post<any>(`${environment.apiUrl}/admin/sections/assign-adviser`, data).subscribe({
@@ -2249,8 +2285,7 @@ export class SchoolYearManagementComponent implements OnInit {
         this.saving = false;
       },
       error: (err) => {
-        // Error assigning adviser
-        this.showMessage('Error assigning adviser', 'error');
+        this.showMessage(err.error?.message || 'Error assigning adviser', 'error');
         this.saving = false;
       }
     });

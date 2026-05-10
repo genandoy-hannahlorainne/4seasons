@@ -27,6 +27,11 @@ export class ManageSectionsComponent implements OnInit {
   saving = false;
   modalError = '';
   form: any = this.emptyForm();
+  originalAdviserId: any = '';
+
+  // Adviser change confirmation
+  adviserChangeReason = '';
+  adviserChangePassword = '';
 
   // Delete confirm
   showDeleteConfirm = false;
@@ -89,6 +94,9 @@ export class ManageSectionsComponent implements OnInit {
       adviser_id: section.adviser_id || '',
       capacity: section.capacity || 50
     };
+    this.originalAdviserId = section.adviser_id || '';
+    this.adviserChangeReason = '';
+    this.adviserChangePassword = '';
     this.isEditing = true;
     this.modalError = '';
     this.showModal = true;
@@ -97,6 +105,13 @@ export class ManageSectionsComponent implements OnInit {
   closeModal(): void {
     this.showModal = false;
     this.form = this.emptyForm();
+    this.originalAdviserId = '';
+    this.adviserChangeReason = '';
+    this.adviserChangePassword = '';
+  }
+
+  adviserChanged(): boolean {
+    return this.isEditing && String(this.form.adviser_id) !== String(this.originalAdviserId);
   }
 
   saveSection(): void {
@@ -104,15 +119,33 @@ export class ManageSectionsComponent implements OnInit {
       this.modalError = 'Section name and grade level are required.';
       return;
     }
+
+    // If adviser changed, require reason and password
+    if (this.adviserChanged()) {
+      if (!this.adviserChangeReason.trim()) {
+        this.modalError = 'Please provide a reason for the adviser change.';
+        return;
+      }
+      if (!this.adviserChangePassword.trim()) {
+        this.modalError = 'Please enter your password to confirm the adviser change.';
+        return;
+      }
+    }
+
     this.saving = true;
     this.modalError = '';
 
-    const payload = {
+    const payload: any = {
       section_name: this.form.section_name,
       grade_level_id: this.form.grade_level_id,
       adviser_id: this.form.adviser_id || null,
       capacity: this.form.capacity
     };
+
+    if (this.adviserChanged()) {
+      payload.adviser_change_reason = this.adviserChangeReason;
+      payload.password = this.adviserChangePassword;
+    }
 
     const req = this.isEditing
       ? this.http.put<any>(`${environment.apiUrl}/admin/sections/${this.form.id}`, payload)
