@@ -26,5 +26,5 @@ return [
     */
     'fcm_project_id'   => env('FCM_PROJECT_ID', ''),
     'fcm_client_email' => env('FCM_CLIENT_EMAIL', ''),
-    'fcm_private_key'  => env('FCM_PRIVATE_KEY', ''),
+    'fcm_private_key'  => str_replace('\n', "\n", env('FCM_PRIVATE_KEY', '')),
 ];
