@@ -5,6 +5,7 @@
         <i class="fa-solid fa-arrow-left"></i> Back
       </button>
       <h1>{{ selectedGradeId ? selectedGrade?.level_name + ' Sections' : 'Manage Sections' }}</h1>
+      <p>{{ selectedGradeId ? 'Manage sections for ' + selectedGrade?.level_name : 'View and manage all grade level sections' }}</p>
     </div>
     <button class="btn btn-primary" *ngIf="selectedGradeId" (click)="openAdd(selectedGradeId)">
       <i class="fa-solid fa-plus"></i> Add Section

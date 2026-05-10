@@ -34,8 +34,10 @@ interface AdviserAssignmentStatus {
   template: `
     <div class="promotion-container">
       <div class="page-header">
-        <h2>Grade Promotion Management</h2>
-        <p>Promote students from one school year to the next</p>
+        <div>
+          <h2>Grade Promotion Management</h2>
+          <p>Promote students from one school year to the next</p>
+        </div>
       </div>
 
       <!-- Setup Card -->
@@ -313,11 +315,17 @@ interface AdviserAssignmentStatus {
 
     .page-header {
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      padding: 1.75rem 1.5rem;
+      padding: 2rem 1.5rem;
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
-      h2 { font-size: 1.75rem; color: #fff; margin: 0 0 4px; font-weight: 700; }
-      p { color: rgba(255,255,255,0.75); margin: 0; font-size: 0.9rem; }
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      h2 { font-size: 2rem; color: #fff; margin: 0 0 4px; font-weight: 700; }
+      p { color: rgba(255,255,255,0.8); margin: 0; font-size: 1.1rem; }
     }
 
     .two-col-row {
