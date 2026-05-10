@@ -271,6 +271,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.pollSubscription?.unsubscribe();
+    document.body.style.overflow = '';
   }
 
   loadNotifications(): void {
@@ -410,8 +411,14 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   toggleSidebar(): void { this.isCollapsed = !this.isCollapsed; }
-  openMobile(): void { this.mobileOpen = true; }
-  closeMobile(): void { this.mobileOpen = false; }
+  openMobile(): void {
+    this.mobileOpen = true;
+    document.body.style.overflow = 'hidden';
+  }
+  closeMobile(): void {
+    this.mobileOpen = false;
+    document.body.style.overflow = '';
+  }
 
   logout(): void {
     this.loggingOut = true;
