@@ -176,28 +176,28 @@ interface UsersResponse {
         <!-- Statistics Cards -->
         <div class="stats-grid">
           <div class="stat-card users">
-            <div class="stat-icon"><img src="assets/icons/total-users.png" alt="Total Users" class="stat-icon-img"></div>
+            <div class="stat-icon"><i class="bi bi-people-fill stat-icon-img"></i></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalUsers }}</div>
               <div class="stat-label">Total Users</div>
             </div>
           </div>
           <div class="stat-card students">
-            <div class="stat-icon"><img src="assets/icons/student.png" alt="Students" class="stat-icon-img"></div>
+            <div class="stat-icon"><i class="bi bi-person-fill stat-icon-img"></i></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalStudents }}</div>
               <div class="stat-label">Students</div>
             </div>
           </div>
           <div class="stat-card faculty">
-            <div class="stat-icon"><img src="assets/icons/adviser-faculty.png" alt="Faculty/Advisers" class="stat-icon-img"></div>
+            <div class="stat-icon"><i class="bi bi-person-badge-fill stat-icon-img"></i></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalAdvisers }}</div>
               <div class="stat-label">Faculty/Advisers</div>
             </div>
           </div>
           <div class="stat-card staff">
-            <div class="stat-icon"><img src="assets/icons/clinic-staff.png" alt="Clinic Staff" class="stat-icon-img"></div>
+            <div class="stat-icon"><i class="bi bi-heart-pulse-fill stat-icon-img"></i></div>
             <div class="stat-info">
               <div class="stat-value">{{ systemStats.totalStaff }}</div>
               <div class="stat-label">Clinic Staff</div>

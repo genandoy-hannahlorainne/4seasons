@@ -41,7 +41,7 @@ interface AdviserAssignmentStatus {
       <!-- Setup Card -->
       <div class="card setup-card">
         <div class="card-title">
-          <img src="assets/icons/calendar.png" style="width:20px;height:20px;object-fit:contain;flex-shrink:0;" alt="Calendar">
+          <i class="bi bi-calendar-fill" style="width:20px;height:20px;flex-shrink:0;color:#5381b2;"></i>
           Select School Years
         </div>
         <div class="year-selectors">
@@ -116,7 +116,7 @@ interface AdviserAssignmentStatus {
 
             <div *ngIf="targetSections?.length === 0" class="empty-state warning">
               <div class="warning-content">
-                <img src="assets/icons/warning.png" style="width:48px;height:48px;object-fit:contain;" alt="Warning">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size:48px;color:#f59e0b;flex-shrink:0;"></i>
                 <div class="warning-text">
                   <strong>No Sections Found</strong>
                   <p>The target school year <span class="year-highlight">{{ getYearName(targetSchoolYearId) }}</span> has no sections yet. Copy sections from the current year to get started.</p>

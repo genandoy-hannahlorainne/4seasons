@@ -96,10 +96,9 @@
   box-shadow: 0 4px 14px rgba(5, 35, 85, 0.3);
 
   .role-icon {
-    width: 32px;
-    height: 32px;
+    font-size: 28px;
     flex-shrink: 0;
-    filter: brightness(0) invert(1);
+    color: white;
   }
 
   &:hover {

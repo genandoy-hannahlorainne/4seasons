@@ -17,7 +17,7 @@
     <div class="profile-settings card" role="region" aria-label="Profile Settings">
       <div class="profile-settings-left">
         <div class="profile-avatar">
-          <img [src]="getProfileIcon()" [alt]="profileForm.get('firstName')?.value" class="avatar-img">
+          <i [class]="getProfileIcon()" style="font-size:80px;color:#052355;"></i>
         </div>
       </div>
 
@@ -49,7 +49,7 @@
         <div class="contact-header">
           <div class="card-title">Contact Information</div>
           <button type="button" class="btn btn-outline edit-btn" (click)="openEditModal()">
-            <img src="assets/edit-icon.png" alt="" class="edit-btn-icon">
+            <i class="bi bi-pencil-fill edit-btn-icon"></i>
             <span>Edit</span>
           </button>
         </div>
@@ -58,7 +58,7 @@
           <label>Email Address</label>
           <div class="input-with-icon">
             <span class="input-icon" aria-hidden="true">
-              <img src="assets/message-icon.png" alt="" class="input-icon-img">
+              <i class="bi bi-envelope-fill input-icon-img"></i>
             </span>
             <input type="email" [value]="profileForm.getRawValue().email" class="form-control" readonly placeholder="Not provided">
           </div>
@@ -68,7 +68,7 @@
           <label>Phone Number</label>
           <div class="input-with-icon">
             <span class="input-icon" aria-hidden="true">
-              <img src="assets/contact-icon.png" alt="" class="input-icon-img">
+              <i class="bi bi-telephone-fill input-icon-img"></i>
             </span>
             <input type="tel" [value]="profileForm.getRawValue().contactNumber" class="form-control" readonly placeholder="Not provided">
           </div>
@@ -78,7 +78,7 @@
           <label>Complete Address</label>
           <div class="input-with-icon">
             <span class="input-icon" aria-hidden="true">
-              <img src="assets/address-icon.png" alt="" class="input-icon-img">
+              <i class="bi bi-geo-alt-fill input-icon-img"></i>
             </span>
             <textarea class="form-control" rows="2" readonly placeholder="Not provided">{{ profileForm.getRawValue().address }}</textarea>
           </div>
