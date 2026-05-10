@@ -207,10 +207,15 @@ $mobile-bp: 768px;
 }
 
 .nav-icon {
-  width: 34px;
-  height: 34px;
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
   object-fit: contain;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .logout-icon {
