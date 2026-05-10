@@ -83,7 +83,7 @@ import { StudentProfileModalComponent } from '../student-profile-modal/student-p
                 <div class="muted">{{ getNotes(student) }}</div>
                 <div class="right">
                   <button type="button" class="icon-action" (click)="viewFullRecord(student)" title="View">
-                    <img src="assets/view-icon.png" alt="View" class="action-icon">
+                    <i class="bi bi-eye-fill action-icon"></i>
                   </button>
                 </div>
               </div>
@@ -385,7 +385,7 @@ export class AdviserHealthStatusComponent implements OnInit {
   }
 
   getAvatarUrl(student: AdvisedStudent): string {
-    return student.gender === 'F' ? 'assets/user-female.png' : 'assets/user-male.png';
+    return 'bi bi-person-circle';
   }
 
   formatBirthday(dateStr: string): string {
@@ -483,7 +483,7 @@ export class AdviserHealthStatusComponent implements OnInit {
             name: profile.full_name || `${profile.first_name} ${profile.last_name}`,
             studentNumber: profile.student_number,
             gradeSection: `${profile.grade_level || ''} - ${profile.section || ''}`.trim().replace(/^-\s*|-\s*$/, ''),
-            avatar: (profile.gender === 'F' || profile.gender === 'Female') ? 'assets/user-female.png' : 'assets/user-male.png',
+            avatar: '',
             gender: profile.gender === 'F' ? 'Female' : (profile.gender === 'M' ? 'Male' : profile.gender || 'N/A'),
             birthday: birthDate
               ? birthDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })

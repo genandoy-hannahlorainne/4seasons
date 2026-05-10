@@ -313,11 +313,11 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
   getProfileIcon(): string {
     if (this.studentGender === 'M') {
-      return 'assets/user-male.png';
+      return 'bi bi-person-circle';
     } else if (this.studentGender === 'F') {
-      return 'assets/user-female.png';
+      return 'bi bi-person-circle';
     }
-    return 'assets/user-male.png'; // default
+    return 'bi bi-person-circle';
   }
 
   goToSHDFForm(): void {

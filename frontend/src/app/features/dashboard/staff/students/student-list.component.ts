@@ -75,7 +75,8 @@ interface StaffStudentRecord {
             <tr *ngFor="let student of filteredStudents">
               <td>
                 <div class="student-cell">
-                  <img [src]="student.avatar" [alt]="student.name" class="student-avatar">
+                  <img *ngIf="student.avatar" [src]="student.avatar" [alt]="student.name" class="student-avatar">
+                  <i *ngIf="!student.avatar" class="bi bi-person-circle student-avatar" style="font-size:36px;color:#052355;"></i>
                   <span class="student-name">{{ student.name }}</span>
                 </div>
               </td>
@@ -287,7 +288,7 @@ export class StudentListComponent implements OnInit {
               gender: s.gender,
               lastVisit: s.last_visit || null,
               hasAllergies: !!(s.allergies && s.allergies.length > 0),
-              avatar: `/assets/user-${s.gender === 'F' ? 'female' : 'male'}.png`
+              avatar: ''
             }));
             this.filteredStudents = this.students;
           } else {

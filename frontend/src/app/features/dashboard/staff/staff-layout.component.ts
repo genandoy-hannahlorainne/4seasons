@@ -40,30 +40,30 @@ import { AuthService } from '../../../core/services/auth.service';
 
         <nav class="sidebar-nav">
           <a routerLink="/dashboard/staff" class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-            <img src="assets/icons/dashboard.png" alt="Dashboard" class="nav-icon">
+            <i class="bi bi-speedometer2 nav-icon"></i>
             <span class="nav-label">Dashboard</span>
           </a>
           <a routerLink="/dashboard/staff/students" class="nav-item" routerLinkActive="active">
-            <img src="assets/icons/student.png" alt="Students" class="nav-icon">
+            <i class="bi bi-people-fill nav-icon"></i>
             <span class="nav-label">Students</span>
           </a>
           <a routerLink="/dashboard/staff/visits" class="nav-item" routerLinkActive="active">
-            <img src="assets/icons/visit.png" alt="Visits" class="nav-icon">
+            <i class="bi bi-clipboard2-pulse-fill nav-icon"></i>
             <span class="nav-label">Visits</span>
           </a>
           <a routerLink="/dashboard/staff/reports" class="nav-item" routerLinkActive="active">
-            <img src="assets/icons/reports.png" alt="Reports" class="nav-icon">
+            <i class="bi bi-bar-chart-fill nav-icon"></i>
             <span class="nav-label">Reports</span>
           </a>
         </nav>
 
         <div class="sidebar-footer">
           <a routerLink="/dashboard/staff/profile" class="nav-item" routerLinkActive="active">
-            <img src="assets/icons/profile.png" alt="Profile" class="nav-icon">
+            <i class="bi bi-person-circle nav-icon"></i>
             <span class="nav-label">Profile</span>
           </a>
           <button class="nav-item logout-btn" (click)="logout()">
-            <img src="assets/icons/logout.jpg" alt="Logout" class="nav-icon">
+            <i class="bi bi-box-arrow-right nav-icon"></i>
             <span class="nav-label">Logout</span>
           </button>
         </div>

@@ -37,7 +37,7 @@ import { takeUntil } from 'rxjs/operators';
           <div class="insights-grid">
             <div class="insight-card highest-risk" *ngIf="topRisk">
               <div class="insight-icon">
-                <img src="assets/icons/warning.png" alt="Warning" class="insight-icon-img">
+                <i class="bi bi-exclamation-triangle-fill insight-icon-img" style="font-size:32px;color:#e74c3c;"></i>
               </div>
               <div class="insight-content">
                 <div class="insight-title">Highest Risk Grade</div>
@@ -49,7 +49,7 @@ import { takeUntil } from 'rxjs/operators';
 
             <div class="insight-card highest-risk no-data-card" *ngIf="!topRisk">
               <div class="insight-icon">
-                <img src="assets/icons/warning.png" alt="No Data" class="insight-icon-img">
+                <i class="bi bi-exclamation-triangle-fill insight-icon-img" style="font-size:32px;color:#e74c3c;"></i>
               </div>
               <div class="insight-content">
                 <div class="insight-title">Highest Risk Grade</div>
@@ -61,7 +61,7 @@ import { takeUntil } from 'rxjs/operators';
             
             <div class="insight-card total-students">
               <div class="insight-icon">
-                <img src="assets/icons/total-users.png" alt="Total Students" class="insight-icon-img">
+                <i class="bi bi-people-fill insight-icon-img" style="font-size:32px;color:#3498db;"></i>
               </div>
               <div class="insight-content">
                 <div class="insight-title">Total Students Analyzed</div>
@@ -72,7 +72,7 @@ import { takeUntil } from 'rxjs/operators';
             
             <div class="insight-card average-bmi">
               <div class="insight-icon">
-                <img src="assets/icons/average.png" alt="Average BMI" class="insight-icon-img">
+                <i class="bi bi-activity insight-icon-img" style="font-size:32px;color:#9b59b6;"></i>
               </div>
               <div class="insight-content">
                 <div class="insight-title">School Average BMI</div>
@@ -83,7 +83,7 @@ import { takeUntil } from 'rxjs/operators';
             
             <div class="insight-card overweight-total">
               <div class="insight-icon">
-                <img src="assets/icons/bmi.jpg" alt="BMI" class="insight-icon-img">
+                <i class="bi bi-heart-pulse-fill insight-icon-img" style="font-size:32px;color:#f39c12;"></i>
               </div>
               <div class="insight-content">
                 <div class="insight-title">Students Overweight/Obese</div>

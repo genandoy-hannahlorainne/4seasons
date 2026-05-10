@@ -31,7 +31,8 @@ import { AdviserService } from '../../../../core/services/adviser.service';
         <div class="profile-settings card" role="region" aria-label="Profile Settings">
           <div class="profile-settings-left">
             <div class="profile-avatar">
-              <img [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
+              <img *ngIf="profileData.avatar" [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
+              <i *ngIf="!profileData.avatar" class="bi bi-person-circle" style="font-size:64px;color:#052355;"></i>
             </div>
           </div>
 
@@ -71,7 +72,7 @@ import { AdviserService } from '../../../../core/services/adviser.service';
             <div class="contact-header">
               <div class="card-title">Contact Information</div>
               <button type="button" class="btn btn-outline edit-btn" (click)="openEditModal()">
-                <img src="assets/edit-icon.png" alt="" class="edit-btn-icon">
+                <i class="bi bi-pencil-fill edit-btn-icon"></i>
                 <span>Edit</span>
               </button>
             </div>
@@ -80,7 +81,7 @@ import { AdviserService } from '../../../../core/services/adviser.service';
               <label for="email">Email Address</label>
               <div class="input-with-icon">
                 <span class="input-icon" aria-hidden="true">
-                  <img src="assets/message-icon.png" alt="" class="input-icon-img">
+                  <i class="bi bi-envelope-fill input-icon-img"></i>
                 </span>
                 <input type="email" id="email" [value]="profileData.email" class="form-control" readonly placeholder="Not provided">
               </div>
@@ -90,7 +91,7 @@ import { AdviserService } from '../../../../core/services/adviser.service';
               <label for="phone">Phone Number</label>
               <div class="input-with-icon">
                 <span class="input-icon" aria-hidden="true">
-                  <img src="assets/contact-icon.png" alt="" class="input-icon-img">
+                  <i class="bi bi-telephone-fill input-icon-img"></i>
                 </span>
                 <input type="tel" id="phone" [value]="profileData.phone" class="form-control" readonly placeholder="Not provided">
               </div>
@@ -100,7 +101,7 @@ import { AdviserService } from '../../../../core/services/adviser.service';
               <label for="address">Complete Address</label>
               <div class="input-with-icon">
                 <span class="input-icon" aria-hidden="true">
-                  <img src="assets/address-icon.png" alt="" class="input-icon-img">
+                  <i class="bi bi-geo-alt-fill input-icon-img"></i>
                 </span>
                 <textarea id="address" [value]="profileData.address" class="form-control" rows="2" readonly placeholder="Not provided"></textarea>
               </div>
@@ -213,7 +214,7 @@ export class AdviserProfileComponent implements OnInit {
     advisoryClass: '',
     birthDate: 'Loading...',
     employeeId: 'Loading...',
-    avatar: 'assets/user-female.png'
+    avatar: ''
   };
 
   editForm = { email: '', phone: '', address: '', employeeId: '', birthDate: '' };

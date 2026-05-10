@@ -13,11 +13,13 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
     <div class="emergency-drills-container">
       <div class="header">
         <div class="header-left">
-          <img src="assets/icons/emergency-drills.png" style="width:36px;height:36px;object-fit:contain;" alt="Emergency Drills">
-          <h2>Emergency Drill Management</h2>
+          <div>
+            <h2>Emergency Drill Management</h2>
+            <p>Create and monitor emergency drills across all grade levels</p>
+          </div>
         </div>
         <button class="btn btn-primary" (click)="showCreateModal = true">
-          <img src="assets/icons/add.png" style="width:16px;height:16px;object-fit:contain;filter:brightness(0) invert(1);" alt="Add"> Create New Drill
+          <i class="bi bi-plus-circle-fill" style="font-size:16px;"></i> Create New Drill
         </button>
       </div>
 
@@ -60,9 +62,10 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
                                        drill.drill_type === 'lockdown' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' :
                                        drill.drill_type === 'medical' ? 'linear-gradient(135deg, #10b981, #059669)' :
                                        'linear-gradient(135deg, #3b82f6, #2563eb)'">
-                <img [src]="'assets/icons/' + (drill.drill_type === 'medical' ? 'emergency' : drill.drill_type) + '.png'"
-                     style="width:28px;height:28px;object-fit:contain;filter:brightness(0) invert(1);"
-                     [alt]="drill.drill_type">
+                <i [class]="'bi ' + (drill.drill_type === 'fire' ? 'bi-fire' : drill.drill_type === 'earthquake' ? 'bi-globe-americas' : drill.drill_type === 'lockdown' ? 'bi-lock-fill' : drill.drill_type === 'medical' ? 'bi-heart-pulse-fill' : 'bi-door-open-fill')"
+                     style="font-size:28px;color:white;"
+                     [attr.aria-label]="drill.drill_type">
+                </i>
               </div>
               <div class="drill-title-group">
                 <h3>{{ drill.drill_name }}</h3>
@@ -123,7 +126,7 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             </div>
           </div>
           <div class="empty-state" *ngIf="activeDrills.length === 0">
-            <img src="assets/icons/emergency-drills.png" style="width:56px;height:56px;object-fit:contain;opacity:0.4;" alt="No drills">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size:56px;opacity:0.4;"></i>
             <h3>No Active Drills</h3>
             <p>Create a new drill to get started.</p>
           </div>
@@ -138,9 +141,10 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
                                        drill.drill_type === 'lockdown' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' :
                                        drill.drill_type === 'medical' ? 'linear-gradient(135deg, #10b981, #059669)' :
                                        'linear-gradient(135deg, #3b82f6, #2563eb)'">
-                <img [src]="'assets/icons/' + (drill.drill_type === 'medical' ? 'emergency' : drill.drill_type) + '.png'"
-                     style="width:28px;height:28px;object-fit:contain;filter:brightness(0) invert(1);"
-                     [alt]="drill.drill_type">
+                <i [class]="'bi ' + (drill.drill_type === 'fire' ? 'bi-fire' : drill.drill_type === 'earthquake' ? 'bi-globe-americas' : drill.drill_type === 'lockdown' ? 'bi-lock-fill' : drill.drill_type === 'medical' ? 'bi-heart-pulse-fill' : 'bi-door-open-fill')"
+                     style="font-size:28px;color:white;"
+                     [attr.aria-label]="drill.drill_type">
+                </i>
               </div>
               <div class="drill-title-group">
                 <h3>{{ drill.drill_name }}</h3>
@@ -171,7 +175,7 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             </div>
           </div>
           <div class="empty-state" *ngIf="completedDrills.length === 0">
-            <img src="assets/icons/emergency-drills.png" style="width:56px;height:56px;object-fit:contain;opacity:0.4;" alt="No drills">
+            <i class="bi bi-check-circle-fill" style="font-size:56px;opacity:0.4;"></i>
             <h3>No Completed Drills</h3>
             <p>Completed drills will appear here.</p>
           </div>
@@ -187,9 +191,10 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
                                        drill.drill_type === 'lockdown' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' :
                                        drill.drill_type === 'medical' ? 'linear-gradient(135deg, #10b981, #059669)' :
                                        'linear-gradient(135deg, #3b82f6, #2563eb)'">
-                <img [src]="'assets/icons/' + (drill.drill_type === 'medical' ? 'emergency' : drill.drill_type) + '.png'"
-                     style="width:28px;height:28px;object-fit:contain;filter:brightness(0) invert(1);"
-                     [alt]="drill.drill_type">
+                <i [class]="'bi ' + (drill.drill_type === 'fire' ? 'bi-fire' : drill.drill_type === 'earthquake' ? 'bi-globe-americas' : drill.drill_type === 'lockdown' ? 'bi-lock-fill' : drill.drill_type === 'medical' ? 'bi-heart-pulse-fill' : 'bi-door-open-fill')"
+                     style="font-size:28px;color:white;"
+                     [attr.aria-label]="drill.drill_type">
+                </i>
               </div>
               <div class="drill-title-group">
                 <h3>{{ drill.drill_name }}</h3>
@@ -199,7 +204,7 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             </div>
 
             <div class="abandoned-reason">
-              <img src="assets/icons/warning.png" style="width:16px;height:16px;object-fit:contain;" alt="Warning">
+              <i class="bi bi-exclamation-triangle-fill" style="width:16px;height:16px;color:#92400e;flex-shrink:0;"></i>
               <span>This drill was automatically abandoned — the scheduled time window passed without being started.</span>
             </div>
 
@@ -224,7 +229,7 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
             </div>
           </div>
           <div class="empty-state" *ngIf="abandonedDrills.length === 0">
-            <img src="assets/icons/emergency-drills.png" style="width:56px;height:56px;object-fit:contain;opacity:0.4;" alt="No drills">
+            <i class="bi bi-slash-circle-fill" style="font-size:56px;opacity:0.4;"></i>
             <h3>No Abandoned Drills</h3>
             <p>Drills that expire without being started will appear here.</p>
           </div>
@@ -535,8 +540,14 @@ import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
       h2 {
         font-size: 2rem;
         color: #ffffff;
-        margin: 0;
+        margin: 0 0 4px;
         font-weight: 700;
+      }
+
+      p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+        margin: 0;
       }
 
       .btn-primary {

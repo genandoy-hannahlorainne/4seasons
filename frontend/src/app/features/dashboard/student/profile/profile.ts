@@ -95,11 +95,11 @@ export class StudentProfileComponent implements OnInit {
   getProfileIcon(): string {
     const gender = this.profileForm.get('gender')?.value;
     if (gender === 'male') {
-      return 'assets/user-male.png';
+      return 'bi bi-person-circle';
     } else if (gender === 'female') {
-      return 'assets/user-female.png';
+      return 'bi bi-person-circle';
     }
-    return 'assets/user-male.png'; // default
+    return 'bi bi-person-circle'; // default
   }
 
   formatDisplayDate(dateString: string): string {

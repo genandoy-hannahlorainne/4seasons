@@ -108,8 +108,6 @@ import { environment } from '../../../../environments/environment';
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      background-color: rgba(83, 129, 178, 0.9);
-      background-blend-mode: multiply;
       padding: 2rem;
     }
 

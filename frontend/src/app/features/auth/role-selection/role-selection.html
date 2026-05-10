@@ -9,18 +9,24 @@
 
     <div class="role-buttons">
       <button class="role-btn" (click)="selectRole('student')">
-        <img src="assets/icons/student.png" alt="Student" class="role-icon">
+        <i class="bi bi-person-fill role-icon"></i>
         Student
       </button>
 
       <button class="role-btn" (click)="selectRole('adviser')">
-        <img src="assets/icons/adviser.png" alt="Adviser" class="role-icon">
+        <i class="bi bi-person-badge-fill role-icon"></i>
         Adviser
       </button>
 
       <button class="role-btn" (click)="selectRole('clinic-staff')">
-        <img src="assets/icons/clinic-staff.png" alt="Clinic Staff" class="role-icon">
+        <i class="bi bi-heart-pulse-fill role-icon"></i>
         Clinic Staff
+      </button>
+    </div>
+
+    <div class="back-to-site">
+      <button class="back-btn" (click)="goToMainSite()">
+        ← Back to Main Site
       </button>
     </div>
   </div>

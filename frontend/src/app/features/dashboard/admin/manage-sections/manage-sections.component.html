@@ -5,6 +5,7 @@
         <i class="fa-solid fa-arrow-left"></i> Back
       </button>
       <h1>{{ selectedGradeId ? selectedGrade?.level_name + ' Sections' : 'Manage Sections' }}</h1>
+      <p>{{ selectedGradeId ? 'Manage sections for ' + selectedGrade?.level_name : 'View and manage all grade level sections' }}</p>
     </div>
     <button class="btn btn-primary" *ngIf="selectedGradeId" (click)="openAdd(selectedGradeId)">
       <i class="fa-solid fa-plus"></i> Add Section
@@ -19,24 +20,24 @@
   <!-- Grade Level Cards View -->
   <div class="grade-cards" *ngIf="!selectedGradeId && !loading">
     <div class="grade-card" *ngFor="let grade of gradeLevels" (click)="selectGrade(grade.id)">
-      <div class="card-icon">
-        <i class="fa-solid fa-graduation-cap"></i>
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <span class="card-title">{{ grade.level_name }}</span>
       </div>
-      <div class="card-content">
-        <h3>{{ grade.level_name }}</h3>
-        <div class="card-stats">
-          <div class="stat">
-            <span class="stat-value">{{ grade.sections?.length || 0 }}</span>
-            <span class="stat-label">Sections</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value">{{ getTotalEnrollment(grade) }}</span>
-            <span class="stat-label">Students</span>
-          </div>
+      <div class="card-stats">
+        <div class="stat">
+          <span class="stat-value">{{ grade.sections?.length || 0 }}</span>
+          <span class="stat-label">Sections</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ getTotalEnrollment(grade) }}</span>
+          <span class="stat-label">Students</span>
         </div>
       </div>
       <div class="card-arrow">
-        <i class="fa-solid fa-chevron-right"></i>
+        <i class="bi bi-chevron-right"></i>
       </div>
     </div>
   </div>
@@ -117,6 +118,31 @@
       </select>
     </div>
 
+    <!-- Adviser change confirmation fields — shown only when editing and adviser changed -->
+    <div *ngIf="isEditing && adviserChanged()" class="adviser-change-notice">
+      <div class="notice-banner">
+        <i class="bi bi-person-badge-fill"></i>
+        Adviser assignment is being changed. Please provide a reason and your password.
+      </div>
+      <div class="form-group">
+        <label>Reason for adviser change <span class="required">*</span></label>
+        <textarea
+          [(ngModel)]="adviserChangeReason"
+          rows="2"
+          placeholder="Explain why the adviser is being changed..."
+          class="form-control">
+        </textarea>
+      </div>
+      <div class="form-group">
+        <label>Enter your password to confirm <span class="required">*</span></label>
+        <input
+          type="password"
+          [(ngModel)]="adviserChangePassword"
+          placeholder="Your account password"
+          class="form-control">
+      </div>
+    </div>
+
     <div class="form-group">
       <label>Capacity</label>
       <input type="number" [(ngModel)]="form.capacity" min="1" max="200" class="form-control">
@@ -135,14 +161,41 @@
 <!-- Delete Confirm -->
 <div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="cancelDelete()">
   <div class="modal-content confirm-modal" (click)="$event.stopPropagation()">
-    <h3>Delete Section</h3>
-    <p>Are you sure you want to delete <strong>{{ deletingSection?.section_name }}</strong>?</p>
-    <p class="warning-text">Students assigned to this section will be unassigned.</p>
+    <div class="modal-header">
+      <h3><i class="bi bi-trash3-fill" style="color:#dc3545;"></i> Delete Section</h3>
+      <button class="close-btn" (click)="cancelDelete()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="alert alert-error" *ngIf="deleteError">{{ deleteError }}</div>
+
+    <p>You are about to delete <strong>{{ deletingSection?.section_name }}</strong>.</p>
+    <p class="warning-text"><i class="bi bi-exclamation-triangle-fill"></i> Students assigned to this section will be unassigned.</p>
+
+    <div class="form-group">
+      <label>Reason for deletion <span class="required">*</span></label>
+      <textarea
+        [(ngModel)]="deleteReason"
+        rows="3"
+        placeholder="Explain why this section is being deleted..."
+        class="form-control">
+      </textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Enter your password to confirm <span class="required">*</span></label>
+      <input
+        type="password"
+        [(ngModel)]="deletePassword"
+        placeholder="Your account password"
+        class="form-control">
+    </div>
+
     <div class="modal-actions">
-      <button class="btn btn-danger" (click)="deleteSection()" [disabled]="deleting">
-        {{ deleting ? 'Deleting...' : 'Delete' }}
+      <button class="btn btn-danger" (click)="deleteSection()" [disabled]="deleting || !deleteReason.trim() || !deletePassword.trim()">
+        <i class="fa-solid fa-spinner fa-spin" *ngIf="deleting"></i>
+        {{ deleting ? 'Deleting...' : 'Confirm Delete' }}
       </button>
-      <button class="btn btn-outline" (click)="cancelDelete()">Cancel</button>
+      <button class="btn btn-outline" (click)="cancelDelete()" [disabled]="deleting">Cancel</button>
     </div>
   </div>
 </div>

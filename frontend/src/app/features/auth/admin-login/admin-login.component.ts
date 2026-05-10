@@ -15,7 +15,7 @@ import { environment } from '../../../../environments/environment';
       <div class="admin-login-card">
         <div class="admin-header">
           <div class="admin-icon-wrapper">
-            <img src="assets/icons/it-admin.png" alt="Admin" class="admin-icon-img" />
+            <i class="bi bi-shield-lock-fill" style="font-size:48px;color:#052355;"></i>
           </div>
           <h1>Admin Portal</h1>
           <p>Authorized personnel only</p>

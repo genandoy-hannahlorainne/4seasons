@@ -29,14 +29,14 @@ import { takeUntil, switchMap } from 'rxjs/operators';
       <div *ngIf="medicalRecord && !loading" class="content">
         <div class="overview-cards">
           <div class="overview-card">
-            <div class="card-icon"><img src="assets/icons/visit.png" alt="Total Visits"></div>
+            <div class="card-icon"><i class="bi bi-clipboard2-pulse-fill" style="font-size:28px;color:#052355;"></i></div>
             <div class="card-content">
               <h3>Total Visits</h3>
               <div class="card-value">{{ medicalRecord.total_visits_count }}</div>
             </div>
           </div>
           <div class="overview-card">
-            <div class="card-icon"><img src="assets/icons/recent-visit.png" alt="Recent Visits"></div>
+            <div class="card-icon"><i class="bi bi-calendar-check-fill" style="font-size:28px;color:#052355;"></i></div>
             <div class="card-content">
               <h3>Recent Visits</h3>
               <div class="card-value">{{ medicalRecord.recent_visits_count }}</div>
@@ -44,14 +44,14 @@ import { takeUntil, switchMap } from 'rxjs/operators';
             </div>
           </div>
           <div class="overview-card">
-            <div class="card-icon"><img src="assets/icons/alert.png" alt="Allergies"></div>
+            <div class="card-icon"><i class="bi bi-exclamation-triangle-fill" style="font-size:28px;color:#052355;"></i></div>
             <div class="card-content">
               <h3>Allergies</h3>
               <div class="card-value">{{ medicalRecord.allergies.length }}</div>
             </div>
           </div>
           <div class="overview-card">
-            <div class="card-icon"><img src="assets/icons/adviser.png" alt="Adviser"></div>
+            <div class="card-icon"><i class="bi bi-person-badge-fill" style="font-size:28px;color:#052355;"></i></div>
             <div class="card-content">
               <h3>Adviser</h3>
               <div class="card-value" style="font-size: 0.9rem;">
@@ -64,7 +64,7 @@ import { takeUntil, switchMap } from 'rxjs/operators';
         <div class="action-cards">
           <div class="action-card" (click)="openPersonalInfoModal()" style="cursor:pointer">
             <div class="action-icon">
-              <img src="assets/icons/my-medical.png" alt="Personal Medical Info">
+              <i class="bi bi-person-lines-fill" style="font-size:28px;color:#052355;"></i>
             </div>
             <div class="action-content">
               <h3>Personal Medical Info</h3>
@@ -75,7 +75,7 @@ import { takeUntil, switchMap } from 'rxjs/operators';
 
           <div class="action-card" routerLink="visits-history">
             <div class="action-icon">
-              <img src="assets/icons/visit.png" alt="Medical Visits History">
+              <i class="bi bi-clipboard2-pulse-fill" style="font-size:28px;color:#052355;"></i>
             </div>
             <div class="action-content">
               <h3>Medical Visits History</h3>
