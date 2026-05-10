@@ -20,24 +20,24 @@
   <!-- Grade Level Cards View -->
   <div class="grade-cards" *ngIf="!selectedGradeId && !loading">
     <div class="grade-card" *ngFor="let grade of gradeLevels" (click)="selectGrade(grade.id)">
-      <div class="card-icon">
-        <i class="fa-solid fa-graduation-cap"></i>
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <span class="card-title">{{ grade.level_name }}</span>
       </div>
-      <div class="card-content">
-        <h3>{{ grade.level_name }}</h3>
-        <div class="card-stats">
-          <div class="stat">
-            <span class="stat-value">{{ grade.sections?.length || 0 }}</span>
-            <span class="stat-label">Sections</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value">{{ getTotalEnrollment(grade) }}</span>
-            <span class="stat-label">Students</span>
-          </div>
+      <div class="card-stats">
+        <div class="stat">
+          <span class="stat-value">{{ grade.sections?.length || 0 }}</span>
+          <span class="stat-label">Sections</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ getTotalEnrollment(grade) }}</span>
+          <span class="stat-label">Students</span>
         </div>
       </div>
       <div class="card-arrow">
-        <i class="fa-solid fa-chevron-right"></i>
+        <i class="bi bi-chevron-right"></i>
       </div>
     </div>
   </div>
