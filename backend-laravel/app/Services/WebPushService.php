@@ -64,7 +64,14 @@ class WebPushService
     {
         $projectId = config('webpush.fcm_project_id');
         if (empty($projectId)) {
-            Log::warning('WebPush: FCM_PROJECT_ID not configured. Skipping FCM push.');
+            // Try to get it from the service account JSON
+            $json = config('webpush.fcm_service_account_json');
+            $credentials = $json ? json_decode($json, true) : null;
+            $projectId = $credentials['project_id'] ?? '';
+        }
+
+        if (empty($projectId)) {
+            Log::warning('WebPush: FCM project_id not configured. Skipping FCM push.');
             return;
         }
 
@@ -128,11 +135,23 @@ class WebPushService
      */
     private function getFcmAccessToken(): ?string
     {
-        $clientEmail = config('webpush.fcm_client_email');
-        $privateKey  = config('webpush.fcm_private_key');
+        $serviceAccountJson = config('webpush.fcm_service_account_json');
+        if (empty($serviceAccountJson)) {
+            Log::warning('WebPush: FCM_SERVICE_ACCOUNT_JSON not configured.');
+            return null;
+        }
+
+        $credentials = json_decode($serviceAccountJson, true);
+        if (!$credentials) {
+            Log::error('WebPush: Failed to parse FCM_SERVICE_ACCOUNT_JSON.');
+            return null;
+        }
+
+        $clientEmail = $credentials['client_email'] ?? '';
+        $privateKey  = $credentials['private_key']  ?? '';
 
         if (empty($clientEmail) || empty($privateKey)) {
-            Log::warning('WebPush: FCM service account credentials not configured.');
+            Log::warning('WebPush: FCM service account credentials missing from JSON.');
             return null;
         }
 
