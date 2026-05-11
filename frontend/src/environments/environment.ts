@@ -10,6 +10,6 @@ export const environment = {
     messagingSenderId: '480384576233',
     appId: '1:480384576233:web:c39e628175d40117b81e78',
     measurementId: 'G-VH81R6NHZW',
-    vapidKey: '' // Fill in after generating Web Push certificate in Firebase Console
+    vapidKey: 'BK705s7rykV7lzqZZRMus8_usAW2RuXLbln_9MOJ6DO8C-wKG2S2cO4DE6WgrfQ7APa5R_wTn-kHfYMldrEhA'
   }
 };
