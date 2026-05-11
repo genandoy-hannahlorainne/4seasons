@@ -34,7 +34,9 @@ class WebPushService
 
         foreach ($subscriptions as $subscription) {
             $this->send($subscription, $payload);
-        }
+        }ubuntu@ip-172-26-2-172:~/4seasons$ docker exec 4seasons-backend-1 php -l /var/www/html/app/Services/WebPushService.php
+No syntax errors detected in /var/www/html/app/Services/WebPushService.php
+ubuntu@ip-172-26-2-172:~/4seasons$
     }
 
     /**
