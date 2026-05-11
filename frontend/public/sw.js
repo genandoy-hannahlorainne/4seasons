@@ -1,52 +1,58 @@
 /**
  * Studentcare Service Worker
- * Handles Web Push notifications for adviser clinic visit alerts.
+ * Handles Web Push notifications via Firebase Cloud Messaging.
  */
 
-const CACHE_NAME = 'studentcare-v1';
+importScripts('https://www.gstatic.com/firebasejs/11.9.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/11.9.0/firebase-messaging-compat.js');
 
-// ─── Install ──────────────────────────────────────────────────────────────────
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
+// ─── Firebase init ────────────────────────────────────────────────────────────
+firebase.initializeApp({
+  apiKey: 'AIzaSyCZmYxycwEFMg0U_FS4SSewMX8F8sMc6dA',
+  authDomain: 'studentcare-pdmhs.firebaseapp.com',
+  projectId: 'studentcare-pdmhs',
+  storageBucket: 'studentcare-pdmhs.firebasestorage.app',
+  messagingSenderId: '480384576233',
+  appId: '1:480384576233:web:c39e628175d40117b81e78',
 });
 
-// ─── Activate ─────────────────────────────────────────────────────────────────
-self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
+const messaging = firebase.messaging();
+
+// ─── Background push handler (app is closed / in background) ─────────────────
+messaging.onBackgroundMessage((payload) => {
+  const data        = payload.data        || {};
+  const notif       = payload.notification || {};
+  const title       = notif.title  || data.title  || 'Studentcare Clinic';
+  const body        = notif.body   || data.body   || 'You have a new notification.';
+  const icon        = data.icon    || '/assets/icons/school-clinic.png';
+  const badge       = data.badge   || '/assets/icons/notification.png';
+  const tag         = data.tag     || 'studentcare-notification';
+  const clickUrl    = data.url     || '/adviser/notifications';
+  const isEmergency = data.requireInteraction === 'true' || data.requireInteraction === true;
+
+  self.registration.showNotification(title, {
+    body,
+    icon,
+    badge,
+    tag,
+    data:               { url: clickUrl },
+    requireInteraction: isEmergency,
+    vibrate:            isEmergency ? [200, 100, 200, 100, 200] : [200],
+    actions: [
+      { action: 'view',    title: 'View Details' },
+      { action: 'dismiss', title: 'Dismiss' },
+    ],
+  });
 });
 
-// ─── Push ─────────────────────────────────────────────────────────────────────
-self.addEventListener('push', (event) => {
-  let data = {};
-
-  try {
-    data = event.data ? event.data.json() : {};
-  } catch {
-    data = { title: 'Studentcare', body: event.data ? event.data.text() : 'New notification' };
-  }
-
-  const title   = data.title   || 'Studentcare Clinic';
-  const options = {
-    body:               data.body    || 'You have a new notification.',
-    icon:               data.icon    || '/assets/icons/school-clinic.png',
-    badge:              data.badge   || '/assets/icons/notification.png',
-    tag:                data.tag     || 'studentcare-notification',
-    data:               data.data    || {},
-    actions:            data.actions || [],
-    requireInteraction: data.requireInteraction || false,
-    vibrate:            data.requireInteraction ? [200, 100, 200, 100, 200] : [200],
-  };
-
-  event.waitUntil(self.registration.showNotification(title, options));
-});
+// ─── Install / Activate ───────────────────────────────────────────────────────
+self.addEventListener('install',   () => self.skipWaiting());
+self.addEventListener('activate',  (e) => e.waitUntil(clients.claim()));
 
 // ─── Notification click ───────────────────────────────────────────────────────
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
-  if (event.action === 'dismiss') {
-    return;
-  }
+  if (event.action === 'dismiss') return;
 
   const targetUrl = (event.notification.data && event.notification.data.url)
     ? event.notification.data.url
@@ -54,17 +60,13 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Focus an existing tab if one is open
       for (const client of windowClients) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.navigate(targetUrl);
           return client.focus();
         }
       }
-      // Otherwise open a new tab
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
-      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
     })
   );
 });

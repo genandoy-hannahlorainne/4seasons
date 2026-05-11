@@ -77,9 +77,13 @@ ubuntu@ip-172-26-2-172:~/4seasons$
             return;
         }
 
-        // Extract the FCM registration token from the legacy endpoint URL
-        // Format: https://fcm.googleapis.com/fcm/send/{token}
-        $token = last(explode('/', rtrim($subscription->endpoint, '/')));
+        // Extract the FCM registration token
+        // New format: token stored directly as endpoint (token_type=fcm)
+        // Legacy format: https://fcm.googleapis.com/fcm/send/{token}
+        $endpoint = $subscription->endpoint;
+        $token = str_contains($endpoint, 'fcm.googleapis.com/fcm/send/')
+            ? last(explode('/', rtrim($endpoint, '/')))
+            : $endpoint;
         if (empty($token)) {
             Log::warning("WebPush: Could not extract FCM token from endpoint: {$subscription->endpoint}");
             return;
@@ -259,6 +263,10 @@ ubuntu@ip-172-26-2-172:~/4seasons$
 
     private function isFcmEndpoint(string $endpoint): bool
     {
-        return str_contains($endpoint, 'fcm.googleapis.com');
+        // Legacy FCM URL: https://fcm.googleapis.com/fcm/send/{token}
+        // New FCM token: stored directly (doesn't start with https://)
+        // or contains fcm.googleapis.com
+        return str_contains($endpoint, 'fcm.googleapis.com')
+            || (!str_starts_with($endpoint, 'https://') && strlen($endpoint) > 100);
     }
 }

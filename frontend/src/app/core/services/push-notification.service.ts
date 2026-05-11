@@ -2,20 +2,23 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getMessaging, getToken, deleteToken, Messaging } from 'firebase/messaging';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PushNotificationService {
   private readonly swPath = '/sw.js';
-  private registration: ServiceWorkerRegistration | null = null;
+  private app: FirebaseApp | null = null;
+  private messaging: Messaging | null = null;
 
   constructor(private http: HttpClient) {}
 
   /**
-   * Register the service worker and subscribe to push notifications.
-   * Call this after a successful login for adviser users, and on app startup
-   * when the user is already authenticated.
+   * Register the service worker, initialize Firebase Messaging,
+   * get an FCM token and save it to the server.
+   * Call this after login for adviser users and on app startup.
    */
   async init(): Promise<void> {
     if (!this.isSupported()) {
@@ -24,49 +27,69 @@ export class PushNotificationService {
     }
 
     try {
-      // Reuse an existing registration if available — avoids redundant re-registration
-      const existing = await navigator.serviceWorker.getRegistration(this.swPath);
-      if (existing) {
-        this.registration = existing;
-        console.info('PushNotifications: reusing existing service worker registration.');
-      } else {
-        this.registration = await navigator.serviceWorker.register(this.swPath, { scope: '/' });
-        console.info('PushNotifications: service worker registered.');
+      // Register service worker
+      const reg = await this.getOrRegisterSW();
+      if (!reg) return;
+
+      // Ask for permission
+      const permission = await this.requestPermission();
+      if (permission !== 'granted') {
+        console.info('PushNotifications: permission not granted.');
+        return;
       }
 
-      // Wait for the SW to be ready before subscribing
-      await navigator.serviceWorker.ready;
+      // Initialize Firebase
+      this.initFirebase();
+      if (!this.messaging) return;
+
+      const vapidKey = environment.firebase?.vapidKey;
+      if (!vapidKey) {
+        console.warn('PushNotifications: Firebase VAPID key not configured.');
+        return;
+      }
+
+      // Get FCM token
+      const token = await getToken(this.messaging, {
+        vapidKey,
+        serviceWorkerRegistration: reg,
+      });
+
+      if (!token) {
+        console.warn('PushNotifications: No FCM token received.');
+        return;
+      }
+
+      await this.saveTokenToServer(token);
+      console.info('PushNotifications: FCM token saved successfully.');
     } catch (err) {
-      console.warn('PushNotifications: service worker registration failed.', err);
-      return;
+      console.warn('PushNotifications: init failed.', err);
     }
-
-    // Ask for permission if not already granted
-    const permission = await this.requestPermission();
-    if (permission !== 'granted') {
-      console.info('PushNotifications: permission not granted (current state: ' + Notification.permission + ').');
-      return;
-    }
-
-    await this.subscribe();
   }
 
   /**
-   * Unsubscribe and remove the push subscription from the server.
-   * Call this on logout.
+   * Delete the FCM token and remove it from the server on logout.
    */
   async unsubscribeAll(): Promise<void> {
     if (!this.isSupported()) return;
 
     try {
-      const reg = this.registration ?? (await navigator.serviceWorker.getRegistration(this.swPath));
+      this.initFirebase();
+      if (!this.messaging) return;
+
+      const vapidKey = environment.firebase?.vapidKey;
+      const reg = await navigator.serviceWorker.getRegistration(this.swPath);
       if (!reg) return;
 
-      const sub = await reg.pushManager.getSubscription();
-      if (!sub) return;
+      const token = await getToken(this.messaging, {
+        vapidKey,
+        serviceWorkerRegistration: reg,
+      }).catch(() => null);
 
-      await this.removeSubscriptionFromServer(sub.endpoint);
-      await sub.unsubscribe();
+      if (token) {
+        await this.removeTokenFromServer(token);
+        await deleteToken(this.messaging);
+      }
+
       console.info('PushNotifications: unsubscribed.');
     } catch (err) {
       console.warn('PushNotifications: unsubscribe failed.', err);
@@ -75,85 +98,57 @@ export class PushNotificationService {
 
   // ─── Private helpers ────────────────────────────────────────────────────────
 
-  private async subscribe(): Promise<void> {
-    if (!this.registration) return;
-
+  private initFirebase(): void {
+    if (this.messaging) return;
     try {
-      const vapidKey = await this.fetchVapidPublicKey();
-      if (!vapidKey) {
-        console.warn('PushNotifications: VAPID public key not available.');
-        return;
+      if (!getApps().length) {
+        this.app = initializeApp(environment.firebase);
+      } else {
+        this.app = getApps()[0];
       }
-
-      const applicationServerKey = this.urlBase64ToUint8Array(vapidKey);
-
-      // Check if already subscribed
-      let sub = await this.registration.pushManager.getSubscription();
-
-      if (sub) {
-        // Check if the existing subscription was made with the current VAPID key.
-        // If the key changed (e.g. old legacy FCM endpoint), unsubscribe and re-subscribe.
-        const existingKey = sub.options?.applicationServerKey;
-        const existingKeyBase64 = existingKey
-          ? btoa(String.fromCharCode(...new Uint8Array(existingKey)))
-          : null;
-        const newKeyBase64 = btoa(String.fromCharCode(...applicationServerKey));
-
-        if (existingKeyBase64 !== newKeyBase64) {
-          console.info('PushNotifications: VAPID key changed, re-subscribing.');
-          await sub.unsubscribe();
-          sub = null;
-        }
-      }
-
-      if (!sub) {
-        sub = await this.registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey,
-        });
-      }
-
-      await this.saveSubscriptionToServer(sub);
-      console.info('PushNotifications: subscribed successfully.');
+      this.messaging = getMessaging(this.app);
     } catch (err) {
-      console.warn('PushNotifications: subscribe failed.', err);
+      console.warn('PushNotifications: Firebase init failed.', err);
     }
   }
 
-  private async fetchVapidPublicKey(): Promise<string | null> {
+  private async getOrRegisterSW(): Promise<ServiceWorkerRegistration | null> {
     try {
-      const res = await firstValueFrom(
-        this.http.get<{ success: boolean; data: { public_key: string } }>(
-          `${environment.apiUrl}/push/vapid-public-key`
-        )
-      );
-      return res?.data?.public_key ?? null;
-    } catch {
+      const existing = await navigator.serviceWorker.getRegistration(this.swPath);
+      if (existing) {
+        await navigator.serviceWorker.ready;
+        return existing;
+      }
+      const reg = await navigator.serviceWorker.register(this.swPath, { scope: '/' });
+      await navigator.serviceWorker.ready;
+      return reg;
+    } catch (err) {
+      console.warn('PushNotifications: SW registration failed.', err);
       return null;
     }
   }
 
-  private async saveSubscriptionToServer(sub: PushSubscription): Promise<void> {
-    const json = sub.toJSON();
+  private async saveTokenToServer(token: string): Promise<void> {
     await firstValueFrom(
       this.http.post(`${environment.apiUrl}/push/subscribe`, {
-        endpoint:    sub.endpoint,
-        p256dh_key:  json.keys?.['p256dh'] ?? null,
-        auth_key:    json.keys?.['auth']   ?? null,
-        user_agent:  navigator.userAgent,
+        endpoint:   token,   // store FCM token as endpoint
+        p256dh_key: null,
+        auth_key:   null,
+        user_agent: navigator.userAgent,
+        token_type: 'fcm',
       })
     );
   }
 
-  private async removeSubscriptionFromServer(endpoint: string): Promise<void> {
+  private async removeTokenFromServer(token: string): Promise<void> {
     try {
       await firstValueFrom(
         this.http.delete(`${environment.apiUrl}/push/unsubscribe`, {
-          body: { endpoint },
+          body: { endpoint: token },
         })
       );
     } catch {
-      // Best-effort — don't throw
+      // Best-effort
     }
   }
 
@@ -167,23 +162,7 @@ export class PushNotificationService {
     return (
       typeof window !== 'undefined' &&
       'serviceWorker' in navigator &&
-      'PushManager' in window &&
       'Notification' in window
     );
-  }
-
-  /**
-   * Convert a base64url VAPID public key to a Uint8Array for the browser API.
-   */
-  private urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
-    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = atob(base64);
-    const buffer = new ArrayBuffer(rawData.length);
-    const view = new Uint8Array(buffer);
-    for (let i = 0; i < rawData.length; i++) {
-      view[i] = rawData.charCodeAt(i);
-    }
-    return view;
   }
 }
