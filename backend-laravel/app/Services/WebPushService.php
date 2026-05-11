@@ -104,7 +104,7 @@ class WebPushService
                         'badge'              => $payload['badge']   ?? '/assets/icons/notification.png',
                         'tag'                => $payload['tag']     ?? 'studentcare-notification',
                         'requireInteraction' => $payload['requireInteraction'] ?? false,
-                        'vibrate'            => $payload['requireInteraction'] ? [200, 100, 200, 100, 200] : [200],
+                        'vibrate'            => ($payload['requireInteraction'] ?? false) ? [200, 100, 200, 100, 200] : [200],
                         'actions'            => $payload['actions'] ?? [],
                         'data'               => $payload['data']    ?? [],
                     ],
