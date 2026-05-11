@@ -18,13 +18,10 @@ return [
     | Chrome on Android generates legacy fcm.googleapis.com/fcm/send/ endpoints.
     | These require the FCM HTTP v1 API with a service account.
     |
-    | Get credentials from Firebase Console → Project Settings → Service Accounts
-    | → Generate new private key.
-    |
-    | FCM_PRIVATE_KEY: paste the full private key including -----BEGIN/END----- lines.
-    | Replace literal \n in the JSON with actual newlines, or keep \n and PHP will handle it.
+    | Set FCM_SERVICE_ACCOUNT_JSON to the full contents of the service account
+    | JSON file downloaded from Firebase Console → Project Settings → Service Accounts.
+    | Paste it as a single line (minified JSON) in the .env file.
     */
-    'fcm_project_id'   => env('FCM_PROJECT_ID', ''),
-    'fcm_client_email' => env('FCM_CLIENT_EMAIL', ''),
-    'fcm_private_key'  => str_replace('\n', "\n", env('FCM_PRIVATE_KEY', '')),
+    'fcm_project_id'          => env('FCM_PROJECT_ID', ''),
+    'fcm_service_account_json' => env('FCM_SERVICE_ACCOUNT_JSON', ''),
 ];
