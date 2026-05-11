@@ -604,7 +604,7 @@ class MedicalVisitController extends BaseController
                         'visit_type' => $lastVisit->visit_type,
                         'chief_complaint' => $lastVisit->chief_complaint,
                         'status' => $lastVisit->status,
-                        'days_ago' => (int) $lastVisit->visit_datetime->diffInDays(now())
+                        'days_ago' => (int) \Carbon\Carbon::parse($lastVisit->visit_datetime, 'UTC')->setTimezone(config('app.timezone'))->diffInDays(now())
                     ] : null
                 ],
                 'recent_visits' => $recentVisits,
