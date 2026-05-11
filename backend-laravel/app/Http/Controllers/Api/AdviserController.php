@@ -663,7 +663,9 @@ class AdviserController extends BaseController
                     return null;
                 }
 
-                $timestamp = $row->visit_datetime ? \Carbon\Carbon::parse($row->visit_datetime)->setTimezone(config('app.timezone')) : now();
+                $timestamp = $row->visit_datetime
+                    ? \Carbon\Carbon::parse($row->visit_datetime, 'UTC')->setTimezone(config('app.timezone'))
+                    : now();
                 $visitType = (string)($row->visit_type ?? 'Visit');
                 $messageSource = trim((string)($row->notes ?: $row->chief_complaint ?: 'Student visited clinic for assessment.'));
                 $previewText = mb_substr($messageSource, 0, 100) . (mb_strlen($messageSource) > 100 ? '...' : '');
@@ -703,28 +705,28 @@ class AdviserController extends BaseController
 
     private function formatTimeAgo($timestamp): string
     {
-        $now = now();
+        $now = now()->setTimezone(config('app.timezone'));
 
         if ($timestamp->greaterThan($now)) {
             return 'Just now';
         }
 
-        $seconds = $timestamp->diffInSeconds($now);
+        $seconds = (int) $timestamp->diffInSeconds($now);
         if ($seconds < 60) {
             return 'Just now';
         }
 
-        $minutes = $timestamp->diffInMinutes($now);
+        $minutes = (int) $timestamp->diffInMinutes($now);
         if ($minutes < 60) {
             return $minutes . 'm ago';
         }
 
-        $hours = $timestamp->diffInHours($now);
+        $hours = (int) $timestamp->diffInHours($now);
         if ($hours < 24) {
             return $hours . 'h ago';
         }
 
-        $days = $timestamp->diffInDays($now);
+        $days = (int) $timestamp->diffInDays($now);
         return $days . 'd ago';
     }
     /**
