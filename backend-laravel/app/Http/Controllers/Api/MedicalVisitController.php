@@ -686,11 +686,12 @@ class MedicalVisitController extends BaseController
                 'requireInteraction' => $isEmergency,
             ];
 
-            app(WebPushService::class)->sendToUser($adviserUserId, $payload);
+            // Try FCM first, fall back to WebPush
+            app(\App\Services\FcmDirectService::class)->sendToUser($adviserUserId, $payload);
 
-            Log::info("WebPush: dispatched to user_id={$adviserUserId} for student_id={$studentId}, visit_id={$visitId}");
+            Log::info("FCM: dispatched to user_id={$adviserUserId} for student_id={$studentId}, visit_id={$visitId}");
         } catch (\Throwable $e) {
-            Log::error('WebPush dispatch failed for adviser: ' . $e->getMessage(), [
+            Log::error('FCM dispatch failed for adviser: ' . $e->getMessage(), [
                 'student_id' => $studentId,
                 'visit_id'   => $visitId,
             ]);

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\StudentBadgeController;
 use App\Http\Controllers\Api\GradePromotionController;
 use App\Http\Controllers\Api\SHDFController;
 use App\Http\Controllers\Api\PushSubscriptionController;
+use App\Http\Controllers\Api\FcmDirectController;
 
 // Health check route for CI/CD
 Route::get('/health', function () {
@@ -304,5 +305,13 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
     Route::prefix('push')->group(function () {
         Route::post('/subscribe', [PushSubscriptionController::class, 'subscribe']);
         Route::delete('/unsubscribe', [PushSubscriptionController::class, 'unsubscribe']);
+    });
+
+    // Direct FCM messaging (server-to-server)
+    Route::prefix('fcm')->middleware('role:admin,adviser,clinic_staff')->group(function () {
+        Route::post('/send-to-user', [FcmDirectController::class, 'sendToUser']);
+        Route::post('/send-to-token', [FcmDirectController::class, 'sendToToken']);
+        Route::post('/send-to-topic', [FcmDirectController::class, 'sendToTopic']);
+        Route::post('/send-to-condition', [FcmDirectController::class, 'sendToCondition']);
     });
 });
