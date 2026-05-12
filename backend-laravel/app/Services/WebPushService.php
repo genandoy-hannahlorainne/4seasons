@@ -158,6 +158,7 @@ class WebPushService
             $header  = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
             $claims  = $this->base64UrlEncode(json_encode([
                 'iss'   => $clientEmail,
+                'sub'   => $clientEmail,
                 'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
                 'aud'   => 'https://oauth2.googleapis.com/token',
                 'iat'   => $now,
