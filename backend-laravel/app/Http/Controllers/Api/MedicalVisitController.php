@@ -677,7 +677,7 @@ class MedicalVisitController extends BaseController
                 'data'    => [
                     'visit_id'   => $visitId,
                     'student_id' => $studentId,
-                    'url'        => '/adviser/notifications',
+                    'url'        => '/adviser/alerts',
                 ],
                 'actions' => [
                     ['action' => 'view', 'title' => 'View Details'],

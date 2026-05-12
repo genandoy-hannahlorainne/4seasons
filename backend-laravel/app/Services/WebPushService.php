@@ -157,7 +157,7 @@ class WebPushService
                         'data'               => $payload['data']    ?? [],
                     ],
                     'fcm_options' => [
-                        'link' => $payload['data']['url'] ?? 'https://studentcare.site/adviser/notifications',
+                        'link' => $payload['data']['url'] ?? 'https://studentcare.site/adviser/alerts',
                     ],
                 ],
             ],
