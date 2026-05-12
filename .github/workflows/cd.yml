@@ -113,4 +113,8 @@ jobs:
             done
           fi
 
+          # Patch config files that may be stale in the image
+          BACKEND_CONTAINER="$($COMPOSE_CMD ps -q backend)"
+          docker exec "$BACKEND_CONTAINER" php artisan config:clear
+
           docker image prune -f
