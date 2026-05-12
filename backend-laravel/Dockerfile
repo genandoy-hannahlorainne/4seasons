@@ -1,7 +1,7 @@
 FROM php:8.2-apache
 
-# Build arg to bust cache when needed
-ARG CACHE_BUST=3
+# Build arg to bust cache when needed — increment this to force a full rebuild
+ARG CACHE_BUST=4
 
 # System deps + PHP extensions required by Laravel/MySQL
 RUN printf 'Types: deb\nURIs: http://ftp.us.debian.org/debian\nSuites: trixie trixie-updates\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n' > /etc/apt/sources.list.d/debian.sources \
@@ -21,6 +21,9 @@ WORKDIR /var/www/html
 # Copy composer files first for better layer caching
 COPY composer.json composer.lock ./
 RUN composer install --no-interaction --optimize-autoloader --no-scripts
+
+# Bust cache before copying app files — forces re-copy when CACHE_BUST changes
+RUN echo "Cache bust: ${CACHE_BUST}"
 
 # Copy the rest of the app
 COPY . /var/www/html
