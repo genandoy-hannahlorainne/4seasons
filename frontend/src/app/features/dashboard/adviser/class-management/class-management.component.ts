@@ -767,6 +767,7 @@ export class ClassManagementComponent implements OnInit {
   viewStudentProfile(student: any) {
     this.adviserService.getStudentCompleteProfile(student.student_id).subscribe({
       next: (response: any) => {
+        console.log('Student profile response:', JSON.stringify(response, null, 2));
         if (response.success && response.data) {
           this.selectedStudent = this.mapStudentData(response.data);
           this.showStudentModal = true;
