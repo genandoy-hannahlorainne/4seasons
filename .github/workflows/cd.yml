@@ -42,8 +42,7 @@ jobs:
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/4seasons-backend:latest
           ${{ secrets.DOCKERHUB_USERNAME }}/4seasons-backend:${{ github.sha }}
-        cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/4seasons-backend:buildcache
-        cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/4seasons-backend:buildcache,mode=max
+        no-cache: true
 
     - name: Copy nginx configs to server
       uses: appleboy/scp-action@v0.1.7
