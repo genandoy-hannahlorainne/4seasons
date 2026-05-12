@@ -274,7 +274,7 @@ class FcmDirectService
             $claims  = $this->base64UrlEncode(json_encode([
                 'iss'   => $clientEmail,
                 'sub'   => $clientEmail,
-                'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+                'scope' => 'https://www.googleapis.com/auth/cloud-platform',
                 'aud'   => 'https://oauth2.googleapis.com/token',
                 'iat'   => $now,
                 'exp'   => $now + 3600,
