@@ -655,18 +655,43 @@ class MedicalVisitController extends BaseController
     private function dispatchAdviserPush(int $studentId, string $studentName, string $visitType, ?string $complaint, int $visitId): void
     {
         try {
-            $student = Student::find($studentId);
+            $student = Student::with(['currentSection', 'currentGradeLevel'])->find($studentId);
             if (!$student || !$student->current_adviser_id) {
                 return;
             }
 
-            // current_adviser_id stores users.user_id (same as sections.adviser_id FK)
             $adviserUserId = (int) $student->current_adviser_id;
+            $isEmergency   = strtolower($visitType) === 'emergency';
 
-            $isEmergency = strtolower($visitType) === 'emergency';
-            $body = $isEmergency
-                ? "{$studentName} has an EMERGENCY visit. Immediate attention may be needed."
-                : "{$studentName} visited the clinic. Reason: " . ($complaint ?? 'General visit');
+            // Build section/grade context e.g. "Grade 7 - Sampaguita"
+            $gradeLabel   = $student->currentGradeLevel?->grade_name ?? $student->grade_level ?? null;
+            $sectionLabel = $student->currentSection?->section_name ?? $student->section ?? null;
+            $classContext = match(true) {
+                $gradeLabel && $sectionLabel => "{$gradeLabel} - {$sectionLabel}",
+                $gradeLabel                  => $gradeLabel,
+                $sectionLabel                => $sectionLabel,
+                default                      => null,
+            };
+
+            // Time e.g. "3:54 PM"
+            $timeLabel = now()->timezone('Asia/Manila')->format('g:i A');
+
+            // Build body
+            $studentDisplay = $classContext
+                ? "{$studentName} ({$classContext})"
+                : $studentName;
+
+            if ($isEmergency) {
+                $body = "{$studentDisplay} has an EMERGENCY visit at {$timeLabel}.";
+                if ($complaint) {
+                    $body .= " Reason: {$complaint}";
+                } else {
+                    $body .= " Immediate attention may be needed.";
+                }
+            } else {
+                $reason = $complaint ?? 'General visit';
+                $body   = "{$studentDisplay} visited the clinic at {$timeLabel}. Reason: {$reason}";
+            }
 
             $payload = [
                 'title'   => $isEmergency ? '🚨 Emergency Clinic Visit' : '🏥 Clinic Visit Notification',
@@ -677,16 +702,15 @@ class MedicalVisitController extends BaseController
                 'data'    => [
                     'visit_id'   => $visitId,
                     'student_id' => $studentId,
-                    'url'        => '/adviser/alerts',
+                    'url'        => "/adviser/alerts?visit_id={$visitId}",
                 ],
                 'actions' => [
-                    ['action' => 'view', 'title' => 'View Details'],
+                    ['action' => 'view',    'title' => 'View Details'],
                     ['action' => 'dismiss', 'title' => 'Dismiss'],
                 ],
                 'requireInteraction' => $isEmergency,
             ];
 
-            // Send via WebPushService (supports both FCM and Web Push)
             app(WebPushService::class)->sendToUser($adviserUserId, $payload);
 
             Log::info("WebPush: dispatched to user_id={$adviserUserId} for student_id={$studentId}, visit_id={$visitId}");
