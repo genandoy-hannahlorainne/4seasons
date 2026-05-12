@@ -22,6 +22,7 @@ return [
     | JSON file downloaded from Firebase Console → Project Settings → Service Accounts.
     | Paste it as a single line (minified JSON) in the .env file.
     */
-    'fcm_project_id'          => env('FCM_PROJECT_ID', ''),
+    'fcm_project_id'           => env('FCM_PROJECT_ID', ''),
     'fcm_service_account_json' => env('FCM_SERVICE_ACCOUNT_JSON', ''),
+    'fcm_server_key'           => env('FCM_SERVER_KEY', ''),
 ];
