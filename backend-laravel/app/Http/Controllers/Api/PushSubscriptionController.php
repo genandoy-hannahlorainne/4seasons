@@ -15,7 +15,7 @@ class PushSubscriptionController extends BaseController
     public function subscribe(Request $request)
     {
         $request->validate([
-            'endpoint'   => 'required|url|max:2048',
+            'endpoint'   => 'required|string|max:2048',
             'p256dh_key' => 'nullable|string|max:512',
             'auth_key'   => 'nullable|string|max:255',
             'user_agent' => 'nullable|string|max:512',
