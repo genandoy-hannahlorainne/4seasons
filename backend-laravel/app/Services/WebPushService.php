@@ -11,8 +11,9 @@ use Minishlink\WebPush\Subscription;
 /**
  * Sends Web Push notifications.
  *
- * - Legacy FCM endpoints (fcm.googleapis.com/fcm/send/...) → FCM HTTP v1 API
- * - All other endpoints (Firefox, desktop Chrome, etc.)    → Standard Web Push / VAPID
+ * - Legacy GCM tokens (APA91b...) → FCM Legacy HTTP API (server key)
+ * - New FCM tokens / fcm.googleapis.com URLs → FCM HTTP v1 API (service account)
+ * - All other endpoints (Firefox, desktop Chrome VAPID) → Standard Web Push / VAPID
  */
 class WebPushService
 {
@@ -20,9 +21,6 @@ class WebPushService
 
     // ─── Public API ───────────────────────────────────────────────────────────
 
-    /**
-     * Send a push notification to all subscriptions of a user.
-     */
     public function sendToUser(int $userId, array $payload): void
     {
         $subscriptions = PushSubscription::where('user_id', $userId)->get();
@@ -37,14 +35,14 @@ class WebPushService
         }
     }
 
-    /**
-     * Send a push notification to a single subscription.
-     * Routes to FCM v1 or standard Web Push based on the endpoint.
-     */
     public function send(PushSubscription $subscription, array $payload): void
     {
         try {
-            if ($this->isFcmEndpoint($subscription->endpoint)) {
+            $endpoint = $subscription->endpoint;
+
+            if ($this->isLegacyFcmToken($endpoint)) {
+                $this->sendViaLegacyFcm($subscription, $payload);
+            } elseif ($this->isFcmEndpoint($endpoint)) {
                 $this->sendViaFcmV1($subscription, $payload);
             } else {
                 $this->sendViaWebPush($subscription, $payload);
@@ -54,11 +52,61 @@ class WebPushService
         }
     }
 
-    // ─── FCM v1 ───────────────────────────────────────────────────────────────
+    // ─── Legacy FCM (for APA91b... tokens) ───────────────────────────────────
 
     /**
-     * Send via Firebase Cloud Messaging HTTP v1 API.
+     * Send via FCM Legacy HTTP API using server key.
+     * Required for old-format GCM/FCM tokens (APA91b...).
      */
+    private function sendViaLegacyFcm(PushSubscription $subscription, array $payload): void
+    {
+        $serverKey = config('webpush.fcm_server_key');
+        if (empty($serverKey)) {
+            // Fall back to v1 if no server key configured
+            $this->sendViaFcmV1($subscription, $payload);
+            return;
+        }
+
+        $token = $subscription->endpoint;
+
+        $body = [
+            'to' => $token,
+            'notification' => [
+                'title' => $payload['title'] ?? 'Studentcare',
+                'body'  => $payload['body']  ?? '',
+                'icon'  => $payload['icon']  ?? '/assets/icons/school-clinic.png',
+                'badge' => $payload['badge'] ?? '/assets/icons/notification.png',
+                'tag'   => $payload['tag']   ?? 'studentcare-notification',
+                'click_action' => $payload['data']['url'] ?? 'https://studentcare.site/adviser/notifications',
+            ],
+            'data' => $payload['data'] ?? [],
+        ];
+
+        $response = Http::withHeaders([
+            'Authorization' => 'key=' . $serverKey,
+            'Content-Type'  => 'application/json',
+        ])->post('https://fcm.googleapis.com/fcm/send', $body);
+
+        if ($response->successful()) {
+            $result = $response->json();
+            if (($result['failure'] ?? 0) > 0) {
+                $error = $result['results'][0]['error'] ?? 'unknown';
+                if (in_array($error, ['NotRegistered', 'InvalidRegistration'])) {
+                    $subscription->delete();
+                    Log::info("WebPush: Removed expired legacy FCM subscription for user {$subscription->user_id}");
+                } else {
+                    Log::warning("WebPush: Legacy FCM failed for user {$subscription->user_id}: {$error}");
+                }
+            } else {
+                Log::info("WebPush: Legacy FCM push sent to user {$subscription->user_id}");
+            }
+        } else {
+            Log::warning("WebPush: Legacy FCM HTTP error for user {$subscription->user_id}: " . $response->body());
+        }
+    }
+
+    // ─── FCM v1 ───────────────────────────────────────────────────────────────
+
     private function sendViaFcmV1(PushSubscription $subscription, array $payload): void
     {
         $projectId = config('webpush.fcm_project_id');
@@ -79,7 +127,7 @@ class WebPushService
             : $endpoint;
 
         if (empty($token)) {
-            Log::warning("WebPush: Could not extract FCM token from endpoint: {$subscription->endpoint}");
+            Log::warning("WebPush: Could not extract FCM token from endpoint: {$endpoint}");
             return;
         }
 
@@ -128,9 +176,6 @@ class WebPushService
         }
     }
 
-    /**
-     * Get a short-lived OAuth2 access token for the FCM v1 API.
-     */
     private function getFcmAccessToken(): ?string
     {
         $serviceAccountJson = config('webpush.fcm_service_account_json');
@@ -158,7 +203,6 @@ class WebPushService
             $header  = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
             $claims  = $this->base64UrlEncode(json_encode([
                 'iss'   => $clientEmail,
-                'sub'   => $clientEmail,
                 'scope' => 'https://www.googleapis.com/auth/cloud-platform',
                 'aud'   => 'https://oauth2.googleapis.com/token',
                 'iat'   => $now,
@@ -252,6 +296,15 @@ class WebPushService
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    /**
+     * Legacy GCM/FCM tokens start with APA91b and are ~152+ chars.
+     * These require the legacy FCM HTTP API, not v1.
+     */
+    private function isLegacyFcmToken(string $endpoint): bool
+    {
+        return str_starts_with($endpoint, 'APA91b') || str_starts_with($endpoint, 'f3gskX');
+    }
 
     private function isFcmEndpoint(string $endpoint): bool
     {
