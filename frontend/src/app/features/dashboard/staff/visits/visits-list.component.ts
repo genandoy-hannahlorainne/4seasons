@@ -105,6 +105,9 @@ interface StudentVisitSummary {
 
         <div class="student-summary-list" *ngIf="filteredStudents.length > 0">
           <div *ngFor="let student of filteredStudents" class="student-summary-card">
+
+            <!-- Card Header -->
+            <div class="card-header-strip" [class.emergency-strip]="student.last_visit?.is_emergency"></div>
             <div class="student-header">
               <div class="student-info">
                 <div class="student-avatar">
@@ -112,71 +115,94 @@ interface StudentVisitSummary {
                 </div>
                 <div class="student-details">
                   <span class="student-name">{{ student.student_name }}</span>
-                  <span class="student-number">{{ student.student_number }}</span>
-                  <span class="student-grade">{{ student.grade_section }}</span>
+                  <div class="student-meta">
+                    <span class="meta-chip"><i class="bi bi-person-badge"></i> {{ student.student_number }}</span>
+                    <span class="meta-chip"><i class="bi bi-mortarboard"></i> {{ student.grade_section }}</span>
+                  </div>
                 </div>
               </div>
               <div class="visit-stats">
-                <div class="stat">
-                  <span class="stat-label">Total Visits</span>
-                  <span class="stat-value">{{ student.total_visits }}</span>
+                <div class="stat-pill">
+                  <i class="bi bi-clipboard2-pulse"></i>
+                  <div>
+                    <span class="stat-value">{{ student.total_visits }}</span>
+                    <span class="stat-label">Total Visits</span>
+                  </div>
                 </div>
-                <div class="stat">
-                  <span class="stat-label">Last Visit</span>
-                  <span class="stat-value">{{ getLastVisitDate(student.last_visit?.visit_datetime) }}</span>
+                <div class="stat-pill">
+                  <i class="bi bi-clock-history"></i>
+                  <div>
+                    <span class="stat-value small">{{ getLastVisitDate(student.last_visit?.visit_datetime) }}</span>
+                    <span class="stat-label">Last Visit</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="student-body" *ngIf="student.last_visit">
-              <div class="visit-info">
-                <span class="info-label">Latest Visit Type:</span>
-                <span class="visit-type-badge" [class]="'type-' + student.last_visit.visit_type">
-                  {{ student.last_visit.visit_type }}
-                </span>
-                <span *ngIf="student.last_visit.is_emergency" class="emergency-badge">🚨 Emergency</span>
-              </div>
-              <div class="visit-info">
-                <span class="info-label">Chief Complaint:</span>
-                <span class="info-value">{{ student.last_visit.chief_complaint }}</span>
-              </div>
-              <div class="visit-info" *ngIf="student.last_visit.diagnosis">
-                <span class="info-label">Diagnosis:</span>
-                <span class="info-value">{{ student.last_visit.diagnosis }}</span>
-              </div>
-              <div class="visit-info">
-                <span class="info-label">Status:</span>
-                <span class="status-badge" [class]="'status-' + student.last_visit.status">{{ student.last_visit.status }}</span>
-              </div>
-            </div>
-
-            <div class="student-actions">
-              <button class="btn btn-outline btn-sm" [routerLink]="['/dashboard/staff/students', student.student_id]">
-                View Profile
-              </button>
-              <button class="btn btn-outline btn-sm" routerLink="/dashboard/staff/visits/new" [queryParams]="{studentId: student.student_id}">
-                + New Visit
-              </button>
-              <button class="btn btn-outline btn-sm" (click)="viewStudentVisits(student.student_id)">
-                View All Visits
-              </button>
-            </div>
-
-            <!-- Recent Visits Expandable -->
-            <div class="recent-visits" *ngIf="student.recent_visits.length > 0">
-              <div class="visits-header" (click)="toggleVisitsExpanded(student.student_id)">
-                <span class="toggle-icon">{{ expandedStudents[student.student_id] ? '▼' : '▶' }}</span>
-                <span>Recent Visits ({{ student.recent_visits.length }})</span>
-              </div>
-              <div class="visits-list" *ngIf="expandedStudents[student.student_id]">
-                <div *ngFor="let visit of student.recent_visits.slice(0, 5)" class="visit-item">
-                  <div class="visit-date">{{ formatDate(visit.visit_datetime) }}</div>
-                  <div class="visit-type-small" [class]="'type-' + visit.visit_type?.toLowerCase()">{{ visit.visit_type }}</div>
-                  <div class="visit-complaint">{{ visit.chief_complaint || visit.notes || 'No complaint' }}</div>
-                  <div class="visit-status" [class]="'status-' + visit.status?.toLowerCase()">{{ visit.status }}</div>
+            <!-- Latest Visit Record -->
+            <div class="latest-visit-section" *ngIf="student.last_visit">
+              <div class="section-label"><i class="bi bi-file-medical"></i> Latest Visit Record</div>
+              <div class="visit-record-grid">
+                <div class="record-field">
+                  <span class="field-label">Visit Type</span>
+                  <span class="visit-type-badge" [class]="'type-' + student.last_visit.visit_type.toLowerCase()">
+                    <i class="bi" [class.bi-heart-pulse]="student.last_visit.is_emergency" [class.bi-clipboard2-check]="!student.last_visit.is_emergency"></i>
+                    {{ student.last_visit.visit_type }}
+                  </span>
+                </div>
+                <div class="record-field">
+                  <span class="field-label">Status</span>
+                  <span class="status-badge" [class]="'status-' + student.last_visit.status.toLowerCase()">{{ student.last_visit.status }}</span>
+                </div>
+                <div class="record-field full-width">
+                  <span class="field-label">Chief Complaint</span>
+                  <span class="field-value">{{ student.last_visit.chief_complaint }}</span>
+                </div>
+                <div class="record-field full-width" *ngIf="student.last_visit.diagnosis">
+                  <span class="field-label">Diagnosis</span>
+                  <span class="field-value">{{ student.last_visit.diagnosis }}</span>
                 </div>
               </div>
             </div>
+
+            <!-- Actions + Expand -->
+            <div class="card-footer">
+              <div class="student-actions">
+                <button class="btn btn-outline btn-sm" [routerLink]="['/dashboard/staff/students', student.student_id]">
+                  <i class="bi bi-person"></i> View Profile
+                </button>
+                <button class="btn btn-primary btn-sm" routerLink="/dashboard/staff/visits/new" [queryParams]="{studentId: student.student_id}">
+                  <i class="bi bi-plus-circle"></i> New Visit
+                </button>
+              </div>
+              <button class="expand-btn" (click)="toggleVisitsExpanded(student.student_id)" *ngIf="student.recent_visits.length > 0">
+                <i class="bi" [class.bi-chevron-down]="!expandedStudents[student.student_id]" [class.bi-chevron-up]="expandedStudents[student.student_id]"></i>
+                Visit History ({{ student.recent_visits.length }})
+              </button>
+            </div>
+
+            <!-- Visit History Table -->
+            <div class="visit-history" *ngIf="expandedStudents[student.student_id] && student.recent_visits.length > 0">
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Chief Complaint</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let visit of student.recent_visits.slice(0, 5)">
+                    <td class="td-date">{{ formatDate(visit.visit_datetime) }}</td>
+                    <td><span class="visit-type-badge sm" [class]="'type-' + visit.visit_type?.toLowerCase()">{{ visit.visit_type }}</span></td>
+                    <td class="td-complaint">{{ visit.chief_complaint || visit.notes || '—' }}</td>
+                    <td><span class="status-badge" [class]="'status-' + visit.status?.toLowerCase()">{{ visit.status }}</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
           </div>
         </div>
       </div>
@@ -411,236 +437,284 @@ interface StudentVisitSummary {
 
     .student-summary-list {
       display: grid;
-      gap: 1.5rem;
+      gap: 1.25rem;
     }
 
     .student-summary-card {
       background: white;
-      border: 1px solid rgba(5, 35, 85, 0.1);
-      border-radius: 20px;
-      padding: 2rem;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
 
       &:hover {
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 6px 24px rgba(5,35,85,0.1);
         transform: translateY(-2px);
       }
+    }
+
+    .card-header-strip {
+      height: 4px;
+      background: linear-gradient(90deg, #052355, #5381b2);
+      &.emergency-strip { background: linear-gradient(90deg, #c62828, #ef5350); }
     }
 
     .student-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 2px solid #e8f0f8;
-      gap: 2rem;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .student-info {
       display: flex;
       align-items: center;
-      gap: 1.25rem;
+      gap: 1rem;
 
       .student-avatar {
-        width: 60px;
-        height: 60px;
+        width: 52px;
+        height: 52px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+        background: linear-gradient(135deg, #052355, #5381b2);
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
         flex-shrink: 0;
 
         .avatar-text {
           color: white;
           font-weight: 700;
-          font-size: 1.5rem;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
         }
       }
 
       .student-details {
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        gap: 0.35rem;
       }
+
       .student-name {
         font-weight: 700;
+        font-size: 1.05rem;
         color: #0f172a;
-        font-size: 1.3rem;
         text-transform: capitalize;
       }
-      .student-number {
-        font-size: 0.9rem;
-        color: #64748b;
-        font-weight: 500;
+
+      .student-meta {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
       }
-      .student-grade {
-        font-size: 0.9rem;
+
+      .meta-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.78rem;
+        font-weight: 500;
         color: #475569;
-        font-weight: 600;
+        background: #f1f5f9;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+
+        i { font-size: 0.75rem; color: #5381b2; }
       }
     }
 
     .visit-stats {
       display: flex;
-      gap: 2rem;
+      gap: 0.75rem;
 
-      .stat {
+      .stat-pill {
         display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 0.25rem;
+        align-items: center;
+        gap: 0.6rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 0.5rem 0.9rem;
 
-        .stat-label {
-          font-size: 0.85rem;
-          color: #64748b;
-          font-weight: 500;
+        > i {
+          font-size: 1.2rem;
+          color: #5381b2;
         }
+
+        > div {
+          display: flex;
+          flex-direction: column;
+        }
+
         .stat-value {
-          font-size: 1.5rem;
+          font-size: 1.1rem;
           font-weight: 700;
           color: #052355;
+          line-height: 1;
+
+          &.small { font-size: 0.82rem; }
+        }
+
+        .stat-label {
+          font-size: 0.72rem;
+          color: #94a3b8;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
         }
       }
     }
 
-    .student-body {
-      margin-bottom: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+    .latest-visit-section {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+
+      .section-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #94a3b8;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+
+        i { color: #5381b2; }
+      }
     }
 
-    .visit-info {
-      display: flex;
-      gap: 1rem;
+    .visit-record-grid {
+      display: grid;
+      grid-template-columns: auto auto 1fr;
+      gap: 0.6rem 1.5rem;
       align-items: center;
 
-      .info-label {
-        color: #64748b;
-        font-size: 0.95rem;
-        font-weight: 600;
-        min-width: 150px;
+      .record-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+
+        &.full-width { grid-column: 1 / -1; }
       }
-      .info-value {
-        color: #0f172a;
-        font-size: 0.95rem;
+
+      .field-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #94a3b8;
+      }
+
+      .field-value {
+        font-size: 0.9rem;
+        color: #1e293b;
         font-weight: 500;
       }
     }
 
     .visit-type-badge {
-      padding: 0.4rem 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.3rem 0.75rem;
       border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      text-transform: capitalize;
-
-      &.type-routine { background: #e3f2fd; color: #1565c0; }
-      &.type-emergency { background: #ffebee; color: #c62828; }
-    }
-
-    .emergency-badge {
-      background: #ffcdd2;
-      color: #c62828;
-      padding: 0.4rem 0.75rem;
-      border-radius: 12px;
       font-size: 0.8rem;
       font-weight: 600;
+
+      &.sm { padding: 0.2rem 0.55rem; font-size: 0.75rem; }
+      &.type-routine { background: #eff6ff; color: #1d4ed8; }
+      &.type-emergency { background: #fff1f2; color: #be123c; }
     }
 
     .status-badge {
-      padding: 0.4rem 1rem;
+      display: inline-block;
+      padding: 0.3rem 0.75rem;
       border-radius: 20px;
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       font-weight: 600;
+      text-transform: capitalize;
 
-      &.status-open { background: #fff3cd; color: #856404; }
-      &.status-closed { background: #d4edda; color: #155724; }
-      &.status-referred { background: #f8d7da; color: #721c24; }
-      &.status-cancelled { background: #f8d7da; color: #721c24; }
+      &.status-open { background: #fefce8; color: #a16207; border: 1px solid #fde047; }
+      &.status-closed { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
+      &.status-referred { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; }
+      &.status-cancelled { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.5rem;
+      background: #fafbfc;
+      flex-wrap: wrap;
+      gap: 0.75rem;
     }
 
     .student-actions {
       display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
+      gap: 0.6rem;
       flex-wrap: wrap;
     }
 
-    .recent-visits {
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid #e8f0f8;
+    .expand-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: none;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s;
 
-      .visits-header {
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #0ea5e9;
-        font-weight: 600;
-        font-size: 0.95rem;
-        padding: 0.5rem 0;
-        transition: all 0.2s ease;
+      &:hover { background: #f1f5f9; border-color: #94a3b8; color: #052355; }
+      i { font-size: 0.8rem; }
+    }
 
-        &:hover {
-          color: #0284c7;
-        }
+    .visit-history {
+      padding: 0 1.5rem 1.25rem;
+    }
 
-        .toggle-icon {
-          display: inline-block;
-          transition: transform 0.2s ease;
-          font-size: 0.85rem;
-        }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
 
-        &:hover { text-decoration: underline; }
+      thead tr {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
       }
 
-      .visits-list {
-        margin-top: 0.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
+      th {
+        padding: 0.6rem 0.75rem;
+        text-align: left;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
       }
 
-      .visit-item {
-        display: grid;
-        grid-template-columns: 120px 100px 1fr 80px;
-        gap: 1rem;
-        padding: 0.5rem;
-        background: #f8f9fa;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        align-items: center;
+      td {
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+        vertical-align: middle;
 
-        .visit-date { color: #7f8c8d; }
-        .visit-type-small {
-          color: #2c3e50;
-          font-weight: 500;
-          padding: 0.2rem 0.5rem;
-          border-radius: 8px;
-          font-size: 0.75rem;
-          text-align: center;
-
-          &.type-routine { background: #e3f2fd; color: #1976d2; }
-          &.type-emergency { background: #ffebee; color: #d32f2f; }
-        }
-        .visit-complaint { color: #495057; }
-        .visit-status {
-          font-size: 0.75rem;
-          padding: 0.2rem 0.5rem;
-          border-radius: 8px;
-          text-align: center;
-
-          &.status-open { background: #fff3cd; color: #856404; }
-          &.status-closed { background: #d4edda; color: #155724; }
-          &.status-referred { background: #f8d7da; color: #721c24; }
-        }
+        &.td-date { color: #64748b; white-space: nowrap; }
+        &.td-complaint { max-width: 260px; }
       }
+
+      tbody tr:last-child td { border-bottom: none; }
+      tbody tr:hover td { background: #f8fafc; }
     }
 
     @media (max-width: 768px) {
@@ -648,9 +722,11 @@ interface StudentVisitSummary {
       .page-header { flex-direction: column; gap: 1rem; align-items: stretch; }
       .filters-section { flex-direction: column; }
       .filter-group { flex-wrap: wrap; }
-      .student-header { flex-direction: column; gap: 1rem; align-items: stretch; }
-      .visit-stats { justify-content: space-around; }
-      .visit-item { grid-template-columns: 1fr; gap: 0.5rem; }
+      .student-header { flex-direction: column; align-items: flex-start; }
+      .visit-stats { width: 100%; justify-content: flex-start; }
+      .visit-record-grid { grid-template-columns: 1fr 1fr; }
+      .card-footer { flex-direction: column; align-items: flex-start; }
+      .history-table th:nth-child(2), .history-table td:nth-child(2) { display: none; }
     }
   `]
 })
