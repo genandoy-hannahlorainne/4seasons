@@ -37,6 +37,11 @@ export class ClinicDashboardComponent implements OnInit {
     this.loadDashboardData();
   }
 
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  }
+
   loadDashboardData(): void {
     // Load all dashboard data from Laravel API
     this.http.get<any>(`${environment.apiUrl}/dashboard/clinic/overview`)

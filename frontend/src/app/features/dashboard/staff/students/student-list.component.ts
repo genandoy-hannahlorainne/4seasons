@@ -75,8 +75,7 @@ interface StaffStudentRecord {
             <tr *ngFor="let student of filteredStudents">
               <td>
                 <div class="student-cell">
-                  <img *ngIf="student.avatar" [src]="student.avatar" [alt]="student.name" class="student-avatar">
-                  <i *ngIf="!student.avatar" class="bi bi-person-circle student-avatar" style="font-size:36px;color:#052355;"></i>
+                  <div class="student-avatar-initials">{{ getInitials(student.name) }}</div>
                   <span class="student-name">{{ student.name }}</span>
                 </div>
               </td>
@@ -199,12 +198,25 @@ interface StaffStudentRecord {
       tbody tr:hover { background: #f8f9fa; }
     }
 
-    .student-cell {
+      .student-cell {
       display: flex;
       align-items: center;
       gap: 0.75rem;
 
-      .student-avatar { width: 36px; height: 36px; border-radius: 50%; }
+      .student-avatar-initials {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #052355, #5381b2);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        letter-spacing: 0.5px;
+      }
       .student-name { font-weight: 500; color: #2c3e50; }
     }
 
@@ -325,6 +337,11 @@ export class StudentListComponent implements OnInit {
     if (this.sectionFilter && !this.sections.includes(this.sectionFilter)) {
       this.sectionFilter = '';
     }
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase().substring(0, 2);
   }
 
   filterStudents(): void {

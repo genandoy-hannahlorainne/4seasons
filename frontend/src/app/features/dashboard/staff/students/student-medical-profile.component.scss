@@ -72,10 +72,20 @@
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
-  .student-avatar img {
+  .student-avatar-initials {
     width: 80px;
     height: 80px;
     border-radius: 50%;
+    background: linear-gradient(135deg, #052355, #5381b2);
+    color: white;
+    font-size: 1.6rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
   }
 
   .student-details {

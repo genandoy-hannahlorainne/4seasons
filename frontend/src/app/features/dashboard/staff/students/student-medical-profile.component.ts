@@ -38,6 +38,11 @@ export class StudentMedicalProfileComponent implements OnInit {
     private authService: AuthService
   ) {}
 
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  }
+
   get backRoute(): string {
     const role = this.authService.currentUserValue?.role_name;
     return role === 'Adviser' ? '/dashboard/adviser/alerts' : '/dashboard/staff/students';

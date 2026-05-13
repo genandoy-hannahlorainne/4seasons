@@ -17,10 +17,7 @@
 
   <!-- Student Info Card -->
   <div class="student-info-card" *ngIf="!loading && !error">
-    <div class="student-avatar">
-      <img *ngIf="student.avatar" [src]="student.avatar" [alt]="student.name">
-      <i *ngIf="!student.avatar" class="bi bi-person-circle" style="font-size:64px;color:#052355;"></i>
-    </div>
+    <div class="student-avatar-initials">{{ getInitials(student.name) }}</div>
     <div class="student-details">
       <h2>{{ student.name }}</h2>
       <p class="student-number">{{ student.student_number }}</p>
