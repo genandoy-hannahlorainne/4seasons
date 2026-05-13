@@ -217,13 +217,13 @@ import { takeUntil } from 'rxjs/operators';
               <span>Risk Level</span>
             </div>
             <div *ngFor="let grade of healthData.grade_statistics" class="table-row">
-              <span class="grade-name">{{ grade.grade_name }}</span>
-              <span class="total">{{ grade.total_students }}</span>
-              <span class="underweight">{{ grade.underweight_count }} ({{ grade.underweight_percentage }}%)</span>
-              <span class="normal">{{ grade.normal_count }} ({{ grade.normal_percentage }}%)</span>
-              <span class="overweight">{{ grade.overweight_count }} ({{ grade.overweight_percentage }}%)</span>
-              <span class="obese">{{ grade.obese_count }} ({{ grade.obese_percentage }}%)</span>
-              <span class="risk-level" [ngClass]="getRiskLevelClass(grade)">{{ getRiskLevel(grade) }}</span>
+              <span class="grade-name" data-label="">{{ grade.grade_name }}</span>
+              <span class="total" data-label="Total:">{{ grade.total_students }}</span>
+              <span class="underweight" data-label="Underweight:">{{ grade.underweight_count }} ({{ grade.underweight_percentage }}%)</span>
+              <span class="normal" data-label="Normal:">{{ grade.normal_count }} ({{ grade.normal_percentage }}%)</span>
+              <span class="overweight" data-label="Overweight:">{{ grade.overweight_count }} ({{ grade.overweight_percentage }}%)</span>
+              <span class="obese" data-label="Obese:">{{ grade.obese_count }} ({{ grade.obese_percentage }}%)</span>
+              <span class="risk-level" [ngClass]="getRiskLevelClass(grade)" data-label="Risk:">{{ getRiskLevel(grade) }}</span>
             </div>
           </div>
         </div>
@@ -342,86 +342,49 @@ import { takeUntil } from 'rxjs/operators';
 
     .insights-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.25rem;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
     }
 
     .insight-card {
       display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1.5rem;
-      border-radius: 10px;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1.25rem;
+      border-radius: 12px;
       border-left: 4px solid;
-      
-      &.highest-risk {
-        background: #fff5f5;
-        border-color: #e74c3c;
-        
-        .insight-icon { color: #e74c3c; }
-      }
-      
-      &.total-students {
-        background: #f8f9fa;
-        border-color: #3498db;
-        
-        .insight-icon { color: #3498db; }
-      }
-      
-      &.average-bmi {
-        background: #f0f8ff;
-        border-color: #9b59b6;
-        
-        .insight-icon { color: #9b59b6; }
-      }
-      
-      &.overweight-total {
-        background: #fff8e1;
-        border-color: #f39c12;
-        
-        .insight-icon { color: #f39c12; }
-      }
-      
+      min-width: 0;
+
+      &.highest-risk  { background: #fff5f5; border-color: #e74c3c; }
+      &.total-students { background: #f0f7ff; border-color: #3498db; }
+      &.average-bmi   { background: #f5f0ff; border-color: #9b59b6; }
+      &.overweight-total { background: #fff8e1; border-color: #f39c12; }
+
       .insight-icon {
-        font-size: 2rem;
-        flex-shrink: 0;
+        font-size: 1.6rem;
         display: flex;
         align-items: center;
-        justify-content: center;
-
-        .insight-icon-img {
-          width: 32px;
-          height: 32px;
-          object-fit: contain;
-          display: block;
-        }
+        .insight-icon-img { width: 28px; height: 28px; object-fit: contain; display: block; }
       }
-      
+
       .insight-content {
         .insight-title {
-          font-size: 0.9rem;
+          font-size: 0.78rem;
           color: #7f8c8d;
-          margin-bottom: 0.25rem;
           font-weight: 500;
+          margin-bottom: 0.2rem;
+          line-height: 1.3;
         }
-        
         .insight-value {
-          font-size: 1.8rem;
+          font-size: 1.6rem;
           font-weight: 700;
           color: #2c3e50;
-          margin-bottom: 0.25rem;
+          line-height: 1.1;
+          margin-bottom: 0.2rem;
+          word-break: break-word;
         }
-        
-        .insight-detail {
-          font-size: 0.85rem;
-          color: #95a5a6;
-        }
-        
-        .insight-students {
-          font-size: 0.8rem;
-          color: #bdc3c7;
-          margin-top: 0.25rem;
-        }
+        .insight-detail  { font-size: 0.78rem; color: #95a5a6; }
+        .insight-students { font-size: 0.72rem; color: #bdc3c7; margin-top: 0.15rem; }
       }
     }
 
@@ -749,15 +712,110 @@ import { takeUntil } from 'rxjs/operators';
       }
     }
 
+    /* ── Tablet (769px – 1024px) ── */
+    @media (max-width: 1024px) {
+      .insights-grid { grid-template-columns: repeat(2, 1fr); }
+      .pie-charts-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+    }
+
+    /* ── Mobile (≤768px) ── */
     @media (max-width: 768px) {
-      .health-risk-visualization { padding: 1rem; }
-      .insights-grid { grid-template-columns: 1fr; }
-      .chart-legend { gap: 1rem; }
-      .statistics-table .table-header, 
-      .statistics-table .table-row {
+      .health-risk-visualization { padding: 0; }
+
+      .viz-card {
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+      }
+
+      .viz-card-header h3 { font-size: 0.95rem; }
+
+      /* Insight cards — 2x2 grid, no overflow */
+      .insights-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+
+      .insight-card {
+        padding: 0.875rem;
+        border-radius: 10px;
+
+        .insight-icon { font-size: 1.3rem; }
+
+        .insight-content {
+          .insight-title  { font-size: 0.72rem; line-height: 1.3; word-break: break-word; white-space: normal; }
+          .insight-value  { font-size: 1.35rem; }
+          .insight-detail { font-size: 0.7rem; }
+          .insight-students { font-size: 0.65rem; }
+        }
+      }
+
+      /* Pie charts — 1 column */
+      .pie-chart-container { padding: 0.75rem; }
+
+      .pie-charts-grid {
         grid-template-columns: 1fr;
-        gap: 0.5rem;
-        text-align: center;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .pie-chart-item {
+        padding: 1rem;
+        .pie-chart-wrapper {
+          width: 150px;
+          height: 150px;
+          .pie-chart-center .total-count { font-size: 1.4rem; }
+        }
+      }
+
+      .chart-legend {
+        gap: 0.6rem;
+        margin-bottom: 1rem;
+        .legend-label { font-size: 0.78rem; }
+      }
+
+      /* Statistics table — label:value rows */
+      .statistics-table {
+        .table-header { display: none; }
+        .table-row {
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+          padding: 0.75rem 1rem;
+          border-bottom: 1px solid #dee2e6;
+          grid-template-columns: unset;
+
+          span {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.3rem 0;
+            font-size: 0.83rem;
+            border-bottom: 1px solid #f1f3f4;
+            &:last-child { border-bottom: none; }
+            &.grade-name {
+              font-size: 0.92rem;
+              font-weight: 700;
+              color: #052355;
+              border-bottom: 1px solid #e2e8f0;
+              padding-bottom: 0.4rem;
+              margin-bottom: 0.2rem;
+            }
+            &::before {
+              content: attr(data-label);
+              font-weight: 600;
+              color: #6b7280;
+              font-size: 0.75rem;
+            }
+          }
+        }
+      }
+
+      /* Trends */
+      .trends-list .trend-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+        .trend-stats { flex-wrap: wrap; gap: 0.4rem; }
       }
     }
   `]
