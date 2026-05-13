@@ -194,7 +194,7 @@ interface PasswordChangeRequest {
                         <span class="history-notif-status" [ngClass]="notif.status?.toLowerCase()">{{ notif.status }}</span>
                       </div>
                     </div>
-                    <i class="fa-solid fa-chevron-right history-notif-arrow"></i>
+
                   </div>
                 </div>
               </div>
@@ -331,11 +331,6 @@ interface PasswordChangeRequest {
             </div>
           </div>
 
-          <div class="modal-footer">
-            <button class="btn-modal-dismiss" (click)="closeHistoryModal()">
-              <i class="fa-solid fa-times"></i> Close
-            </button>
-          </div>
         </div>
       </div>
 

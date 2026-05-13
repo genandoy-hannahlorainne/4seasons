@@ -873,21 +873,6 @@ $mobile-bp: 768px;
     }
   }
 
-  .history-notif-arrow {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-    font-size: 0.75rem;
-    transition: transform 0.15s ease, color 0.15s ease;
-    pointer-events: none;
-  }
-
-  .history-notif-item:hover .history-notif-arrow {
-    transform: translateY(-50%) translateX(2px);
-    color: #6b7280;
-  }
 
   .history-notif-icon {
     width: 34px;
