@@ -140,70 +140,102 @@ interface PasswordChangeRequest {
           </div>
 
           <div class="panel-content">
-            <div class="section-header">
-              <span>Pending</span>
-            </div>
-
-            <div class="notification-list">
-              <div
-                *ngFor="let request of passwordChangeRequests"
-                class="notification-item password-change-notif">
-                <div class="notif-banner" (click)="openNotificationModal(request)">
-                  <div class="banner-header">
-                    <i class="fa-solid fa-key"></i>
-                    <span>1 Password Change Request</span>
-                  </div>
-                  <div class="banner-body">
-                    <div class="request-main">
-                      <strong>({{ request.request_data.role }})</strong>
-                    </div>
-                    <div class="request-reason">{{ request.request_data.reason }}</div>
-                    <div class="request-footer">
-                      <span>Username: {{ request.request_data.username }}</span>
-                      <span class="time-ago">{{ request.timeAgo }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div *ngIf="passwordChangeRequests.length === 0 && (notifPanelService.notificationHistory$ | async)?.length === 0" class="no-notifications">
-                <i class="fa-solid fa-bell-slash"></i>
-                <p>No new notifications</p>
-              </div>
-            </div>
-
-            <!-- Recent Notifications History -->
             <ng-container *ngIf="notifPanelService.notificationHistory$ | async as history">
-              <div *ngIf="history.length > 0">
-                <div class="section-header">
-                  <span>Recent</span>
-                  <span class="history-count-badge">{{ history.length }}</span>
+
+              <!-- ALL TAB -->
+              <ng-container *ngIf="showAllTab">
+                <!-- Password change requests (always unread/pending) -->
+                <div *ngFor="let request of passwordChangeRequests"
+                     class="fb-notif-item fb-notif-unread"
+                     (click)="openNotificationModal(request)">
+                  <div class="fb-notif-icon-wrap pending-icon">
+                    <i class="fa-solid fa-key"></i>
+                  </div>
+                  <div class="fb-notif-body">
+                    <div class="fb-notif-message fw-bold">
+                      Password change request from <strong>{{ request.request_data.full_name }}</strong>
+                      <span class="fb-notif-role">({{ request.request_data.role }})</span>
+                    </div>
+                    <div class="fb-notif-reason">{{ request.request_data.reason }}</div>
+                    <div class="fb-notif-time">{{ request.timeAgo }}</div>
+                  </div>
+                  <span class="unread-dot"></span>
                 </div>
-                <div class="history-list">
-                  <div *ngFor="let notif of history" class="history-notif-item" [ngClass]="notif.priority"
+
+                <!-- History items -->
+                <div *ngFor="let notif of history"
+                     class="fb-notif-item"
+                     [class.fb-notif-unread]="isUnread(notif)"
+                     (click)="openHistoryModal(notif)">
+                  <div class="fb-notif-icon-wrap" [ngClass]="notif.priority === 'urgent' ? 'urgent-icon' : 'normal-icon'">
+                    <i class="fa-solid" [ngClass]="notifPanelService.getNotificationIcon(notif)"></i>
+                  </div>
+                  <div class="fb-notif-body">
+                    <div class="fb-notif-message" [class.fw-bold]="isUnread(notif)">{{ notif.message }}</div>
+                    <div class="fb-notif-meta">
+                      <span *ngIf="notif.student">{{ notif.student.full_name }} · </span>
+                      <span *ngIf="notif.user && !notif.student">{{ notif.user.full_name }} · </span>
+                      <span class="fb-notif-time">{{ notif.timeAgo }}</span>
+                    </div>
+                  </div>
+                  <span class="unread-dot" *ngIf="isUnread(notif)"></span>
+                </div>
+
+                <!-- Empty state -->
+                <div *ngIf="passwordChangeRequests.length === 0 && history.length === 0" class="no-notifications">
+                  <i class="fa-solid fa-bell-slash"></i>
+                  <p>No notifications</p>
+                </div>
+              </ng-container>
+
+              <!-- UNREAD TAB -->
+              <ng-container *ngIf="!showAllTab">
+                <!-- Pending requests are always unread -->
+                <div *ngFor="let request of passwordChangeRequests"
+                     class="fb-notif-item fb-notif-unread"
+                     (click)="openNotificationModal(request)">
+                  <div class="fb-notif-icon-wrap pending-icon">
+                    <i class="fa-solid fa-key"></i>
+                  </div>
+                  <div class="fb-notif-body">
+                    <div class="fb-notif-message fw-bold">
+                      Password change request from <strong>{{ request.request_data.full_name }}</strong>
+                      <span class="fb-notif-role">({{ request.request_data.role }})</span>
+                    </div>
+                    <div class="fb-notif-reason">{{ request.request_data.reason }}</div>
+                    <div class="fb-notif-time">{{ request.timeAgo }}</div>
+                  </div>
+                  <span class="unread-dot"></span>
+                </div>
+
+                <!-- Only unread history items -->
+                <ng-container *ngFor="let notif of history">
+                  <div *ngIf="isUnread(notif)"
+                       class="fb-notif-item fb-notif-unread"
                        (click)="openHistoryModal(notif)">
-                    <div class="history-notif-icon" [ngClass]="notif.priority">
+                    <div class="fb-notif-icon-wrap" [ngClass]="notif.priority === 'urgent' ? 'urgent-icon' : 'normal-icon'">
                       <i class="fa-solid" [ngClass]="notifPanelService.getNotificationIcon(notif)"></i>
                     </div>
-                    <div class="history-notif-content">
-                      <div class="history-notif-message">{{ notif.message }}</div>
-                      <div class="history-notif-meta">
-                        <span *ngIf="notif.student">{{ notif.student.full_name }}</span>
-                        <span *ngIf="notif.user && !notif.student">{{ notif.user.full_name }}</span>
-                        <span class="history-notif-time">{{ notif.timeAgo }}</span>
-                        <span class="history-notif-status" [ngClass]="notif.status?.toLowerCase()">{{ notif.status }}</span>
+                    <div class="fb-notif-body">
+                      <div class="fb-notif-message fw-bold">{{ notif.message }}</div>
+                      <div class="fb-notif-meta">
+                        <span *ngIf="notif.student">{{ notif.student.full_name }} · </span>
+                        <span *ngIf="notif.user && !notif.student">{{ notif.user.full_name }} · </span>
+                        <span class="fb-notif-time">{{ notif.timeAgo }}</span>
                       </div>
                     </div>
-
+                    <span class="unread-dot"></span>
                   </div>
-                </div>
-              </div>
-            </ng-container>
+                </ng-container>
 
-            <div *ngIf="passwordChangeRequests.length === 0 && ((notifPanelService.notificationHistory$ | async)?.length ?? 0) === 0" class="no-notifications">
-              <i class="fa-solid fa-bell-slash"></i>
-              <p>No notifications</p>
-            </div>
+                <!-- Empty state -->
+                <div *ngIf="passwordChangeRequests.length === 0 && !hasUnreadHistory(history)" class="no-notifications">
+                  <i class="fa-solid fa-bell-slash"></i>
+                  <p>No unread notifications</p>
+                </div>
+              </ng-container>
+
+            </ng-container>
           </div>
         </div>
       </div>
@@ -347,6 +379,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   showHistoryModal = false;
   selectedRequest: PasswordChangeRequest | null = null;
   selectedHistoryNotif: NotificationHistoryItem | null = null;
+  readHistoryIds = new Set<number>();
   passwordChangeRequests: PasswordChangeRequest[] = [];
   unreadCount = 0;
   showAllTab = true; // true = All, false = Unread
@@ -364,6 +397,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     // Poll for new notifications every 30 seconds
     this.pollSubscription = interval(30000).subscribe(() => {
       this.loadNotifications();
+    });
+    // Reset read state when history refreshes
+    this.notifPanelService.notificationHistory$.subscribe(() => {
+      this.readHistoryIds.clear();
     });
   }
 
@@ -436,10 +473,23 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.selectedRequest = null;
   }
 
+  isUnread(notif: NotificationHistoryItem): boolean {
+    if (notif.notification_id == null) return false;
+    return !this.readHistoryIds.has(notif.notification_id);
+  }
+
+  hasUnreadHistory(history: NotificationHistoryItem[]): boolean {
+    return history.some(n => this.isUnread(n));
+  }
+
   openHistoryModal(notif: NotificationHistoryItem): void {
     this.selectedHistoryNotif = notif;
     this.showHistoryModal = true;
     this.notifPanelService.close();
+    // Mark as read
+    if (notif.notification_id != null) {
+      this.readHistoryIds.add(notif.notification_id);
+    }
   }
 
   closeHistoryModal(): void {

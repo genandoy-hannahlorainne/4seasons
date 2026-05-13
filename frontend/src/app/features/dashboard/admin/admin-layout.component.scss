@@ -831,104 +831,96 @@ $mobile-bp: 768px;
     }
   }
 
-  /* History section inside panel */
-  .history-count-badge {
-    background: #e0e7ff;
-    color: #4338ca;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 0.15rem 0.5rem;
-    border-radius: 10px;
-  }
-
-  .history-list {
-    padding: 0 0.5rem 0.5rem;
-  }
-
-  .history-notif-item {
+  /* Facebook-style flat notification items */
+  .fb-notif-item {
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    border-radius: 10px;
-    margin-bottom: 0.4rem;
-    border-left: 3px solid #e5e7eb;
-    background: #f9fafb;
-    transition: background 0.15s ease, transform 0.15s ease;
+    gap: 0.85rem;
+    padding: 0.85rem 1.25rem;
     cursor: pointer;
+    transition: background 0.15s ease;
     position: relative;
+    border-radius: 8px;
+    margin: 0 0.25rem 0.15rem;
 
-    &:hover {
-      background: #f1f5f9;
-      transform: translateX(2px);
-    }
-
-    &.urgent {
-      border-left-color: #ef4444;
-      background: #fff5f5;
-    }
-
-    &.normal {
-      border-left-color: #3b82f6;
-    }
+    &:hover { background: #f0f2f5; }
   }
 
+  .fb-notif-unread {
+    background: #e7f0fd;
+    &:hover { background: #dce8fc; }
+  }
 
-  .history-notif-icon {
-    width: 34px;
-    height: 34px;
+  .fb-notif-icon-wrap {
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    background: #e0e7ff;
-    color: #4338ca;
-    font-size: 0.9rem;
+    font-size: 1.1rem;
 
-    &.urgent {
-      background: #fee2e2;
-      color: #ef4444;
-    }
+    &.pending-icon { background: linear-gradient(135deg, #f59e0b, #f97316); color: white; }
+    &.urgent-icon  { background: #fee2e2; color: #ef4444; }
+    &.normal-icon  { background: #dbeafe; color: #2563eb; }
   }
 
-  .history-notif-content {
+  .fb-notif-body {
     flex: 1;
     min-width: 0;
+  }
 
-    .history-notif-message {
-      font-size: 0.88rem;
-      color: #1f2937;
-      font-weight: 500;
-      line-height: 1.4;
-      margin-bottom: 0.3rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+  .fb-notif-message {
+    font-size: 0.9rem;
+    color: #1c1e21;
+    line-height: 1.4;
+    margin-bottom: 0.2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 
-    .history-notif-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      font-size: 0.78rem;
-      color: #6b7280;
-    }
+  .fb-notif-role {
+    color: #65676b;
+    font-weight: 400;
+    margin-left: 0.25rem;
+  }
 
-    .history-notif-time {
-      color: #9ca3af;
-    }
+  .fb-notif-reason {
+    font-size: 0.82rem;
+    color: #65676b;
+    font-style: italic;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-    .history-notif-status {
-      padding: 0.1rem 0.45rem;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.72rem;
+  .fb-notif-meta {
+    font-size: 0.82rem;
+    color: #65676b;
+  }
 
-      &.read   { background: #d1fae5; color: #065f46; }
-      &.sent   { background: #dbeafe; color: #1e40af; }
-      &.pending { background: #fef3c7; color: #92400e; }
-    }
+  .fb-notif-time {
+    font-size: 0.82rem;
+    color: #2563eb;
+    font-weight: 600;
+  }
+
+  .unread-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #2563eb;
+    flex-shrink: 0;
+    margin-top: 0.4rem;
+  }
+
+  .fw-bold {
+    font-weight: 700 !important;
+    color: #050505 !important;
   }
 }
 
