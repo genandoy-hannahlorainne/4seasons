@@ -284,27 +284,93 @@ export class ViewReportsComponent implements OnInit {
 
   private exportGenericExcel(): void {
     const wb = new Workbook();
-    const ws = wb.addWorksheet(`${this.activeReport} Report`);
-    ws.columns = [{ width: 30 }, { width: 20 }, { width: 20 }, { width: 20 }];
+    const ws = wb.addWorksheet(`${this.getReportLabel(this.activeReport)} Report`);
+    const label = this.getReportLabel(this.activeReport);
+    const generated = new Date().toLocaleString('en-PH');
 
-    const titleRow = ws.addRow([`${this.getReportLabel(this.activeReport)} Report`]);
-    titleRow.font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
-    titleRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0A2D6E' } };
-    ws.mergeCells(titleRow.number, 1, titleRow.number, 4);
+    const addTitle = (cols: number) => {
+      ws.columns = Array(cols).fill(null).map(() => ({ width: 28 }));
+      const titleRow = ws.addRow([`${label} Report`]);
+      titleRow.font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
+      titleRow.alignment = { vertical: 'middle', horizontal: 'center' };
+      titleRow.height = 22;
+      titleRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0A2D6E' } };
+      ws.mergeCells(titleRow.number, 1, titleRow.number, cols);
 
-    const metaRow = ws.addRow([`Generated: ${new Date().toLocaleString('en-PH')}`]);
-    metaRow.font = { italic: true, size: 9, color: { argb: 'FF404040' } };
-    ws.mergeCells(metaRow.number, 1, metaRow.number, 4);
-    ws.addRow([]);
+      const metaRow = ws.addRow([`Generated: ${generated}`]);
+      metaRow.font = { italic: true, size: 9, color: { argb: 'FF404040' } };
+      ws.mergeCells(metaRow.number, 1, metaRow.number, cols);
+      ws.addRow([]);
+    };
 
-    if (Array.isArray(this.reportData) && this.reportData.length > 0) {
-      const headers = Object.keys(this.reportData[0]);
-      const headerRow = ws.addRow(headers.map(h => h.replace(/_/g, ' ').toUpperCase()));
+    const addHeaderRow = (headers: string[]) => {
+      const headerRow = ws.addRow(headers);
       headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.height = 18;
       headerRow.eachCell(cell => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF144799' } };
+        cell.alignment = { vertical: 'middle' };
       });
-      this.reportData.forEach((row: any) => ws.addRow(headers.map(h => row[h])));
+    };
+
+    const addDataRow = (values: any[]) => {
+      const row = ws.addRow(values);
+      row.eachCell(cell => { cell.alignment = { vertical: 'middle', wrapText: true }; });
+    };
+
+    if (this.activeReport === 'summary') {
+      addTitle(2);
+      ws.columns = [{ width: 34 }, { width: 20 }];
+      addHeaderRow(['METRIC', 'VALUE']);
+      addDataRow(['Total Students', this.reportData.total_students]);
+      addDataRow(['Total Advisers', this.reportData.total_advisers]);
+      addDataRow(['Total Clinic Staff', this.reportData.total_staff]);
+      addDataRow(['Active Users', this.reportData.active_users]);
+      addDataRow(['Inactive Users', this.reportData.inactive_users]);
+      addDataRow(['Total Medical Visits', this.reportData.total_visits]);
+      addDataRow(['Total Allergies Recorded', this.reportData.total_allergies]);
+
+    } else if (this.activeReport === 'users' && Array.isArray(this.reportData)) {
+      addTitle(4);
+      ws.columns = [{ width: 20 }, { width: 12 }, { width: 12 }, { width: 12 }];
+      addHeaderRow(['ROLE', 'TOTAL', 'ACTIVE', 'INACTIVE']);
+      this.reportData.forEach((r: any) => addDataRow([r.role, r.total, r.active, r.inactive]));
+
+    } else if (this.activeReport === 'medical' && Array.isArray(this.reportData)) {
+      addTitle(4);
+      ws.columns = [{ width: 20 }, { width: 16 }, { width: 18 }, { width: 16 }];
+      addHeaderRow(['DATE', 'TOTAL VISITS', 'UNIQUE STUDENTS', 'STAFF INVOLVED']);
+      this.reportData.forEach((r: any) => addDataRow([new Date(r.date).toLocaleDateString('en-PH'), r.total_visits, r.unique_students, r.staff_involved]));
+
+    } else if (this.activeReport === 'registration' && Array.isArray(this.reportData)) {
+      addTitle(3);
+      ws.columns = [{ width: 20 }, { width: 18 }, { width: 20 }];
+      addHeaderRow(['DATE', 'ROLE', 'NEW REGISTRATIONS']);
+      this.reportData.forEach((r: any) => addDataRow([new Date(r.date).toLocaleDateString('en-PH'), r.role, r.count]));
+
+    } else if (this.activeReport === 'allergies' && Array.isArray(this.reportData)) {
+      addTitle(3);
+      ws.columns = [{ width: 28 }, { width: 16 }, { width: 12 }];
+      addHeaderRow(['ALLERGY', 'SEVERITY', 'COUNT']);
+      this.reportData.forEach((r: any) => addDataRow([r.allergy, r.severity, r.count]));
+
+    } else if (this.activeReport === 'principal-health-trends' && this.reportData) {
+      const s = this.reportData.summary || {};
+      const peak = this.reportData.peakSlot;
+      const rec = this.reportData.recommendation || {};
+      addTitle(2);
+      ws.columns = [{ width: 30 }, { width: 40 }];
+      addHeaderRow(['METRIC', 'VALUE']);
+      addDataRow(['Total Visits', s.totalVisits ?? 0]);
+      addDataRow(['Unique Students', s.uniqueStudents ?? 0]);
+      addDataRow(['Emergency Visits', s.emergencyVisits ?? 0]);
+      addDataRow(['Hospital Referrals', s.hospitalReferrals ?? 0]);
+      addDataRow(['Peak Slot', peak ? `${peak.day} ${peak.timeRangeLabel || peak.timeRange} (${peak.visits} visits)` : 'N/A']);
+      addDataRow(['Recommendation', rec.title || 'N/A']);
+      addDataRow(['Details', rec.details || 'N/A']);
+      ws.addRow([]);
+      addHeaderRow(['TOP VISIT REASON', 'COUNT']);
+      (this.reportData.topReasons || []).forEach((r: any) => addDataRow([r.reason, r.count]));
     }
 
     wb.xlsx.writeBuffer().then(buffer => {
