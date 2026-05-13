@@ -53,7 +53,8 @@ interface UsersResponse {
             <p>Manage your school's medical records system efficiently and securely</p>
           </div>
         </div>
-        <!-- Notification Bell -->
+
+        <!-- Notification Bell (desktop only) -->
         <button class="hero-notif-bell notification-bell" (click)="notifPanelService.toggle()" title="Notifications">
           <i class="bi bi-bell-fill"></i>
           <span class="hero-notif-badge" *ngIf="(notifPanelService.unreadCount$ | async) as count">
