@@ -187,33 +187,36 @@ interface UsersResponse {
           </div>
         </div>
 
-        <!-- Health Risk Visualization -->
-        <app-health-risk-visualization></app-health-risk-visualization>
-
-        <!-- Main Content Grid -->
-        <div class="content-grid">
-          <!-- System Activity -->
-          <div class="card activity-card">
-            <div class="card-header">
-              <h2>System Activity</h2>
-              <span class="badge">Live</span>
-            </div>
-            <div class="activity-list">
-              <div *ngFor="let activity of activityLog" class="activity-item">
-                <div class="activity-icon" [ngClass]="activity.type">
-                  <i [ngClass]="getActivityIconClass(activity.type)"></i>
-                </div>
-                <div class="activity-details">
-                  <div class="activity-action">{{ activity.action }}</div>
-                  <div class="activity-meta">
-                    <span class="activity-user">{{ activity.user }}</span>
-                    <span class="activity-time">{{ activity.timestamp }}</span>
+        <!-- Bottom Grid: Health Risk Visualization + System Activity -->
+        <div class="bottom-grid">
+          <div class="bottom-grid-left">
+            <!-- Health Risk Visualization -->
+            <app-health-risk-visualization></app-health-risk-visualization>
+          </div>
+          <div class="bottom-grid-right">
+            <!-- System Activity -->
+            <div class="card activity-card">
+              <div class="card-header">
+                <h2>System Activity</h2>
+                <span class="badge">Live</span>
+              </div>
+              <div class="activity-list">
+                <div *ngFor="let activity of activityLog" class="activity-item">
+                  <div class="activity-icon" [ngClass]="activity.type">
+                    <i [ngClass]="getActivityIconClass(activity.type)"></i>
+                  </div>
+                  <div class="activity-details">
+                    <div class="activity-action">{{ activity.action }}</div>
+                    <div class="activity-meta">
+                      <span class="activity-user">{{ activity.user }}</span>
+                      <span class="activity-time">{{ activity.timestamp }}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div *ngIf="activityLog.length === 0" class="no-activity">
-                <i class="fa-solid fa-inbox"></i>
-                <p>No recent activity</p>
+                <div *ngIf="activityLog.length === 0" class="no-activity">
+                  <i class="fa-solid fa-inbox"></i>
+                  <p>No recent activity</p>
+                </div>
               </div>
             </div>
           </div>
@@ -654,6 +657,20 @@ interface UsersResponse {
       gap: 1.5rem;
     }
 
+    /* ── Bottom grid: viz (left, wider) + activity (right, sticky) ── */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+      align-items: start;
+      margin-bottom: 1.5rem;
+    }
+
+    .bottom-grid-right .card {
+      position: sticky;
+      top: 1.5rem;
+    }
+
     .card {
       background: white;
       border-radius: 12px;
@@ -882,12 +899,15 @@ interface UsersResponse {
     @media (max-width: 1200px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .content-grid { grid-template-columns: 1fr; }
+      .bottom-grid { grid-template-columns: 1fr; }
+      .bottom-grid-right .card { position: static; }
     }
 
     @media (max-width: 768px) {
       .admin-dashboard { padding: 1rem; }
       .stats-grid { grid-template-columns: 1fr; }
       .actions-grid { grid-template-columns: repeat(2, 1fr); }
+      .bottom-grid { gap: 1rem; }
       .users-table .table-header, .users-table .table-row {
         grid-template-columns: 1fr 1fr;
         .user-date, .user-status { display: none; }
