@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { AdminNotificationPanelService } from '../../../core/services/admin-notification-panel.service';
 import { Subject, interval, BehaviorSubject } from 'rxjs';
 import { takeUntil, switchMap, startWith, tap } from 'rxjs/operators';
 import { HealthRiskVisualizationComponent } from './health-risk-visualization/health-risk-visualization.component';
@@ -52,6 +53,13 @@ interface UsersResponse {
             <p>Manage your school's medical records system efficiently and securely</p>
           </div>
         </div>
+        <!-- Notification Bell -->
+        <button class="hero-notif-bell notification-bell" (click)="notifPanelService.toggle()" title="Notifications">
+          <i class="bi bi-bell-fill"></i>
+          <span class="hero-notif-badge" *ngIf="(notifPanelService.unreadCount$ | async) as count">
+            <span *ngIf="count > 0">{{ count }}</span>
+          </span>
+        </button>
       </div>
 
       <!-- Loading State -->
@@ -1095,7 +1103,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private adminService: AdminService,
-    private authService: AuthService
+    private authService: AuthService,
+    public notifPanelService: AdminNotificationPanelService
   ) {}
 
   ngOnInit(): void {

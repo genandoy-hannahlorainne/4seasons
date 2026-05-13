@@ -4,6 +4,7 @@ import { RouterModule, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
+import { AdminNotificationPanelService } from '../../../core/services/admin-notification-panel.service';
 import { interval, Subscription } from 'rxjs';
 
 interface PasswordChangeRequest {
@@ -56,13 +57,6 @@ interface PasswordChangeRequest {
             <span class="nav-label">Dashboard</span>
           </a>
 
-          <!-- Notification Bell in Sidebar -->
-          <button class="nav-item notification-nav-item" (click)="toggleNotificationPanel()" title="Notifications">
-            <i class="bi bi-bell-fill nav-icon"></i>
-            <span class="nav-label">Notifications</span>
-            <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
-          </button>
-
           <a routerLink="/dashboard/admin/manage-users" routerLinkActive="active" class="nav-item" title="Users" (click)="closeMobile()">
             <i class="bi bi-people-fill nav-icon"></i>
             <span class="nav-label">Users</span>
@@ -111,12 +105,17 @@ interface PasswordChangeRequest {
           <span></span><span></span><span></span>
         </button>
         <span class="mobile-brand">PDMHS Admin</span>
-
-
+        <!-- Mobile notification bell -->
+        <button class="notification-bell mobile-notif-bell" (click)="toggleNotificationPanel()" title="Notifications">
+          <i class="bi bi-bell-fill"></i>
+          <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+        </button>
       </header>
 
-      <!-- Notification Panel (Centered Modal) -->
-      <div class="notification-panel-overlay" *ngIf="showNotificationPanel" (click)="closeNotificationPanel()">
+      <!-- Content topbar with notification bell — REMOVED, bell is now inside hero section -->
+
+      <!-- Notification Side Panel -->
+      <div class="notification-panel-overlay" *ngIf="notifPanelService.open$ | async" (click)="closeNotificationPanel()">
         <div class="notification-panel" (click)="$event.stopPropagation()">
           <div class="panel-header">
             <h3>Notifications</h3>
@@ -247,7 +246,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   loggingOut = false;
 
   // Notification system
-  showNotificationPanel = false;
   showNotificationModal = false;
   selectedRequest: PasswordChangeRequest | null = null;
   passwordChangeRequests: PasswordChangeRequest[] = [];
@@ -258,7 +256,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private adminService: AdminService
+    private adminService: AdminService,
+    public notifPanelService: AdminNotificationPanelService
   ) {}
 
   ngOnInit(): void {
@@ -295,6 +294,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
               created_at: n.created_at
             }));
           this.unreadCount = this.passwordChangeRequests.length;
+          this.notifPanelService.setUnreadCount(this.unreadCount);
         } else {
           // Invalid response structure
         }
@@ -319,17 +319,17 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   toggleNotificationPanel(): void {
     this.closeMobile();
-    this.showNotificationPanel = !this.showNotificationPanel;
+    this.notifPanelService.toggle();
   }
 
   closeNotificationPanel(): void {
-    this.showNotificationPanel = false;
+    this.notifPanelService.close();
   }
 
   openNotificationModal(request: PasswordChangeRequest): void {
     this.selectedRequest = request;
     this.showNotificationModal = true;
-    this.showNotificationPanel = false;
+    this.notifPanelService.close();
   }
 
   closeNotificationModal(): void {
@@ -362,6 +362,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
             r => r.notification_id !== request.notification_id
           );
           this.unreadCount = this.passwordChangeRequests.length;
+          this.notifPanelService.setUnreadCount(this.unreadCount);
           this.closeNotificationModal();
         } else {
           // Failed response
@@ -390,6 +391,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
               r => r.notification_id !== request.notification_id
             );
             this.unreadCount = this.passwordChangeRequests.length;
+            this.notifPanelService.setUnreadCount(this.unreadCount);
             this.closeNotificationModal();
           }
         },
@@ -405,9 +407,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.notification-bell') &&
-        !target.closest('.notification-panel') &&
-        !target.closest('.notification-nav-item')) {
-      this.closeNotificationPanel();
+        !target.closest('.notification-panel')) {
+      this.notifPanelService.close();
     }
   }
 
