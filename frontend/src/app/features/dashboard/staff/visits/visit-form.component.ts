@@ -66,7 +66,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
           <!-- Selected Student Card -->
           <div class="selected-student" *ngIf="selectedStudent">
-            <img [src]="selectedStudent.avatar" alt="Student" class="student-avatar">
+            <div class="student-avatar-initials">{{ getInitials(selectedStudent.full_name) }}</div>
             <div class="student-info">
               <span class="student-name">{{ selectedStudent.full_name }}</span>
               <span class="student-details">{{ selectedStudent.student_number }} | {{ selectedStudent.grade_section }}</span>
@@ -451,7 +451,20 @@ import { AuthService } from '../../../../core/services/auth.service';
       border-radius: 10px;
       border: 1.5px solid #93c5fd;
 
-      .student-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid #bfdbfe; }
+      .student-avatar-initials {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #052355, #5381b2);
+        color: white;
+        font-weight: 700;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        letter-spacing: 0.5px;
+      }
       .student-info { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; }
       .student-name { font-weight: 700; color: #052355; font-size: 1rem; }
       .student-details { font-size: 0.82rem; color: #475569; font-weight: 500; }
@@ -882,6 +895,11 @@ export class VisitFormComponent implements OnInit, OnDestroy {
 
   clearStudent(): void {
     this.selectedStudent = null;
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().substring(0, 2);
   }
 
   private formatVisitDateTime(value: string): string {
