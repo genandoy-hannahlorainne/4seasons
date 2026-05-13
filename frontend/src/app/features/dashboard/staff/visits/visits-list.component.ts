@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -175,35 +175,54 @@ interface StudentVisitSummary {
                   <i class="bi bi-plus-circle"></i> New Visit
                 </button>
               </div>
-              <button class="expand-btn" (click)="toggleVisitsExpanded(student.student_id)" *ngIf="student.recent_visits.length > 0">
-                <i class="bi" [class.bi-chevron-down]="!expandedStudents[student.student_id]" [class.bi-chevron-up]="expandedStudents[student.student_id]"></i>
+              <button class="expand-btn" (click)="openHistoryModal(student)" *ngIf="student.recent_visits.length > 0">
+                <i class="bi bi-clock-history"></i>
                 Visit History ({{ student.recent_visits.length }})
               </button>
             </div>
 
-            <!-- Visit History Table -->
-            <div class="visit-history" *ngIf="expandedStudents[student.student_id] && student.recent_visits.length > 0">
-              <table class="history-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Chief Complaint</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let visit of student.recent_visits.slice(0, 5)">
-                    <td class="td-date">{{ formatDate(visit.visit_datetime) }}</td>
-                    <td><span class="visit-type-badge sm" [class]="'type-' + visit.visit_type?.toLowerCase()">{{ visit.visit_type }}</span></td>
-                    <td class="td-complaint">{{ visit.chief_complaint || visit.notes || '—' }}</td>
-                    <td><span class="status-badge" [class]="'status-' + visit.status?.toLowerCase()">{{ visit.status }}</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visit History Modal -->
+    <div class="modal-overlay" *ngIf="historyModal" (click)="closeHistoryModal()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-student-info">
+            <div class="modal-avatar">{{ getStudentInitials(historyModal.student_name) }}</div>
+            <div>
+              <div class="modal-student-name">{{ historyModal.student_name }}</div>
+              <div class="modal-student-meta">
+                <span><i class="bi bi-person-badge"></i> {{ historyModal.student_number }}</span>
+                <span><i class="bi bi-mortarboard"></i> {{ historyModal.grade_section }}</span>
+              </div>
+            </div>
+          </div>
+          <button class="modal-close" (click)="closeHistoryModal()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Chief Complaint</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let visit of historyModal.recent_visits">
+                <td class="td-date">{{ formatDate(visit.visit_datetime) }}</td>
+                <td><span class="visit-type-badge sm" [class]="'type-' + visit.visit_type?.toLowerCase()">{{ visit.visit_type }}</span></td>
+                <td class="td-complaint">{{ visit.chief_complaint || visit.notes || '—' }}</td>
+                <td><span class="status-badge" [class]="'status-' + visit.status?.toLowerCase()">{{ visit.status }}</span></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -679,9 +698,106 @@ interface StudentVisitSummary {
       i { font-size: 0.8rem; }
     }
 
-    .visit-history {
-      padding: 0 1.5rem 1.25rem;
+    /* ── Visit History Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      backdrop-filter: blur(3px);
+      animation: fadeIn 0.18s ease;
     }
+
+    .modal-box {
+      background: white;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+      animation: slideUp 0.22s ease;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+      gap: 1rem;
+    }
+
+    .modal-student-info {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .modal-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #052355, #5381b2);
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .modal-student-name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #0f172a;
+      text-transform: capitalize;
+    }
+
+    .modal-student-meta {
+      display: flex;
+      gap: 0.75rem;
+      font-size: 0.78rem;
+      color: #64748b;
+      margin-top: 0.2rem;
+
+      i { color: #5381b2; margin-right: 0.2rem; }
+    }
+
+    .modal-close {
+      background: #f1f5f9;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      flex-shrink: 0;
+      transition: background 0.2s;
+
+      &:hover { background: #e2e8f0; color: #0f172a; }
+      i { font-size: 0.85rem; }
+    }
+
+    .modal-body {
+      overflow-y: auto;
+      padding: 1rem 1.5rem 1.5rem;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
     .history-table {
       width: 100%;
@@ -730,7 +846,7 @@ interface StudentVisitSummary {
     }
   `]
 })
-export class VisitsListComponent implements OnInit {
+export class VisitsListComponent implements OnInit, OnDestroy {
   searchTerm = '';
   dateFilter = '';
   statusFilter = '';
@@ -741,12 +857,16 @@ export class VisitsListComponent implements OnInit {
   allVisits: any[] = [];
   studentSummaries: StudentVisitSummary[] = [];
   filteredStudents: StudentVisitSummary[] = [];
-  expandedStudents: { [key: number]: boolean } = {};
+  historyModal: StudentVisitSummary | null = null;
 
   constructor(
     private medicalVisitService: MedicalVisitService,
     private router: Router
   ) {}
+
+  ngOnDestroy(): void {
+    document.body.style.overflow = '';
+  }
 
   ngOnInit(): void {
     this.loadVisits();
@@ -855,12 +975,14 @@ export class VisitsListComponent implements OnInit {
     this.filterVisits();
   }
 
-  toggleVisitsExpanded(studentId: number): void {
-    this.expandedStudents[studentId] = !this.expandedStudents[studentId];
+  openHistoryModal(student: StudentVisitSummary): void {
+    this.historyModal = student;
+    document.body.style.overflow = 'hidden';
   }
 
-  viewStudentVisits(studentId: number): void {
-    this.router.navigate(['/dashboard/staff/students', studentId, 'visits']);
+  closeHistoryModal(): void {
+    this.historyModal = null;
+    document.body.style.overflow = '';
   }
 
   getStudentInitials(name: string): string {
