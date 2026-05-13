@@ -121,6 +121,10 @@ export class StudentMedicalProfileComponent implements OnInit, OnChanges {
             avatar: studentData.avatar || ''
           };
 
+          // Student-level height/weight (from students table) used as fallback
+          const studentHeight = studentData.height_cm ?? null;
+          const studentWeight = studentData.weight_kg ?? null;
+
           const visits = payload.medical_visits || payload.medicalVisits || [];
           const mappedVitalsFromVisits = Array.isArray(visits)
             ? visits.flatMap((visit: any) => {
@@ -133,8 +137,9 @@ export class StudentMedicalProfileComponent implements OnInit, OnChanges {
                   temperature: vital.temperature_c ?? vital.temperature ?? '',
                   blood_pressure: vital.blood_pressure || [vital.bp_systolic, vital.bp_diastolic].filter(Boolean).join('/') || '',
                   pulse_rate: vital.pulse_rate ?? '',
-                  weight: vital.weight_kg ?? '',
-                  height: vital.height_cm ?? ''
+                  // Use per-visit value first; fall back to student profile value
+                  weight: vital.weight_kg != null && vital.weight_kg !== '' ? vital.weight_kg : studentWeight,
+                  height: vital.height_cm != null && vital.height_cm !== '' ? vital.height_cm : studentHeight
                 }));
               })
             : [];
