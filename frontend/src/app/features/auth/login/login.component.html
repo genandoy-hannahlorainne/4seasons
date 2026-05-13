@@ -84,13 +84,62 @@
         }
       </button>
 
-      <div class="signup-link">
-        Don't have an account? <span class="contact-admin">Contact your administrator</span>
+      <div class="signup-link" (click)="toggleContactModal()">
+        Don't have an account? <span class="contact-admin">Contact School Administration</span>
       </div>
     </form>
   </div>
 </div>
 
+@if (showContactModal) {
+  <div class="fp-overlay" (click)="toggleContactModal()">
+    <div class="fp-modal" (click)="$event.stopPropagation()">
+      <div class="fp-modal-header">
+        <div class="fp-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <button class="fp-close" (click)="toggleContactModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="fp-modal-body">
+        <h3>Contact School Administration</h3>
+        <p>To request access or sign up, please contact the IT or Admin office of PDMHS.</p>
+        <div class="fp-steps">
+          <div class="fp-step">
+            <span class="fp-step-num">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </span>
+            <span><strong>Email</strong><br/><a href="mailto:sdotapat.pdmhs&#64;deped.gov.ph" class="fp-link">sdotapat.pdmhs&#64;deped.gov.ph</a></span>
+          </div>
+          <div class="fp-step">
+            <span class="fp-step-num">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </span>
+            <span><strong>Location</strong><br/>8th Street GHQ Village, Katuparan, Taguig, Philippines, 1630</span>
+          </div>
+        </div>
+      </div>
+      <div class="fp-modal-footer">
+        <button class="fp-btn-close" (click)="toggleContactModal()">Got it</button>
+      </div>
+    </div>
+  </div>
+}
 @if (showForgotPassword) {
   <div class="fp-overlay" (click)="toggleForgotPassword()">
     <div class="fp-modal" (click)="$event.stopPropagation()">
@@ -122,7 +171,7 @@
           </div>
           <div class="fp-step">
             <span class="fp-step-num">3</span>
-            <span>Your password will be <strong>reset by the admin</strong></span>
+            <span>Your password will be <strong>reset by the IT Admin</strong></span>
           </div>
         </div>
       </div>
