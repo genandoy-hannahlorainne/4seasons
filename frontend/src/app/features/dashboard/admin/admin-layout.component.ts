@@ -1,10 +1,10 @@
 import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
-import { AdminNotificationPanelService } from '../../../core/services/admin-notification-panel.service';
+import { AdminNotificationPanelService, NotificationHistoryItem } from '../../../core/services/admin-notification-panel.service';
 import { interval, Subscription } from 'rxjs';
 
 interface PasswordChangeRequest {
@@ -24,7 +24,7 @@ interface PasswordChangeRequest {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet],
+  imports: [CommonModule, RouterModule, RouterOutlet, TitleCasePipe],
   styleUrls: ['./admin-layout.component.scss'],
   template: `
     <div class="admin-shell" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen">
@@ -141,8 +141,7 @@ interface PasswordChangeRequest {
 
           <div class="panel-content">
             <div class="section-header">
-              <span>Earlier</span>
-              <a href="javascript:void(0)" class="see-all">See all</a>
+              <span>Pending</span>
             </div>
 
             <div class="notification-list">
@@ -167,10 +166,43 @@ interface PasswordChangeRequest {
                 </div>
               </div>
 
-              <div *ngIf="passwordChangeRequests.length === 0" class="no-notifications">
+              <div *ngIf="passwordChangeRequests.length === 0 && (notifPanelService.notificationHistory$ | async)?.length === 0" class="no-notifications">
                 <i class="fa-solid fa-bell-slash"></i>
                 <p>No new notifications</p>
               </div>
+            </div>
+
+            <!-- Recent Notifications History -->
+            <ng-container *ngIf="notifPanelService.notificationHistory$ | async as history">
+              <div *ngIf="history.length > 0">
+                <div class="section-header">
+                  <span>Recent</span>
+                  <span class="history-count-badge">{{ history.length }}</span>
+                </div>
+                <div class="history-list">
+                  <div *ngFor="let notif of history" class="history-notif-item" [ngClass]="notif.priority"
+                       (click)="openHistoryModal(notif)">
+                    <div class="history-notif-icon" [ngClass]="notif.priority">
+                      <i class="fa-solid" [ngClass]="notifPanelService.getNotificationIcon(notif)"></i>
+                    </div>
+                    <div class="history-notif-content">
+                      <div class="history-notif-message">{{ notif.message }}</div>
+                      <div class="history-notif-meta">
+                        <span *ngIf="notif.student">{{ notif.student.full_name }}</span>
+                        <span *ngIf="notif.user && !notif.student">{{ notif.user.full_name }}</span>
+                        <span class="history-notif-time">{{ notif.timeAgo }}</span>
+                        <span class="history-notif-status" [ngClass]="notif.status?.toLowerCase()">{{ notif.status }}</span>
+                      </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right history-notif-arrow"></i>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+
+            <div *ngIf="passwordChangeRequests.length === 0 && ((notifPanelService.notificationHistory$ | async)?.length ?? 0) === 0" class="no-notifications">
+              <i class="fa-solid fa-bell-slash"></i>
+              <p>No notifications</p>
             </div>
           </div>
         </div>
@@ -237,6 +269,76 @@ interface PasswordChangeRequest {
         <router-outlet></router-outlet>
       </main>
 
+      <!-- History Notification Detail Modal -->
+      <div class="modal-overlay" *ngIf="showHistoryModal" (click)="closeHistoryModal()">
+        <div class="modal-content history-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>
+              <i class="fa-solid" [ngClass]="selectedHistoryNotif ? notifPanelService.getNotificationIcon(selectedHistoryNotif) : 'fa-bell'"></i>
+              Notification Details
+            </h3>
+            <button class="modal-close" (click)="closeHistoryModal()">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+
+          <div class="modal-body" *ngIf="selectedHistoryNotif">
+            <div class="request-details">
+              <div class="detail-row">
+                <span class="detail-label">Message:</span>
+                <span class="detail-value">{{ selectedHistoryNotif.message }}</span>
+              </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif.notification_type">
+                <span class="detail-label">Type:</span>
+                <span class="detail-value role-badge">{{ selectedHistoryNotif.notification_type | titlecase }}</span>
+              </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif.priority">
+                <span class="detail-label">Priority:</span>
+                <span class="detail-value" [ngClass]="selectedHistoryNotif.priority === 'urgent' ? 'role-badge' : ''">
+                  {{ selectedHistoryNotif.priority | titlecase }}
+                </span>
+              </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif.student">
+                <span class="detail-label">Student:</span>
+                <span class="detail-value">
+                  {{ selectedHistoryNotif.student.full_name }}
+                  <span style="color:#6b7280"> ({{ selectedHistoryNotif.student.student_number }})</span>
+                </span>
+              </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif.user && !selectedHistoryNotif.student">
+                <span class="detail-label">User:</span>
+                <span class="detail-value">
+                  {{ selectedHistoryNotif.user.full_name }}
+                  <span style="color:#6b7280"> ({{ selectedHistoryNotif.user.role }})</span>
+                </span>
+              </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif['request_data']?.reason">
+                <span class="detail-label">Reason:</span>
+                <span class="detail-value reason-text">{{ selectedHistoryNotif['request_data'].reason }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value">
+                  <span class="history-notif-status" [ngClass]="selectedHistoryNotif.status?.toLowerCase()">
+                    {{ selectedHistoryNotif.status }}
+                  </span>
+                </span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Time:</span>
+                <span class="detail-value">{{ selectedHistoryNotif.timeAgo }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-modal-dismiss" (click)="closeHistoryModal()">
+              <i class="fa-solid fa-times"></i> Close
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   `,
 })
@@ -247,7 +349,9 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   // Notification system
   showNotificationModal = false;
+  showHistoryModal = false;
   selectedRequest: PasswordChangeRequest | null = null;
+  selectedHistoryNotif: NotificationHistoryItem | null = null;
   passwordChangeRequests: PasswordChangeRequest[] = [];
   unreadCount = 0;
   showAllTab = true; // true = All, false = Unread
@@ -335,6 +439,17 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   closeNotificationModal(): void {
     this.showNotificationModal = false;
     this.selectedRequest = null;
+  }
+
+  openHistoryModal(notif: NotificationHistoryItem): void {
+    this.selectedHistoryNotif = notif;
+    this.showHistoryModal = true;
+    this.notifPanelService.close();
+  }
+
+  closeHistoryModal(): void {
+    this.showHistoryModal = false;
+    this.selectedHistoryNotif = null;
   }
 
   approvePasswordChange(): void {

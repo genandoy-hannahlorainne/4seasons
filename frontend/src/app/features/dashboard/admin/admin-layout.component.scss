@@ -830,6 +830,121 @@ $mobile-bp: 768px;
       }
     }
   }
+
+  /* History section inside panel */
+  .history-count-badge {
+    background: #e0e7ff;
+    color: #4338ca;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+  }
+
+  .history-list {
+    padding: 0 0.5rem 0.5rem;
+  }
+
+  .history-notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 0.4rem;
+    border-left: 3px solid #e5e7eb;
+    background: #f9fafb;
+    transition: background 0.15s ease, transform 0.15s ease;
+    cursor: pointer;
+    position: relative;
+
+    &:hover {
+      background: #f1f5f9;
+      transform: translateX(2px);
+    }
+
+    &.urgent {
+      border-left-color: #ef4444;
+      background: #fff5f5;
+    }
+
+    &.normal {
+      border-left-color: #3b82f6;
+    }
+  }
+
+  .history-notif-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.75rem;
+    transition: transform 0.15s ease, color 0.15s ease;
+    pointer-events: none;
+  }
+
+  .history-notif-item:hover .history-notif-arrow {
+    transform: translateY(-50%) translateX(2px);
+    color: #6b7280;
+  }
+
+  .history-notif-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #e0e7ff;
+    color: #4338ca;
+    font-size: 0.9rem;
+
+    &.urgent {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+  }
+
+  .history-notif-content {
+    flex: 1;
+    min-width: 0;
+
+    .history-notif-message {
+      font-size: 0.88rem;
+      color: #1f2937;
+      font-weight: 500;
+      line-height: 1.4;
+      margin-bottom: 0.3rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-notif-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: #6b7280;
+    }
+
+    .history-notif-time {
+      color: #9ca3af;
+    }
+
+    .history-notif-status {
+      padding: 0.1rem 0.45rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.72rem;
+
+      &.read   { background: #d1fae5; color: #065f46; }
+      &.sent   { background: #dbeafe; color: #1e40af; }
+      &.pending { background: #fef3c7; color: #92400e; }
+    }
+  }
 }
 
 @keyframes slideInRight {
@@ -1062,4 +1177,17 @@ $mobile-bp: 768px;
     margin: 10px;
     max-width: 100%;
   }
+}
+
+/* Global status badge — used in history detail modal */
+.history-notif-status {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.78rem;
+
+  &.read    { background: #d1fae5; color: #065f46; }
+  &.sent    { background: #dbeafe; color: #1e40af; }
+  &.pending { background: #fef3c7; color: #92400e; }
 }
