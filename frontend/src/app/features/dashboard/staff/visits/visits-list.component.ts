@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { MedicalVisitService } from '../../../../core/services/medical-visit.service';
+import { VisitFormComponent } from './visit-form.component';
 
 interface StudentVisitSummary {
   student_id: number;
@@ -25,7 +26,7 @@ interface StudentVisitSummary {
 @Component({
   selector: 'app-visits-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, VisitFormComponent],
   template: `
     <div class="visits-page">
       <div class="page-header">
@@ -33,7 +34,7 @@ interface StudentVisitSummary {
           <h1>Medical Visits</h1>
           <p>Student visit summary and records</p>
         </div>
-        <button class="btn btn-primary" routerLink="/dashboard/staff/visits/new">+ New Visit</button>
+        <button class="btn btn-primary" (click)="openNewVisitModal()">+ New Visit</button>
       </div>
 
       <!-- Loading State -->
@@ -88,7 +89,7 @@ interface StudentVisitSummary {
             <p>There are no medical visits recorded in the system.</p>
             <p class="alert-hint">Create a new clinic visit to get started.</p>
           </div>
-          <button class="btn btn-primary" routerLink="/dashboard/staff/visits/new">
+          <button class="btn btn-primary" (click)="openNewVisitModal()">
             + Create First Visit
           </button>
         </div>
@@ -171,7 +172,7 @@ interface StudentVisitSummary {
                 <button class="btn btn-outline btn-sm" [routerLink]="['/dashboard/staff/students', student.student_id]">
                   <i class="bi bi-person"></i> View Profile
                 </button>
-                <button class="btn btn-primary btn-sm" routerLink="/dashboard/staff/visits/new" [queryParams]="{studentId: student.student_id}">
+                <button class="btn btn-primary btn-sm" (click)="openNewVisitModal(student.student_id)">
                   <i class="bi bi-plus-circle"></i> New Visit
                 </button>
               </div>
@@ -185,6 +186,20 @@ interface StudentVisitSummary {
         </div>
       </div>
     </div>
+
+    <!-- New Visit Modal -->
+    @if (showNewVisitModal) {
+    <div class="modal-overlay new-visit-modal" (click)="closeNewVisitModal()">
+      <div class="new-visit-modal-box" (click)="$event.stopPropagation()">
+        <button class="new-visit-close" (click)="closeNewVisitModal()"><i class="bi bi-x-lg"></i></button>
+        <app-visit-form
+          [preselectedStudentId]="newVisitStudentId"
+          (visitSaved)="onVisitSaved()"
+          (cancelled)="closeNewVisitModal()">
+        </app-visit-form>
+      </div>
+    </div>
+    }
 
     <!-- Visit History Modal -->
     <div class="modal-overlay" *ngIf="historyModal" (click)="closeHistoryModal()">
@@ -796,6 +811,39 @@ interface StudentVisitSummary {
       -webkit-overflow-scrolling: touch;
     }
 
+    .new-visit-modal { align-items: flex-start; padding-top: 2rem; }
+
+    .new-visit-modal-box {
+      position: relative;
+      width: 100%;
+      max-width: 860px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 16px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+      animation: slideUp 0.22s ease;
+    }
+
+    .new-visit-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      z-index: 10;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      &:hover { background: rgba(255,255,255,0.35); }
+      i { font-size: 0.85rem; }
+    }
+
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -858,6 +906,8 @@ export class VisitsListComponent implements OnInit, OnDestroy {
   studentSummaries: StudentVisitSummary[] = [];
   filteredStudents: StudentVisitSummary[] = [];
   historyModal: StudentVisitSummary | null = null;
+  showNewVisitModal = false;
+  newVisitStudentId: number | null = null;
 
   constructor(
     private medicalVisitService: MedicalVisitService,
@@ -973,6 +1023,23 @@ export class VisitsListComponent implements OnInit, OnDestroy {
     this.typeFilter = '';
     this.dateFilter = '';
     this.filterVisits();
+  }
+
+  openNewVisitModal(studentId?: number): void {
+    this.newVisitStudentId = studentId ?? null;
+    this.showNewVisitModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeNewVisitModal(): void {
+    this.showNewVisitModal = false;
+    this.newVisitStudentId = null;
+    document.body.style.overflow = '';
+  }
+
+  onVisitSaved(): void {
+    this.closeNewVisitModal();
+    this.loadVisits();
   }
 
   openHistoryModal(student: StudentVisitSummary): void {

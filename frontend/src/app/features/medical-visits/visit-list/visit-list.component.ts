@@ -16,6 +16,16 @@ export class VisitListComponent {
   selectedStatus = 'all';
   selectedType = 'all';
   showRecentVisits: { [key: string]: boolean } = {};
+  showModal = false;
+  visitForm = {
+    student_id: null as number | null,
+    visit_type: 'Routine' as 'Routine' | 'Emergency' | 'Follow-up' | 'Referral',
+    status: 'Open' as 'Open' | 'Closed' | 'Referred',
+    chief_complaint: '',
+    notes: '',
+    notify_parent: false,
+    notification_method: 'none' as 'sms' | 'email' | 'call' | 'none'
+  };
 
   visits = [
     {
@@ -41,7 +51,27 @@ export class VisitListComponent {
   }
 
   newVisit(studentId?: number) {
-    // New visit action
+    if (studentId) this.visitForm.student_id = studentId;
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+    this.visitForm = {
+      student_id: null,
+      visit_type: 'Routine',
+      status: 'Open',
+      chief_complaint: '',
+      notes: '',
+      notify_parent: false,
+      notification_method: 'none'
+    };
+  }
+
+  submitVisit() {
+    // TODO: call MedicalVisitService.create(this.visitForm)
+    console.log('Submit visit:', this.visitForm);
+    this.closeModal();
   }
 
   viewAllVisits(studentId: number) {
