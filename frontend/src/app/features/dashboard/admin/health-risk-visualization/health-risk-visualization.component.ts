@@ -10,10 +10,6 @@ import { takeUntil } from 'rxjs/operators';
   imports: [CommonModule],
   template: `
     <div class="health-risk-visualization">
-      <div class="visualization-header">
-        <h2><i class="fas fa-chart-bar"></i> Health Risk Visualization</h2>
-        <p>BMI distribution analysis across grade levels</p>
-      </div>
 
       <!-- Loading State -->
       <div *ngIf="loading" class="loading-state">
@@ -31,9 +27,14 @@ import { takeUntil } from 'rxjs/operators';
       <!-- Main Content -->
       <div *ngIf="!loading && !error && healthData" class="visualization-content">
         
-        <!-- Key Insights -->
-        <div class="insights-section">
-          <h3>Key Health Insights</h3>
+        <!-- Card 1: Key Health Insights -->
+        <div class="viz-card">
+          <div class="viz-card-header">
+            <div class="viz-card-header-main">
+              <h3><i class="fas fa-chart-bar"></i> Health Risk Visualization</h3>
+              <p class="viz-card-desc">BMI distribution analysis across grade levels</p>
+            </div>
+          </div>
           <div class="insights-grid">
             <div class="insight-card highest-risk" *ngIf="topRisk">
               <div class="insight-icon">
@@ -94,11 +95,13 @@ import { takeUntil } from 'rxjs/operators';
           </div>
         </div>
 
-        <!-- BMI Distribution Chart -->
-        <div class="chart-section">
-          <h3>BMI Distribution by Grade Level</h3>
+        <!-- Card 2: BMI Distribution Chart -->
+        <div class="viz-card">
+          <div class="viz-card-header">
+            <h3><i class="fas fa-chart-pie"></i> BMI Distribution by Grade Level</h3>
+          </div>
           
-          <!-- Pie Chart View (when data exists) -->
+          <!-- Pie Chart View -->
           <div class="pie-chart-container" *ngIf="healthData.grade_statistics && healthData.grade_statistics.length > 0">
             <div class="chart-legend">
               <div class="legend-item underweight">
@@ -164,62 +167,33 @@ import { takeUntil } from 'rxjs/operators';
             </div>
           </div>
 
-          <!-- Bar Chart View (legacy/fallback) -->
+          <!-- Bar Chart View (fallback) -->
           <div class="chart-container" *ngIf="!healthData.grade_statistics || healthData.grade_statistics.length === 0">
             <div class="chart-legend">
-              <div class="legend-item underweight">
-                <span class="legend-color"></span>
-                <span class="legend-label">Underweight</span>
-              </div>
-              <div class="legend-item normal">
-                <span class="legend-color"></span>
-                <span class="legend-label">Normal Weight</span>
-              </div>
-              <div class="legend-item overweight">
-                <span class="legend-color"></span>
-                <span class="legend-label">Overweight</span>
-              </div>
-              <div class="legend-item obese">
-                <span class="legend-color"></span>
-                <span class="legend-label">Obese</span>
-              </div>
+              <div class="legend-item underweight"><span class="legend-color"></span><span class="legend-label">Underweight</span></div>
+              <div class="legend-item normal"><span class="legend-color"></span><span class="legend-label">Normal Weight</span></div>
+              <div class="legend-item overweight"><span class="legend-color"></span><span class="legend-label">Overweight</span></div>
+              <div class="legend-item obese"><span class="legend-color"></span><span class="legend-label">Obese</span></div>
             </div>
-            
             <div class="bar-chart">
-              <div *ngFor="let grade of healthData.grade_statistics" class="grade-bar" 
+              <div *ngFor="let grade of healthData.grade_statistics" class="grade-bar"
                    [ngClass]="{'grade-7-highlight': grade.grade_name.includes('7') || grade.grade_level.includes('7')}">
                 <div class="grade-label">
                   {{ grade.grade_name }}
-                  <span *ngIf="(grade.grade_name.includes('7') || grade.grade_level.includes('7')) && grade.overweight_percentage >= 25" 
+                  <span *ngIf="(grade.grade_name.includes('7') || grade.grade_level.includes('7')) && grade.overweight_percentage >= 25"
                         class="highest-risk-badge">HIGHEST RISK</span>
                 </div>
                 <div class="bar-container">
                   <div class="bar-stack">
-                    <div class="bar-segment underweight" 
-                         [style.width.%]="grade.underweight_percentage"
-                         [title]="'Underweight: ' + grade.underweight_count + ' students (' + grade.underweight_percentage + '%)'">
-                    </div>
-                    <div class="bar-segment normal" 
-                         [style.width.%]="grade.normal_percentage"
-                         [title]="'Normal: ' + grade.normal_count + ' students (' + grade.normal_percentage + '%)'">
-                    </div>
-                    <div class="bar-segment overweight" 
-                         [style.width.%]="grade.overweight_percentage"
-                         [title]="'Overweight: ' + grade.overweight_count + ' students (' + grade.overweight_percentage + '%)'">
-                    </div>
-                    <div class="bar-segment obese" 
-                         [style.width.%]="grade.obese_percentage"
-                         [title]="'Obese: ' + grade.obese_count + ' students (' + grade.obese_percentage + '%)'">
-                    </div>
+                    <div class="bar-segment underweight" [style.width.%]="grade.underweight_percentage" [title]="'Underweight: ' + grade.underweight_count + ' students (' + grade.underweight_percentage + '%)'"></div>
+                    <div class="bar-segment normal" [style.width.%]="grade.normal_percentage" [title]="'Normal: ' + grade.normal_count + ' students (' + grade.normal_percentage + '%)'"></div>
+                    <div class="bar-segment overweight" [style.width.%]="grade.overweight_percentage" [title]="'Overweight: ' + grade.overweight_count + ' students (' + grade.overweight_percentage + '%)'"></div>
+                    <div class="bar-segment obese" [style.width.%]="grade.obese_percentage" [title]="'Obese: ' + grade.obese_count + ' students (' + grade.obese_percentage + '%)'"></div>
                   </div>
                   <div class="bar-values">
                     <span class="total-students">{{ grade.total_students }} students</span>
-                    <span class="overweight-highlight" *ngIf="grade.overweight_percentage > 20">
-                      {{ grade.overweight_percentage }}% overweight
-                    </span>
-                    <span class="grade-7-alert" *ngIf="(grade.grade_name.includes('7') || grade.grade_level.includes('7')) && grade.overweight_percentage >= 25">
-                      🚨 Canteen intervention recommended
-                    </span>
+                    <span class="overweight-highlight" *ngIf="grade.overweight_percentage > 20">{{ grade.overweight_percentage }}% overweight</span>
+                    <span class="grade-7-alert" *ngIf="(grade.grade_name.includes('7') || grade.grade_level.includes('7')) && grade.overweight_percentage >= 25">🚨 Canteen intervention recommended</span>
                   </div>
                 </div>
               </div>
@@ -227,9 +201,11 @@ import { takeUntil } from 'rxjs/operators';
           </div>
         </div>
 
-        <!-- Detailed Statistics Table -->
-        <div class="statistics-section">
-          <h3>Detailed Statistics by Grade</h3>
+        <!-- Card 3: Detailed Statistics Table -->
+        <div class="viz-card">
+          <div class="viz-card-header">
+            <h3><i class="fas fa-table"></i> Detailed Statistics by Grade</h3>
+          </div>
           <div class="statistics-table">
             <div class="table-header">
               <span>Grade Level</span>
@@ -247,16 +223,16 @@ import { takeUntil } from 'rxjs/operators';
               <span class="normal">{{ grade.normal_count }} ({{ grade.normal_percentage }}%)</span>
               <span class="overweight">{{ grade.overweight_count }} ({{ grade.overweight_percentage }}%)</span>
               <span class="obese">{{ grade.obese_count }} ({{ grade.obese_percentage }}%)</span>
-              <span class="risk-level" [ngClass]="getRiskLevelClass(grade)">
-                {{ getRiskLevel(grade) }}
-              </span>
+              <span class="risk-level" [ngClass]="getRiskLevelClass(grade)">{{ getRiskLevel(grade) }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Recent Trends -->
-        <div class="trends-section" *ngIf="healthData.recent_trends && healthData.recent_trends.length > 0">
-          <h3>Recent BMI Update Trends (Last 30 Days)</h3>
+        <!-- Card 4: Recent BMI Update Trends -->
+        <div class="viz-card" *ngIf="healthData.recent_trends && healthData.recent_trends.length > 0">
+          <div class="viz-card-header">
+            <h3><i class="fas fa-chart-line"></i> Recent BMI Update Trends <span class="viz-card-subtitle">Last 30 Days</span></h3>
+          </div>
           <div class="trends-list">
             <div *ngFor="let trend of healthData.recent_trends" class="trend-item">
               <div class="trend-date">{{ formatDate(trend.update_date) }}</div>
@@ -268,40 +244,65 @@ import { takeUntil } from 'rxjs/operators';
             </div>
           </div>
         </div>
+
       </div>
     </div>
   `,
   styles: [`
     .health-risk-visualization {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      margin-bottom: 2rem;
+      background: transparent;
+      padding: 0;
+      margin-bottom: 0;
     }
 
-    .visualization-header {
-      margin-bottom: 2rem;
-      text-align: center;
-      
-      h2 {
-        font-size: 1.8rem;
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
+    /* Shared card wrapper for each section */
+    .viz-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(5, 35, 85, 0.06);
+    }
+
+    .viz-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f0f4f8;
+
+      h3 {
+        font-size: 1.15rem;
+        color: #052355;
         font-weight: 700;
+        margin: 0 0 0.25rem 0;
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 0.75rem;
-        
-        i { color: #e74c3c; }
+        gap: 0.6rem;
+
+        i { color: #5381b2; font-size: 1rem; }
       }
-      
-      p {
-        color: #7f8c8d;
-        font-size: 1.1rem;
-        margin: 0;
-      }
+    }
+
+    .viz-card-desc {
+      font-size: 0.88rem;
+      color: #7f8c8d;
+      margin: 0;
+    }
+
+    .viz-card-subtitle {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #94a3b8;
+      margin-left: 0.5rem;
+    }
+
+    .visualization-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
     }
 
     .loading-state, .error-state {
@@ -339,21 +340,10 @@ import { takeUntil } from 'rxjs/operators';
       100% { transform: rotate(360deg); }
     }
 
-    .insights-section {
-      margin-bottom: 2.5rem;
-      
-      h3 {
-        font-size: 1.3rem;
-        color: #2c3e50;
-        margin-bottom: 1.5rem;
-        font-weight: 600;
-      }
-    }
-
     .insights-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
     }
 
     .insight-card {
@@ -432,17 +422,6 @@ import { takeUntil } from 'rxjs/operators';
           color: #bdc3c7;
           margin-top: 0.25rem;
         }
-      }
-    }
-
-    .chart-section {
-      margin-bottom: 2.5rem;
-      
-      h3 {
-        font-size: 1.3rem;
-        color: #2c3e50;
-        margin-bottom: 1.5rem;
-        font-weight: 600;
       }
     }
 
@@ -691,17 +670,6 @@ import { takeUntil } from 'rxjs/operators';
       to { box-shadow: 0 0 15px rgba(231, 76, 60, 0.6); }
     }
 
-    .statistics-section {
-      margin-bottom: 2.5rem;
-      
-      h3 {
-        font-size: 1.3rem;
-        color: #2c3e50;
-        margin-bottom: 1.5rem;
-        font-weight: 600;
-      }
-    }
-
     .statistics-table {
       background: #f8f9fa;
       border-radius: 8px;
@@ -747,15 +715,6 @@ import { takeUntil } from 'rxjs/operators';
           &.moderate { background: #fff3cd; color: #856404; }
           &.high { background: #f8d7da; color: #721c24; }
         }
-      }
-    }
-
-    .trends-section {
-      h3 {
-        font-size: 1.3rem;
-        color: #2c3e50;
-        margin-bottom: 1.5rem;
-        font-weight: 600;
       }
     }
 
