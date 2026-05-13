@@ -239,6 +239,177 @@
   }
 }
 
+.forgot-password {
+  font-family: 'Albert Sans', sans-serif;
+  text-align: right;
+  margin-top: 0.4rem;
+
+  span {
+    font-size: 0.875rem;
+    color: #5381b2;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #052355;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  }
+}
+
+// Forgot Password Modal
+.fp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 35, 85, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.fp-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(5, 35, 85, 0.25);
+  overflow: hidden;
+  animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fp-modal-header {
+  background: linear-gradient(135deg, #052355 0%, #1a4a8a 100%);
+  padding: 1.5rem 1.5rem 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  .fp-icon-wrap {
+    width: 52px;
+    height: 52px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+  }
+
+  .fp-close {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+  }
+}
+
+.fp-modal-body {
+  padding: 1.5rem;
+
+  h3 {
+    font-family: 'Epilogue', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #052355;
+    margin: 0 0 0.5rem;
+  }
+
+  p {
+    font-family: 'Albert Sans', sans-serif;
+    font-size: 0.875rem;
+    color: #555;
+    line-height: 1.6;
+    margin: 0 0 1.25rem;
+  }
+}
+
+.fp-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.fp-step {
+  font-family: 'Albert Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #333;
+  background: #eef2f9;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+
+  .fp-step-num {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: #052355;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  strong {
+    color: #052355;
+  }
+}
+
+.fp-modal-footer {
+  padding: 0 1.5rem 1.5rem;
+
+  .fp-btn-close {
+    font-family: 'Albert Sans', sans-serif;
+    width: 100%;
+    padding: 0.75rem;
+    background: #052355;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #041b44;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.92) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 .signup-link {
   font-family: 'Albert Sans', sans-serif;
   text-align: center;
