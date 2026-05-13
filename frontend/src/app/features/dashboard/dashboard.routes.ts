@@ -5,7 +5,6 @@ import { StudentDashboardComponent } from './student/student-dashboard.component
 import { StudentProfileComponent } from './student/profile/profile';
 import { AdviserLayoutComponent } from './adviser/adviser-layout.component';
 import { AdviserDashboardComponent } from './adviser/adviser-dashboard.component';
-import { AdviserAlertsComponent } from './adviser/alerts/adviser-alerts.component';
 import { AdviserHealthStatusComponent } from './adviser/health-status/adviser-health-status.component';
 import { AdviserProfileComponent } from './adviser/profile/adviser-profile.component';
 import { ClassManagementComponent } from './adviser/class-management/class-management.component';
@@ -59,7 +58,6 @@ export const dashboardRoutes: Routes = [
     data: { roles: ['Adviser'] },
     children: [
       { path: '', component: AdviserDashboardComponent },
-      { path: 'alerts', component: AdviserAlertsComponent },
       { path: 'health-status', redirectTo: '', pathMatch: 'full' },
       { path: 'health-monitoring', component: HealthMonitoringComponent },
       { path: 'shdf-download', component: SHDFDownloadComponent },
