@@ -92,6 +92,11 @@ export class StudentProfileComponent implements OnInit {
     this.loadUserProfile();
   }
 
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  }
+
   getProfileIcon(): string {
     const gender = this.profileForm.get('gender')?.value;
     if (gender === 'male') {

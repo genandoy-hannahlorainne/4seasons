@@ -65,7 +65,7 @@
             <div class="visits-list" *ngIf="!loadingVisits && recentVisits.length > 0">
               <div *ngFor="let visit of recentVisits" class="visit-item">
                 <div class="visit-avatar">
-                  <img [src]="visit.avatar" alt="Student">
+                  <div class="visit-avatar-initials">{{ getInitials(visit.studentName) }}</div>
                 </div>
                 <div class="visit-info">
                   <div class="visit-name">{{ visit.studentName }}</div>

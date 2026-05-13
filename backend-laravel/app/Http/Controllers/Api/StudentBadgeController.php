@@ -87,20 +87,16 @@ class StudentBadgeController extends BaseController
                 return $this->sendError('Student not found', [], 404);
             }
 
-            // Calculate wellness streak (days without clinic visits)
+            // Calculate wellness streak (weekdays only, no weekends)
             $lastVisit = \App\Models\MedicalVisit::where('student_id', $studentId)
                 ->orderBy('visit_datetime', 'desc')
                 ->first();
 
-            $currentStreak = 0;
-            if (!$lastVisit) {
-                // No visits ever - streak since enrollment or a reasonable start date
-                $startDate = $student->created_at ?? now()->subDays(365);
-                $currentStreak = now()->diffInDays($startDate);
-            } else {
-                // Days since last visit
-                $currentStreak = now()->diffInDays($lastVisit->visit_datetime);
-            }
+            $startDate = $lastVisit
+                ? \Carbon\Carbon::parse($lastVisit->visit_datetime)
+                : \Carbon\Carbon::parse($student->created_at ?? now()->subDays(365));
+
+            $currentStreak = $this->countWeekdays($startDate, now());
 
             // Load badge metadata
             $metadataPath = base_path('resources/badges/streak/metadata.json');
@@ -300,6 +296,19 @@ class StudentBadgeController extends BaseController
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function countWeekdays(\Carbon\Carbon $from, \Carbon\Carbon $to): int
+    {
+        $count = 0;
+        $current = $from->copy()->addDay();
+        while ($current->lte($to)) {
+            if ($current->isWeekday()) {
+                $count++;
+            }
+            $current->addDay();
+        }
+        return $count;
     }
 
     /**

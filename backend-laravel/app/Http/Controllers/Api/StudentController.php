@@ -67,7 +67,7 @@ class StudentController extends BaseController
                 'currentAdviser',
                 'currentSection.adviser',
                 'medicalVisits' => function($query) {
-                    $query->with('vitals')->orderBy('visit_datetime', 'desc')->limit(10);
+                    $query->with('vitals')->orderBy('visit_datetime', 'desc')->limit(50);
                 }
             ]);
 
@@ -868,6 +868,53 @@ class StudentController extends BaseController
         }
 
         return null;
+    }
+
+    /**
+     * Get visit summary notifications for the authenticated student
+     */
+    public function getVisitSummaries(Request $request)
+    {
+        try {
+            $authUser = $request->user();
+            $student = Student::where('user_id', $authUser->user_id)->where('is_active', true)->first();
+
+            if (!$student) {
+                return $this->sendError('Student not found', [], 404);
+            }
+
+            $visits = \App\Models\MedicalVisit::where('student_id', $student->student_id)
+                ->with(['clinicStaff.user', 'vitals'])
+                ->orderBy('visit_datetime', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(fn ($v) => [
+                    'visit_id'        => $v->visit_id,
+                    'visit_type'      => $v->visit_type,
+                    'chief_complaint' => $v->chief_complaint,
+                    'notes'           => $v->notes,
+                    'status'          => $v->status,
+                    'visit_datetime'  => $v->visit_datetime,
+                    'attended_by'     => $v->clinicStaff?->user?->full_name ?? null,
+                    'vitals'          => $v->vitals->map(fn ($vt) => [
+                        'temperature_c'    => $vt->temperature_c,
+                        'bp_systolic'      => $vt->bp_systolic,
+                        'bp_diastolic'     => $vt->bp_diastolic,
+                        'pulse_rate'       => $vt->pulse_rate,
+                        'respiration_rate' => $vt->respiration_rate,
+                        'height_cm'        => $vt->height_cm,
+                        'weight_kg'        => $vt->weight_kg,
+                        'notes'            => $vt->notes,
+                    ])->first(),
+                ]);
+
+            return $this->sendResponse([
+                'summaries'    => $visits,
+                'unread_count' => 0,
+            ], 'Visit summaries retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve visit summaries', $e->getMessage(), 500);
+        }
     }
 
     /**

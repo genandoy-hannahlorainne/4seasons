@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { StaffService } from '../../../../core/services/staff.service';
+import { StudentMedicalProfileComponent } from './student-medical-profile.component';
 
 interface StaffStudentRecord {
   id: number;
@@ -18,7 +19,7 @@ interface StaffStudentRecord {
 @Component({
   selector: 'app-student-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, StudentMedicalProfileComponent],
   template: `
     <div class="student-list-page">
       <div class="page-header">
@@ -75,8 +76,7 @@ interface StaffStudentRecord {
             <tr *ngFor="let student of filteredStudents">
               <td>
                 <div class="student-cell">
-                  <img *ngIf="student.avatar" [src]="student.avatar" [alt]="student.name" class="student-avatar">
-                  <i *ngIf="!student.avatar" class="bi bi-person-circle student-avatar" style="font-size:36px;color:#052355;"></i>
+                  <div class="student-avatar-initials">{{ getInitials(student.name) }}</div>
                   <span class="student-name">{{ student.name }}</span>
                 </div>
               </td>
@@ -90,7 +90,7 @@ interface StaffStudentRecord {
               </td>
               <td>
                 <div class="action-buttons">
-                  <button class="btn btn-primary btn-sm" [routerLink]="['/dashboard/staff/students', student.id]">
+                  <button class="btn btn-primary btn-sm" (click)="openProfile(student.id)">
                     View Profile
                   </button>
                 </div>
@@ -106,6 +106,13 @@ interface StaffStudentRecord {
         </div>
       </div>
     </div>
+
+    <!-- Student Profile Modal -->
+    <app-student-medical-profile
+      *ngIf="selectedStudentId !== null"
+      [modalStudentId]="selectedStudentId"
+      (closeModal)="closeProfile()">
+    </app-student-medical-profile>
   `,
   styles: [`
     .student-list-page {
@@ -199,12 +206,25 @@ interface StaffStudentRecord {
       tbody tr:hover { background: #f8f9fa; }
     }
 
-    .student-cell {
+      .student-cell {
       display: flex;
       align-items: center;
       gap: 0.75rem;
 
-      .student-avatar { width: 36px; height: 36px; border-radius: 50%; }
+      .student-avatar-initials {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #052355, #5381b2);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        letter-spacing: 0.5px;
+      }
       .student-name { font-weight: 500; color: #2c3e50; }
     }
 
@@ -258,7 +278,18 @@ export class StudentListComponent implements OnInit {
   students: StaffStudentRecord[] = [];
   filteredStudents: StaffStudentRecord[] = [];
 
+  /** ID of the student whose profile modal is open; null = closed */
+  selectedStudentId: number | null = null;
+
   constructor(private staffService: StaffService) {}
+
+  openProfile(studentId: number): void {
+    this.selectedStudentId = studentId;
+  }
+
+  closeProfile(): void {
+    this.selectedStudentId = null;
+  }
 
   ngOnInit(): void {
     this.loadStudents();
@@ -325,6 +356,11 @@ export class StudentListComponent implements OnInit {
     if (this.sectionFilter && !this.sections.includes(this.sectionFilter)) {
       this.sectionFilter = '';
     }
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase().substring(0, 2);
   }
 
   filterStudents(): void {

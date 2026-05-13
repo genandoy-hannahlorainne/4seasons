@@ -44,6 +44,8 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
   // Recent activities instead of immunization records
   recentActivities: any[] = [];
+  visitSummaries: any[] = [];
+  unreadSummariesCount = 0;
 
   loading = true;
   error = '';
@@ -66,6 +68,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Load data initially
     this.loadStudentData();
+    this.loadVisitSummaries();
 
     // Reload data whenever we navigate back to this route
     this.routerSubscription = this.router.events
@@ -247,7 +250,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
           // Set recent activities (medical visits)
           if (data.recent_visits && data.recent_visits.length > 0) {
-            this.recentActivities = data.recent_visits.map((visit: any) => ({
+            this.recentActivities = data.recent_visits.slice(0, 3).map((visit: any) => ({
               activity: `Clinic Visit - ${visit.diagnosis || 'General checkup'}`,
               date: this.formatDate(visit.visit_datetime),
               type: visit.visit_type || 'Routine',
@@ -281,6 +284,95 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
         // Medical data failed to load, but continuing with basic profile
         this.loading = false;
       }
+    });
+  }
+
+  loadVisitSummaries(): void {
+    this.studentService.getVisitSummaries().subscribe({
+      next: (response) => {
+        console.log('Visit summaries raw response:', response);
+        const data = response?.data ?? response;
+        this.visitSummaries = data?.summaries ?? [];
+        this.unreadSummariesCount = data?.unread_count ?? 0;
+      },
+      error: (err) => {
+        console.error('Visit summaries error:', err);
+      }
+    });
+  }
+
+  downloadVisitSummariesPdf(): void {
+    import('jspdf').then(({ jsPDF }) => {
+      import('jspdf-autotable').then(() => {
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pageW = doc.internal.pageSize.getWidth();
+
+        // Header background
+        doc.setFillColor(5, 35, 85);
+        doc.rect(0, 0, pageW, 32, 'F');
+
+        // Title
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('PDMHS StudentCare+', 14, 13);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Clinic Visit Summaries', 14, 21);
+
+        // Student info (right side of header)
+        doc.setFontSize(9);
+        doc.text(this.studentName, pageW - 14, 13, { align: 'right' });
+        doc.text(this.studentId + ' • ' + this.gradeLevel, pageW - 14, 20, { align: 'right' });
+        doc.text('Generated: ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), pageW - 14, 27, { align: 'right' });
+
+        // Table
+        (doc as any).autoTable({
+          startY: 40,
+          head: [['#', 'Date', 'Type', 'Complaint', 'Notes', 'Attended By', 'Status']],
+          body: this.visitSummaries.map((s, i) => [
+            i + 1,
+            this.formatDate(s.visit_datetime),
+            s.visit_type,
+            s.chief_complaint || '—',
+            s.notes || '—',
+            s.attended_by || '—',
+            s.status || '—',
+          ]),
+          headStyles: {
+            fillColor: [5, 35, 85],
+            textColor: 255,
+            fontStyle: 'bold',
+            fontSize: 9,
+          },
+          bodyStyles: { fontSize: 8.5, textColor: [30, 30, 30] },
+          alternateRowStyles: { fillColor: [240, 244, 248] },
+          columnStyles: {
+            0: { cellWidth: 8, halign: 'center' },
+            1: { cellWidth: 24 },
+            2: { cellWidth: 20 },
+            3: { cellWidth: 45 },
+            4: { cellWidth: 35 },
+            5: { cellWidth: 30 },
+            6: { cellWidth: 18 },
+          },
+          margin: { left: 14, right: 14 },
+          didDrawPage: (data: any) => {
+            // Footer
+            const pageCount = (doc as any).internal.getNumberOfPages();
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text(
+              `Page ${data.pageNumber} of ${pageCount}`,
+              pageW / 2,
+              doc.internal.pageSize.getHeight() - 8,
+              { align: 'center' }
+            );
+          },
+        });
+
+        doc.save(`visit-summaries-${this.studentId || 'student'}.pdf`);
+      });
     });
   }
 
