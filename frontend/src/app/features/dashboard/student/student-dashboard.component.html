@@ -131,34 +131,87 @@
           </div>
 
           <div class="card visit-summaries-card">
-            <div class="card-header">
-              <h2>Clinic Visit Summaries</h2>
-              <button *ngIf="visitSummaries.length > 0" class="btn-download-pdf" (click)="downloadVisitSummariesPdf()">
+            <div class="vs-header">
+              <div class="vs-icon-wrap">
+                <i class="bi bi-clipboard2-pulse-fill"></i>
+              </div>
+              <div class="vs-title-group">
+                <h2>Clinic Visit Summaries</h2>
+                <span class="vs-count" *ngIf="visitSummaries.length > 0">{{ visitSummaries.length }} record{{ visitSummaries.length > 1 ? 's' : '' }}</span>
+                <span class="vs-count vs-empty" *ngIf="visitSummaries.length === 0">No records yet</span>
+              </div>
+            </div>
+            <div class="vs-actions" *ngIf="visitSummaries.length > 0">
+              <button class="btn-preview" (click)="showSummaryModal = true">
+                <i class="bi bi-eye-fill"></i> Preview
+              </button>
+              <button class="btn-pdf" (click)="downloadVisitSummariesPdf()">
                 <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
               </button>
             </div>
-            <div *ngIf="visitSummaries.length === 0" class="no-summaries">
-              <p>No clinic visit summaries yet.</p>
-            </div>
-            <div class="summaries-list">
-              <div *ngFor="let s of visitSummaries" class="summary-item">
-                <div class="summary-header">
-                  <span class="summary-type-badge" [class]="'type-' + s.visit_type">{{ s.visit_type }}</span>
-                  <span class="summary-status" [class]="'status-' + s.status?.toLowerCase()">{{ s.status }}</span>
-                  <span class="summary-date">{{ formatDate(s.visit_datetime) }}</span>
-                </div>
-                <div class="summary-complaint"><strong>Complaint:</strong> {{ s.chief_complaint }}</div>
-                <div *ngIf="s.notes" class="summary-notes"><strong>Notes:</strong> {{ s.notes }}</div>
-                <div *ngIf="s.attended_by" class="summary-staff"><strong>Attended by:</strong> {{ s.attended_by }}</div>
-                <div *ngIf="s.vitals" class="summary-vitals">
-                  <span *ngIf="s.vitals.temperature_c">🌡️ {{ s.vitals.temperature_c }}°C</span>
-                  <span *ngIf="s.vitals.bp_systolic">💉 {{ s.vitals.bp_systolic }}/{{ s.vitals.bp_diastolic }} mmHg</span>
-                  <span *ngIf="s.vitals.pulse_rate">❤️ {{ s.vitals.pulse_rate }} bpm</span>
-                  <span *ngIf="s.vitals.weight_kg">⚖️ {{ s.vitals.weight_kg }} kg</span>
-                </div>
-              </div>
+            <div class="vs-empty-state" *ngIf="visitSummaries.length === 0">
+              <i class="bi bi-clipboard-x"></i>
+              <p>Your clinic visit summaries will appear here once you have a recorded visit.</p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visit Summaries Preview Modal -->
+  <div class="vs-modal-overlay" *ngIf="showSummaryModal" (click)="showSummaryModal = false">
+    <div class="vs-modal" (click)="$event.stopPropagation()">
+      <div class="vs-modal-header">
+        <div class="vs-modal-title">
+          <i class="bi bi-clipboard2-pulse-fill"></i>
+          <span>Clinic Visit Summaries</span>
+        </div>
+        <div class="vs-modal-actions">
+          <button class="btn-pdf" (click)="downloadVisitSummariesPdf()">
+            <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
+          </button>
+          <button class="vs-modal-close" (click)="showSummaryModal = false">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+      <div class="vs-modal-body">
+        <div class="vs-table-wrap">
+          <table class="vs-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Complaint</th>
+                <th>Notes</th>
+                <th>Attended By</th>
+                <th>Vitals</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of visitSummaries; let i = index">
+                <td class="td-num">{{ i + 1 }}</td>
+                <td class="td-date">{{ formatDate(s.visit_datetime) }}</td>
+                <td>
+                  <span class="summary-type-badge" [class]="'type-' + s.visit_type">{{ s.visit_type | titlecase }}</span>
+                </td>
+                <td class="td-complaint">{{ s.chief_complaint }}</td>
+                <td class="td-notes">{{ s.notes || '—' }}</td>
+                <td class="td-staff">{{ s.attended_by || '—' }}</td>
+                <td class="td-vitals">
+                  <span *ngIf="s.vitals?.pulse_rate">❤️ {{ s.vitals.pulse_rate }} bpm</span>
+                  <span *ngIf="s.vitals?.temperature_c">🌡️ {{ s.vitals.temperature_c }}°C</span>
+                  <span *ngIf="!s.vitals?.pulse_rate && !s.vitals?.temperature_c">—</span>
+                </td>
+                <td>
+                  <span class="summary-status-badge" [class]="'vstatus-' + s.status?.toLowerCase()">{{ s.status | titlecase }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

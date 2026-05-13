@@ -53,6 +53,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   // Modal state
   showComprehensiveModal = false;
   comprehensiveFormStudentId: number | null = null;
+  showSummaryModal = false;
 
   // SHDF status
   shdfStatus: SHDFStatus | null = null;
