@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { StaffService } from '../../../../core/services/staff.service';
+import { StudentMedicalProfileComponent } from './student-medical-profile.component';
 
 interface StaffStudentRecord {
   id: number;
@@ -18,7 +19,7 @@ interface StaffStudentRecord {
 @Component({
   selector: 'app-student-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, StudentMedicalProfileComponent],
   template: `
     <div class="student-list-page">
       <div class="page-header">
@@ -89,7 +90,7 @@ interface StaffStudentRecord {
               </td>
               <td>
                 <div class="action-buttons">
-                  <button class="btn btn-primary btn-sm" [routerLink]="['/dashboard/staff/students', student.id]">
+                  <button class="btn btn-primary btn-sm" (click)="openProfile(student.id)">
                     View Profile
                   </button>
                 </div>
@@ -105,6 +106,13 @@ interface StaffStudentRecord {
         </div>
       </div>
     </div>
+
+    <!-- Student Profile Modal -->
+    <app-student-medical-profile
+      *ngIf="selectedStudentId !== null"
+      [modalStudentId]="selectedStudentId"
+      (closeModal)="closeProfile()">
+    </app-student-medical-profile>
   `,
   styles: [`
     .student-list-page {
@@ -270,7 +278,18 @@ export class StudentListComponent implements OnInit {
   students: StaffStudentRecord[] = [];
   filteredStudents: StaffStudentRecord[] = [];
 
+  /** ID of the student whose profile modal is open; null = closed */
+  selectedStudentId: number | null = null;
+
   constructor(private staffService: StaffService) {}
+
+  openProfile(studentId: number): void {
+    this.selectedStudentId = studentId;
+  }
+
+  closeProfile(): void {
+    this.selectedStudentId = null;
+  }
 
   ngOnInit(): void {
     this.loadStudents();

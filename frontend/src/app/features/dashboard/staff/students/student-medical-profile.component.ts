@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { StaffService } from '../../../../core/services/staff.service';
@@ -11,7 +11,15 @@ import { AuthService } from '../../../../core/services/auth.service';
   templateUrl: './student-medical-profile.component.html',
   styleUrls: ['./student-medical-profile.component.scss']
 })
-export class StudentMedicalProfileComponent implements OnInit {
+export class StudentMedicalProfileComponent implements OnInit, OnChanges {
+  /** When used as a modal, pass the student ID via this input */
+  @Input() modalStudentId: number | null = null;
+  /** Emits when the modal close button is clicked */
+  @Output() closeModal = new EventEmitter<void>();
+
+  /** True when rendered inside a modal overlay */
+  get isModal(): boolean { return this.modalStudentId !== null; }
+
   studentId: number = 0;
   activeTab = 'vitals';
   loading = true;
@@ -49,13 +57,35 @@ export class StudentMedicalProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.studentId = Number(this.route.snapshot.paramMap.get('id'));
-    if (this.studentId) {
+    if (this.modalStudentId) {
+      // Modal mode — use the passed-in ID
+      this.studentId = this.modalStudentId;
       this.loadStudentProfile();
     } else {
-      this.error = 'Invalid student ID';
-      this.loading = false;
+      // Routed page mode — read from URL param
+      this.studentId = Number(this.route.snapshot.paramMap.get('id'));
+      if (this.studentId) {
+        this.loadStudentProfile();
+      } else {
+        this.error = 'Invalid student ID';
+        this.loading = false;
+      }
     }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['modalStudentId'] && !changes['modalStudentId'].firstChange) {
+      const newId = changes['modalStudentId'].currentValue;
+      if (newId) {
+        this.studentId = newId;
+        this.activeTab = 'vitals';
+        this.loadStudentProfile();
+      }
+    }
+  }
+
+  onClose(): void {
+    this.closeModal.emit();
   }
 
   loadStudentProfile(): void {

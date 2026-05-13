@@ -1,162 +1,176 @@
-<div class="medical-profile-page">
+<!-- ── Modal Overlay (when used as popup) ── -->
+<div class="modal-overlay" *ngIf="isModal" (click)="onClose()"></div>
+
+<div [class.modal-panel]="isModal" [class.medical-profile-page]="!isModal">
 
   <!-- Hero Header -->
   <div class="page-header">
-    <button class="back-btn" [routerLink]="backRoute">
+    <!-- Modal: close button on the right -->
+    <button *ngIf="isModal" class="close-btn" (click)="onClose()" title="Close">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <!-- Page: back button -->
+    <button *ngIf="!isModal" class="back-btn" [routerLink]="backRoute">
       <i class="bi bi-arrow-left"></i> Back to Students
     </button>
     <h1><i class="bi bi-person-vcard"></i> Student Medical Profile</h1>
   </div>
 
-  <!-- Loading State -->
-  <div class="loading-state" *ngIf="loading">
-    <div class="spinner"></div>
-    <p>Loading student profile...</p>
-  </div>
+  <!-- Scrollable body (modal only wraps this) -->
+  <div [class.modal-body]="isModal">
 
-  <!-- Error State -->
-  <div class="error-state" *ngIf="error && !loading">
-    <i class="bi bi-exclamation-triangle-fill"></i>
-    <p>{{ error }}</p>
-    <button class="btn btn-secondary" [routerLink]="backRoute">Back to Students</button>
-  </div>
-
-  <ng-container *ngIf="!loading && !error">
-
-    <!-- Student Info Card -->
-    <div class="student-info-card">
-      <div class="student-avatar-initials">{{ getInitials(student.name) }}</div>
-      <div class="student-details">
-        <h2>{{ student.name }}</h2>
-        <div class="student-chips">
-          <span class="chip chip-id"><i class="bi bi-person-badge"></i> {{ student.student_number }}</span>
-          <span class="chip chip-grade"><i class="bi bi-mortarboard"></i> {{ student.grade_section }}</span>
-          <span class="chip chip-blood" *ngIf="student.blood_type"><i class="bi bi-droplet-fill"></i> {{ student.blood_type }}</span>
-        </div>
-        <div class="student-contact" *ngIf="student.email || student.phone">
-          <span *ngIf="student.email"><i class="bi bi-envelope"></i> {{ student.email }}</span>
-          <span *ngIf="student.phone"><i class="bi bi-telephone"></i> {{ student.phone }}</span>
-        </div>
-      </div>
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading student profile...</p>
     </div>
 
-    <!-- No Medical Record -->
-    <div class="no-record-alert" *ngIf="!hasMedicalRecord">
-      <div class="alert-icon"><i class="bi bi-clipboard2-x"></i></div>
-      <div class="alert-body">
-        <h3>No Medical Record Yet</h3>
-        <p>This student doesn't have any medical records in the system yet.</p>
-      </div>
+    <!-- Error State -->
+    <div class="error-state" *ngIf="error && !loading">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <p>{{ error }}</p>
+      <button class="btn btn-secondary" *ngIf="!isModal" [routerLink]="backRoute">Back to Students</button>
+      <button class="btn btn-secondary" *ngIf="isModal" (click)="onClose()">Close</button>
     </div>
 
-    <!-- Allergies Banner -->
-    <div class="allergies-banner" *ngIf="allergies.length > 0">
-      <div class="banner-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-      <div class="banner-body">
-        <span class="banner-title">Known Allergies</span>
-        <div class="allergy-chips">
-          <span *ngFor="let allergy of allergies" class="allergy-chip" [class]="'severity-' + allergy.severity">
-            {{ allergy.name || allergy.allergy_name }}
-            <em *ngIf="allergy.severity">({{ allergy.severity }})</em>
-          </span>
-        </div>
-      </div>
-    </div>
+    <ng-container *ngIf="!loading && !error">
 
-    <!-- Tabs -->
-    <div class="profile-tabs">
-      <button class="tab" [class.active]="activeTab === 'vitals'" (click)="activeTab = 'vitals'">
-        <i class="bi bi-heart-pulse"></i> Vitals History
-      </button>
-      <button class="tab" [class.active]="activeTab === 'diagnoses'" (click)="activeTab = 'diagnoses'">
-        <i class="bi bi-clipboard2-pulse"></i> Diagnoses
-      </button>
-      <button class="tab" [class.active]="activeTab === 'allergies'" (click)="activeTab = 'allergies'">
-        <i class="bi bi-exclamation-triangle"></i> Allergies
-      </button>
-    </div>
-
-    <!-- Tab Content -->
-    <div class="tab-content">
-
-      <!-- Vitals History -->
-      <div *ngIf="activeTab === 'vitals'" class="content-section">
-        <div class="section-label"><i class="bi bi-heart-pulse"></i> Vitals History</div>
-        <div class="empty-state" *ngIf="vitalsHistory.length === 0">
-          <i class="bi bi-clipboard2-x"></i>
-          <p>No vitals recorded yet</p>
-        </div>
-        <div class="table-wrap" *ngIf="vitalsHistory.length > 0">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Date & Time</th>
-                <th>Temp (°C)</th>
-                <th>Blood Pressure</th>
-                <th>Pulse Rate</th>
-                <th>Weight (kg)</th>
-                <th>Height (cm)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let vital of vitalsHistory">
-                <td class="td-date">{{ vital.date_display || vital.date }}</td>
-                <td>{{ vital.temperature || '—' }}</td>
-                <td>{{ vital.blood_pressure || '—' }}</td>
-                <td>{{ vital.pulse_rate ? vital.pulse_rate + ' bpm' : '—' }}</td>
-                <td>{{ vital.weight || '—' }}</td>
-                <td>{{ vital.height || '—' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Diagnoses -->
-      <div *ngIf="activeTab === 'diagnoses'" class="content-section">
-        <div class="section-label"><i class="bi bi-clipboard2-pulse"></i> Diagnoses</div>
-        <div class="empty-state" *ngIf="diagnoses.length === 0">
-          <i class="bi bi-clipboard2-x"></i>
-          <p>No diagnoses recorded yet</p>
-        </div>
-        <div class="card-list" *ngIf="diagnoses.length > 0">
-          <div *ngFor="let diagnosis of diagnoses" class="info-card">
-            <div class="info-card-header">
-              <span class="info-card-title">{{ diagnosis.condition }}</span>
-              <span class="info-card-date"><i class="bi bi-calendar3"></i> {{ diagnosis.date }}</span>
-            </div>
-            <p class="info-card-desc" *ngIf="diagnosis.notes">{{ diagnosis.notes }}</p>
-            <div class="info-card-footer">
-              <span class="status-badge" [class]="diagnosis.status?.toLowerCase()">{{ diagnosis.status }}</span>
-              <span class="visit-type-badge" *ngIf="diagnosis.visit_type"
-                [class.emergency]="diagnosis.visit_type === 'Emergency'">
-                <i class="bi" [class.bi-exclamation-circle-fill]="diagnosis.visit_type === 'Emergency'"
-                              [class.bi-hospital]="diagnosis.visit_type !== 'Emergency'"></i>
-                {{ diagnosis.visit_type }}
-              </span>
-            </div>
+      <!-- Student Info Card -->
+      <div class="student-info-card">
+        <div class="student-avatar-initials">{{ getInitials(student.name) }}</div>
+        <div class="student-details">
+          <h2>{{ student.name }}</h2>
+          <div class="student-chips">
+            <span class="chip chip-id"><i class="bi bi-person-badge"></i> {{ student.student_number }}</span>
+            <span class="chip chip-grade"><i class="bi bi-mortarboard"></i> {{ student.grade_section }}</span>
+            <span class="chip chip-blood" *ngIf="student.blood_type"><i class="bi bi-droplet-fill"></i> {{ student.blood_type }}</span>
+          </div>
+          <div class="student-contact" *ngIf="student.email || student.phone">
+            <span *ngIf="student.email"><i class="bi bi-envelope"></i> {{ student.email }}</span>
+            <span *ngIf="student.phone"><i class="bi bi-telephone"></i> {{ student.phone }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Allergies -->
-      <div *ngIf="activeTab === 'allergies'" class="content-section">
-        <div class="section-label"><i class="bi bi-exclamation-triangle"></i> Allergies</div>
-        <div class="empty-state" *ngIf="allergies.length === 0">
-          <i class="bi bi-shield-check"></i>
-          <p>No known allergies</p>
+      <!-- No Medical Record -->
+      <div class="no-record-alert" *ngIf="!hasMedicalRecord">
+        <div class="alert-icon"><i class="bi bi-clipboard2-x"></i></div>
+        <div class="alert-body">
+          <h3>No Medical Record Yet</h3>
+          <p>This student doesn't have any medical records in the system yet.</p>
         </div>
-        <div class="allergy-table-list" *ngIf="allergies.length > 0">
-          <div *ngFor="let allergy of allergies" class="allergy-row" [class]="'severity-' + allergy.severity">
-            <div class="allergy-row-left">
-              <span class="allergy-name">{{ allergy.allergy_name || allergy.name }}</span>
-              <span class="allergy-reaction" *ngIf="allergy.reaction">{{ allergy.reaction }}</span>
-            </div>
-            <span class="severity-badge" [class]="'sev-' + allergy.severity">{{ allergy.severity || 'Unknown' }}</span>
+      </div>
+
+      <!-- Allergies Banner -->
+      <div class="allergies-banner" *ngIf="allergies.length > 0">
+        <div class="banner-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="banner-body">
+          <span class="banner-title">Known Allergies</span>
+          <div class="allergy-chips">
+            <span *ngFor="let allergy of allergies" class="allergy-chip" [class]="'severity-' + allergy.severity">
+              {{ allergy.name || allergy.allergy_name }}
+              <em *ngIf="allergy.severity">({{ allergy.severity }})</em>
+            </span>
           </div>
         </div>
       </div>
 
-    </div>
-  </ng-container>
+      <!-- Tabs -->
+      <div class="profile-tabs">
+        <button class="tab" [class.active]="activeTab === 'vitals'" (click)="activeTab = 'vitals'">
+          <i class="bi bi-heart-pulse"></i> Vitals History
+        </button>
+        <button class="tab" [class.active]="activeTab === 'diagnoses'" (click)="activeTab = 'diagnoses'">
+          <i class="bi bi-clipboard2-pulse"></i> Diagnoses
+        </button>
+        <button class="tab" [class.active]="activeTab === 'allergies'" (click)="activeTab = 'allergies'">
+          <i class="bi bi-exclamation-triangle"></i> Allergies
+        </button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+
+        <!-- Vitals History -->
+        <div *ngIf="activeTab === 'vitals'" class="content-section">
+          <div class="section-label"><i class="bi bi-heart-pulse"></i> Vitals History</div>
+          <div class="empty-state" *ngIf="vitalsHistory.length === 0">
+            <i class="bi bi-clipboard2-x"></i>
+            <p>No vitals recorded yet</p>
+          </div>
+          <div class="table-wrap" *ngIf="vitalsHistory.length > 0">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Temp (°C)</th>
+                  <th>Blood Pressure</th>
+                  <th>Pulse Rate</th>
+                  <th>Weight (kg)</th>
+                  <th>Height (cm)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let vital of vitalsHistory">
+                  <td class="td-date">{{ vital.date_display || vital.date }}</td>
+                  <td>{{ vital.temperature || '—' }}</td>
+                  <td>{{ vital.blood_pressure || '—' }}</td>
+                  <td>{{ vital.pulse_rate ? vital.pulse_rate + ' bpm' : '—' }}</td>
+                  <td>{{ vital.weight || '—' }}</td>
+                  <td>{{ vital.height || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Diagnoses -->
+        <div *ngIf="activeTab === 'diagnoses'" class="content-section">
+          <div class="section-label"><i class="bi bi-clipboard2-pulse"></i> Diagnoses</div>
+          <div class="empty-state" *ngIf="diagnoses.length === 0">
+            <i class="bi bi-clipboard2-x"></i>
+            <p>No diagnoses recorded yet</p>
+          </div>
+          <div class="card-list" *ngIf="diagnoses.length > 0">
+            <div *ngFor="let diagnosis of diagnoses" class="info-card">
+              <div class="info-card-header">
+                <span class="info-card-title">{{ diagnosis.condition }}</span>
+                <span class="info-card-date"><i class="bi bi-calendar3"></i> {{ diagnosis.date }}</span>
+              </div>
+              <p class="info-card-desc" *ngIf="diagnosis.notes">{{ diagnosis.notes }}</p>
+              <div class="info-card-footer">
+                <span class="status-badge" [class]="diagnosis.status?.toLowerCase()">{{ diagnosis.status }}</span>
+                <span class="visit-type-badge" *ngIf="diagnosis.visit_type"
+                  [class.emergency]="diagnosis.visit_type === 'Emergency'">
+                  <i class="bi" [class.bi-exclamation-circle-fill]="diagnosis.visit_type === 'Emergency'"
+                                [class.bi-hospital]="diagnosis.visit_type !== 'Emergency'"></i>
+                  {{ diagnosis.visit_type }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Allergies -->
+        <div *ngIf="activeTab === 'allergies'" class="content-section">
+          <div class="section-label"><i class="bi bi-exclamation-triangle"></i> Allergies</div>
+          <div class="empty-state" *ngIf="allergies.length === 0">
+            <i class="bi bi-shield-check"></i>
+            <p>No known allergies</p>
+          </div>
+          <div class="allergy-table-list" *ngIf="allergies.length > 0">
+            <div *ngFor="let allergy of allergies" class="allergy-row" [class]="'severity-' + allergy.severity">
+              <div class="allergy-row-left">
+                <span class="allergy-name">{{ allergy.allergy_name || allergy.name }}</span>
+                <span class="allergy-reaction" *ngIf="allergy.reaction">{{ allergy.reaction }}</span>
+              </div>
+              <span class="severity-badge" [class]="'sev-' + allergy.severity">{{ allergy.severity || 'Unknown' }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </ng-container>
+
+  </div><!-- /modal-body -->
 </div>
