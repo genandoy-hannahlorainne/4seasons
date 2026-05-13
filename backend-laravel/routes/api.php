@@ -218,24 +218,21 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
         Route::get('/qr/lookup', [StudentController::class, 'getByQr']);
         Route::get('/medical-data', [StudentController::class, 'getMedicalDataByUserId']);
         Route::get('/badges/summary', [StudentController::class, 'getBadgeSummary']);
+        Route::get('/visit-summaries', [StudentController::class, 'getVisitSummaries']);
+        Route::post('/', [StudentController::class, 'store']);
         Route::get('/{student}', [StudentController::class, 'show'])->name('students.show');
+        Route::put('/{student}', [StudentController::class, 'update'])->name('students.update');
         Route::get('/{student}/medical-data', [StudentController::class, 'getMedicalData']);
         Route::put('/{student}/medical-data', [StudentController::class, 'updateMedicalData']);
         Route::get('/{student}/visits', [MedicalVisitController::class, 'getStudentVisits']);
         Route::get('/{student}/visit-history', [MedicalVisitController::class, 'getStudentVisitHistory']);
-        Route::post('/', [StudentController::class, 'store']);
-        Route::put('/{student}', [StudentController::class, 'update'])->name('students.update');
-    });
-
-    // Student badge routes
-    Route::prefix('student')->group(function () {
-        Route::get('/streak-badges/metadata', [StudentBadgeController::class, 'getStreakBadgeMetadata']);
-    });
-
-    // Student-specific badge routes
-    Route::prefix('students')->group(function () {
         Route::get('/{studentId}/badges', [StudentBadgeController::class, 'getStudentBadges']);
         Route::get('/{studentId}/badge-notifications', [StudentBadgeController::class, 'getBadgeNotifications']);
+    });
+
+    // Student badge metadata route
+    Route::prefix('student')->group(function () {
+        Route::get('/streak-badges/metadata', [StudentBadgeController::class, 'getStreakBadgeMetadata']);
     });
 
     // Badge notifications

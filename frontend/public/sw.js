@@ -27,7 +27,7 @@ messaging.onBackgroundMessage((payload) => {
   const icon        = data.icon    || '/assets/icons/school-clinic.png';
   const badge       = data.badge   || '/assets/icons/notification.png';
   const tag         = data.tag     || 'studentcare-notification';
-  const clickUrl    = data.url     || '/adviser/notifications';
+  const clickUrl    = data.url     || '/adviser/alerts';
   const isEmergency = data.requireInteraction === 'true' || data.requireInteraction === true;
 
   self.registration.showNotification(title, {
@@ -56,7 +56,7 @@ self.addEventListener('notificationclick', (event) => {
 
   const targetUrl = (event.notification.data && event.notification.data.url)
     ? event.notification.data.url
-    : '/adviser/notifications';
+    : '/adviser/alerts';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {

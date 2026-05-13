@@ -767,6 +767,7 @@ export class ClassManagementComponent implements OnInit {
   viewStudentProfile(student: any) {
     this.adviserService.getStudentCompleteProfile(student.student_id).subscribe({
       next: (response: any) => {
+        console.log('Student profile response:', JSON.stringify(response, null, 2));
         if (response.success && response.data) {
           this.selectedStudent = this.mapStudentData(response.data);
           this.showStudentModal = true;
@@ -786,28 +787,33 @@ export class ClassManagementComponent implements OnInit {
   }
 
   private mapStudentData(data: any): any {
+    // API returns data.profile with the actual fields
+    const profile = data.profile || data.personal_info || data;
+    const allergies = data.allergies || profile.allergies || [];
+    const recentVisits = data.medical_visits || data.recent_visits || [];
+
     return {
-      name: data.full_name || `${data.first_name} ${data.last_name}`,
-      studentNumber: data.student_number,
-      gradeSection: data.grade_section || `${data.grade_level} - ${data.section}`,
-      gender: data.gender,
-      birthday: data.birth_date,
-      age: data.age || this.calculateAge(data.birth_date),
-      contact: data.phone || data.emergency_contact_phone,
+      name: profile.full_name || `${profile.first_name} ${profile.last_name}`,
+      studentNumber: profile.student_number,
+      gradeSection: profile.grade_section || (profile.grade_level && profile.section ? `${profile.grade_level} - ${profile.section}` : (profile.grade_level || profile.section || 'N/A')),
+      gender: profile.gender,
+      birthday: profile.birth_date,
+      age: this.calculateAge(profile.birth_date),
+      contact: profile.phone || profile.contact_number || profile.emergency_contact_phone,
       vitals: {
-        bloodType: data.blood_type,
-        height: data.height ? `${data.height} cm` : 'N/A',
-        weight: data.weight ? `${data.weight} kg` : 'N/A',
-        bmi: data.bmi
+        bloodType: profile.blood_type,
+        height: profile.height_cm ? `${profile.height_cm} cm` : 'N/A',
+        weight: profile.weight_kg ? `${profile.weight_kg} kg` : 'N/A',
+        bmi: profile.bmi
       },
-      allergies: data.allergies || [],
+      allergies: allergies,
       emergencyContact: {
-        name: data.emergency_contact,
-        relation: data.emergency_contact_relation || 'N/A',
-        phone: data.emergency_contact_phone || 'N/A'
+        name: profile.emergency_contact,
+        relation: profile.emergency_contact_relation || 'N/A',
+        phone: profile.emergency_contact_phone || 'N/A'
       },
-      recentVisits: data.recent_visits || [],
-      lastVisit: data.last_visit
+      recentVisits: recentVisits,
+      lastVisit: data.last_visit || null
     };
   }
 
