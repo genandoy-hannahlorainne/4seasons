@@ -149,6 +149,25 @@ class MedicalVisitController extends BaseController
                     'status'     => 'Pending',
                 ]);
 
+                // Student-facing visit summary notification
+                Notification::create([
+                    'student_id'        => $request->student_id,
+                    'visit_id'          => $visitId,
+                    'channel'           => 'System',
+                    'notification_type' => 'visit_summary',
+                    'message'           => $isEmergency
+                        ? "You had an emergency clinic visit. Reason: {$request->chief_complaint}"
+                        : "You visited the clinic. Reason: {$request->chief_complaint}",
+                    'priority'          => $isEmergency ? 'urgent' : 'normal',
+                    'status'            => 'Pending',
+                    'metadata'          => [
+                        'visit_type'      => $request->input('visit_type', 'Routine'),
+                        'chief_complaint' => $request->chief_complaint,
+                        'notes'           => $request->notes,
+                        'visit_datetime'  => $request->input('visit_datetime', now()),
+                    ],
+                ]);
+
                 // Add vitals if provided
                 if ($request->has('vitals') && is_array($request->vitals)) {
                     $vitalsPayload = [

@@ -166,6 +166,10 @@ export class StudentService {
       .pipe(map(response => response.data));
   }
 
+  getVisitSummaries(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/students/visit-summaries`);
+  }
+
   getStudentQRCode(studentId: number): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/students/qr?student_id=${studentId}`);
   }

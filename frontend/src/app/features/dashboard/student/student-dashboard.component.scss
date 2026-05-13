@@ -742,3 +742,115 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     padding: 20px;
   }
 }
+
+
+// Visit Summaries Card
+.visit-summaries-card {
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+
+    h2 {
+      margin-bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .unread-badge {
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 0.1rem 0.55rem;
+      line-height: 1.4;
+    }
+
+    .btn-download-pdf {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #052355;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.45rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      white-space: nowrap;
+
+      &:hover {
+        background: #0a3a7a;
+        transform: translateY(-1px);
+      }
+
+      i { font-size: 0.95rem; }
+    }
+  }
+
+  .no-summaries p {
+    color: $color-text-muted;
+    font-size: $font-size-sm;
+  }
+
+  .summaries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .summary-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.85rem 1rem;
+    border-radius: $radius-md;
+    background: $color-light-bg;
+    border: 1px solid $color-border;
+
+    &.unread {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+
+    .summary-type-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex-shrink: 0;
+
+      &.type-Routine   { background: #dcfce7; color: #15803d; }
+      &.type-Emergency { background: #fee2e2; color: #b91c1c; }
+    }
+
+    .summary-body {
+      flex: 1;
+      min-width: 0;
+
+      .summary-message {
+        font-size: $font-size-sm;
+        font-weight: 600;
+        color: $color-text-dark;
+        margin-bottom: 0.2rem;
+      }
+
+      .summary-notes {
+        font-size: $font-size-xs;
+        color: $color-text-muted;
+        margin-bottom: 0.2rem;
+      }
+
+      .summary-date {
+        font-size: $font-size-xs;
+        color: $color-text-muted;
+      }
+    }
+  }
+}
