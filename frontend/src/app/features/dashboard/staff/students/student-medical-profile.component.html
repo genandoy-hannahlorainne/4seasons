@@ -126,7 +126,15 @@
               <span class="info-card-date"><i class="bi bi-calendar3"></i> {{ diagnosis.date }}</span>
             </div>
             <p class="info-card-desc" *ngIf="diagnosis.notes">{{ diagnosis.notes }}</p>
-            <span class="status-badge" [class]="diagnosis.status">{{ diagnosis.status }}</span>
+            <div class="info-card-footer">
+              <span class="status-badge" [class]="diagnosis.status?.toLowerCase()">{{ diagnosis.status }}</span>
+              <span class="visit-type-badge" *ngIf="diagnosis.visit_type"
+                [class.emergency]="diagnosis.visit_type === 'Emergency'">
+                <i class="bi" [class.bi-exclamation-circle-fill]="diagnosis.visit_type === 'Emergency'"
+                              [class.bi-hospital]="diagnosis.visit_type !== 'Emergency'"></i>
+                {{ diagnosis.visit_type }}
+              </span>
+            </div>
           </div>
         </div>
       </div>

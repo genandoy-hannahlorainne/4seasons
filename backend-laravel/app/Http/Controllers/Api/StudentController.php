@@ -67,7 +67,7 @@ class StudentController extends BaseController
                 'currentAdviser',
                 'currentSection.adviser',
                 'medicalVisits' => function($query) {
-                    $query->with('vitals')->orderBy('visit_datetime', 'desc')->limit(10);
+                    $query->with('vitals')->orderBy('visit_datetime', 'desc')->limit(50);
                 }
             ]);
 

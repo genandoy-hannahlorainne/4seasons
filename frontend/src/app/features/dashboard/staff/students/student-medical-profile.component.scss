@@ -405,6 +405,13 @@ $text-muted: #64748b;
     margin: 0 0 0.6rem;
     line-height: 1.5;
   }
+
+  .info-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
 }
 
 .status-badge {
@@ -468,6 +475,25 @@ $text-muted: #64748b;
   &.sev-medium  { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
   &.sev-low     { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
   &.sev-Unknown, &.sev- { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+}
+
+.visit-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+
+  &.emergency {
+    background: #fff1f2;
+    color: #be123c;
+    border-color: #fca5a5;
+  }
 }
 
 /* ── Buttons ── */

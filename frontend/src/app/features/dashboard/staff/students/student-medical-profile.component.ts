@@ -110,7 +110,23 @@ export class StudentMedicalProfileComponent implements OnInit {
             : [];
 
           this.vitalsHistory = this.normalizeVitalsHistory(payload.vitals || payload.vitals_history || mappedVitalsFromVisits || []);
-          this.diagnoses = payload.diagnoses || payload.medical_history || [];
+
+          // Derive diagnoses from clinic visit records (chief_complaint / notes)
+          const diagnosesFromVisits = Array.isArray(visits)
+            ? visits
+                .filter((visit: any) => visit.chief_complaint || visit.notes)
+                .map((visit: any) => ({
+                  condition: visit.chief_complaint || visit.notes,
+                  notes: visit.chief_complaint && visit.notes ? visit.notes : null,
+                  date: visit.visit_datetime
+                    ? new Date(visit.visit_datetime).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: '2-digit' })
+                    : '',
+                  status: visit.status || 'active',
+                  visit_type: visit.visit_type || ''
+                }))
+            : [];
+          this.diagnoses = payload.diagnoses || diagnosesFromVisits;
+
           this.allergies = payload.allergies || [];
 
           this.hasMedicalRecord = 
