@@ -1144,16 +1144,116 @@ $mobile-bp: 768px;
   }
 }
 
-/* Mobile Responsive */
+/* ── Mobile Responsive (iOS & Android) ── */
 @media (max-width: 768px) {
+
+  /* Panel — full screen on mobile */
   .notification-panel {
     width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+
+    .panel-header {
+      padding: 1rem 1.25rem;
+      padding-top: max(1rem, env(safe-area-inset-top));
+      h3 { font-size: 1.1rem; }
+      .panel-close {
+        min-width: 44px;
+        min-height: 44px;
+        -webkit-tap-highlight-color: transparent;
+      }
+    }
+
+    .panel-tabs {
+      padding: 0.5rem 0.75rem;
+      .tab-btn {
+        min-height: 44px;
+        font-size: 0.875rem;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mark-all-btn {
+        min-height: 44px;
+        -webkit-tap-highlight-color: transparent;
+      }
+    }
+
+    .panel-content {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .fb-notif-item {
+      padding: 1rem;
+      min-height: 64px;
+      -webkit-tap-highlight-color: transparent;
+    }
   }
 
-  .modal-overlay .modal-content {
-    margin: 10px;
-    max-width: 100%;
+  /* Modal — centered, fluid size */
+  .modal-overlay {
+    align-items: center;
+    padding: 1rem;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+
+    .modal-content {
+      width: 100%;
+      max-width: 100%;
+      max-height: 90dvh;
+      border-radius: 16px;
+      margin: 0;
+      animation: scaleIn 0.2s ease;
+
+      .modal-header {
+        padding: 1rem 1.25rem;
+        border-radius: 16px 16px 0 0;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        h3 { font-size: 1rem; }
+        .modal-close {
+          min-width: 44px;
+          min-height: 44px;
+          -webkit-tap-highlight-color: transparent;
+        }
+      }
+
+      .modal-body {
+        padding: 1.25rem;
+        -webkit-overflow-scrolling: touch;
+
+        .request-details {
+          padding: 0.75rem 1rem;
+          .detail-row {
+            flex-direction: column;
+            gap: 0.2rem;
+            padding: 0.55rem 0;
+            .detail-label { min-width: unset; font-size: 0.75rem; }
+            .detail-value { font-size: 0.875rem; }
+          }
+        }
+      }
+
+      .modal-footer {
+        padding: 1rem 1.25rem;
+        flex-direction: column;
+        gap: 0.6rem;
+        button {
+          width: 100%;
+          justify-content: center;
+          min-height: 48px;
+          font-size: 0.9rem;
+          -webkit-tap-highlight-color: transparent;
+        }
+      }
+    }
   }
+}
+
+@keyframes slideUpMobile {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 /* Global status badge — used in history detail modal */
