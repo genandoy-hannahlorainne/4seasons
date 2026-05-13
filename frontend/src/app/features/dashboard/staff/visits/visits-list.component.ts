@@ -191,9 +191,9 @@ interface StudentVisitSummary {
     @if (showNewVisitModal) {
     <div class="modal-overlay new-visit-modal" (click)="closeNewVisitModal()">
       <div class="new-visit-modal-box" (click)="$event.stopPropagation()">
-        <button class="new-visit-close" (click)="closeNewVisitModal()"><i class="bi bi-x-lg"></i></button>
         <app-visit-form
           [preselectedStudentId]="newVisitStudentId"
+          [isModal]="true"
           (visitSaved)="onVisitSaved()"
           (cancelled)="closeNewVisitModal()">
         </app-visit-form>
@@ -822,26 +822,6 @@ interface StudentVisitSummary {
       border-radius: 16px;
       box-shadow: 0 24px 60px rgba(0,0,0,0.3);
       animation: slideUp 0.22s ease;
-    }
-
-    .new-visit-close {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      z-index: 10;
-      background: rgba(255,255,255,0.2);
-      border: none;
-      color: white;
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
-      &:hover { background: rgba(255,255,255,0.35); }
-      i { font-size: 0.85rem; }
     }
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

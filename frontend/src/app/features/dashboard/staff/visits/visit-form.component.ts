@@ -12,10 +12,15 @@ import { AuthService } from '../../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, QrScannerComponent],
   template: `
-    <div class="visit-form-page">
+    <div class="visit-form-page" [class.modal-mode]="isModal">
       <div class="page-header">
-        <button class="back-btn" routerLink="/dashboard/staff/visits">← Back to Visits</button>
-        <h1>{{ isEditMode ? 'Edit Visit' : 'New Medical Visit' }}</h1>
+        <button class="back-btn" *ngIf="!isModal" routerLink="/dashboard/staff/visits">← Back to Visits</button>
+        <div class="header-title-row">
+          <h1>{{ isEditMode ? 'Edit Visit' : 'New Medical Visit' }}</h1>
+          <button type="button" class="modal-close-btn" *ngIf="isModal" (click)="onCancel()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
       </div>
 
       <!-- QR Scanner Modal -->
@@ -233,46 +238,94 @@ import { AuthService } from '../../../../core/services/auth.service';
       display: flex;
       flex-direction: column;
       align-items: center;
+
+      &.modal-mode {
+        min-height: unset;
+        padding: 0;
+        background: #f0f4f8;
+        border-radius: 16px;
+        overflow: hidden;
+      }
     }
 
     .page-header {
       width: 100%;
       max-width: 800px;
       margin-bottom: 1.5rem;
-      background: linear-gradient(135deg, rgba(5,35,85,0.95) 0%, rgba(83,129,178,0.95) 100%);
-      padding: 2.5rem;
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      padding: 2rem 2rem 1.5rem;
       border-radius: 0 0 24px 24px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       box-sizing: border-box;
 
-      .back-btn {
-        background: rgba(255, 255, 255, 0.15);
-        border: 2px solid rgba(255, 255, 255, 0.6);
-        color: #ffffff;
-        cursor: pointer;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        transition: all 0.2s ease;
-        display: inline-block;
+      .modal-mode & {
+        border-radius: 0;
+        margin-bottom: 0;
+        max-width: 100%;
+        padding: 1.4rem 1.75rem;
+        box-shadow: none;
+      }
 
-        &:hover {
-          background: rgba(255, 255, 255, 0.25);
-          border-color: #ffffff;
-          text-decoration: none;
-        }
+      .back-btn {
+        background: rgba(255,255,255,0.15);
+        border: 1.5px solid rgba(255,255,255,0.5);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.88rem;
+        margin-bottom: 0.75rem;
+        padding: 0.45rem 1rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+        display: inline-block;
+        &:hover { background: rgba(255,255,255,0.25); }
+      }
+
+      .header-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
       }
 
       h1 {
-        font-size: 2rem;
-        color: #ffffff;
+        font-size: 1.5rem;
+        color: #fff;
         font-weight: 700;
         margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        &::before { content: '🏥'; font-size: 1.2rem; }
       }
     }
 
-    .visit-form { width: 100%; max-width: 800px; }
+    .modal-close-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.4);
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      &:hover { background: rgba(255,255,255,0.3); border-color: white; transform: scale(1.05); }
+      i { font-size: 0.85rem; }
+    }
+
+    .visit-form {
+      width: 100%;
+      max-width: 800px;
+
+      .modal-mode & {
+        max-width: 100%;
+        padding: 1.5rem;
+        box-sizing: border-box;
+      }
+    }
 
     .form-section {
       background: white;
@@ -631,6 +684,14 @@ import { AuthService } from '../../../../core/services/auth.service';
       display: flex;
       gap: 1rem;
       justify-content: flex-end;
+
+      .modal-mode & {
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        padding: 1rem 1.5rem;
+        margin: 0 -1.5rem -1.5rem;
+        border-radius: 0 0 16px 16px;
+      }
     }
 
     .btn {
@@ -677,6 +738,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 })
 export class VisitFormComponent implements OnInit, OnDestroy {
   @Input() preselectedStudentId: number | null = null;
+  @Input() isModal = false;
   @Output() visitSaved = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
 
