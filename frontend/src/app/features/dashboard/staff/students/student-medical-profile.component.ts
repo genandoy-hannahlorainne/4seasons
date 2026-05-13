@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { StaffService } from '../../../../core/services/staff.service';
@@ -11,7 +11,15 @@ import { AuthService } from '../../../../core/services/auth.service';
   templateUrl: './student-medical-profile.component.html',
   styleUrls: ['./student-medical-profile.component.scss']
 })
-export class StudentMedicalProfileComponent implements OnInit {
+export class StudentMedicalProfileComponent implements OnInit, OnChanges {
+  /** When used as a modal, pass the student ID via this input */
+  @Input() modalStudentId: number | null = null;
+  /** Emits when the modal close button is clicked */
+  @Output() closeModal = new EventEmitter<void>();
+
+  /** True when rendered inside a modal overlay */
+  get isModal(): boolean { return this.modalStudentId !== null; }
+
   studentId: number = 0;
   activeTab = 'vitals';
   loading = true;
@@ -38,19 +46,46 @@ export class StudentMedicalProfileComponent implements OnInit {
     private authService: AuthService
   ) {}
 
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  }
+
   get backRoute(): string {
     const role = this.authService.currentUserValue?.role_name;
     return role === 'Adviser' ? '/dashboard/adviser/alerts' : '/dashboard/staff/students';
   }
 
   ngOnInit(): void {
-    this.studentId = Number(this.route.snapshot.paramMap.get('id'));
-    if (this.studentId) {
+    if (this.modalStudentId) {
+      // Modal mode — use the passed-in ID
+      this.studentId = this.modalStudentId;
       this.loadStudentProfile();
     } else {
-      this.error = 'Invalid student ID';
-      this.loading = false;
+      // Routed page mode — read from URL param
+      this.studentId = Number(this.route.snapshot.paramMap.get('id'));
+      if (this.studentId) {
+        this.loadStudentProfile();
+      } else {
+        this.error = 'Invalid student ID';
+        this.loading = false;
+      }
     }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['modalStudentId'] && !changes['modalStudentId'].firstChange) {
+      const newId = changes['modalStudentId'].currentValue;
+      if (newId) {
+        this.studentId = newId;
+        this.activeTab = 'vitals';
+        this.loadStudentProfile();
+      }
+    }
+  }
+
+  onClose(): void {
+    this.closeModal.emit();
   }
 
   loadStudentProfile(): void {
@@ -86,6 +121,10 @@ export class StudentMedicalProfileComponent implements OnInit {
             avatar: studentData.avatar || ''
           };
 
+          // Student-level height/weight (from students table) used as fallback
+          const studentHeight = studentData.height_cm ?? null;
+          const studentWeight = studentData.weight_kg ?? null;
+
           const visits = payload.medical_visits || payload.medicalVisits || [];
           const mappedVitalsFromVisits = Array.isArray(visits)
             ? visits.flatMap((visit: any) => {
@@ -98,14 +137,31 @@ export class StudentMedicalProfileComponent implements OnInit {
                   temperature: vital.temperature_c ?? vital.temperature ?? '',
                   blood_pressure: vital.blood_pressure || [vital.bp_systolic, vital.bp_diastolic].filter(Boolean).join('/') || '',
                   pulse_rate: vital.pulse_rate ?? '',
-                  weight: vital.weight_kg ?? '',
-                  height: vital.height_cm ?? ''
+                  // Use per-visit value first; fall back to student profile value
+                  weight: vital.weight_kg != null && vital.weight_kg !== '' ? vital.weight_kg : studentWeight,
+                  height: vital.height_cm != null && vital.height_cm !== '' ? vital.height_cm : studentHeight
                 }));
               })
             : [];
 
           this.vitalsHistory = this.normalizeVitalsHistory(payload.vitals || payload.vitals_history || mappedVitalsFromVisits || []);
-          this.diagnoses = payload.diagnoses || payload.medical_history || [];
+
+          // Derive diagnoses from clinic visit records (chief_complaint / notes)
+          const diagnosesFromVisits = Array.isArray(visits)
+            ? visits
+                .filter((visit: any) => visit.chief_complaint || visit.notes)
+                .map((visit: any) => ({
+                  condition: visit.chief_complaint || visit.notes,
+                  notes: visit.chief_complaint && visit.notes ? visit.notes : null,
+                  date: visit.visit_datetime
+                    ? new Date(visit.visit_datetime).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: '2-digit' })
+                    : '',
+                  status: visit.status || 'active',
+                  visit_type: visit.visit_type || ''
+                }))
+            : [];
+          this.diagnoses = payload.diagnoses || diagnosesFromVisits;
+
           this.allergies = payload.allergies || [];
 
           this.hasMedicalRecord = 

@@ -20,8 +20,7 @@ import { AdminService } from '../../../../core/services/admin.service';
         <div class="profile-settings card" role="region" aria-label="Profile Settings">
           <div class="profile-settings-left">
             <div class="profile-avatar">
-              <img *ngIf="profileData.avatar" [src]="profileData.avatar" [alt]="profileData.fullName" class="avatar-img">
-              <i *ngIf="!profileData.avatar" class="bi bi-person-circle" style="font-size:64px;color:#052355;"></i>
+              <div class="avatar-initials">{{ getInitials(profileData.fullName) }}</div>
             </div>
           </div>
 
@@ -158,6 +157,11 @@ export class AdminProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProfileData();
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase().substring(0, 2);
   }
 
   loadProfileData(): void {

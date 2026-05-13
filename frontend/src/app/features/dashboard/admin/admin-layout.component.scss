@@ -280,10 +280,19 @@ $mobile-bp: 768px;
     transform: translateX(-100%);
     width: 280px !important;
     z-index: 300;
+    // iOS: safe area + smooth scroll
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidebar-nav {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .sidebar-brand {
     padding: 12px 16px;
+    padding-top: max(12px, env(safe-area-inset-top));
     gap: 10px;
   }
 
@@ -319,7 +328,10 @@ $mobile-bp: 768px;
 
   .main-content {
     margin-left: 0 !important;
-    padding-top: 52px;
+    padding-top: calc(52px + env(safe-area-inset-top));
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 
   .mobile-topbar {
@@ -330,12 +342,17 @@ $mobile-bp: 768px;
     top: 0;
     left: 0;
     right: 0;
-    height: 52px;
+    // iOS: account for status bar / notch
+    height: calc(52px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
     background: $sidebar-bg;
     border-bottom: 1px solid rgba(5, 35, 85, 0.1);
-    padding: 0 16px;
     z-index: 200;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    // Prevent iOS rubber-band bleed
+    -webkit-transform: translateZ(0);
   }
 
   .mobile-menu-btn {
@@ -345,8 +362,14 @@ $mobile-bp: 768px;
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 6px;
+    // iOS: minimum 44px touch target
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
     border-radius: 6px;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
 
     span {
       display: block;
@@ -363,11 +386,6 @@ $mobile-bp: 768px;
     color: #1a2744;
   }
 
-  .main-content {
-    margin-left: 0 !important;
-    padding-top: 52px;
-  }
-
   /* hide desktop hamburger on mobile */
   .hamburger { display: none; }
   .brand-text { display: block !important; opacity: 1 !important; max-width: 200px !important; }
@@ -380,18 +398,26 @@ $mobile-bp: 768px;
     border: 1px solid rgba(5, 35, 85, 0.15);
     border-radius: 8px;
     padding: 7px;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Fix nav alignment on mobile — never center */
   .nav-item {
     justify-content: flex-start !important;
-    padding: 12px 18px !important;
+    padding: 14px 18px !important;
     gap: 12px !important;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .sidebar-brand {
     justify-content: flex-start !important;
     padding: 12px 16px !important;
+    padding-top: max(12px, env(safe-area-inset-top)) !important;
     gap: 10px !important;
   }
 }

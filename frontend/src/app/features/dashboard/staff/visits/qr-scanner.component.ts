@@ -98,13 +98,15 @@ import { Html5Qrcode } from 'html5-qrcode';
     }
 
     .btn {
-      padding: 0.75rem 1.5rem;
+      padding: 0.65rem 1.5rem;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      font-weight: 500;
+      font-weight: 600;
+      font-size: 0.88rem;
+      letter-spacing: 0.2px;
 
-      &.btn-secondary { background: #6c757d; color: white; &:hover { background: #545b62; } }
+      &.btn-secondary { background: white; color: #475569; border: 1.5px solid #cbd5e1; &:hover { background: #f1f5f9; } }
     }
   `]
 })

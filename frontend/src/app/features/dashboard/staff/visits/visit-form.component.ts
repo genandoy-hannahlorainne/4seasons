@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -12,10 +12,15 @@ import { AuthService } from '../../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, QrScannerComponent],
   template: `
-    <div class="visit-form-page">
+    <div class="visit-form-page" [class.modal-mode]="isModal">
       <div class="page-header">
-        <button class="back-btn" routerLink="/dashboard/staff/visits">← Back to Visits</button>
-        <h1>{{ isEditMode ? 'Edit Visit' : 'New Medical Visit' }}</h1>
+        <button class="back-btn" *ngIf="!isModal" routerLink="/dashboard/staff/visits">← Back to Visits</button>
+        <div class="header-title-row">
+          <h1>{{ isEditMode ? 'Edit Visit' : 'New Medical Visit' }}</h1>
+          <button type="button" class="modal-close-btn" *ngIf="isModal" (click)="onCancel()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
       </div>
 
       <!-- QR Scanner Modal -->
@@ -31,12 +36,15 @@ import { AuthService } from '../../../../core/services/auth.service';
       <form class="visit-form" (ngSubmit)="onSubmit()">
         <!-- Student Selection -->
         <div class="form-section">
-          <h3>Student Information</h3>
+          <h3><i class="bi bi-person-badge"></i> Student Information</h3>
+          <div class="section-body">
 
           <!-- Scan QR Button -->
           <div class="scan-section" *ngIf="!selectedStudent">
-            <button type="button" class="btn btn-scan" (click)="openScanner()">
-              Scan Student QR Code
+            <div class="scan-icon"><i class="bi bi-qr-code-scan"></i></div>
+            <span class="scan-label">Quick Student Lookup</span>
+            <button type="button" class="btn-scan" (click)="openScanner()">
+              <i class="bi bi-camera"></i> Scan QR Code
             </button>
             <span class="or-divider">or search manually</span>
           </div>
@@ -63,7 +71,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
           <!-- Selected Student Card -->
           <div class="selected-student" *ngIf="selectedStudent">
-            <img [src]="selectedStudent.avatar" alt="Student" class="student-avatar">
+            <div class="student-avatar-initials">{{ getInitials(selectedStudent.full_name) }}</div>
             <div class="student-info">
               <span class="student-name">{{ selectedStudent.full_name }}</span>
               <span class="student-details">{{ selectedStudent.student_number }} | {{ selectedStudent.grade_section }}</span>
@@ -107,11 +115,13 @@ import { AuthService } from '../../../../core/services/auth.service';
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         <!-- Visit Details -->
         <div class="form-section">
-          <h3>Visit Details</h3>
+          <h3><i class="bi bi-calendar2-check"></i> Visit Details</h3>
+          <div class="section-body">
           <div class="form-row">
             <div class="form-group">
               <label>Date & Time *</label>
@@ -126,11 +136,13 @@ import { AuthService } from '../../../../core/services/auth.service';
               </select>
             </div>
           </div>
+          </div>
         </div>
 
         <!-- Vitals -->
         <div class="form-section">
-          <h3>Vital Signs</h3>
+          <h3><i class="bi bi-heart-pulse"></i> Vital Signs</h3>
+          <div class="section-body">
           <div class="form-row vitals-row">
             <div class="form-group">
               <label>Temperature (°C)</label>
@@ -145,11 +157,13 @@ import { AuthService } from '../../../../core/services/auth.service';
               <input type="number" [(ngModel)]="visit.vitals.pulseRate" name="pulseRate" class="form-control" placeholder="72">
             </div>
           </div>
+          </div>
         </div>
 
         <!-- Assessment & Treatment -->
         <div class="form-section">
-          <h3>Assessment & Treatment</h3>
+          <h3><i class="bi bi-clipboard2-pulse"></i> Assessment &amp; Treatment</h3>
+          <div class="section-body">
           <div class="form-group">
             <label>Diagnosis Category *</label>
             <select [(ngModel)]="visit.diagnosis" name="diagnosis" class="form-control" required>
@@ -170,11 +184,13 @@ import { AuthService } from '../../../../core/services/auth.service';
               <option value="Other">Other</option>
             </select>
           </div>
+          </div>
         </div>
 
         <!-- Status & Notification -->
         <div class="form-section">
-          <h3>Status & Notification</h3>
+          <h3><i class="bi bi-bell"></i> Status &amp; Notification</h3>
+          <div class="section-body">
           <div class="form-row">
             <div class="form-group">
               <label>Visit Status *</label>
@@ -201,11 +217,12 @@ import { AuthService } from '../../../../core/services/auth.service';
               <small>🚨 Emergency visits automatically notify admin and parents</small>
             </div>
           </div>
+          </div>
         </div>
 
         <!-- Form Actions -->
         <div class="form-actions">
-          <button type="button" class="btn btn-secondary" routerLink="/dashboard/staff/visits">Cancel</button>
+          <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancel</button>
           <button type="submit" class="btn btn-primary" [disabled]="loading || !selectedStudent">
             {{ loading ? 'Saving...' : (isEditMode ? 'Update Visit' : 'Save Visit') }}
           </button>
@@ -218,78 +235,193 @@ import { AuthService } from '../../../../core/services/auth.service';
       padding: 2rem;
       background: #f0f4f8;
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      &.modal-mode {
+        min-height: unset;
+        padding: 0;
+        background: #f0f4f8;
+        border-radius: 16px;
+        overflow: hidden;
+      }
     }
 
     .page-header {
-      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 1.5rem;
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      padding: 2rem 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
-      
-      .back-btn {
-        background: rgba(255, 255, 255, 0.15);
-        border: 2px solid rgba(255, 255, 255, 0.6);
-        color: #ffffff;
-        cursor: pointer;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        transition: all 0.2s ease;
-        display: inline-block;
-        
-        &:hover { 
-          background: rgba(255, 255, 255, 0.25);
-          border-color: #ffffff;
-          text-decoration: none;
-        }
+      padding: 2rem 2rem 1.5rem;
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      box-sizing: border-box;
+
+      .modal-mode & {
+        border-radius: 0;
+        margin-bottom: 0;
+        max-width: 100%;
+        padding: 1.4rem 1.75rem;
+        box-shadow: none;
       }
-      
-      h1 { 
-        font-size: 2rem; 
-        color: #ffffff; 
+
+      .back-btn {
+        background: rgba(255,255,255,0.15);
+        border: 1.5px solid rgba(255,255,255,0.5);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.88rem;
+        margin-bottom: 0.75rem;
+        padding: 0.45rem 1rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+        display: inline-block;
+        &:hover { background: rgba(255,255,255,0.25); }
+      }
+
+      .header-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        color: #fff;
         font-weight: 700;
         margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        &::before { content: '🏥'; font-size: 1.2rem; }
       }
     }
 
-    .visit-form { max-width: 800px; }
+    .modal-close-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.4);
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      &:hover { background: rgba(255,255,255,0.3); border-color: white; transform: scale(1.05); }
+      i { font-size: 0.85rem; }
+    }
+
+    .visit-form {
+      width: 100%;
+      max-width: 800px;
+
+      .modal-mode & {
+        max-width: 100%;
+        padding: 1.5rem;
+        box-sizing: border-box;
+      }
+    }
 
     .form-section {
       background: white;
       border-radius: 12px;
-      padding: 1.5rem;
+      padding: 0;
       margin-bottom: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
 
-      h3 { color: #052355; margin: 0 0 1rem; font-size: 1.1rem; font-weight: 600; }
+      h3 {
+        color: #052355;
+        margin: 0;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        padding: 0.85rem 1.5rem;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        i { color: #5381b2; font-size: 0.9rem; }
+      }
+    }
+
+    .section-body {
+      padding: 1.25rem 1.5rem;
     }
 
     .scan-section {
-      text-align: center;
-      padding: 1.5rem;
-      background: #f8f9fa;
-      border-radius: 8px;
-      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 2rem 1.5rem;
+      background: #f8fafc;
+      border: 1.5px dashed #b6c8e0;
+      border-radius: 10px;
+      margin-bottom: 1.25rem;
+
+      .scan-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #052355, #5381b2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        i { font-size: 1.5rem; color: #fff; }
+      }
+
+      .scan-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #94a3b8;
+      }
 
       .btn-scan {
-        padding: 1rem 2rem;
-        font-size: 1.1rem;
-        background: #28a745;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 1.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        background: #052355;
         color: white;
         border: none;
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s ease;
-        &:hover { background: #1e7e34; }
+        letter-spacing: 0.2px;
+        &:hover { background: #021535; box-shadow: 0 4px 12px rgba(5,35,85,0.25); }
+        i { font-size: 1rem; }
       }
 
       .or-divider {
-        display: block;
-        margin-top: 1rem;
-        color: #7f8c8d;
-        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        max-width: 320px;
+        color: #94a3b8;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        &::before, &::after {
+          content: '';
+          flex: 1;
+          height: 1px;
+          background: #e2e8f0;
+        }
       }
     }
 
@@ -305,16 +437,27 @@ import { AuthService } from '../../../../core/services/auth.service';
       margin-bottom: 1rem;
       position: relative;
 
-      label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; }
+      label {
+        display: block;
+        margin-bottom: 0.4rem;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #475569;
+      }
 
       .form-control {
         width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #e9ecef;
+        padding: 0.65rem 0.9rem;
+        border: 1px solid #e2e8f0;
         border-radius: 8px;
-        font-size: 1rem;
+        font-size: 0.92rem;
+        color: #0f172a;
         box-sizing: border-box;
-        &:focus { outline: none; border-color: #007bff; }
+        background: #fff;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        &:focus { outline: none; border-color: #052355; box-shadow: 0 0 0 3px rgba(5,35,85,0.08); }
       }
 
       textarea.form-control { resize: vertical; }
@@ -356,15 +499,28 @@ import { AuthService } from '../../../../core/services/auth.service';
       display: flex;
       align-items: flex-start;
       gap: 1rem;
-      padding: 1rem;
-      background: #e3f2fd;
-      border-radius: 8px;
-      border: 2px solid #007bff;
+      padding: 1rem 1.25rem;
+      background: #eff6ff;
+      border-radius: 10px;
+      border: 1.5px solid #93c5fd;
 
-      .student-avatar { width: 60px; height: 60px; border-radius: 50%; }
-      .student-info { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
-      .student-name { font-weight: 600; color: #2c3e50; font-size: 1.1rem; }
-      .student-details { font-size: 0.9rem; color: #7f8c8d; }
+      .student-avatar-initials {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #052355, #5381b2);
+        color: white;
+        font-weight: 700;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        letter-spacing: 0.5px;
+      }
+      .student-info { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; }
+      .student-name { font-weight: 700; color: #052355; font-size: 1rem; }
+      .student-details { font-size: 0.82rem; color: #475569; font-weight: 500; }
 
       .student-allergies {
         margin-top: 0.5rem;
@@ -528,18 +684,30 @@ import { AuthService } from '../../../../core/services/auth.service';
       display: flex;
       gap: 1rem;
       justify-content: flex-end;
+
+      .modal-mode & {
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        padding: 1rem 1.5rem;
+        margin: 0 -1.5rem -1.5rem;
+        border-radius: 0 0 16px 16px;
+      }
     }
 
     .btn {
-      padding: 0.75rem 1.5rem;
+      padding: 0.7rem 1.5rem;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      font-weight: 500;
+      font-weight: 600;
+      font-size: 0.9rem;
       transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
 
-      &.btn-primary { background: #007bff; color: white; &:hover { background: #0056b3; } }
-      &.btn-secondary { background: #6c757d; color: white; &:hover { background: #545b62; } }
+      &.btn-primary { background: #052355; color: white; &:hover { background: #021535; } }
+      &.btn-secondary { background: white; color: #475569; border: 1.5px solid #cbd5e1; &:hover { background: #f1f5f9; } }
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
 
@@ -562,12 +730,18 @@ import { AuthService } from '../../../../core/services/auth.service';
     }
 
     @media (max-width: 768px) {
+      .visit-form-page { padding: 1rem; }
       .form-row { grid-template-columns: 1fr; }
       .form-row.vitals-row { grid-template-columns: repeat(2, 1fr); }
     }
   `]
 })
 export class VisitFormComponent implements OnInit, OnDestroy {
+  @Input() preselectedStudentId: number | null = null;
+  @Input() isModal = false;
+  @Output() visitSaved = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
+
   isEditMode = false;
   loading = false;
   showScanner = false;
@@ -593,6 +767,14 @@ export class VisitFormComponent implements OnInit, OnDestroy {
   };
 
   // Watch for visit type changes to auto-check notify parent for emergency
+  onCancel(): void {
+    if (this.cancelled.observed) {
+      this.cancelled.emit();
+    } else {
+      this.router.navigate(['/dashboard/staff/visits']);
+    }
+  }
+
   onVisitTypeChange(): void {
     if (this.visit.visitType === 'emergency') {
       this.visit.notifyParent = true;
@@ -621,10 +803,10 @@ export class VisitFormComponent implements OnInit, OnDestroy {
       }
     }, 1000);
 
-    // Check if studentId is passed via query params
-    const studentId = this.route.snapshot.queryParamMap.get('studentId');
+    // Check if studentId is passed via @Input (modal mode) or query params (page mode)
+    const studentId = this.preselectedStudentId ?? (this.route.snapshot.queryParamMap.get('studentId') ? parseInt(this.route.snapshot.queryParamMap.get('studentId')!) : null);
     if (studentId) {
-      this.loadStudentById(parseInt(studentId));
+      this.loadStudentById(studentId);
     }
   }
 
@@ -777,6 +959,11 @@ export class VisitFormComponent implements OnInit, OnDestroy {
     this.selectedStudent = null;
   }
 
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().substring(0, 2);
+  }
+
   private formatVisitDateTime(value: string): string {
     if (!value || !value.trim()) {
       const now = new Date();
@@ -855,7 +1042,11 @@ export class VisitFormComponent implements OnInit, OnDestroy {
           this.loading = false;
           if (response.success) {
             alert('Medical visit saved successfully!');
-            this.router.navigate(['/dashboard/staff/visits']);
+            if (this.visitSaved.observed) {
+              this.visitSaved.emit();
+            } else {
+              this.router.navigate(['/dashboard/staff/visits']);
+            }
           } else {
             alert('Failed to save visit: ' + response.message);
           }

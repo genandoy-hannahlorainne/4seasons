@@ -129,6 +129,36 @@
               </button>
             </div>
           </div>
+
+          <div class="card visit-summaries-card">
+            <div class="card-header">
+              <h2>Clinic Visit Summaries</h2>
+              <button *ngIf="visitSummaries.length > 0" class="btn-download-pdf" (click)="downloadVisitSummariesPdf()">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
+              </button>
+            </div>
+            <div *ngIf="visitSummaries.length === 0" class="no-summaries">
+              <p>No clinic visit summaries yet.</p>
+            </div>
+            <div class="summaries-list">
+              <div *ngFor="let s of visitSummaries" class="summary-item">
+                <div class="summary-header">
+                  <span class="summary-type-badge" [class]="'type-' + s.visit_type">{{ s.visit_type }}</span>
+                  <span class="summary-status" [class]="'status-' + s.status?.toLowerCase()">{{ s.status }}</span>
+                  <span class="summary-date">{{ formatDate(s.visit_datetime) }}</span>
+                </div>
+                <div class="summary-complaint"><strong>Complaint:</strong> {{ s.chief_complaint }}</div>
+                <div *ngIf="s.notes" class="summary-notes"><strong>Notes:</strong> {{ s.notes }}</div>
+                <div *ngIf="s.attended_by" class="summary-staff"><strong>Attended by:</strong> {{ s.attended_by }}</div>
+                <div *ngIf="s.vitals" class="summary-vitals">
+                  <span *ngIf="s.vitals.temperature_c">🌡️ {{ s.vitals.temperature_c }}°C</span>
+                  <span *ngIf="s.vitals.bp_systolic">💉 {{ s.vitals.bp_systolic }}/{{ s.vitals.bp_diastolic }} mmHg</span>
+                  <span *ngIf="s.vitals.pulse_rate">❤️ {{ s.vitals.pulse_rate }} bpm</span>
+                  <span *ngIf="s.vitals.weight_kg">⚖️ {{ s.vitals.weight_kg }} kg</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
