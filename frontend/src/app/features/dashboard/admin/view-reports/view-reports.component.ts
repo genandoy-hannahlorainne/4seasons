@@ -144,25 +144,24 @@ export class ViewReportsComponent implements OnInit {
       if (this.activeReport === 'principal-health-trends') {
         this.exportPrincipalReportPdf();
       } else {
-        this.exportSummaryPdf();
+        this.exportReportPdf();
       }
     } else {
       this.exportGenericExcel();
     }
   }
 
-  private exportSummaryPdf(): void {
+  private exportReportPdf(): void {
     const NAVY: [number, number, number] = [10, 45, 110];
-    const BLUE: [number, number, number] = [20, 71, 153];
     const BLUE_MID: [number, number, number] = [180, 205, 245];
     const GRAY: [number, number, number] = [100, 100, 100];
     const DARK: [number, number, number] = [30, 30, 30];
-    const WHITE: [number, number, number] = [255, 255, 255];
 
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
     const margin = 15;
+    const label = this.getReportLabel(this.activeReport);
     const printedDate = new Date().toLocaleString('en-PH', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 
     const logoImg = new Image();
@@ -177,31 +176,25 @@ export class ViewReportsComponent implements OnInit {
       doc.setFontSize(13);
       doc.setTextColor(...NAVY);
       doc.text('StudentCare+: PDMHS Medical Record System', margin + 22, 16);
-
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8.4);
       doc.setTextColor(...GRAY);
       doc.text('President Diosdado Macapagal High School', margin + 22, 21.5);
-
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(7.2);
       doc.text('8th Street GHQ Village, Katuparan, Taguig, Philippines', margin + 22, 26);
-
       doc.setDrawColor(...BLUE_MID);
       doc.line(margin, 30.5, pageW - margin, 30.5);
-
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12.2);
       doc.setTextColor(...NAVY);
-      doc.text('SYSTEM SUMMARY REPORT', pageW / 2, 36, { align: 'center' });
-
+      doc.text(`${label.toUpperCase()} REPORT`, pageW / 2, 36, { align: 'center' });
       doc.setDrawColor(...BLUE_MID);
       doc.line(margin, 40, pageW - margin, 40);
-
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7.4);
       doc.setTextColor(...GRAY);
-      doc.text(`Printed: ${printedDate}`, pageW - margin, 44, { align: 'right' });
+      doc.text(`Generated: ${printedDate}`, pageW - margin, 44, { align: 'right' });
       doc.line(margin, 46, pageW - margin, 46);
 
       const text = (v: any) => (v === null || v === undefined || v === '' ? 'N/A' : String(v));
@@ -214,35 +207,76 @@ export class ViewReportsComponent implements OnInit {
         doc.setDrawColor(...BLUE_MID);
         doc.setLineWidth(0.2);
         doc.line(margin, y + 1.4, pageW - margin, y + 1.4);
-
         let cy = y + 5;
-        lines.forEach(([label, value]) => {
+        lines.forEach(([lbl, val]) => {
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(8.1);
           doc.setTextColor(85, 92, 105);
-          doc.text(`${label}:`, margin, cy);
+          doc.text(`${lbl}:`, margin, cy);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(...DARK);
-          const valueLines = doc.splitTextToSize(value, pageW - margin - 42);
-          doc.text(valueLines, margin + 38, cy);
-          cy += Math.max(1, valueLines.length) * 3.5;
+          const vLines = doc.splitTextToSize(val, pageW - margin - 42);
+          doc.text(vLines, margin + 38, cy);
+          cy += Math.max(1, vLines.length) * 3.5;
         });
         return cy + 1.5;
       };
 
       let y = 50;
-      y = drawSection('USER STATISTICS', [
-        ['Total Students', text(this.reportData.total_students)],
-        ['Total Advisers', text(this.reportData.total_advisers)],
-        ['Total Clinic Staff', text(this.reportData.total_staff)],
-        ['Active Users', text(this.reportData.active_users)],
-        ['Inactive Users', text(this.reportData.inactive_users)],
-      ], y);
 
-      y = drawSection('CLINIC STATISTICS', [
-        ['Total Medical Visits', text(this.reportData.total_visits)],
-        ['Total Allergies Recorded', text(this.reportData.total_allergies)],
-      ], y);
+      if (this.activeReport === 'summary') {
+        y = drawSection('USER STATISTICS', [
+          ['Total Students', text(this.reportData.total_students)],
+          ['Total Advisers', text(this.reportData.total_advisers)],
+          ['Total Clinic Staff', text(this.reportData.total_staff)],
+          ['Active Users', text(this.reportData.active_users)],
+          ['Inactive Users', text(this.reportData.inactive_users)],
+        ], y);
+        y = drawSection('CLINIC STATISTICS', [
+          ['Total Medical Visits', text(this.reportData.total_visits)],
+          ['Total Allergies Recorded', text(this.reportData.total_allergies)],
+        ], y);
+
+      } else if (this.activeReport === 'users' && Array.isArray(this.reportData)) {
+        autoTable(doc, {
+          startY: y,
+          head: [['Role', 'Total', 'Active', 'Inactive']],
+          body: this.reportData.map((r: any) => [r.role, r.total, r.active, r.inactive]),
+          theme: 'grid',
+          headStyles: { fillColor: NAVY }
+        });
+        y = (doc as any).lastAutoTable.finalY + 6;
+
+      } else if (this.activeReport === 'medical' && Array.isArray(this.reportData)) {
+        autoTable(doc, {
+          startY: y,
+          head: [['Date', 'Total Visits', 'Unique Students', 'Staff Involved']],
+          body: this.reportData.map((r: any) => [new Date(r.date).toLocaleDateString('en-PH'), r.total_visits, r.unique_students, r.staff_involved]),
+          theme: 'grid',
+          headStyles: { fillColor: NAVY }
+        });
+        y = (doc as any).lastAutoTable.finalY + 6;
+
+      } else if (this.activeReport === 'registration' && Array.isArray(this.reportData)) {
+        autoTable(doc, {
+          startY: y,
+          head: [['Date', 'Role', 'New Registrations']],
+          body: this.reportData.map((r: any) => [new Date(r.date).toLocaleDateString('en-PH'), r.role, r.count]),
+          theme: 'grid',
+          headStyles: { fillColor: NAVY }
+        });
+        y = (doc as any).lastAutoTable.finalY + 6;
+
+      } else if (this.activeReport === 'allergies' && Array.isArray(this.reportData)) {
+        autoTable(doc, {
+          startY: y,
+          head: [['Allergy', 'Severity', 'Count']],
+          body: this.reportData.map((r: any) => [r.allergy, r.severity, r.count]),
+          theme: 'grid',
+          headStyles: { fillColor: NAVY }
+        });
+        y = (doc as any).lastAutoTable.finalY + 6;
+      }
 
       // Signature area
       doc.setDrawColor(...BLUE_MID);
@@ -271,7 +305,7 @@ export class ViewReportsComponent implements OnInit {
       doc.text(`StudentCare+ | Generated: ${printedDate}`, margin, pageH - 12.5);
       doc.text('Page 1', pageW - margin, pageH - 12.5, { align: 'right' });
 
-      doc.save(`summary-report-${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`${this.activeReport}-report-${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
     if (logoImg.complete) {
