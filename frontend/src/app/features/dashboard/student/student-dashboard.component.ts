@@ -291,21 +291,17 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   loadVisitSummaries(): void {
     this.studentService.getVisitSummaries().subscribe({
       next: (response) => {
-        console.log('Visit summaries raw response:', response);
         const data = response?.data ?? response;
         this.visitSummaries = data?.summaries ?? [];
         this.unreadSummariesCount = data?.unread_count ?? 0;
       },
-      error: (err) => {
-        console.error('Visit summaries error:', err);
-      }
+      error: () => {}
     });
   }
 
   downloadVisitSummariesPdf(): void {
-    import('jspdf').then(({ jsPDF }) => {
-      import('jspdf-autotable').then(() => {
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    Promise.all([import('jspdf'), import('jspdf-autotable')]).then(([{ jsPDF }, autoTable]) => {
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
         const pageW = doc.internal.pageSize.getWidth();
 
         // Header background
@@ -328,7 +324,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
         doc.text('Generated: ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), pageW - 14, 27, { align: 'right' });
 
         // Table
-        (doc as any).autoTable({
+        (autoTable.default)(doc, {
           startY: 40,
           head: [['#', 'Date', 'Type', 'Complaint', 'Notes', 'Attended By', 'Status']],
           body: this.visitSummaries.map((s, i) => [
@@ -373,7 +369,6 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
         });
 
         doc.save(`visit-summaries-${this.studentId || 'student'}.pdf`);
-      });
     });
   }
 
