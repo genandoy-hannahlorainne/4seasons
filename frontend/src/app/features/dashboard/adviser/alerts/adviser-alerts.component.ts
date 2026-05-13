@@ -84,14 +84,21 @@ interface Alert {
                   <i class="fa-solid fa-user-nurse"></i>
                 </div>
                 <span class="alert-badge" [ngClass]="alert.priority">
-                  <span *ngIf="alert.priority === 'urgent'">!</span>
-                  <span *ngIf="alert.priority === 'normal'">i</span>
+                  <i class="fa-solid fa-triangle-exclamation" *ngIf="alert.priority === 'urgent'"></i>
+                  <i class="fa-solid fa-circle-info" *ngIf="alert.priority === 'normal'"></i>
                 </span>
               </div>
 
               <div class="alert-content">
                 <div class="alert-header-row">
-                  <span class="alert-sender">{{ alert.senderName }}</span>
+                  <div class="sender-group">
+                    <span class="alert-sender">{{ alert.senderName }}</span>
+                    <span class="priority-chip" [ngClass]="alert.priority">
+                      <i class="fa-solid fa-triangle-exclamation" *ngIf="alert.priority === 'urgent'"></i>
+                      <i class="fa-solid fa-circle-info" *ngIf="alert.priority === 'normal'"></i>
+                      {{ alert.priority === 'urgent' ? 'Urgent' : 'Notice' }}
+                    </span>
+                  </div>
                   <span class="alert-time">{{ alert.timeAgo }}</span>
                 </div>
                 <div class="alert-subject">
@@ -298,8 +305,7 @@ interface Alert {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.65rem;
-        font-weight: 700;
+        font-size: 0.6rem;
         color: white;
         border: 2px solid white;
 
@@ -320,6 +326,37 @@ interface Alert {
 
         .alert-sender { font-weight: 700; color: #1e293b; font-size: 0.9rem; }
         .alert-time   { color: #94a3b8; font-size: 0.78rem; }
+      }
+
+      .sender-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .priority-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.18rem 0.55rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+
+        &.urgent {
+          background: #fef2f2;
+          color: #b91c1c;
+          border: 1px solid #fecaca;
+          i { font-size: 0.65rem; }
+        }
+        &.normal {
+          background: #eff6ff;
+          color: #1d4ed8;
+          border: 1px solid #bfdbfe;
+          i { font-size: 0.65rem; }
+        }
       }
 
       .alert-subject {
