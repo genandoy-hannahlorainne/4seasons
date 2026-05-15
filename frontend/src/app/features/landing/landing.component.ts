@@ -49,6 +49,9 @@ export class LandingComponent {
 
   openModal(modal: string): void {
     this.activeModal = modal;
+    if (modal === 'signup') {
+      this.signupStep = 'initial';
+    }
     document.body.style.overflow = 'hidden';
   }
 

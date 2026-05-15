@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { AdminNotificationPanelService } from '../../../core/services/admin-notification-panel.service';
 import { Subject, interval, BehaviorSubject } from 'rxjs';
 import { takeUntil, switchMap, startWith, tap } from 'rxjs/operators';
 import { HealthRiskVisualizationComponent } from './health-risk-visualization/health-risk-visualization.component';
@@ -52,6 +53,14 @@ interface UsersResponse {
             <p>Manage your school's medical records system efficiently and securely</p>
           </div>
         </div>
+
+        <!-- Notification Bell (desktop only) -->
+        <button class="hero-notif-bell notification-bell" (click)="notifPanelService.toggle()" title="Notifications">
+          <i class="bi bi-bell-fill"></i>
+          <span class="hero-notif-badge" *ngIf="(notifPanelService.unreadCount$ | async) as count">
+            <span *ngIf="count > 0">{{ count }}</span>
+          </span>
+        </button>
       </div>
 
       <!-- Loading State -->
@@ -146,33 +155,6 @@ interface UsersResponse {
           </div>
         </div>
 
-        <!-- Notification History -->
-        <div class="notification-history" *ngIf="notificationHistory.length > 0">
-          <div class="history-header">
-            <h2><i class="fa-solid fa-clock-rotate-left"></i> Recent Notifications</h2>
-            <span class="history-count">{{ notificationHistory.length }} notification{{ notificationHistory.length > 1 ? 's' : '' }}</span>
-          </div>
-          <div class="history-list">
-            <div *ngFor="let notification of notificationHistory" class="history-item" [ngClass]="notification.priority">
-              <div class="history-icon">
-                <i class="fa-solid" [ngClass]="getNotificationIcon(notification)"></i>
-              </div>
-              <div class="history-content">
-                <div class="history-message">{{ notification.message }}</div>
-                <div class="history-meta">
-                  <span class="history-student" *ngIf="notification.student">{{ notification.student?.full_name }} ({{ notification.student?.student_number }})</span>
-                  <span class="history-user" *ngIf="notification.user && !notification.student">{{ notification.user?.full_name }} ({{ notification.user?.role }})</span>
-                  <span class="history-time">{{ notification.timeAgo }}</span>
-                  <span class="history-status" [ngClass]="notification.status.toLowerCase()">{{ notification.status }}</span>
-                </div>
-              </div>
-              <button class="history-view" (click)="viewNotificationDetails(notification)" title="View Details">
-                <i class="fa-solid fa-eye"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
         <!-- Statistics Cards -->
         <div class="stats-grid">
           <div class="stat-card users">
@@ -205,33 +187,36 @@ interface UsersResponse {
           </div>
         </div>
 
-        <!-- Health Risk Visualization -->
-        <app-health-risk-visualization></app-health-risk-visualization>
-
-        <!-- Main Content Grid -->
-        <div class="content-grid">
-          <!-- System Activity -->
-          <div class="card activity-card">
-            <div class="card-header">
-              <h2>System Activity</h2>
-              <span class="badge">Live</span>
-            </div>
-            <div class="activity-list">
-              <div *ngFor="let activity of activityLog" class="activity-item">
-                <div class="activity-icon" [ngClass]="activity.type">
-                  <i [ngClass]="getActivityIconClass(activity.type)"></i>
-                </div>
-                <div class="activity-details">
-                  <div class="activity-action">{{ activity.action }}</div>
-                  <div class="activity-meta">
-                    <span class="activity-user">{{ activity.user }}</span>
-                    <span class="activity-time">{{ activity.timestamp }}</span>
+        <!-- Bottom Grid: Health Risk Visualization + System Activity -->
+        <div class="bottom-grid">
+          <div class="bottom-grid-left">
+            <!-- Health Risk Visualization -->
+            <app-health-risk-visualization></app-health-risk-visualization>
+          </div>
+          <div class="bottom-grid-right">
+            <!-- System Activity -->
+            <div class="card activity-card">
+              <div class="card-header">
+                <h2>System Activity</h2>
+                <span class="badge">Live</span>
+              </div>
+              <div class="activity-list">
+                <div *ngFor="let activity of activityLog" class="activity-item">
+                  <div class="activity-icon" [ngClass]="activity.type">
+                    <i [ngClass]="getActivityIconClass(activity.type)"></i>
+                  </div>
+                  <div class="activity-details">
+                    <div class="activity-action">{{ activity.action }}</div>
+                    <div class="activity-meta">
+                      <span class="activity-user">{{ activity.user }}</span>
+                      <span class="activity-time">{{ activity.timestamp }}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div *ngIf="activityLog.length === 0" class="no-activity">
-                <i class="fa-solid fa-inbox"></i>
-                <p>No recent activity</p>
+                <div *ngIf="activityLog.length === 0" class="no-activity">
+                  <i class="fa-solid fa-inbox"></i>
+                  <p>No recent activity</p>
+                </div>
               </div>
             </div>
           </div>
@@ -626,162 +611,6 @@ interface UsersResponse {
       100% { box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3); }
     }
 
-    .notification-history {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-      .history-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #e9ecef;
-
-        h2 {
-          font-size: 1.2rem;
-          color: #2c3e50;
-          margin: 0;
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-
-          i { color: #3498db; }
-        }
-
-        .history-count {
-          background: #e3f2fd;
-          color: #1976d2;
-          padding: 0.25rem 0.75rem;
-          border-radius: 20px;
-          font-size: 0.85rem;
-          font-weight: 600;
-        }
-      }
-
-      .history-list {
-        .history-item {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1rem;
-          border-radius: 8px;
-          margin-bottom: 0.75rem;
-          border-left: 4px solid;
-          transition: all 0.2s ease;
-
-          &.urgent {
-            background: #fff5f5;
-            border-color: #e74c3c;
-          }
-
-          &.normal {
-            background: #f8f9fa;
-            border-color: #3498db;
-          }
-
-          &:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transform: translateX(4px);
-          }
-
-          .history-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            flex-shrink: 0;
-          }
-
-          &.urgent .history-icon {
-            background: #ffebee;
-            color: #e74c3c;
-          }
-
-          &.normal .history-icon {
-            background: #e3f2fd;
-            color: #3498db;
-          }
-
-          .history-content {
-            flex: 1;
-
-            .history-message {
-              font-weight: 500;
-              color: #2c3e50;
-              margin-bottom: 0.5rem;
-              line-height: 1.4;
-            }
-
-            .history-meta {
-              display: flex;
-              flex-wrap: wrap;
-              gap: 1rem;
-              font-size: 0.85rem;
-              color: #7f8c8d;
-
-              .history-student {
-                font-weight: 500;
-                color: #34495e;
-              }
-
-              .history-time {
-                color: #95a5a6;
-              }
-
-              .history-status {
-                padding: 0.2rem 0.6rem;
-                border-radius: 12px;
-                font-weight: 600;
-                font-size: 0.75rem;
-
-                &.pending {
-                  background: #fff3cd;
-                  color: #856404;
-                }
-
-                &.read {
-                  background: #d4edda;
-                  color: #155724;
-                }
-
-                &.sent {
-                  background: #d1ecf1;
-                  color: #0c5460;
-                }
-              }
-            }
-          }
-
-          .history-view {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            color: #495057;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-
-            &:hover {
-              background: #3498db;
-              color: white;
-              border-color: #3498db;
-            }
-
-            i { font-size: 1rem; }
-          }
-        }
-      }
-    }
-
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -826,6 +655,20 @@ interface UsersResponse {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 1.5rem;
+    }
+
+    /* ── Bottom grid: viz (left, wider) + activity (right, sticky) ── */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+      align-items: start;
+      margin-bottom: 1.5rem;
+    }
+
+    .bottom-grid-right .card {
+      position: sticky;
+      top: 1.5rem;
     }
 
     .card {
@@ -1056,12 +899,15 @@ interface UsersResponse {
     @media (max-width: 1200px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .content-grid { grid-template-columns: 1fr; }
+      .bottom-grid { grid-template-columns: 1fr; }
+      .bottom-grid-right .card { position: static; }
     }
 
     @media (max-width: 768px) {
       .admin-dashboard { padding: 1rem; }
       .stats-grid { grid-template-columns: 1fr; }
       .actions-grid { grid-template-columns: repeat(2, 1fr); }
+      .bottom-grid { gap: 1rem; }
       .users-table .table-header, .users-table .table-row {
         grid-template-columns: 1fr 1fr;
         .user-date, .user-status { display: none; }
@@ -1095,7 +941,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private adminService: AdminService,
-    private authService: AuthService
+    private authService: AuthService,
+    public notifPanelService: AdminNotificationPanelService
   ) {}
 
   ngOnInit(): void {
@@ -1252,6 +1099,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           this.notificationHistory = allNotifications.filter(
             (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
           ).slice(0, 10); // Show last 10
+          this.notifPanelService.setNotificationHistory(this.notificationHistory);
 
           // Notifications categorized
         } else if (response?.success && Array.isArray(response.notifications)) {
@@ -1278,6 +1126,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           this.notificationHistory = allNotifications.filter(
             (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
           ).slice(0, 10);
+          this.notifPanelService.setNotificationHistory(this.notificationHistory);
 
           // Notifications categorized and loaded
         }
@@ -1405,6 +1254,7 @@ Position: ${notification?.staff?.position || 'N/A'}
               ...this.emergencyNotifications.map(n => ({ ...n, status: 'Read' })),
               ...this.notificationHistory
             ].slice(0, 10);
+            this.notifPanelService.setNotificationHistory(this.notificationHistory);
 
             // Clear emergency notifications
             this.emergencyNotifications = [];

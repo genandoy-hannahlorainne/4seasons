@@ -216,15 +216,129 @@
 .btn-signup-no:hover { background:#e2e8f0; border-color:#cbd5e1; }
 .btn-back { font-family:'Inter',sans-serif; display:flex; align-items:center; gap:0.4rem; background:none; border:none; color:#052355; font-size:0.85rem; font-weight:600; cursor:pointer; padding:0.5rem 0; margin-bottom:1.5rem; transition:color 0.18s; align-self:flex-start; }
 .btn-back:hover { color:#0d3a7a; }
-.contact-icon { display:inline-flex; align-items:center; justify-content:center; width:80px; height:80px; background:linear-gradient(135deg,#e8f0fe,#dbeafe); border-radius:20px; color:#052355; margin-bottom:1.5rem; }
-.contact-subtitle { font-size:0.95rem; color:#64748b; margin:0.5rem 0 1.75rem; line-height:1.6; }
-.contact-info-box { display:flex; flex-direction:column; gap:1.25rem; margin-bottom:1.75rem; text-align:left; background:#f8fafc; padding:1.5rem; border-radius:14px; border:1px solid #e8edf5; }
-.contact-info-item { display:flex; align-items:flex-start; gap:1rem; }
-.contact-info-item svg { color:#052355; flex-shrink:0; margin-top:0.2rem; }
-.contact-label { font-size:0.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:0.2rem; }
-.contact-value { font-size:0.875rem; color:#334155; font-weight:500; line-height:1.5; word-break:break-word; }
-.contact-note { display:flex; align-items:flex-start; gap:0.6rem; font-size:0.8rem; color:#64748b; line-height:1.6; background:#fef3c7; padding:0.875rem 1rem; border-radius:10px; border:1px solid #fde68a; margin:0; }
-.contact-note svg { color:#d97706; flex-shrink:0; margin-top:0.15rem; }
+
+/* ── Contact Step (matches login fp-modal style) ── */
+.contact-step-modal {
+  width: 100%;
+  align-items: stretch;
+
+  .fp-modal-header {
+    background: linear-gradient(135deg, #052355 0%, #1a4a8a 100%);
+    padding: 1.5rem 1.5rem 1.25rem;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin: -2rem -2rem 0;
+
+    .fp-icon-wrap {
+      width: 52px;
+      height: 52px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .fp-close {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+      &:hover { background: rgba(255,255,255,0.28); }
+    }
+  }
+
+  .fp-modal-body {
+    padding: 1.5rem 0 0;
+    width: 100%;
+
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #052355;
+      margin: 0 0 0.5rem;
+      text-align: left;
+    }
+
+    p {
+      font-size: 0.875rem;
+      color: #555;
+      line-height: 1.6;
+      margin: 0 0 1.25rem;
+      text-align: left;
+    }
+  }
+
+  .fp-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .fp-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: #333;
+    background: #eef2f9;
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+
+    .fp-step-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      background: #052355;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    strong { color: #052355; }
+  }
+
+  .fp-link {
+    color: #052355;
+    font-weight: 600;
+    text-decoration: none;
+    word-break: break-all;
+    &:hover { text-decoration: underline; text-underline-offset: 2px; }
+  }
+
+  .fp-modal-footer {
+    padding: 1.25rem 0 0;
+    width: 100%;
+
+    .fp-btn-close {
+      width: 100%;
+      padding: 0.75rem;
+      background: #052355;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      &:hover { background: #041b44; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(5,35,85,0.3); }
+    }
+  }
+}
 
 @media (max-width: 480px) {
   .btn-sign-up { padding:0.65rem 1.25rem; font-size:0.85rem; }

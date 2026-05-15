@@ -17,6 +17,8 @@ export class LoginComponent implements OnInit {
   error = '';
   selectedRole: string = '';
   showPassword = false;
+  showForgotPassword = false;
+  showContactModal = false;
 
   constructor(
     private fb: FormBuilder,
@@ -44,6 +46,14 @@ export class LoginComponent implements OnInit {
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  toggleForgotPassword(): void {
+    this.showForgotPassword = !this.showForgotPassword;
+  }
+
+  toggleContactModal(): void {
+    this.showContactModal = !this.showContactModal;
   }
 
   goBack(): void {

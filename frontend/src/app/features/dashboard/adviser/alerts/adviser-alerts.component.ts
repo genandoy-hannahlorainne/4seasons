@@ -49,23 +49,28 @@ interface Alert {
       <div *ngIf="!loading">
         <!-- Alert Filters -->
         <div class="alert-filters" *ngIf="alerts.length > 0">
-          <button
-            class="filter-btn"
-            [class.active]="activeFilter === 'all'"
-            (click)="setFilter('all')">
-            All ({{ alerts.length }})
-          </button>
-          <button
-            class="filter-btn"
-            [class.active]="activeFilter === 'recent'"
-            (click)="setFilter('recent')">
-            Recent ({{ recentCount }})
-          </button>
-          <button
-            class="filter-btn"
-            [class.active]="activeFilter === 'unread'"
-            (click)="setFilter('unread')">
-            Unread ({{ unreadCount }})
+          <div class="filter-group">
+            <button
+              class="filter-btn"
+              [class.active]="activeFilter === 'all'"
+              (click)="setFilter('all')">
+              All ({{ alerts.length }})
+            </button>
+            <button
+              class="filter-btn"
+              [class.active]="activeFilter === 'recent'"
+              (click)="setFilter('recent')">
+              Recent ({{ recentCount }})
+            </button>
+            <button
+              class="filter-btn"
+              [class.active]="activeFilter === 'unread'"
+              (click)="setFilter('unread')">
+              Unread ({{ unreadCount }})
+            </button>
+          </div>
+          <button class="mark-all-btn" *ngIf="unreadCount > 0" (click)="markAllAsRead()">
+            <i class="fa-solid fa-check-double"></i> Mark All as Read
           </button>
         </div>
 
@@ -84,14 +89,21 @@ interface Alert {
                   <i class="fa-solid fa-user-nurse"></i>
                 </div>
                 <span class="alert-badge" [ngClass]="alert.priority">
-                  <span *ngIf="alert.priority === 'urgent'">!</span>
-                  <span *ngIf="alert.priority === 'normal'">i</span>
+                  <i class="fa-solid fa-triangle-exclamation" *ngIf="alert.priority === 'urgent'"></i>
+                  <i class="fa-solid fa-circle-info" *ngIf="alert.priority === 'normal'"></i>
                 </span>
               </div>
 
               <div class="alert-content">
                 <div class="alert-header-row">
-                  <span class="alert-sender">{{ alert.senderName }}</span>
+                  <div class="sender-group">
+                    <span class="alert-sender">{{ alert.senderName }}</span>
+                    <span class="priority-chip" [ngClass]="alert.priority">
+                      <i class="fa-solid fa-triangle-exclamation" *ngIf="alert.priority === 'urgent'"></i>
+                      <i class="fa-solid fa-circle-info" *ngIf="alert.priority === 'normal'"></i>
+                      {{ alert.priority === 'urgent' ? 'Urgent' : 'Notice' }}
+                    </span>
+                  </div>
                   <span class="alert-time">{{ alert.timeAgo }}</span>
                 </div>
                 <div class="alert-subject">
@@ -215,9 +227,17 @@ interface Alert {
     /* ── Filters ── */
     .alert-filters {
       display: flex;
-      gap: 0.5rem;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 1.25rem;
       flex-wrap: wrap;
+      gap: 0.5rem;
+
+      .filter-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
 
       .filter-btn {
         padding: 0.5rem 1.1rem;
@@ -238,6 +258,23 @@ interface Alert {
           border-color: transparent;
           box-shadow: 0 2px 8px rgba(5,35,85,0.25);
         }
+      }
+
+      .mark-all-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        border: 1.5px solid #bfdbfe;
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 600;
+        transition: all 0.2s;
+
+        &:hover { background: #dbeafe; border-color: #93c5fd; }
       }
     }
 
@@ -298,8 +335,7 @@ interface Alert {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.65rem;
-        font-weight: 700;
+        font-size: 0.6rem;
         color: white;
         border: 2px solid white;
 
@@ -320,6 +356,37 @@ interface Alert {
 
         .alert-sender { font-weight: 700; color: #1e293b; font-size: 0.9rem; }
         .alert-time   { color: #94a3b8; font-size: 0.78rem; }
+      }
+
+      .sender-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .priority-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.18rem 0.55rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+
+        &.urgent {
+          background: #fef2f2;
+          color: #b91c1c;
+          border: 1px solid #fecaca;
+          i { font-size: 0.65rem; }
+        }
+        &.normal {
+          background: #eff6ff;
+          color: #1d4ed8;
+          border: 1px solid #bfdbfe;
+          i { font-size: 0.65rem; }
+        }
       }
 
       .alert-subject {
@@ -563,6 +630,10 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
   markAsRead(alert: Alert, event: Event): void {
     event.stopPropagation();
     alert.isRead = !alert.isRead;
+  }
+
+  markAllAsRead(): void {
+    this.alerts.forEach(a => a.isRead = true);
   }
 
   viewStudentRecord(alert: Alert, event: Event): void {

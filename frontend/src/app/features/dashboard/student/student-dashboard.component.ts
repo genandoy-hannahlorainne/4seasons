@@ -53,6 +53,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   // Modal state
   showComprehensiveModal = false;
   comprehensiveFormStudentId: number | null = null;
+  showSummaryModal = false;
 
   // SHDF status
   shdfStatus: SHDFStatus | null = null;
@@ -290,45 +291,73 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
   loadVisitSummaries(): void {
     this.studentService.getVisitSummaries().subscribe({
       next: (response) => {
-        console.log('Visit summaries raw response:', response);
         const data = response?.data ?? response;
         this.visitSummaries = data?.summaries ?? [];
         this.unreadSummariesCount = data?.unread_count ?? 0;
       },
-      error: (err) => {
-        console.error('Visit summaries error:', err);
-      }
+      error: () => {}
     });
   }
 
   downloadVisitSummariesPdf(): void {
-    import('jspdf').then(({ jsPDF }) => {
-      import('jspdf-autotable').then(() => {
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        const pageW = doc.internal.pageSize.getWidth();
+    Promise.all([import('jspdf'), import('jspdf-autotable')]).then(([{ jsPDF }, autoTable]) => {
+      const NAVY: [number, number, number] = [10, 45, 110];
+      const BLUE_MID: [number, number, number] = [180, 205, 245];
+      const BLUE_LIGHT: [number, number, number] = [235, 241, 255];
+      const GRAY: [number, number, number] = [100, 100, 100];
+      const DARK: [number, number, number] = [30, 30, 30];
+      const WHITE: [number, number, number] = [255, 255, 255];
 
-        // Header background
-        doc.setFillColor(5, 35, 85);
-        doc.rect(0, 0, pageW, 32, 'F');
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const printedDate = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: '2-digit' });
 
-        // Title
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(16);
+      const logoImg = new Image();
+      logoImg.src = 'assets/pdmhs-logo.png';
+
+      const buildPDF = () => {
+        try {
+          if (logoImg.complete && logoImg.naturalWidth > 0) doc.addImage(logoImg, 'PNG', margin, 11, 18, 18);
+        } catch (_) {}
+
         doc.setFont('helvetica', 'bold');
-        doc.text('PDMHS StudentCare+', 14, 13);
-        doc.setFontSize(10);
+        doc.setFontSize(13);
+        doc.setTextColor(...NAVY);
+        doc.text('StudentCare+: PDMHS Medical Record System', margin + 22, 16);
+
         doc.setFont('helvetica', 'normal');
-        doc.text('Clinic Visit Summaries', 14, 21);
+        doc.setFontSize(8.4);
+        doc.setTextColor(...GRAY);
+        doc.text('President Diosdado Macapagal High School', margin + 22, 21.5);
 
-        // Student info (right side of header)
-        doc.setFontSize(9);
-        doc.text(this.studentName, pageW - 14, 13, { align: 'right' });
-        doc.text(this.studentId + ' • ' + this.gradeLevel, pageW - 14, 20, { align: 'right' });
-        doc.text('Generated: ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), pageW - 14, 27, { align: 'right' });
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(7.2);
+        doc.text('8th Street GHQ Village, Katuparan, Taguig, Philippines', margin + 22, 26);
 
-        // Table
-        (doc as any).autoTable({
-          startY: 40,
+        doc.setDrawColor(...BLUE_MID);
+        doc.line(margin, 30.5, pageW - margin, 30.5);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12.2);
+        doc.setTextColor(...NAVY);
+        doc.text('CLINIC VISIT SUMMARIES', pageW / 2, 36, { align: 'center' });
+
+        doc.setDrawColor(...BLUE_MID);
+        doc.line(margin, 40, pageW - margin, 40);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.4);
+        doc.setTextColor(...GRAY);
+        doc.text(`Student: ${this.studentName}`, margin, 44);
+        doc.text(`ID: ${this.studentId}  •  ${this.gradeLevel}`, pageW / 2, 44, { align: 'center' });
+        doc.text(`Printed: ${printedDate}`, pageW - margin, 44, { align: 'right' });
+        doc.text(`Adviser: ${this.adviserName}`, margin, 48.5);
+        doc.line(margin, 51, pageW - margin, 51);
+
+        (autoTable.default)(doc, {
+          startY: 55,
           head: [['#', 'Date', 'Type', 'Complaint', 'Notes', 'Attended By', 'Status']],
           body: this.visitSummaries.map((s, i) => [
             i + 1,
@@ -339,40 +368,40 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
             s.attended_by || '—',
             s.status || '—',
           ]),
-          headStyles: {
-            fillColor: [5, 35, 85],
-            textColor: 255,
-            fontStyle: 'bold',
-            fontSize: 9,
-          },
-          bodyStyles: { fontSize: 8.5, textColor: [30, 30, 30] },
-          alternateRowStyles: { fillColor: [240, 244, 248] },
+          headStyles: { fillColor: NAVY, textColor: WHITE, fontStyle: 'bold', fontSize: 8.5 },
+          bodyStyles: { fontSize: 8, textColor: DARK },
+          alternateRowStyles: { fillColor: BLUE_LIGHT },
           columnStyles: {
             0: { cellWidth: 8, halign: 'center' },
-            1: { cellWidth: 24 },
+            1: { cellWidth: 22 },
             2: { cellWidth: 20 },
-            3: { cellWidth: 45 },
+            3: { cellWidth: 42 },
             4: { cellWidth: 35 },
             5: { cellWidth: 30 },
             6: { cellWidth: 18 },
           },
-          margin: { left: 14, right: 14 },
+          margin: { left: margin, right: margin },
           didDrawPage: (data: any) => {
-            // Footer
             const pageCount = (doc as any).internal.getNumberOfPages();
-            doc.setFontSize(8);
-            doc.setTextColor(150);
-            doc.text(
-              `Page ${data.pageNumber} of ${pageCount}`,
-              pageW / 2,
-              doc.internal.pageSize.getHeight() - 8,
-              { align: 'center' }
-            );
+            doc.setDrawColor(...BLUE_MID);
+            doc.line(margin, pageH - 17, pageW - margin, pageH - 17);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.8);
+            doc.setTextColor(...GRAY);
+            doc.text(`StudentCare+ | ${this.studentName}`, margin, pageH - 12.5);
+            doc.text(`Page ${data.pageNumber} of ${pageCount}`, pageW - margin, pageH - 12.5, { align: 'right' });
           },
         });
 
         doc.save(`visit-summaries-${this.studentId || 'student'}.pdf`);
-      });
+      };
+
+      if (logoImg.complete) {
+        buildPDF();
+      } else {
+        logoImg.onload = () => buildPDF();
+        logoImg.onerror = () => buildPDF();
+      }
     });
   }
 

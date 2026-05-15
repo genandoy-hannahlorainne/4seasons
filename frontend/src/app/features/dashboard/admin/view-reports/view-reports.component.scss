@@ -10,22 +10,17 @@
   padding: 2rem 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
 
   h1 {
     font-size: 2rem;
     color: #ffffff;
-    margin-bottom: 0.5rem;
+    margin: 0 0 0.4rem;
     font-weight: 700;
   }
 
   p {
     color: rgba(255, 255, 255, 0.8);
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     margin: 0;
   }
 }
@@ -210,6 +205,7 @@
   .report-actions {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
 
     .btn {
       padding: 0.5rem 1rem;
@@ -227,6 +223,42 @@
         opacity: 0.9;
         box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
       }
+    }
+
+    .export-dropdown {
+      position: relative;
+
+      .export-menu {
+        display: none;
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        background: white;
+        border: 1px solid #d0daea;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        min-width: 180px;
+        z-index: 100;
+        overflow: hidden;
+
+        button {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          width: 100%;
+          padding: 0.65rem 1rem;
+          background: none;
+          border: none;
+          color: #2c3e50;
+          font-size: 0.9rem;
+          cursor: pointer;
+          text-align: left;
+
+          &:hover { background: #f0f4ff; color: #052355; }
+        }
+      }
+
+      &.open .export-menu { display: block; }
     }
   }
 }
