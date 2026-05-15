@@ -63,51 +63,12 @@ class FcmDirectService
 
         $message = [
             'message' => [
-                'token' => $deviceToken,
+                'token'        => $deviceToken,
                 'notification' => [
                     'title' => $payload['title'] ?? 'Studentcare',
                     'body'  => $payload['body']  ?? '',
                 ],
-                'webpush' => [
-                    'notification' => [
-                        'title'              => $payload['title']   ?? 'Studentcare',
-                        'body'               => $payload['body']    ?? '',
-                        'icon'               => $payload['icon']    ?? '/assets/icons/school-clinic.png',
-                        'badge'              => $payload['badge']   ?? '/assets/icons/notification.png',
-                        'tag'                => $payload['tag']     ?? 'studentcare-notification',
-                        'requireInteraction' => $payload['requireInteraction'] ?? false,
-                        'vibrate'            => ($payload['requireInteraction'] ?? false) ? [200, 100, 200, 100, 200] : [200],
-                        'actions'            => $payload['actions'] ?? [],
-                        'data'               => $payload['data']    ?? [],
-                    ],
-                    'fcm_options' => [
-                        'link' => $payload['data']['url'] ?? 'https://studentcare.site/adviser/notifications',
-                    ],
-                ],
-                'android' => [
-                    'notification' => [
-                        'title'              => $payload['title']   ?? 'Studentcare',
-                        'body'               => $payload['body']    ?? '',
-                        'icon'               => 'ic_notification',
-                        'sound'              => 'default',
-                        'channel_id'         => 'studentcare_notifications',
-                        'priority'           => ($payload['requireInteraction'] ?? false) ? 'high' : 'default',
-                    ],
-                    'priority' => ($payload['requireInteraction'] ?? false) ? 'high' : 'normal',
-                ],
-                'apns' => [
-                    'payload' => [
-                        'aps' => [
-                            'alert' => [
-                                'title' => $payload['title'] ?? 'Studentcare',
-                                'body'  => $payload['body']  ?? '',
-                            ],
-                            'sound' => 'default',
-                            'badge' => 1,
-                            'mutable-content' => true,
-                        ],
-                    ],
-                ],
+                'webpush' => $this->buildWebpushBlock($payload),
             ],
         ];
 
@@ -143,27 +104,12 @@ class FcmDirectService
 
         $message = [
             'message' => [
-                'topic' => $topic,
+                'topic'        => $topic,
                 'notification' => [
                     'title' => $payload['title'] ?? 'Studentcare',
                     'body'  => $payload['body']  ?? '',
                 ],
-                'webpush' => [
-                    'notification' => [
-                        'title'              => $payload['title']   ?? 'Studentcare',
-                        'body'               => $payload['body']    ?? '',
-                        'icon'               => $payload['icon']    ?? '/assets/icons/school-clinic.png',
-                        'badge'              => $payload['badge']   ?? '/assets/icons/notification.png',
-                        'tag'                => $payload['tag']     ?? 'studentcare-notification',
-                        'requireInteraction' => $payload['requireInteraction'] ?? false,
-                        'vibrate'            => ($payload['requireInteraction'] ?? false) ? [200, 100, 200, 100, 200] : [200],
-                        'actions'            => $payload['actions'] ?? [],
-                        'data'               => $payload['data']    ?? [],
-                    ],
-                    'fcm_options' => [
-                        'link' => $payload['data']['url'] ?? 'https://studentcare.site/adviser/notifications',
-                    ],
-                ],
+                'webpush' => $this->buildWebpushBlock($payload),
             ],
         ];
 
@@ -199,27 +145,12 @@ class FcmDirectService
 
         $message = [
             'message' => [
-                'condition' => $condition,
+                'condition'    => $condition,
                 'notification' => [
                     'title' => $payload['title'] ?? 'Studentcare',
                     'body'  => $payload['body']  ?? '',
                 ],
-                'webpush' => [
-                    'notification' => [
-                        'title'              => $payload['title']   ?? 'Studentcare',
-                        'body'               => $payload['body']    ?? '',
-                        'icon'               => $payload['icon']    ?? '/assets/icons/school-clinic.png',
-                        'badge'              => $payload['badge']   ?? '/assets/icons/notification.png',
-                        'tag'                => $payload['tag']     ?? 'studentcare-notification',
-                        'requireInteraction' => $payload['requireInteraction'] ?? false,
-                        'vibrate'            => ($payload['requireInteraction'] ?? false) ? [200, 100, 200, 100, 200] : [200],
-                        'actions'            => $payload['actions'] ?? [],
-                        'data'               => $payload['data']    ?? [],
-                    ],
-                    'fcm_options' => [
-                        'link' => $payload['data']['url'] ?? 'https://studentcare.site/adviser/notifications',
-                    ],
-                ],
+                'webpush' => $this->buildWebpushBlock($payload),
             ],
         ];
 
@@ -308,6 +239,30 @@ class FcmDirectService
             Log::error('FcmDirect: Access token exception: ' . $e->getMessage());
             return null;
         }
+    }
+
+    private function buildWebpushBlock(array $payload): array
+    {
+        $appUrl  = rtrim(config('app.url', 'https://studentcare.site'), '/');
+        $icon    = $payload['icon']  ?? ($appUrl . '/assets/icons/school-clinic.png');
+        $badge   = $payload['badge'] ?? ($appUrl . '/assets/icons/notification.png');
+        $rawLink = $payload['data']['url'] ?? '/adviser/notifications';
+        $link    = str_starts_with($rawLink, 'http') ? $rawLink : $appUrl . $rawLink;
+
+        return [
+            'notification' => [
+                'title'              => $payload['title']   ?? 'Studentcare',
+                'body'               => $payload['body']    ?? '',
+                'icon'               => $icon,
+                'badge'              => $badge,
+                'tag'                => $payload['tag']     ?? 'studentcare-notification',
+                'requireInteraction' => $payload['requireInteraction'] ?? false,
+                'vibrate'            => ($payload['requireInteraction'] ?? false) ? [200, 100, 200, 100, 200] : [200],
+                'actions'            => $payload['actions'] ?? [],
+                'data'               => array_merge($payload['data'] ?? [], ['url' => $link]),
+            ],
+            'fcm_options' => ['link' => $link],
+        ];
     }
 
     private function base64UrlEncode(string $data): string
