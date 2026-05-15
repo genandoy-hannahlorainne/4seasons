@@ -63,6 +63,29 @@
       </div>
     </div>
 
+    <!-- Mobile Card View -->
+    <div class="user-cards">
+      <div *ngFor="let user of paginatedUsers" class="user-card" (click)="viewUser(user)">
+        <div class="user-card-top">
+          <div class="user-card-info">
+            <span class="user-card-name">{{ user.full_name }}</span>
+            <span class="user-card-username">@{{ user.username }}</span>
+          </div>
+          <span class="role-badge" [ngClass]="user.role">{{ user.roleDisplay }}</span>
+        </div>
+        <div class="user-card-email">{{ user.email }}</div>
+        <div class="user-card-bottom">
+          <span class="status-badge" [ngClass]="getStatusClass(user.is_active)">{{ getStatusText(user.is_active) }}</span>
+          <span class="user-card-date">{{ user.created_at ? (user.created_at | date:'mediumDate') : 'N/A' }}</span>
+          <button class="action-btn view-btn" (click)="viewUser(user); $event.stopPropagation()" title="View/Edit">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+        </div>
+      </div>
+      <div *ngIf="filteredUsers.length === 0" class="no-users"><p>No users found matching your criteria</p></div>
+    </div>
+
+    <!-- Desktop Table View -->
     <div class="users-table-wrapper">
       <table class="users-table">
         <thead>

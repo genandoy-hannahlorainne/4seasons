@@ -1,9 +1,10 @@
 import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
+import { AdminNotificationPanelService, NotificationHistoryItem } from '../../../core/services/admin-notification-panel.service';
 import { interval, Subscription } from 'rxjs';
 
 interface PasswordChangeRequest {
@@ -23,7 +24,7 @@ interface PasswordChangeRequest {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet],
+  imports: [CommonModule, RouterModule, RouterOutlet, TitleCasePipe],
   styleUrls: ['./admin-layout.component.scss'],
   template: `
     <div class="admin-shell" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen">
@@ -55,13 +56,6 @@ interface PasswordChangeRequest {
             <i class="bi bi-speedometer2 nav-icon"></i>
             <span class="nav-label">Dashboard</span>
           </a>
-
-          <!-- Notification Bell in Sidebar -->
-          <button class="nav-item notification-nav-item" (click)="toggleNotificationPanel()" title="Notifications">
-            <i class="bi bi-bell-fill nav-icon"></i>
-            <span class="nav-label">Notifications</span>
-            <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
-          </button>
 
           <a routerLink="/dashboard/admin/manage-users" routerLinkActive="active" class="nav-item" title="Users" (click)="closeMobile()">
             <i class="bi bi-people-fill nav-icon"></i>
@@ -111,12 +105,17 @@ interface PasswordChangeRequest {
           <span></span><span></span><span></span>
         </button>
         <span class="mobile-brand">PDMHS Admin</span>
-
-
+        <!-- Mobile notification bell -->
+        <button class="notification-bell mobile-notif-bell" (click)="toggleNotificationPanel()" title="Notifications">
+          <i class="bi bi-bell-fill"></i>
+          <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+        </button>
       </header>
 
-      <!-- Notification Panel (Centered Modal) -->
-      <div class="notification-panel-overlay" *ngIf="showNotificationPanel" (click)="closeNotificationPanel()">
+      <!-- Content topbar with notification bell — REMOVED, bell is now inside hero section -->
+
+      <!-- Notification Side Panel -->
+      <div class="notification-panel-overlay" *ngIf="notifPanelService.open$ | async" (click)="closeNotificationPanel()">
         <div class="notification-panel" (click)="$event.stopPropagation()">
           <div class="panel-header">
             <h3>Notifications</h3>
@@ -141,38 +140,102 @@ interface PasswordChangeRequest {
           </div>
 
           <div class="panel-content">
-            <div class="section-header">
-              <span>Earlier</span>
-              <a href="javascript:void(0)" class="see-all">See all</a>
-            </div>
+            <ng-container *ngIf="notifPanelService.notificationHistory$ | async as history">
 
-            <div class="notification-list">
-              <div
-                *ngFor="let request of passwordChangeRequests"
-                class="notification-item password-change-notif">
-                <div class="notif-banner" (click)="openNotificationModal(request)">
-                  <div class="banner-header">
+              <!-- ALL TAB -->
+              <ng-container *ngIf="showAllTab">
+                <!-- Password change requests (always unread/pending) -->
+                <div *ngFor="let request of passwordChangeRequests"
+                     class="fb-notif-item fb-notif-unread"
+                     (click)="openNotificationModal(request)">
+                  <div class="fb-notif-icon-wrap pending-icon">
                     <i class="fa-solid fa-key"></i>
-                    <span>1 Password Change Request</span>
                   </div>
-                  <div class="banner-body">
-                    <div class="request-main">
-                      <strong>({{ request.request_data.role }})</strong>
+                  <div class="fb-notif-body">
+                    <div class="fb-notif-message fw-bold">
+                      Password change request from <strong>{{ request.request_data.full_name }}</strong>
+                      <span class="fb-notif-role">({{ request.request_data.role }})</span>
                     </div>
-                    <div class="request-reason">{{ request.request_data.reason }}</div>
-                    <div class="request-footer">
-                      <span>Username: {{ request.request_data.username }}</span>
-                      <span class="time-ago">{{ request.timeAgo }}</span>
-                    </div>
+                    <div class="fb-notif-reason">{{ request.request_data.reason }}</div>
+                    <div class="fb-notif-time">{{ request.timeAgo }}</div>
                   </div>
+                  <span class="unread-dot"></span>
                 </div>
-              </div>
 
-              <div *ngIf="passwordChangeRequests.length === 0" class="no-notifications">
-                <i class="fa-solid fa-bell-slash"></i>
-                <p>No new notifications</p>
-              </div>
-            </div>
+                <!-- History items -->
+                <div *ngFor="let notif of history"
+                     class="fb-notif-item"
+                     [class.fb-notif-unread]="isUnread(notif)"
+                     (click)="openHistoryModal(notif)">
+                  <div class="fb-notif-icon-wrap" [ngClass]="notif.priority === 'urgent' ? 'urgent-icon' : 'normal-icon'">
+                    <i class="fa-solid" [ngClass]="notifPanelService.getNotificationIcon(notif)"></i>
+                  </div>
+                  <div class="fb-notif-body">
+                    <div class="fb-notif-message" [class.fw-bold]="isUnread(notif)">{{ notif.message }}</div>
+                    <div class="fb-notif-meta">
+                      <span *ngIf="notif.student">{{ notif.student.full_name }} · </span>
+                      <span *ngIf="notif.user && !notif.student">{{ notif.user.full_name }} · </span>
+                      <span class="fb-notif-time">{{ notif.timeAgo }}</span>
+                    </div>
+                  </div>
+                  <span class="unread-dot" *ngIf="isUnread(notif)"></span>
+                </div>
+
+                <!-- Empty state -->
+                <div *ngIf="passwordChangeRequests.length === 0 && history.length === 0" class="no-notifications">
+                  <i class="fa-solid fa-bell-slash"></i>
+                  <p>No notifications</p>
+                </div>
+              </ng-container>
+
+              <!-- UNREAD TAB -->
+              <ng-container *ngIf="!showAllTab">
+                <!-- Pending requests are always unread -->
+                <div *ngFor="let request of passwordChangeRequests"
+                     class="fb-notif-item fb-notif-unread"
+                     (click)="openNotificationModal(request)">
+                  <div class="fb-notif-icon-wrap pending-icon">
+                    <i class="fa-solid fa-key"></i>
+                  </div>
+                  <div class="fb-notif-body">
+                    <div class="fb-notif-message fw-bold">
+                      Password change request from <strong>{{ request.request_data.full_name }}</strong>
+                      <span class="fb-notif-role">({{ request.request_data.role }})</span>
+                    </div>
+                    <div class="fb-notif-reason">{{ request.request_data.reason }}</div>
+                    <div class="fb-notif-time">{{ request.timeAgo }}</div>
+                  </div>
+                  <span class="unread-dot"></span>
+                </div>
+
+                <!-- Only unread history items -->
+                <ng-container *ngFor="let notif of history">
+                  <div *ngIf="isUnread(notif)"
+                       class="fb-notif-item fb-notif-unread"
+                       (click)="openHistoryModal(notif)">
+                    <div class="fb-notif-icon-wrap" [ngClass]="notif.priority === 'urgent' ? 'urgent-icon' : 'normal-icon'">
+                      <i class="fa-solid" [ngClass]="notifPanelService.getNotificationIcon(notif)"></i>
+                    </div>
+                    <div class="fb-notif-body">
+                      <div class="fb-notif-message fw-bold">{{ notif.message }}</div>
+                      <div class="fb-notif-meta">
+                        <span *ngIf="notif.student">{{ notif.student.full_name }} · </span>
+                        <span *ngIf="notif.user && !notif.student">{{ notif.user.full_name }} · </span>
+                        <span class="fb-notif-time">{{ notif.timeAgo }}</span>
+                      </div>
+                    </div>
+                    <span class="unread-dot"></span>
+                  </div>
+                </ng-container>
+
+                <!-- Empty state -->
+                <div *ngIf="passwordChangeRequests.length === 0 && !hasUnreadHistory(history)" class="no-notifications">
+                  <i class="fa-solid fa-bell-slash"></i>
+                  <p>No unread notifications</p>
+                </div>
+              </ng-container>
+
+            </ng-container>
           </div>
         </div>
       </div>
@@ -238,6 +301,71 @@ interface PasswordChangeRequest {
         <router-outlet></router-outlet>
       </main>
 
+      <!-- History Notification Detail Modal -->
+      <div class="modal-overlay" *ngIf="showHistoryModal" (click)="closeHistoryModal()">
+        <div class="modal-content history-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>
+              <i class="fa-solid" [ngClass]="selectedHistoryNotif ? notifPanelService.getNotificationIcon(selectedHistoryNotif) : 'fa-bell'"></i>
+              Notification Details
+            </h3>
+            <button class="modal-close" (click)="closeHistoryModal()">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+
+          <div class="modal-body" *ngIf="selectedHistoryNotif">
+            <div class="request-details">
+              <div class="detail-row">
+                <span class="detail-label">Message:</span>
+                <span class="detail-value">{{ selectedHistoryNotif.message }}</span>
+              </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif.notification_type">
+                <span class="detail-label">Type:</span>
+                <span class="detail-value role-badge">{{ selectedHistoryNotif.notification_type | titlecase }}</span>
+              </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif.priority">
+                <span class="detail-label">Priority:</span>
+                <span class="detail-value" [ngClass]="selectedHistoryNotif.priority === 'urgent' ? 'role-badge' : ''">
+                  {{ selectedHistoryNotif.priority | titlecase }}
+                </span>
+              </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif.student">
+                <span class="detail-label">Student:</span>
+                <span class="detail-value">
+                  {{ selectedHistoryNotif.student.full_name }}
+                  <span style="color:#6b7280"> ({{ selectedHistoryNotif.student.student_number }})</span>
+                </span>
+              </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif.user && !selectedHistoryNotif.student">
+                <span class="detail-label">User:</span>
+                <span class="detail-value">
+                  {{ selectedHistoryNotif.user.full_name }}
+                  <span style="color:#6b7280"> ({{ selectedHistoryNotif.user.role }})</span>
+                </span>
+              </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif['request_data']?.reason">
+                <span class="detail-label">Reason:</span>
+                <span class="detail-value reason-text">{{ selectedHistoryNotif['request_data'].reason }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value">
+                  <span class="history-notif-status" [ngClass]="selectedHistoryNotif.status?.toLowerCase()">
+                    {{ selectedHistoryNotif.status }}
+                  </span>
+                </span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Time:</span>
+                <span class="detail-value">{{ selectedHistoryNotif.timeAgo }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   `,
 })
@@ -247,9 +375,11 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   loggingOut = false;
 
   // Notification system
-  showNotificationPanel = false;
   showNotificationModal = false;
+  showHistoryModal = false;
   selectedRequest: PasswordChangeRequest | null = null;
+  selectedHistoryNotif: NotificationHistoryItem | null = null;
+  readHistoryIds = new Set<number>();
   passwordChangeRequests: PasswordChangeRequest[] = [];
   unreadCount = 0;
   showAllTab = true; // true = All, false = Unread
@@ -258,7 +388,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private adminService: AdminService
+    private adminService: AdminService,
+    public notifPanelService: AdminNotificationPanelService
   ) {}
 
   ngOnInit(): void {
@@ -266,6 +397,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     // Poll for new notifications every 30 seconds
     this.pollSubscription = interval(30000).subscribe(() => {
       this.loadNotifications();
+    });
+    // Reset read state when history refreshes
+    this.notifPanelService.notificationHistory$.subscribe(() => {
+      this.readHistoryIds.clear();
     });
   }
 
@@ -295,6 +430,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
               created_at: n.created_at
             }));
           this.unreadCount = this.passwordChangeRequests.length;
+          this.notifPanelService.setUnreadCount(this.unreadCount);
         } else {
           // Invalid response structure
         }
@@ -319,22 +455,46 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   toggleNotificationPanel(): void {
     this.closeMobile();
-    this.showNotificationPanel = !this.showNotificationPanel;
+    this.notifPanelService.toggle();
   }
 
   closeNotificationPanel(): void {
-    this.showNotificationPanel = false;
+    this.notifPanelService.close();
   }
 
   openNotificationModal(request: PasswordChangeRequest): void {
     this.selectedRequest = request;
     this.showNotificationModal = true;
-    this.showNotificationPanel = false;
+    this.notifPanelService.close();
   }
 
   closeNotificationModal(): void {
     this.showNotificationModal = false;
     this.selectedRequest = null;
+  }
+
+  isUnread(notif: NotificationHistoryItem): boolean {
+    if (notif.notification_id == null) return false;
+    return !this.readHistoryIds.has(notif.notification_id);
+  }
+
+  hasUnreadHistory(history: NotificationHistoryItem[]): boolean {
+    return history.some(n => this.isUnread(n));
+  }
+
+  openHistoryModal(notif: NotificationHistoryItem): void {
+    this.selectedHistoryNotif = notif;
+    this.showHistoryModal = true;
+    this.notifPanelService.close();
+    // Mark as read
+    if (notif.notification_id != null) {
+      this.readHistoryIds.add(notif.notification_id);
+    }
+  }
+
+  closeHistoryModal(): void {
+    this.showHistoryModal = false;
+    this.selectedHistoryNotif = null;
   }
 
   approvePasswordChange(): void {
@@ -362,6 +522,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
             r => r.notification_id !== request.notification_id
           );
           this.unreadCount = this.passwordChangeRequests.length;
+          this.notifPanelService.setUnreadCount(this.unreadCount);
           this.closeNotificationModal();
         } else {
           // Failed response
@@ -390,6 +551,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
               r => r.notification_id !== request.notification_id
             );
             this.unreadCount = this.passwordChangeRequests.length;
+            this.notifPanelService.setUnreadCount(this.unreadCount);
             this.closeNotificationModal();
           }
         },
@@ -405,9 +567,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.notification-bell') &&
-        !target.closest('.notification-panel') &&
-        !target.closest('.notification-nav-item')) {
-      this.closeNotificationPanel();
+        !target.closest('.notification-panel')) {
+      this.notifPanelService.close();
     }
   }
 

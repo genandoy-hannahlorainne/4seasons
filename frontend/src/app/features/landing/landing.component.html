@@ -473,40 +473,46 @@
     </div>
 
     <!-- Contact Step: Non-member Options -->
-    <div *ngIf="signupStep === 'contact'" class="signup-step">
-      <button class="btn-back" (click)="signupStep = 'initial'">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        Back
-      </button>
-      
-      <div class="contact-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <div *ngIf="signupStep === 'contact'" class="signup-step contact-step-modal">
+      <div class="fp-modal-header">
+        <div class="fp-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <button class="fp-close" (click)="signupStep = 'initial'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
-      <h2>Contact School Administration</h2>
-      <p class="contact-subtitle">To request access or sign up, please contact the IT or Admin office of PDMHS</p>
-      
-      <div class="contact-info-box">
-        <div class="contact-info-item">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <div>
-            <div class="contact-label">Email</div>
-            <div class="contact-value">sdotapat.pdmhs&#64;deped.gov.ph</div>
+      <div class="fp-modal-body">
+        <h3>Contact School IT Admin</h3>
+        <p>To request access or sign up, please contact the IT Admin office of PDMHS.</p>
+        <div class="fp-steps">
+          <div class="fp-step">
+            <span class="fp-step-num">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </span>
+            <span><strong>Email</strong><br/><a href="mailto:sdotapat.pdmhs&#64;deped.gov.ph" class="fp-link">sdotapat.pdmhs&#64;deped.gov.ph</a></span>
+          </div>
+          <div class="fp-step">
+            <span class="fp-step-num">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </span>
+            <span><strong>Location</strong><br/>8th Street GHQ Village, Katuparan, Taguig, Philippines, 1630</span>
           </div>
         </div>
-        
-        <div class="contact-info-item">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <div>
-            <div class="contact-label">Location</div>
-            <div class="contact-value">8th Street GHQ Village, Katuparan, Taguig, Philippines, 1630</div>
-          </div>
-        </div>
       </div>
-      
-      <p class="contact-note">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        The admin team will verify your identity and provide you with login credentials.
-      </p>
+      <div class="fp-modal-footer">
+        <button class="fp-btn-close" (click)="signupStep = 'initial'">Got it</button>
+      </div>
     </div>
   </div>
 </div>
