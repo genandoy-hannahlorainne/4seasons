@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdviserService, AdvisedStudent } from '../../../core/services/adviser.service';
 import { StudentProfileModalComponent } from './student-profile-modal/student-profile-modal.component';
+import { PushNotificationService } from '../../../core/services/push-notification.service';
 
 @Component({
   selector: 'app-adviser-dashboard',
@@ -11,6 +12,14 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
   imports: [CommonModule, RouterModule, StudentProfileModalComponent],
   template: `
     <div class="adviser-dashboard">
+
+      <!-- Push Notification Banner -->
+      <div *ngIf="showNotifBanner" class="notif-banner">
+        <i class="fa-solid fa-bell"></i>
+        <span>Enable push notifications to receive clinic visit alerts on this device.</span>
+        <button (click)="enableNotifications()">Enable Now</button>
+        <button class="dismiss" (click)="showNotifBanner = false">✕</button>
+      </div>
 
       <!-- Hero Section -->
       <div class="hero-section">
@@ -139,6 +148,42 @@ import { StudentProfileModalComponent } from './student-profile-modal/student-pr
       padding: 2rem;
       background: #f5f7fa;
       min-height: 100vh;
+    }
+
+    /* ── Notification Banner ── */
+    .notif-banner {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: #fff8e1;
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      padding: 0.85rem 1.25rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.9rem;
+      color: #92400e;
+
+      i { color: #f59e0b; font-size: 1.1rem; flex-shrink: 0; }
+      span { flex: 1; }
+
+      button {
+        padding: 0.4rem 1rem;
+        background: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+
+        &.dismiss {
+          background: transparent;
+          color: #92400e;
+          padding: 0.4rem 0.6rem;
+          font-size: 1rem;
+        }
+      }
     }
 
     /* ── Hero ── */
@@ -448,10 +493,17 @@ export class AdviserDashboardComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private adviserService: AdviserService
+    private adviserService: AdviserService,
+    private pushService: PushNotificationService
   ) {}
 
+  showNotifBanner = false;
+
   ngOnInit(): void {
+    // Show banner if push is supported but permission not yet granted
+    if (this.pushService.isSupported() && Notification.permission !== 'granted') {
+      this.showNotifBanner = true;
+    }
     const currentUser = this.authService.currentUserValue;
     if (currentUser) {
       const fullName = currentUser.full_name || 'Adviser';
@@ -470,6 +522,13 @@ export class AdviserDashboardComponent implements OnInit {
       },
       error: () => {}
     });
+  }
+
+  async enableNotifications(): Promise<void> {
+    await this.pushService.requestFromUserGesture();
+    if (Notification.permission === 'granted') {
+      this.showNotifBanner = false;
+    }
   }
 
   loadStudents(): void {

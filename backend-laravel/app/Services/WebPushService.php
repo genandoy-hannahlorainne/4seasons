@@ -228,10 +228,14 @@ class WebPushService
     private function buildWebpushBlock(array $payload): array
     {
         $appUrl  = rtrim(config('app.url', 'https://studentcare.site'), '/');
-        $icon    = $payload['icon']  ?? ($appUrl . '/assets/icons/school-clinic.png');
-        $badge   = $payload['badge'] ?? ($appUrl . '/assets/icons/notification.png');
-        $rawLink = $payload['data']['url'] ?? '/adviser/notifications';
-        $link    = str_starts_with($rawLink, 'http') ? $rawLink : $appUrl . $rawLink;
+
+        $rawIcon  = $payload['icon']  ?? '/assets/icons/school-clinic.png';
+        $rawBadge = $payload['badge'] ?? '/assets/icons/notification.png';
+        $rawLink  = $payload['data']['url'] ?? '/adviser/notifications';
+
+        $icon  = str_starts_with($rawIcon,  'http') ? $rawIcon  : $appUrl . $rawIcon;
+        $badge = str_starts_with($rawBadge, 'http') ? $rawBadge : $appUrl . $rawBadge;
+        $link  = str_starts_with($rawLink,  'http') ? $rawLink  : $appUrl . $rawLink;
 
         return [
             'notification' => [
