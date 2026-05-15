@@ -10,6 +10,56 @@
   margin-bottom: 2.5rem;
   border-radius: 0 0 24px 24px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+/* Notification bell inside hero */
+.hero-notif-bell {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+
+  i {
+    font-size: 1.3rem;
+    color: white;
+    pointer-events: none;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.28);
+    transform: scale(1.08);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.hero-notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  border: 2px solid rgba(5, 35, 85, 0.9);
+  line-height: 1.3;
+  pointer-events: none;
 }
 
 .hero-content {
@@ -763,50 +813,120 @@
 }
 
 @media (max-width: 768px) {
-  .admin-dashboard {
-    padding: 0;
-  }
+  .admin-dashboard { padding: 0; }
 
-  .hero-section {
-    padding: 2rem 1.5rem;
-  }
+  .hero-notif-bell { display: none; }
+
+  .hero-section { padding: 1.25rem 1rem; }
 
   .hero-content {
     flex-direction: column;
     text-align: center;
-    gap: 2rem;
+    gap: 1rem;
   }
 
   .hero-text {
-    h1 {
-      font-size: 1.8rem;
-    }
-
-    p {
-      font-size: 1rem;
-    }
+    h1 { font-size: 1.4rem; }
+    p  { font-size: 0.9rem; }
   }
 
-  .hero-image-container {
-    max-width: 250px;
-  }
+  .hero-image-container { max-width: 180px; }
 
-  .dashboard-content {
-    padding: 0 1.5rem 1.5rem 1.5rem;
-  }
+  .dashboard-content { padding: 0 1rem 1rem 1rem; }
 
   .dashboard-header {
     flex-direction: column;
     text-align: center;
+    .header-logo { width: 60px; height: 60px; }
+  }
 
-    .header-logo {
-      width: 60px;
-      height: 60px;
+  /* Stats — 2x2 grid on mobile */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+    gap: 0.75rem;
+    border-radius: 12px;
+
+    .stat-icon { font-size: 2rem; }
+    .stat-info {
+      .stat-value { font-size: 1.75rem; }
+      .stat-label { font-size: 0.8rem; }
     }
   }
 
-  .stats-grid {
-    grid-template-columns: 1fr;
+  /* Emergency banner */
+  .emergency-banner {
+    padding: 1.25rem;
+    border-radius: 14px;
+
+    .emergency-header { font-size: 1rem; margin-bottom: 1rem; }
+
+    .emergency-item {
+      flex-direction: column;
+      align-items: flex-start !important;
+      gap: 0.75rem;
+      padding: 1rem;
+
+      .emergency-actions {
+        width: 100%;
+        flex-direction: row;
+        button { flex: 1; justify-content: center; }
+      }
+    }
+  }
+
+  /* Password requests banner */
+  .password-requests-banner {
+    padding: 1.25rem;
+    border-radius: 14px;
+
+    .requests-header { font-size: 1rem; margin-bottom: 1rem; }
+
+    .request-item {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 0.75rem !important;
+      padding: 1rem !important;
+
+      .request-actions {
+        width: 100%;
+        .btn-approve, .btn-dismiss {
+          flex: 1;
+          justify-content: center;
+        }
+      }
+    }
+  }
+
+  /* Drill alerts banner */
+  .drill-alerts-banner {
+    padding: 1.25rem;
+    border-radius: 14px;
+
+    .drill-header { font-size: 1rem; margin-bottom: 1rem; }
+
+    .drill-item {
+      flex-direction: column;
+      align-items: flex-start !important;
+      gap: 0.75rem;
+      padding: 1rem;
+
+      .drill-actions {
+        width: 100%;
+        .drill-view { width: 100%; justify-content: center; }
+      }
+    }
+  }
+
+  /* Activity card */
+  .card { padding: 1.25rem; border-radius: 12px; }
+
+  .activity-item {
+    .activity-meta { flex-direction: column; gap: 0.2rem; }
   }
 }
 

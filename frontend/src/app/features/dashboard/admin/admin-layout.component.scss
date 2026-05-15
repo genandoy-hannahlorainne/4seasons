@@ -386,6 +386,44 @@ $mobile-bp: 768px;
     color: #1a2744;
   }
 
+  /* Mobile notification bell in topbar */
+  .mobile-notif-bell {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: #1a2744;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+
+    i {
+      font-size: 1.3rem;
+      color: #1a2744;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: #ef4444;
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 0.1rem 0.3rem;
+      border-radius: 10px;
+      min-width: 16px;
+      text-align: center;
+      border: 1.5px solid white;
+      line-height: 1.2;
+    }
+  }
+
   /* hide desktop hamburger on mobile */
   .hamburger { display: none; }
   .brand-text { display: block !important; opacity: 1 !important; max-width: 200px !important; }
@@ -508,13 +546,12 @@ $mobile-bp: 768px;
   bottom: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.35);
   z-index: 9999;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  backdrop-filter: blur(3px);
+  align-items: stretch;
+  justify-content: flex-end;
+  backdrop-filter: blur(2px);
   animation: overlayFadeIn 0.2s ease-out;
 }
 
@@ -523,21 +560,19 @@ $mobile-bp: 768px;
   to { opacity: 1; }
 }
 
-/* Notification Panel (Centered Modal) */
+/* Notification Side Panel */
 .notification-panel {
   position: relative;
-  width: 100%;
-  max-width: 520px;
-  max-height: 90vh;
+  width: 400px;
+  max-width: 100vw;
+  height: 100vh;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.18);
   z-index: 10000;
   display: flex;
   flex-direction: column;
-  animation: modalSlideUp 0.3s ease-out;
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  margin: 0 auto;
 
   .panel-header {
     display: flex;
@@ -545,16 +580,17 @@ $mobile-bp: 768px;
     justify-content: space-between;
     padding: 1.25rem 1.5rem;
     border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
 
     h3 {
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       font-weight: 700;
-      color: #1f2937;
+      color: white;
       margin: 0;
     }
 
     .panel-close {
-      background: #f3f4f6;
+      background: rgba(255, 255, 255, 0.15);
       border: none;
       width: 36px;
       height: 36px;
@@ -566,12 +602,12 @@ $mobile-bp: 768px;
       transition: background 0.2s ease;
 
       &:hover {
-        background: #e5e7eb;
+        background: rgba(255, 255, 255, 0.28);
       }
 
       i {
         font-size: 1.1rem;
-        color: #6b7280;
+        color: white;
       }
     }
   }
@@ -608,7 +644,6 @@ $mobile-bp: 768px;
   .panel-content {
     flex: 1;
     overflow-y: auto;
-    max-height: 450px;
 
     .section-header {
       display: flex;
@@ -795,16 +830,108 @@ $mobile-bp: 768px;
       }
     }
   }
+
+  /* Facebook-style flat notification items */
+  .fb-notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 0.85rem 1.25rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    position: relative;
+    border-radius: 8px;
+    margin: 0 0.25rem 0.15rem;
+
+    &:hover { background: #f0f2f5; }
+  }
+
+  .fb-notif-unread {
+    background: #e7f0fd;
+    &:hover { background: #dce8fc; }
+  }
+
+  .fb-notif-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.1rem;
+
+    &.pending-icon { background: linear-gradient(135deg, #f59e0b, #f97316); color: white; }
+    &.urgent-icon  { background: #fee2e2; color: #ef4444; }
+    &.normal-icon  { background: #dbeafe; color: #2563eb; }
+  }
+
+  .fb-notif-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .fb-notif-message {
+    font-size: 0.9rem;
+    color: #1c1e21;
+    line-height: 1.4;
+    margin-bottom: 0.2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .fb-notif-role {
+    color: #65676b;
+    font-weight: 400;
+    margin-left: 0.25rem;
+  }
+
+  .fb-notif-reason {
+    font-size: 0.82rem;
+    color: #65676b;
+    font-style: italic;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .fb-notif-meta {
+    font-size: 0.82rem;
+    color: #65676b;
+  }
+
+  .fb-notif-time {
+    font-size: 0.82rem;
+    color: #2563eb;
+    font-weight: 600;
+  }
+
+  .unread-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #2563eb;
+    flex-shrink: 0;
+    margin-top: 0.4rem;
+  }
+
+  .fw-bold {
+    font-weight: 700 !important;
+    color: #050505 !important;
+  }
 }
 
-@keyframes slideDown {
+@keyframes slideInRight {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateX(100%);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
 
@@ -1017,73 +1144,157 @@ $mobile-bp: 768px;
   }
 }
 
-/* Mobile Responsive */
+/* ── Mobile Responsive (iOS & Android) ── */
 @media (max-width: 768px) {
+
+  /* Panel — full screen on mobile */
   .notification-panel {
-    right: 10px;
-    left: 10px;
-    width: auto;
-    top: 60px;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+
+    .panel-header {
+      padding: 1rem 1.25rem;
+      padding-top: max(1rem, env(safe-area-inset-top));
+      h3 { font-size: 1.1rem; }
+      .panel-close {
+        min-width: 44px;
+        min-height: 44px;
+        -webkit-tap-highlight-color: transparent;
+      }
+    }
+
+    .panel-tabs {
+      padding: 0.5rem 0.75rem;
+      .tab-btn {
+        min-height: 44px;
+        font-size: 0.875rem;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mark-all-btn {
+        min-height: 44px;
+        -webkit-tap-highlight-color: transparent;
+      }
+    }
+
+    .panel-content {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .fb-notif-item {
+      padding: 1rem;
+      min-height: 64px;
+      -webkit-tap-highlight-color: transparent;
+    }
   }
 
-  .modal-overlay .modal-content {
-    margin: 10px;
-    max-width: 100%;
+  /* Modal — centered, fluid size */
+  .modal-overlay {
+    align-items: center;
+    padding: 1rem;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+
+    .modal-content {
+      width: 100%;
+      max-width: 100%;
+      max-height: 90dvh;
+      border-radius: 16px;
+      margin: 0;
+      animation: scaleIn 0.2s ease;
+
+      .modal-header {
+        padding: 1rem 1.25rem;
+        border-radius: 16px 16px 0 0;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        h3 { font-size: 1rem; }
+        .modal-close {
+          min-width: 44px;
+          min-height: 44px;
+          -webkit-tap-highlight-color: transparent;
+        }
+      }
+
+      .modal-body {
+        padding: 1.25rem;
+        -webkit-overflow-scrolling: touch;
+
+        .request-details {
+          padding: 0.75rem 1rem;
+          .detail-row {
+            flex-direction: column;
+            gap: 0.2rem;
+            padding: 0.55rem 0;
+            .detail-label { min-width: unset; font-size: 0.75rem; }
+            .detail-value { font-size: 0.875rem; }
+          }
+        }
+      }
+
+      .modal-footer {
+        padding: 1rem 1.25rem;
+        flex-direction: column;
+        gap: 0.6rem;
+        button {
+          width: 100%;
+          justify-content: center;
+          min-height: 48px;
+          font-size: 0.9rem;
+          -webkit-tap-highlight-color: transparent;
+        }
+      }
+    }
   }
 }
 
+@keyframes slideUpMobile {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
 
-/* Notification Nav Item in Sidebar */
-.notification-nav-item {
+/* Global status badge — used in history detail modal */
+.history-notif-status {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.78rem;
+
+  &.read    { background: #d1fae5; color: #065f46; }
+  &.sent    { background: #dbeafe; color: #1e40af; }
+  &.pending { background: #fef3c7; color: #92400e; }
+}
+
+/* ── Sidebar Notification Bell ── */
+.notification-bell-nav {
   position: relative;
-  cursor: pointer !important;
-  pointer-events: auto !important;
 
-  .notification-badge {
+  .bell-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    flex-shrink: 0;
+  }
+
+  .notif-badge {
     position: absolute;
-    right: 1.5rem;
-    top: 50%;
-    transform: translateY(-50%);
+    top: -6px;
+    right: -8px;
     background: #ef4444;
     color: white;
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     font-weight: 700;
-    padding: 0.2rem 0.5rem;
+    padding: 0.1rem 0.3rem;
     border-radius: 10px;
-    min-width: 20px;
+    min-width: 16px;
     text-align: center;
-    pointer-events: none;
-  }
-
-  img.nav-icon {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    filter: brightness(0) saturate(100%) invert(11%) sepia(35%) saturate(3000%) hue-rotate(200deg) brightness(95%) contrast(101%);
-    transition: filter 0.2s ease;
-    pointer-events: none;
-  }
-
-  &:hover {
-    background: rgba(5, 35, 85, 0.06);
-
-    img.nav-icon {
-      filter: brightness(0) saturate(100%) invert(11%) sepia(35%) saturate(3000%) hue-rotate(200deg) brightness(110%) contrast(101%);
-    }
-  }
-
-  &.active {
-    background: rgba(5, 35, 85, 0.1);
-    border-left-color: #052355;
-
-    img.nav-icon {
-      filter: brightness(0) saturate(100%) invert(11%) sepia(35%) saturate(3000%) hue-rotate(200deg) brightness(110%) contrast(101%);
-    }
-  }
-}
-
-.admin-shell.collapsed .notification-nav-item {
-  .notification-badge {
-    right: 0.5rem;
+    border: 1.5px solid white;
+    line-height: 1.2;
   }
 }

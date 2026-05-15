@@ -1,7 +1,29 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { AdviserService } from '../../../core/services/adviser.service';
+import { AdviserNotificationPanelService } from '../../../core/services/adviser-notification-panel.service';
+import { interval, Subscription } from 'rxjs';
+
+interface AdviserAlert {
+  id: number;
+  studentId?: number;
+  student_id?: number;
+  senderName: string;
+  senderRole: string;
+  studentName: string;
+  studentNumber: string;
+  subject: string;
+  previewText: string;
+  fullMessage: string;
+  timeAgo: string;
+  fullDate: string;
+  createdAt: string;
+  visitType: string;
+  priority: 'urgent' | 'normal';
+  isRead: boolean;
+}
 
 @Component({
   selector: 'app-adviser-layout',
@@ -46,10 +68,6 @@ import { AuthService } from '../../../core/services/auth.service';
             <i class="fa-solid fa-download nav-icon-fa"></i>
             <span class="nav-label">Download SHDF</span>
           </a>
-          <a routerLink="/dashboard/adviser/alerts" routerLinkActive="active" class="nav-item" title="Alerts" (click)="closeMobile()">
-            <i class="fa-solid fa-bell nav-icon-fa"></i>
-            <span class="nav-label">Alerts</span>
-          </a>
           <a routerLink="/dashboard/adviser/class-management" routerLinkActive="active" class="nav-item" title="My Class" (click)="closeMobile()">
             <i class="fa-solid fa-users nav-icon-fa"></i>
             <span class="nav-label">My Class</span>
@@ -57,6 +75,13 @@ import { AuthService } from '../../../core/services/auth.service';
         </nav>
 
         <div class="sidebar-footer">
+          <button class="nav-item notification-bell-nav" (click)="toggleNotificationPanel()" title="Notifications">
+            <span class="bell-wrap">
+              <i class="fa-solid fa-bell nav-icon-fa"></i>
+              <span class="notif-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+            </span>
+            <span class="nav-label">Notifications</span>
+          </button>
           <a routerLink="/dashboard/adviser/profile" routerLinkActive="active" class="nav-item" title="Profile" (click)="closeMobile()">
             <i class="fa-solid fa-user nav-icon-fa"></i>
             <span class="nav-label">Profile</span>
@@ -74,7 +99,138 @@ import { AuthService } from '../../../core/services/auth.service';
           <span></span><span></span><span></span>
         </button>
         <span class="mobile-brand">PDMHS Adviser</span>
+        <button class="notification-bell mobile-notif-bell" (click)="toggleNotificationPanel()" title="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+        </button>
       </header>
+
+      <!-- Notification Side Panel -->
+      <div class="notification-panel-overlay" *ngIf="notifPanelService.open$ | async" (click)="closeNotificationPanel()">
+        <div class="notification-panel" (click)="$event.stopPropagation()">
+
+          <div class="panel-header">
+            <h3>Notifications</h3>
+            <button class="panel-close" (click)="closeNotificationPanel()">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+
+          <div class="panel-tabs">
+            <button class="tab-btn" [class.active]="showAllTab" (click)="showAllTab = true">All</button>
+            <button class="tab-btn" [class.active]="!showAllTab" (click)="showAllTab = false">Unread</button>
+            <button class="mark-all-btn" *ngIf="unreadCount > 0" (click)="markAllAsRead()">
+              <i class="fa-solid fa-check-double"></i> Mark all as read
+            </button>
+          </div>
+
+          <div class="panel-content">
+
+            <!-- ALL TAB -->
+            <ng-container *ngIf="showAllTab">
+              <div *ngFor="let alert of alerts"
+                   class="fb-notif-item"
+                   [class.fb-notif-unread]="!alert.isRead"
+                   (click)="openAlertDetail(alert)">
+                <div class="fb-notif-icon-wrap" [ngClass]="alert.priority === 'urgent' ? 'urgent-icon' : 'normal-icon'">
+                  <i class="fa-solid" [ngClass]="alert.priority === 'urgent' ? 'fa-triangle-exclamation' : 'fa-circle-info'"></i>
+                </div>
+                <div class="fb-notif-body">
+                  <div class="fb-notif-message" [class.fw-bold]="!alert.isRead">
+                    <strong>{{ alert.studentName }}</strong> — {{ alert.subject }}
+                  </div>
+                  <div class="fb-notif-meta">{{ alert.senderName }} · <span class="fb-notif-time">{{ alert.timeAgo }}</span></div>
+                </div>
+                <span class="unread-dot" *ngIf="!alert.isRead"></span>
+              </div>
+
+              <div *ngIf="alerts.length === 0" class="no-notifications">
+                <i class="fa-solid fa-bell-slash"></i>
+                <p>No notifications</p>
+              </div>
+            </ng-container>
+
+            <!-- UNREAD TAB -->
+            <ng-container *ngIf="!showAllTab">
+              <div *ngFor="let alert of unreadAlerts"
+                   class="fb-notif-item fb-notif-unread"
+                   (click)="openAlertDetail(alert)">
+                <div class="fb-notif-icon-wrap" [ngClass]="alert.priority === 'urgent' ? 'urgent-icon' : 'normal-icon'">
+                  <i class="fa-solid" [ngClass]="alert.priority === 'urgent' ? 'fa-triangle-exclamation' : 'fa-circle-info'"></i>
+                </div>
+                <div class="fb-notif-body">
+                  <div class="fb-notif-message fw-bold">
+                    <strong>{{ alert.studentName }}</strong> — {{ alert.subject }}
+                  </div>
+                  <div class="fb-notif-meta">{{ alert.senderName }} · <span class="fb-notif-time">{{ alert.timeAgo }}</span></div>
+                </div>
+                <span class="unread-dot"></span>
+              </div>
+
+              <div *ngIf="unreadAlerts.length === 0" class="no-notifications">
+                <i class="fa-solid fa-bell-slash"></i>
+                <p>No unread notifications</p>
+              </div>
+            </ng-container>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert Detail Modal -->
+      <div class="modal-overlay" *ngIf="selectedAlert" (click)="closeAlertDetail()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>
+              <i class="fa-solid" [ngClass]="selectedAlert!.priority === 'urgent' ? 'fa-triangle-exclamation' : 'fa-circle-info'"></i>
+              Notification Details
+            </h3>
+            <button class="modal-close" (click)="closeAlertDetail()"><i class="fa-solid fa-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <div class="request-details">
+              <div class="detail-row">
+                <span class="detail-label">Student:</span>
+                <span class="detail-value">{{ selectedAlert!.studentName }} <span class="muted">({{ selectedAlert!.studentNumber }})</span></span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Subject:</span>
+                <span class="detail-value">{{ selectedAlert!.subject }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">From:</span>
+                <span class="detail-value">{{ selectedAlert!.senderName }} <span class="muted">({{ selectedAlert!.senderRole }})</span></span>
+              </div>
+              <div class="detail-row" *ngIf="selectedAlert!.visitType">
+                <span class="detail-label">Visit Type:</span>
+                <span class="detail-value">{{ selectedAlert!.visitType }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Priority:</span>
+                <span class="detail-value">
+                  <span class="priority-chip" [ngClass]="selectedAlert!.priority">
+                    <i class="fa-solid" [ngClass]="selectedAlert!.priority === 'urgent' ? 'fa-triangle-exclamation' : 'fa-circle-info'"></i>
+                    {{ selectedAlert!.priority === 'urgent' ? 'Urgent' : 'Notice' }}
+                  </span>
+                </span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Time:</span>
+                <span class="detail-value">{{ selectedAlert!.fullDate || selectedAlert!.timeAgo }}</span>
+              </div>
+            </div>
+            <div class="message-box">
+              <p>{{ selectedAlert!.fullMessage }}</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeAlertDetail()">Close</button>
+            <button class="btn-primary" (click)="viewStudentRecord(selectedAlert!)">
+              <i class="fa-solid fa-user"></i> View Student Record
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- Main content -->
       <main class="main-content">
@@ -84,18 +240,100 @@ import { AuthService } from '../../../core/services/auth.service';
     </div>
   `,
 })
-export class AdviserLayoutComponent implements OnInit {
-  adviserName = 'Adviser';
+export class AdviserLayoutComponent implements OnInit, OnDestroy {
   isCollapsed = false;
   mobileOpen = false;
   loggingOut = false;
+  showAllTab = true;
+  alerts: AdviserAlert[] = [];
+  selectedAlert: AdviserAlert | null = null;
+  unreadCount = 0;
+  private pollSub?: Subscription;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private adviserService: AdviserService,
+    public notifPanelService: AdviserNotificationPanelService
+  ) {}
+
+  get unreadAlerts(): AdviserAlert[] {
+    return this.alerts.filter(a => !a.isRead);
+  }
 
   ngOnInit(): void {
-    const currentUser = this.authService.currentUserValue;
-    if (currentUser) {
-      this.adviserName = currentUser.full_name || 'Adviser';
+    this.loadNotifications();
+    this.pollSub = interval(30000).subscribe(() => this.loadNotifications());
+  }
+
+  ngOnDestroy(): void {
+    this.pollSub?.unsubscribe();
+  }
+
+  loadNotifications(): void {
+    this.adviserService.getAdviserNotifications().subscribe({
+      next: (response) => {
+        let notifications: any[] = [];
+        if (response?.success && response.data?.notifications) {
+          notifications = response.data.notifications;
+        } else if (response?.success && Array.isArray(response.notifications)) {
+          notifications = response.notifications;
+        } else if (Array.isArray(response?.notifications)) {
+          notifications = response.notifications;
+        }
+        this.alerts = notifications.map((n: any) => ({
+          ...n,
+          studentId: n.studentId ?? n.student_id,
+          isRead: n.isRead ?? false
+        }));
+        this.unreadCount = this.alerts.filter(a => !a.isRead).length;
+        this.notifPanelService.setUnreadCount(this.unreadCount);
+      },
+      error: () => {}
+    });
+  }
+
+  toggleNotificationPanel(): void {
+    this.closeMobile();
+    this.notifPanelService.toggle();
+  }
+
+  closeNotificationPanel(): void {
+    this.notifPanelService.close();
+  }
+
+  openAlertDetail(alert: AdviserAlert): void {
+    alert.isRead = true;
+    this.unreadCount = this.alerts.filter(a => !a.isRead).length;
+    this.notifPanelService.setUnreadCount(this.unreadCount);
+    this.selectedAlert = alert;
+    this.notifPanelService.close();
+  }
+
+  closeAlertDetail(): void {
+    this.selectedAlert = null;
+  }
+
+  markAllAsRead(): void {
+    this.alerts.forEach(a => a.isRead = true);
+    this.unreadCount = 0;
+    this.notifPanelService.setUnreadCount(0);
+  }
+
+  viewStudentRecord(alert: AdviserAlert): void {
+    const studentId = alert.studentId ?? alert.student_id;
+    if (!studentId) return;
+    this.closeAlertDetail();
+    this.router.navigate(['/dashboard/adviser/students', studentId]);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.notification-bell') &&
+        !target.closest('.notification-bell-nav') &&
+        !target.closest('.notification-panel')) {
+      this.notifPanelService.close();
     }
   }
 
