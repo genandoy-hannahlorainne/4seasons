@@ -71,7 +71,7 @@ export class LoginComponent implements OnInit {
     return roleMap[this.selectedRole] || '';
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.loginForm.invalid) {
       return;
     }
@@ -86,10 +86,10 @@ export class LoginComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    // iOS Safari requires permission to be requested from a direct user gesture.
-    // Pre-request here (before the async HTTP call) so it counts as user-initiated.
+    // For adviser: request notification permission NOW (user gesture context).
+    // We await it so permission is resolved before init() runs after login.
     if (this.selectedRole === 'adviser' && this.pushNotificationService.isSupported()) {
-      Notification.requestPermission().catch(() => {});
+      await Notification.requestPermission().catch(() => {});
     }
 
     const { username, password } = this.loginForm.value;
@@ -118,7 +118,6 @@ export class LoginComponent implements OnInit {
         if (userRole !== expectedRole) {
           this.authService.logout();
           this.error = `You selected to login as "${expectedRole}" but this account belongs to "${userRole}". Please use the correct account for ${expectedRole}.`;
-          // Security: Role mismatch detected
           return;
         }
 
