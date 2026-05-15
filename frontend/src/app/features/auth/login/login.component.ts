@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { PushNotificationService } from '../../../core/services/push-notification.service';
 
 @Component({
   selector: 'app-login',
@@ -24,7 +25,8 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private pushNotificationService: PushNotificationService
   ) {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
@@ -83,6 +85,12 @@ export class LoginComponent implements OnInit {
 
     this.loading = true;
     this.error = '';
+
+    // iOS Safari requires permission to be requested from a direct user gesture.
+    // Pre-request here (before the async HTTP call) so it counts as user-initiated.
+    if (this.selectedRole === 'adviser' && this.pushNotificationService.isSupported()) {
+      Notification.requestPermission().catch(() => {});
+    }
 
     const { username, password } = this.loginForm.value;
 

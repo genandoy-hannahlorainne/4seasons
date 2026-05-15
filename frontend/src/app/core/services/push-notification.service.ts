@@ -16,6 +16,16 @@ export class PushNotificationService {
   constructor(private http: HttpClient) {}
 
   /**
+   * Call this from a user gesture (button click) for iOS Safari support.
+   * On other platforms, init() handles it automatically.
+   */
+  async requestFromUserGesture(): Promise<void> {
+    if (!this.isSupported()) return;
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') await this.init();
+  }
+
+  /**
    * Register the service worker, initialize Firebase Messaging,
    * get an FCM token and save it to the server.
    * Call this after login for adviser users and on app startup.
@@ -158,11 +168,12 @@ export class PushNotificationService {
     return Notification.requestPermission();
   }
 
-  private isSupported(): boolean {
+  isSupported(): boolean {
     return (
       typeof window !== 'undefined' &&
       'serviceWorker' in navigator &&
-      'Notification' in window
+      'Notification' in window &&
+      'PushManager' in window
     );
   }
 }

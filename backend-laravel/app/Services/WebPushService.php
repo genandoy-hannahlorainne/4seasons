@@ -69,17 +69,21 @@ class WebPushService
 
         $token = $subscription->endpoint;
 
+        $appUrl  = rtrim(config('app.url', 'https://studentcare.site'), '/');
+        $rawLink = $payload['data']['url'] ?? '/adviser/notifications';
+        $link    = str_starts_with($rawLink, 'http') ? $rawLink : $appUrl . $rawLink;
+
         $body = [
             'to' => $token,
             'notification' => [
-                'title' => $payload['title'] ?? 'Studentcare',
-                'body'  => $payload['body']  ?? '',
-                'icon'  => $payload['icon']  ?? '/assets/icons/school-clinic.png',
-                'badge' => $payload['badge'] ?? '/assets/icons/notification.png',
-                'tag'   => $payload['tag']   ?? 'studentcare-notification',
-                'click_action' => $payload['data']['url'] ?? 'https://studentcare.site/adviser/notifications',
+                'title'        => $payload['title'] ?? 'Studentcare',
+                'body'         => $payload['body']  ?? '',
+                'icon'         => $payload['icon']  ?? ($appUrl . '/assets/icons/school-clinic.png'),
+                'badge'        => $payload['badge'] ?? ($appUrl . '/assets/icons/notification.png'),
+                'tag'          => $payload['tag']   ?? 'studentcare-notification',
+                'click_action' => $link,
             ],
-            'data' => $payload['data'] ?? [],
+            'data' => array_merge($payload['data'] ?? [], ['url' => $link]),
         ];
 
         $response = Http::withHeaders([
@@ -144,22 +148,7 @@ class WebPushService
                     'title' => $payload['title'] ?? 'Studentcare',
                     'body'  => $payload['body']  ?? '',
                 ],
-                'webpush' => [
-                    'notification' => [
-                        'title'              => $payload['title']   ?? 'Studentcare',
-                        'body'               => $payload['body']    ?? '',
-                        'icon'               => $payload['icon']    ?? '/assets/icons/school-clinic.png',
-                        'badge'              => $payload['badge']   ?? '/assets/icons/notification.png',
-                        'tag'                => $payload['tag']     ?? 'studentcare-notification',
-                        'requireInteraction' => $payload['requireInteraction'] ?? false,
-                        'vibrate'            => ($payload['requireInteraction'] ?? false) ? [200, 100, 200, 100, 200] : [200],
-                        'actions'            => $payload['actions'] ?? [],
-                        'data'               => $payload['data']    ?? [],
-                    ],
-                    'fcm_options' => [
-                        'link' => $payload['data']['url'] ?? 'https://studentcare.site/adviser/alerts',
-                    ],
-                ],
+                'webpush' => $this->buildWebpushBlock($payload),
             ],
         ];
 
@@ -234,6 +223,30 @@ class WebPushService
             Log::error('WebPush: FCM access token exception: ' . $e->getMessage());
             return null;
         }
+    }
+
+    private function buildWebpushBlock(array $payload): array
+    {
+        $appUrl  = rtrim(config('app.url', 'https://studentcare.site'), '/');
+        $icon    = $payload['icon']  ?? ($appUrl . '/assets/icons/school-clinic.png');
+        $badge   = $payload['badge'] ?? ($appUrl . '/assets/icons/notification.png');
+        $rawLink = $payload['data']['url'] ?? '/adviser/notifications';
+        $link    = str_starts_with($rawLink, 'http') ? $rawLink : $appUrl . $rawLink;
+
+        return [
+            'notification' => [
+                'title'              => $payload['title']   ?? 'Studentcare',
+                'body'               => $payload['body']    ?? '',
+                'icon'               => $icon,
+                'badge'              => $badge,
+                'tag'                => $payload['tag']     ?? 'studentcare-notification',
+                'requireInteraction' => $payload['requireInteraction'] ?? false,
+                'vibrate'            => ($payload['requireInteraction'] ?? false) ? [200, 100, 200, 100, 200] : [200],
+                'actions'            => $payload['actions'] ?? [],
+                'data'               => array_merge($payload['data'] ?? [], ['url' => $link]),
+            ],
+            'fcm_options' => ['link' => $link],
+        ];
     }
 
     private function base64UrlEncode(string $data): string
