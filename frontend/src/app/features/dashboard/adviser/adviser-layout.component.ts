@@ -4,6 +4,7 @@ import { RouterModule, RouterOutlet, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdviserService } from '../../../core/services/adviser.service';
 import { AdviserNotificationPanelService } from '../../../core/services/adviser-notification-panel.service';
+import { PushNotificationService } from '../../../core/services/push-notification.service';
 import { interval, Subscription } from 'rxjs';
 
 interface AdviserAlert {
@@ -249,12 +250,14 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
   selectedAlert: AdviserAlert | null = null;
   unreadCount = 0;
   private pollSub?: Subscription;
+  private pushSub?: Subscription;
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private adviserService: AdviserService,
-    public notifPanelService: AdviserNotificationPanelService
+    public notifPanelService: AdviserNotificationPanelService,
+    private pushNotificationService: PushNotificationService
   ) {}
 
   get unreadAlerts(): AdviserAlert[] {
@@ -263,11 +266,17 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadNotifications();
+    // Poll every 30 seconds as a fallback
     this.pollSub = interval(30000).subscribe(() => this.loadNotifications());
+    // Refresh immediately when a foreground FCM push arrives (app is open)
+    this.pushSub = this.pushNotificationService.foregroundMessage$.subscribe(() => {
+      this.loadNotifications();
+    });
   }
 
   ngOnDestroy(): void {
     this.pollSub?.unsubscribe();
+    this.pushSub?.unsubscribe();
   }
 
   loadNotifications(): void {

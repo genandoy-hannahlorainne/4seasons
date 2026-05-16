@@ -35,30 +35,44 @@ if (typeof firebase !== 'undefined') {
   const messaging = firebase.messaging();
 
   // ─── Background push handler (app is closed / in background) ─────────────────
+  // Styled like social media notifications: app icon, bold title, preview body,
+  // action buttons, badge on status bar, vibration, and direct deep-link on click.
   messaging.onBackgroundMessage((payload) => {
     const data        = payload.data        || {};
     const notif       = payload.notification || {};
-    const title       = notif.title  || data.title  || 'Studentcare Clinic';
+
+    const title       = notif.title  || data.title  || 'Studentcare';
     const body        = notif.body   || data.body   || 'You have a new notification.';
     const icon        = data.icon    || notif.icon  || '/assets/icons/school-clinic.png';
     const badge       = data.badge   || '/assets/icons/notification.png';
+    const image       = data.image   || notif.image || null;   // optional big thumbnail
     const tag         = data.tag     || 'studentcare-notification';
     const clickUrl    = data.url     || '/adviser/alerts';
     const isEmergency = data.requireInteraction === 'true' || data.requireInteraction === true;
+    const timestamp   = data.timestamp ? parseInt(data.timestamp, 10) : Date.now();
 
-    return self.registration.showNotification(title, {
+    const options = {
       body,
-      icon,
-      badge,
-      tag,
+      icon,           // app icon shown next to the title (like FB/Messenger avatar)
+      badge,          // small monochrome icon shown in Android status bar
+      tag,            // collapses duplicate notifications for the same visit
       data:               { url: clickUrl },
-      requireInteraction: isEmergency,
-      vibrate:            isEmergency ? [200, 100, 200, 100, 200] : [200],
+      requireInteraction: isEmergency,   // keeps urgent alerts on screen until dismissed
+      vibrate:            isEmergency ? [300, 100, 300, 100, 300] : [200, 50, 200],
+      timestamp,          // shows correct time like social media (e.g. "2 min ago")
+      silent:             false,         // always play sound
       actions: [
-        { action: 'view',    title: 'View Details' },
-        { action: 'dismiss', title: 'Dismiss' },
+        { action: 'view',    title: '👁 View Details' },
+        { action: 'dismiss', title: '✕ Dismiss' },
       ],
-    });
+    };
+
+    // Add big image thumbnail if provided (like Facebook post preview)
+    if (image) {
+      options.image = image;
+    }
+
+    return self.registration.showNotification(title, options);
   });
 }
 
@@ -131,22 +145,25 @@ self.addEventListener('message', (event) => {
 // ─── Notification click ───────────────────────────────────────────────────────
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+
+  // Dismiss action — just close, do nothing else
   if (event.action === 'dismiss') return;
 
+  // 'view' action or clicking the notification body both open the app
   const targetUrl = (event.notification.data && event.notification.data.url)
     ? event.notification.data.url
     : '/adviser/alerts';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Try to focus existing window
+      // If the app is already open, focus it and navigate — like tapping a FB notification
       for (const client of windowClients) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.navigate(targetUrl);
           return client.focus();
         }
       }
-      // Open new window if none exists
+      // App is closed — open a new window directly to the notification target
       if (clients.openWindow) return clients.openWindow(targetUrl);
     })
   );
