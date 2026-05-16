@@ -271,6 +271,7 @@ class WebPushService
                 'click_action' => $link,
                 'channel_id'   => $isEmergency ? 'studentcare_urgent' : 'studentcare_default',
             ],
+            'priority'    => 'high',
             'fcm_options' => ['analytics_label' => 'studentcare_push'],
             'data'        => array_merge($payload['data'] ?? [], ['url' => $link]),
         ];
