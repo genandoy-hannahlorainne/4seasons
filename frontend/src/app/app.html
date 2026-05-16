@@ -1,1 +1,13 @@
+﻿<!-- PWA Update Banner -->
+<div *ngIf="showUpdateBanner" class="pwa-update-banner" role="alert" aria-live="polite">
+  <div class="pwa-update-banner__content">
+    <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+    <span>A new version of Studentcare is available.</span>
+  </div>
+  <div class="pwa-update-banner__actions">
+    <button class="btn btn-primary btn-sm" (click)="applyUpdate()">Update Now</button>
+    <button class="btn btn-outline btn-sm" (click)="dismissUpdate()">Later</button>
+  </div>
+</div>
+
 <router-outlet />
