@@ -69,6 +69,8 @@ class FcmDirectService
                     'body'  => $payload['body']  ?? '',
                 ],
                 'webpush' => $this->buildWebpushBlock($payload),
+                'android' => $this->buildAndroidBlock($payload),
+                'apns'    => $this->buildApnsBlock($payload),
             ],
         ];
 
@@ -110,6 +112,8 @@ class FcmDirectService
                     'body'  => $payload['body']  ?? '',
                 ],
                 'webpush' => $this->buildWebpushBlock($payload),
+                'android' => $this->buildAndroidBlock($payload),
+                'apns'    => $this->buildApnsBlock($payload),
             ],
         ];
 
@@ -151,6 +155,8 @@ class FcmDirectService
                     'body'  => $payload['body']  ?? '',
                 ],
                 'webpush' => $this->buildWebpushBlock($payload),
+                'android' => $this->buildAndroidBlock($payload),
+                'apns'    => $this->buildApnsBlock($payload),
             ],
         ];
 
@@ -266,6 +272,75 @@ class FcmDirectService
                 'data'               => array_merge($payload['data'] ?? [], ['url' => $link]),
             ],
             'fcm_options' => ['link' => $link],
+        ];
+    }
+
+    /**
+     * Build the Android-specific FCM block.
+     * Required for push notifications to work on Android devices.
+     */
+    private function buildAndroidBlock(array $payload): array
+    {
+        $appUrl   = rtrim(config('app.url', 'https://studentcare.site'), '/');
+        $rawIcon  = $payload['icon']  ?? '/assets/icons/school-clinic.png';
+        $rawLink  = $payload['data']['url'] ?? '/adviser/notifications';
+
+        $icon  = str_starts_with($rawIcon, 'http') ? $rawIcon : $appUrl . $rawIcon;
+        $link  = str_starts_with($rawLink, 'http') ? $rawLink : $appUrl . $rawLink;
+
+        $isEmergency = $payload['requireInteraction'] ?? false;
+
+        return [
+            'notification' => [
+                'icon'          => $icon,
+                'tag'           => $payload['tag'] ?? 'studentcare-notification',
+                'click_action'  => $link,
+                'channel_id'    => $isEmergency ? 'studentcare_urgent' : 'studentcare_default',
+            ],
+            'fcm_options' => [
+                'analytics_label' => 'studentcare_push',
+            ],
+            'data' => array_merge(
+                $payload['data'] ?? [],
+                ['url' => $link]
+            ),
+        ];
+    }
+
+    /**
+     * Build the APNs (Apple Push Notification service) block.
+     * Required for push notifications to work on iOS devices (Safari PWA / iOS Chrome).
+     */
+    private function buildApnsBlock(array $payload): array
+    {
+        $appUrl   = rtrim(config('app.url', 'https://studentcare.site'), '/');
+        $rawLink  = $payload['data']['url'] ?? '/adviser/notifications';
+        $link     = str_starts_with($rawLink, 'http') ? $rawLink : $appUrl . $rawLink;
+
+        $isEmergency = $payload['requireInteraction'] ?? false;
+
+        $aps = [
+                    'alert' => [
+                        'title' => $payload['title'] ?? 'Studentcare',
+                        'body'  => $payload['body']  ?? '',
+                    ],
+                    'badge'             => 1,
+                    'content-available' => 1,
+                    'mutable-content'   => 1,
+                ];
+
+        if ($isEmergency) {
+            $aps['sound'] = 'default';
+        }
+
+        return [
+            'payload' => [
+                'aps' => $aps,
+                'url' => $link,
+            ],
+            'fcm_options' => [
+                'analytics_label' => 'studentcare_push',
+            ],
         ];
     }
 
