@@ -92,7 +92,7 @@ jobs:
             sleep 15
             $COMPOSE_CMD pull
           }
-          $COMPOSE_CMD up -d
+          $COMPOSE_CMD up -d --force-recreate
 
           BACKEND_CONTAINER="$($COMPOSE_CMD ps -q backend)"
           if [ -n "$BACKEND_CONTAINER" ]; then
