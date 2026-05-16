@@ -712,20 +712,23 @@ class MedicalVisitController extends BaseController
                 $body   = "{$studentDisplay} visited the clinic at {$timeLabel}. Reason: {$reason}";
             }
 
+            $appUrl = rtrim(config('app.url', 'https://studentcare.site'), '/');
+
             $payload = [
                 'title'   => $isEmergency ? '🚨 Emergency Clinic Visit' : '🏥 Clinic Visit Notification',
                 'body'    => $body,
-                'icon'    => '/assets/icons/school-clinic.png',
-                'badge'   => '/assets/icons/notification.png',
+                'icon'    => $appUrl . '/assets/icons/school-clinic.png',
+                'badge'   => $appUrl . '/assets/icons/notification.png',
                 'tag'     => "visit-{$visitId}",
                 'data'    => [
                     'visit_id'   => $visitId,
                     'student_id' => $studentId,
-                    'url'        => "/adviser/alerts?visit_id={$visitId}",
+                    'url'        => "/dashboard/adviser/alerts?visit_id={$visitId}",
+                    'timestamp'  => (string) (now()->timestamp * 1000), // ms for JS Date
                 ],
                 'actions' => [
-                    ['action' => 'view',    'title' => 'View Details'],
-                    ['action' => 'dismiss', 'title' => 'Dismiss'],
+                    ['action' => 'view',    'title' => '👁 View Details'],
+                    ['action' => 'dismiss', 'title' => '✕ Dismiss'],
                 ],
                 'requireInteraction' => $isEmergency,
             ];

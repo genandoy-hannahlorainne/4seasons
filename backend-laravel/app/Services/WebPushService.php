@@ -373,10 +373,25 @@ class WebPushService
         return str_starts_with($endpoint, 'APA91b') || str_starts_with($endpoint, 'f3gskX');
     }
 
+    /**
+     * Detect any raw FCM token or FCM endpoint URL.
+     * Raw FCM tokens are never https:// URLs — they are alphanumeric strings
+     * with colons, hyphens, underscores (e.g. "cY5EN7UZa46P...:APA91b...").
+     * The VAPID Web Push library cannot handle these — they must go via FCM v1.
+     */
     private function isFcmEndpoint(string $endpoint): bool
     {
-        return str_contains($endpoint, 'fcm.googleapis.com')
-            || (!str_starts_with($endpoint, 'https://') && strlen($endpoint) > 100);
+        // Full FCM push endpoint URL
+        if (str_contains($endpoint, 'fcm.googleapis.com')) {
+            return true;
+        }
+
+        // Raw FCM token — not a URL, just a token string
+        if (!str_starts_with($endpoint, 'https://') && strlen($endpoint) > 50) {
+            return true;
+        }
+
+        return false;
     }
 }
 

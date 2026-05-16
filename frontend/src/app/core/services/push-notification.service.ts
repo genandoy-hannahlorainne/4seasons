@@ -138,24 +138,34 @@ export class PushNotificationService {
         const body   = notif.body  || data['body']  || '';
         const icon   = data['icon']  || notif.icon  || '/assets/icons/school-clinic.png';
         const badge  = data['badge'] || '/assets/icons/notification.png';
+        const image  = data['image'] || (notif as any).image || undefined;
         const tag    = data['tag']   || 'studentcare-notification';
-        const url    = data['url']   || '/adviser/notifications';
+        const url    = data['url']   || '/adviser/alerts';
         const isEmergency = data['requireInteraction'] === 'true';
+        const timestamp = data['timestamp'] ? parseInt(data['timestamp'], 10) : Date.now();
 
         navigator.serviceWorker.ready.then((reg) => {
-          reg.showNotification(title, {
+          const options: NotificationOptions = {
             body,
             icon,
             badge,
             tag,
             data:               { url },
             requireInteraction: isEmergency,
-            vibrate:            isEmergency ? [200, 100, 200, 100, 200] : [200],
+            vibrate:            isEmergency ? [300, 100, 300, 100, 300] : [200, 50, 200],
+            timestamp,
+            silent:             false,
             actions: [
-              { action: 'view',    title: 'View Details' },
-              { action: 'dismiss', title: 'Dismiss' },
+              { action: 'view',    title: '👁 View Details' },
+              { action: 'dismiss', title: '✕ Dismiss' },
             ],
-          } as NotificationOptions);
+          } as any;
+
+          if (image) {
+            (options as any).image = image;
+          }
+
+          reg.showNotification(title, options);
         }).catch(() => {
           // Fallback: basic Notification API (no actions, no badge)
           new Notification(title, { body, icon, tag });

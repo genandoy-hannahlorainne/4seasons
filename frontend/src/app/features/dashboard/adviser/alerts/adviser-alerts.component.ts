@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AdviserService } from '../../../../core/services/adviser.service';
+import { PushNotificationService } from '../../../../core/services/push-notification.service';
 import { Router } from '@angular/router';
 import { Subject, interval } from 'rxjs';
 import { takeUntil, switchMap, startWith } from 'rxjs/operators';
@@ -522,7 +523,8 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private adviserService: AdviserService,
-    private router: Router
+    private router: Router,
+    private pushNotificationService: PushNotificationService
   ) {}
 
   get filteredAlerts(): Alert[] {
@@ -552,7 +554,7 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadAlerts();
 
-    // Auto-refresh notifications every 30 seconds
+    // Auto-refresh notifications every 30 seconds as a fallback
     interval(this.refreshInterval)
       .pipe(
         startWith(0),
@@ -574,6 +576,13 @@ export class AdviserAlertsComponent implements OnInit, OnDestroy {
         error: (err) => {
           // Auto-refresh error
         }
+      });
+
+    // Refresh immediately when a foreground FCM push arrives (app is open)
+    this.pushNotificationService.foregroundMessage$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadAlerts();
       });
   }
 
