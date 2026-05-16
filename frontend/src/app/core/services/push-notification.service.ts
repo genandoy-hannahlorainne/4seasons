@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getMessaging, getToken, deleteToken, Messaging } from 'firebase/messaging';
+import { getMessaging, getToken, deleteToken, onMessage, Messaging, MessagePayload } from 'firebase/messaging';
 
 @Injectable({
   providedIn: 'root',
@@ -12,6 +12,9 @@ export class PushNotificationService {
   private readonly swPath = '/sw.js';
   private app: FirebaseApp | null = null;
   private messaging: Messaging | null = null;
+
+  /** Emits whenever a foreground FCM message arrives (app is open). */
+  readonly foregroundMessage$ = new Subject<MessagePayload>();
 
   constructor(private http: HttpClient) {}
 
@@ -71,6 +74,11 @@ export class PushNotificationService {
 
       await this.saveTokenToServer(token);
       console.info('PushNotifications: FCM token saved successfully.');
+
+      // Listen for foreground messages (app is open/focused).
+      // The SW onBackgroundMessage only fires when the app is in the background.
+      // Without this handler, Android Chrome silently drops foreground FCM messages.
+      this.listenForeground();
     } catch (err) {
       console.warn('PushNotifications: init failed.', err);
     }
@@ -106,7 +114,55 @@ export class PushNotificationService {
     }
   }
 
-  // ─── Private helpers ────────────────────────────────────────────────────────
+  //  Private helpers 
+
+  /**
+   * Register a foreground message listener.
+   * When the app is open, FCM bypasses the service worker and delivers here.
+   * We manually show a Notification so the user still sees it on Android/iOS.
+   */
+  private listenForeground(): void {
+    if (!this.messaging) return;
+
+    onMessage(this.messaging, (payload) => {
+      console.info('PushNotifications: foreground message received.', payload);
+
+      // Emit for any component that wants to react (e.g. refresh notification list)
+      this.foregroundMessage$.next(payload);
+
+      // Show a native notification so Android/iOS users see it even when app is open
+      if (Notification.permission === 'granted') {
+        const data   = (payload.data   || {}) as Record<string, string>;
+        const notif  = payload.notification || {};
+        const title  = notif.title || data['title'] || 'Studentcare';
+        const body   = notif.body  || data['body']  || '';
+        const icon   = data['icon']  || notif.icon  || '/assets/icons/school-clinic.png';
+        const badge  = data['badge'] || '/assets/icons/notification.png';
+        const tag    = data['tag']   || 'studentcare-notification';
+        const url    = data['url']   || '/adviser/notifications';
+        const isEmergency = data['requireInteraction'] === 'true';
+
+        navigator.serviceWorker.ready.then((reg) => {
+          reg.showNotification(title, {
+            body,
+            icon,
+            badge,
+            tag,
+            data:               { url },
+            requireInteraction: isEmergency,
+            vibrate:            isEmergency ? [200, 100, 200, 100, 200] : [200],
+            actions: [
+              { action: 'view',    title: 'View Details' },
+              { action: 'dismiss', title: 'Dismiss' },
+            ],
+          } as NotificationOptions);
+        }).catch(() => {
+          // Fallback: basic Notification API (no actions, no badge)
+          new Notification(title, { body, icon, tag });
+        });
+      }
+    });
+  }
 
   private initFirebase(): void {
     if (this.messaging) return;
@@ -141,7 +197,7 @@ export class PushNotificationService {
   private async saveTokenToServer(token: string): Promise<void> {
     await firstValueFrom(
       this.http.post(`${environment.apiUrl}/push/subscribe`, {
-        endpoint:   token,   // store FCM token as endpoint
+        endpoint:   token,
         p256dh_key: null,
         auth_key:   null,
         user_agent: navigator.userAgent,
