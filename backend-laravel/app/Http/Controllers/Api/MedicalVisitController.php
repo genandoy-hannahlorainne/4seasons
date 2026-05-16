@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Api;
 
@@ -778,3 +778,4 @@ class MedicalVisitController extends BaseController
         }
     }
 }
+
