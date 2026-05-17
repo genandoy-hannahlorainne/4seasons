@@ -117,4 +117,41 @@ jobs:
           BACKEND_CONTAINER="$($COMPOSE_CMD ps -q backend)"
           docker exec "$BACKEND_CONTAINER" php artisan config:clear
 
+          # Ensure webpush.php has FCM keys (image may have old version)
+          docker exec "$BACKEND_CONTAINER" php -r "
+file_put_contents('/var/www/html/config/webpush.php', '<?php
+return [
+    \'vapid_public_key\'  => env(\'VAPID_PUBLIC_KEY\', \'\'),
+    \'vapid_private_key\' => env(\'VAPID_PRIVATE_KEY\', \'\'),
+    \'vapid_subject\'     => env(\'VAPID_SUBJECT\', \'mailto:admin@studentcare.site\'),
+    \'fcm_project_id\'    => env(\'FCM_PROJECT_ID\', \'\'),
+    \'fcm_server_key\'    => env(\'FCM_SERVER_KEY\', \'\'),
+    \'fcm_service_account_json\' => env(\'FCM_SERVICE_ACCOUNT_JSON\', \'\'),
+];');
+echo 'webpush.php patched';
+"
+
+          # Fix WebPushService: remove BOM and fix FCM token detection threshold
+          docker exec "$BACKEND_CONTAINER" php -r "
+\\\$file = '/var/www/html/app/Services/WebPushService.php';
+\\\$c = file_get_contents(\\\$file);
+if (substr(\\\$c, 0, 3) === \"\xef\xbb\xbf\") { \\\$c = substr(\\\$c, 3); }
+\\\$c = str_replace('strlen(\\\$endpoint) > 100', 'strlen(\\\$endpoint) > 50', \\\$c);
+file_put_contents(\\\$file, \\\$c);
+opcache_reset();
+echo 'WebPushService patched';
+"
+
+          # Fix PushSubscriptionController: remove url validation
+          docker exec "$BACKEND_CONTAINER" php -r "
+\\\$file = '/var/www/html/app/Http/Controllers/Api/PushSubscriptionController.php';
+\\\$c = file_get_contents(\\\$file);
+\\\$c = str_replace(\"'required|url|max:2048'\", \"'required|string|max:2048'\", \\\$c);
+file_put_contents(\\\$file, \\\$c);
+opcache_reset();
+echo 'PushSubscriptionController patched';
+"
+
+          docker exec "$BACKEND_CONTAINER" php artisan config:cache
+
           docker image prune -f
