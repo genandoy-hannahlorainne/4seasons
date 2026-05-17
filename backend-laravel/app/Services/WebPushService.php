@@ -366,12 +366,14 @@ class WebPushService
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
     /**
-     * Legacy GCM/FCM tokens start with APA91b and are ~152+ chars.
+     * Legacy GCM/FCM tokens start with APA91b or contain :APA91b (sender_id:token format).
      * These require the legacy FCM HTTP API, not v1.
      */
     private function isLegacyFcmToken(string $endpoint): bool
     {
-        return str_starts_with($endpoint, 'APA91b') || str_starts_with($endpoint, 'f3gskX');
+        return str_starts_with($endpoint, 'APA91b')
+            || str_starts_with($endpoint, 'f3gskX')
+            || str_contains($endpoint, ':APA91b');
     }
 
     /**
