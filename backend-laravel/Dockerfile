@@ -1,7 +1,7 @@
 FROM php:8.2-apache
 
 # Build arg to bust cache when needed — increment this to force a full rebuild
-ARG CACHE_BUST=4
+ARG CACHE_BUST=5
 
 # System deps + PHP extensions required by Laravel/MySQL
 RUN printf 'Types: deb\nURIs: http://ftp.us.debian.org/debian\nSuites: trixie trixie-updates\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n' > /etc/apt/sources.list.d/debian.sources \
