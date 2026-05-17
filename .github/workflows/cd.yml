@@ -87,11 +87,12 @@ jobs:
             exit 1
           fi
 
-          $COMPOSE_CMD pull || {
-            echo "Pull failed, retrying after 15s..."
-            sleep 15
-            $COMPOSE_CMD pull
-          }
+          # Pull the exact image by SHA tag to bypass Docker Hub CDN caching of :latest
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/4seasons-backend:${{ github.sha }}
+
+          # Re-tag it as :latest so docker compose picks it up
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/4seasons-backend:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/4seasons-backend:latest
+
           $COMPOSE_CMD up -d --force-recreate
 
           BACKEND_CONTAINER="$($COMPOSE_CMD ps -q backend)"
