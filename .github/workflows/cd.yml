@@ -116,6 +116,7 @@ jobs:
           # Clear and rebuild config cache
           BACKEND_CONTAINER="$($COMPOSE_CMD ps -q backend)"
           docker exec "$BACKEND_CONTAINER" php artisan config:clear
+          docker exec "$BACKEND_CONTAINER" php artisan migrate --force
           docker exec "$BACKEND_CONTAINER" php artisan config:cache
 
           docker image prune -f
