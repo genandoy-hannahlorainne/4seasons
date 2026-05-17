@@ -113,7 +113,7 @@ jobs:
             done
           fi
 
-          # Clear and rebuild config cache
+          # Re-fetch container ID after recreate (old ID may be stale)
           BACKEND_CONTAINER="$($COMPOSE_CMD ps -q backend)"
           docker exec "$BACKEND_CONTAINER" php artisan config:clear
           docker exec "$BACKEND_CONTAINER" php artisan migrate --force
