@@ -19,6 +19,8 @@ class WebPushService
 {
     private ?WebPush $webPush = null;
 
+    public function __construct(private FcmAccessTokenService $tokenService) {}
+
     // ─── Public API ───────────────────────────────────────────────────────────
 
     public function sendToUser(int $userId, array $payload): void
@@ -54,27 +56,20 @@ class WebPushService
 
     // ─── Legacy FCM (for APA91b... tokens) ───────────────────────────────────
 
-    /**
-     * Send via FCM Legacy HTTP API using server key.
-     * Required for old-format GCM/FCM tokens (APA91b...).
-     */
     private function sendViaLegacyFcm(PushSubscription $subscription, array $payload): void
     {
         $serverKey = config('webpush.fcm_server_key');
         if (empty($serverKey)) {
-            // Fall back to v1 if no server key configured
             $this->sendViaFcmV1($subscription, $payload);
             return;
         }
-
-        $token = $subscription->endpoint;
 
         $appUrl  = rtrim(config('app.url', 'https://studentcare.site'), '/');
         $rawLink = $payload['data']['url'] ?? '/adviser/notifications';
         $link    = str_starts_with($rawLink, 'http') ? $rawLink : $appUrl . $rawLink;
 
         $body = [
-            'to' => $token,
+            'to' => $subscription->endpoint,
             'notification' => [
                 'title'        => $payload['title'] ?? 'Studentcare',
                 'body'         => $payload['body']  ?? '',
@@ -115,9 +110,9 @@ class WebPushService
     {
         $projectId = config('webpush.fcm_project_id');
         if (empty($projectId)) {
-            $json = config('webpush.fcm_service_account_json');
+            $json        = config('webpush.fcm_service_account_json');
             $credentials = $json ? json_decode($json, true) : null;
-            $projectId = $credentials['project_id'] ?? '';
+            $projectId   = $credentials['project_id'] ?? '';
         }
 
         if (empty($projectId)) {
@@ -126,7 +121,7 @@ class WebPushService
         }
 
         $endpoint = $subscription->endpoint;
-        $token = str_contains($endpoint, 'fcm.googleapis.com/fcm/send/')
+        $token    = str_contains($endpoint, 'fcm.googleapis.com/fcm/send/')
             ? last(explode('/', rtrim($endpoint, '/')))
             : $endpoint;
 
@@ -135,7 +130,7 @@ class WebPushService
             return;
         }
 
-        $accessToken = $this->getFcmAccessToken();
+        $accessToken = $this->tokenService->getAccessToken();
         if (!$accessToken) {
             Log::error('WebPush: Failed to obtain FCM access token.');
             return;
@@ -143,7 +138,7 @@ class WebPushService
 
         $notification = [
             'message' => [
-                'token' => $token,
+                'token'        => $token,
                 'notification' => [
                     'title' => $payload['title'] ?? 'Studentcare',
                     'body'  => $payload['body']  ?? '',
@@ -167,77 +162,89 @@ class WebPushService
         }
     }
 
-    private function getFcmAccessToken(): ?string
+    // ─── Standard Web Push / VAPID ────────────────────────────────────────────
+
+    private function sendViaWebPush(PushSubscription $subscription, array $payload): void
     {
-        $serviceAccountJson = config('webpush.fcm_service_account_json');
-        if (empty($serviceAccountJson)) {
-            Log::warning('WebPush: FCM_SERVICE_ACCOUNT_JSON not configured.');
-            return null;
+        if (empty(config('webpush.vapid_public_key')) || empty(config('webpush.vapid_private_key'))) {
+            Log::warning('WebPush: VAPID keys not configured. Skipping push notification.');
+            return;
         }
 
-        $credentials = json_decode($serviceAccountJson, true);
-        if (!$credentials) {
-            Log::error('WebPush: Failed to parse FCM_SERVICE_ACCOUNT_JSON.');
-            return null;
-        }
+        $webPush = $this->getWebPush();
 
-        $clientEmail = $credentials['client_email'] ?? '';
-        $privateKey  = $credentials['private_key']  ?? '';
+        $sub = Subscription::create([
+            'endpoint'        => $subscription->endpoint,
+            'contentEncoding' => 'aes128gcm',
+            'keys'            => [
+                'p256dh' => $subscription->p256dh_key,
+                'auth'   => $subscription->auth_key,
+            ],
+        ]);
 
-        if (empty($clientEmail) || empty($privateKey)) {
-            Log::warning('WebPush: FCM service account credentials missing from JSON.');
-            return null;
-        }
+        $webPush->queueNotification($sub, json_encode($payload));
 
-        try {
-            $now = time();
-            $header  = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
-            $claims  = $this->base64UrlEncode(json_encode([
-                'iss'   => $clientEmail,
-                'scope' => 'https://www.googleapis.com/auth/cloud-platform',
-                'aud'   => 'https://oauth2.googleapis.com/token',
-                'iat'   => $now,
-                'exp'   => $now + 3600,
-            ]));
-
-            $signingInput = "{$header}.{$claims}";
-            $privateKeyResource = openssl_pkey_get_private($privateKey);
-            if (!$privateKeyResource) {
-                Log::error('WebPush: Failed to load FCM private key.');
-                return null;
+        foreach ($webPush->flush() as $report) {
+            if ($report->isSuccess()) {
+                Log::info("WebPush: VAPID push sent to user {$subscription->user_id}");
+            } elseif ($report->isSubscriptionExpired()) {
+                $subscription->delete();
+                Log::info("WebPush: Removed expired VAPID subscription for user {$subscription->user_id}");
+            } else {
+                Log::warning("WebPush: VAPID push failed for user {$subscription->user_id}: " . $report->getReason());
             }
-
-            openssl_sign($signingInput, $signature, $privateKeyResource, 'SHA256');
-            $jwt = "{$signingInput}." . $this->base64UrlEncode($signature);
-
-            $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
-                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                'assertion'  => $jwt,
-            ]);
-
-            if ($response->successful()) {
-                return $response->json('access_token');
-            }
-
-            Log::error('WebPush: FCM token exchange failed: ' . $response->body());
-            return null;
-        } catch (\Throwable $e) {
-            Log::error('WebPush: FCM access token exception: ' . $e->getMessage());
-            return null;
         }
+    }
+
+    private function getWebPush(): WebPush
+    {
+        if ($this->webPush) {
+            return $this->webPush;
+        }
+
+        $this->webPush = new WebPush([
+            'VAPID' => [
+                'subject'    => config('webpush.vapid_subject', 'mailto:admin@studentcare.site'),
+                'publicKey'  => config('webpush.vapid_public_key'),
+                'privateKey' => config('webpush.vapid_private_key'),
+            ],
+        ]);
+        $this->webPush->setDefaultOptions(['TTL' => 86400]);
+
+        return $this->webPush;
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private function isLegacyFcmToken(string $endpoint): bool
+    {
+        return str_starts_with($endpoint, 'APA91b')
+            || str_starts_with($endpoint, 'f3gskX')
+            || str_contains($endpoint, ':APA91b');
+    }
+
+    private function isFcmEndpoint(string $endpoint): bool
+    {
+        if (str_contains($endpoint, 'fcm.googleapis.com')) {
+            return true;
+        }
+
+        if (!str_starts_with($endpoint, 'https://') && strlen($endpoint) > 50) {
+            return true;
+        }
+
+        return false;
     }
 
     private function buildWebpushBlock(array $payload): array
     {
-        $appUrl  = rtrim(config('app.url', 'https://studentcare.site'), '/');
-
+        $appUrl   = rtrim(config('app.url', 'https://studentcare.site'), '/');
         $rawIcon  = $payload['icon']  ?? '/assets/icons/school-clinic.png';
         $rawBadge = $payload['badge'] ?? '/assets/icons/notification.png';
         $rawLink  = $payload['data']['url'] ?? '/adviser/notifications';
-
-        $icon  = str_starts_with($rawIcon,  'http') ? $rawIcon  : $appUrl . $rawIcon;
-        $badge = str_starts_with($rawBadge, 'http') ? $rawBadge : $appUrl . $rawBadge;
-        $link  = str_starts_with($rawLink,  'http') ? $rawLink  : $appUrl . $rawLink;
+        $icon     = str_starts_with($rawIcon,  'http') ? $rawIcon  : $appUrl . $rawIcon;
+        $badge    = str_starts_with($rawBadge, 'http') ? $rawBadge : $appUrl . $rawBadge;
+        $link     = str_starts_with($rawLink,  'http') ? $rawLink  : $appUrl . $rawLink;
 
         return [
             'notification' => [
@@ -303,98 +310,4 @@ class WebPushService
             'fcm_options' => ['analytics_label' => 'studentcare_push'],
         ];
     }
-
-    private function base64UrlEncode(string $data): string
-    {
-        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-    }
-
-    // ─── Standard Web Push / VAPID ────────────────────────────────────────────
-
-    private function sendViaWebPush(PushSubscription $subscription, array $payload): void
-    {
-        if (empty(config('webpush.vapid_public_key')) || empty(config('webpush.vapid_private_key'))) {
-            Log::warning('WebPush: VAPID keys not configured. Skipping push notification.');
-            return;
-        }
-
-        $webPush = $this->getWebPush();
-
-        $sub = Subscription::create([
-            'endpoint'        => $subscription->endpoint,
-            'contentEncoding' => 'aes128gcm',
-            'keys'            => [
-                'p256dh' => $subscription->p256dh_key,
-                'auth'   => $subscription->auth_key,
-            ],
-        ]);
-
-        $webPush->queueNotification($sub, json_encode($payload));
-
-        foreach ($webPush->flush() as $report) {
-            if ($report->isSuccess()) {
-                Log::info("WebPush: VAPID push sent to user {$subscription->user_id}");
-            } elseif ($report->isSubscriptionExpired()) {
-                $subscription->delete();
-                Log::info("WebPush: Removed expired VAPID subscription for user {$subscription->user_id}");
-            } else {
-                Log::warning("WebPush: VAPID push failed for user {$subscription->user_id}: " . $report->getReason());
-            }
-        }
-    }
-
-    private function getWebPush(): WebPush
-    {
-        if ($this->webPush) {
-            return $this->webPush;
-        }
-
-        $auth = [
-            'VAPID' => [
-                'subject'    => config('webpush.vapid_subject', 'mailto:admin@studentcare.site'),
-                'publicKey'  => config('webpush.vapid_public_key'),
-                'privateKey' => config('webpush.vapid_private_key'),
-            ],
-        ];
-
-        $this->webPush = new WebPush($auth);
-        $this->webPush->setDefaultOptions(['TTL' => 86400]);
-
-        return $this->webPush;
-    }
-
-    // ─── Helpers ──────────────────────────────────────────────────────────────
-
-    /**
-     * Legacy GCM/FCM tokens start with APA91b or contain :APA91b (sender_id:token format).
-     * These require the legacy FCM HTTP API, not v1.
-     */
-    private function isLegacyFcmToken(string $endpoint): bool
-    {
-        return str_starts_with($endpoint, 'APA91b')
-            || str_starts_with($endpoint, 'f3gskX')
-            || str_contains($endpoint, ':APA91b');
-    }
-
-    /**
-     * Detect any raw FCM token or FCM endpoint URL.
-     * Raw FCM tokens are never https:// URLs — they are alphanumeric strings
-     * with colons, hyphens, underscores (e.g. "cY5EN7UZa46P...:APA91b...").
-     * The VAPID Web Push library cannot handle these — they must go via FCM v1.
-     */
-    private function isFcmEndpoint(string $endpoint): bool
-    {
-        // Full FCM push endpoint URL
-        if (str_contains($endpoint, 'fcm.googleapis.com')) {
-            return true;
-        }
-
-        // Raw FCM token — not a URL, just a token string
-        if (!str_starts_with($endpoint, 'https://') && strlen($endpoint) > 50) {
-            return true;
-        }
-
-        return false;
-    }
 }
-
