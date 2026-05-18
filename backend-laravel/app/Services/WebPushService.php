@@ -220,7 +220,8 @@ class WebPushService
     {
         return str_starts_with($endpoint, 'APA91b')
             || str_starts_with($endpoint, 'f3gskX')
-            || str_contains($endpoint, ':APA91b');
+            || str_contains($endpoint, ':APA91b')
+            || preg_match('/^[A-Za-z0-9_-]+:[A-Za-z0-9_-]{10,}$/', $endpoint);
     }
 
     private function isFcmEndpoint(string $endpoint): bool
