@@ -11,9 +11,9 @@ use Minishlink\WebPush\Subscription;
 /**
  * Sends Web Push notifications.
  *
- * - Legacy GCM tokens (APA91b...) → FCM Legacy HTTP API (server key)
- * - New FCM tokens / fcm.googleapis.com URLs → FCM HTTP v1 API (service account)
- * - All other endpoints (Firefox, desktop Chrome VAPID) → Standard Web Push / VAPID
+ * - FCM device tokens (from Firebase getToken) → FCM HTTP v1 API
+ * - Legacy GCM tokens (APA91b...) → FCM Legacy HTTP API when server key is set
+ * - Standard push endpoints (Firefox, desktop Chrome VAPID) → Web Push / VAPID
  */
 class WebPushService
 {
@@ -21,14 +21,12 @@ class WebPushService
 
     public function __construct(private FcmAccessTokenService $tokenService) {}
 
-    // ─── Public API ───────────────────────────────────────────────────────────
-
     public function sendToUser(int $userId, array $payload): void
     {
         $subscriptions = PushSubscription::where('user_id', $userId)->get();
 
         if ($subscriptions->isEmpty()) {
-            Log::info("WebPush: No subscriptions found for user_id={$userId}.");
+            Log::info("WebPush: No subscriptions found for user_id={$userId}. Adviser may not have enabled notifications on this device.");
             return;
         }
 
@@ -41,6 +39,16 @@ class WebPushService
     {
         try {
             $endpoint = $subscription->endpoint;
+            $tokenType = strtolower((string) ($subscription->token_type ?? ''));
+
+            if ($tokenType === 'fcm' || $this->isFcmDeviceToken($subscription)) {
+                if ($this->isLegacyFcmToken($endpoint)) {
+                    $this->sendViaLegacyFcm($subscription, $payload);
+                } else {
+                    $this->sendViaFcmV1($subscription, $payload);
+                }
+                return;
+            }
 
             if ($this->isLegacyFcmToken($endpoint)) {
                 $this->sendViaLegacyFcm($subscription, $payload);
@@ -54,7 +62,17 @@ class WebPushService
         }
     }
 
-    // ─── Legacy FCM (for APA91b... tokens) ───────────────────────────────────
+    private function isFcmDeviceToken(PushSubscription $subscription): bool
+    {
+        if (!empty($subscription->p256dh_key) || !empty($subscription->auth_key)) {
+            return false;
+        }
+
+        $endpoint = $subscription->endpoint;
+
+        return !str_starts_with($endpoint, 'https://')
+            && strlen($endpoint) >= 100;
+    }
 
     private function sendViaLegacyFcm(PushSubscription $subscription, array $payload): void
     {
@@ -64,21 +82,19 @@ class WebPushService
             return;
         }
 
-        $appUrl  = rtrim(config('app.url', 'https://studentcare.site'), '/');
-        $rawLink = $payload['data']['url'] ?? '/adviser/notifications';
-        $link    = str_starts_with($rawLink, 'http') ? $rawLink : $appUrl . $rawLink;
+        $data = FcmMessageBuilder::buildDataPayload($payload);
 
         $body = [
             'to' => $subscription->endpoint,
             'notification' => [
-                'title'        => $payload['title'] ?? 'Studentcare',
-                'body'         => $payload['body']  ?? '',
-                'icon'         => $payload['icon']  ?? ($appUrl . '/assets/icons/school-clinic.png'),
-                'badge'        => $payload['badge'] ?? ($appUrl . '/assets/icons/notification.png'),
-                'tag'          => $payload['tag']   ?? 'studentcare-notification',
-                'click_action' => $link,
+                'title'        => $data['title'],
+                'body'         => $data['body'],
+                'icon'         => $data['icon'],
+                'badge'        => $data['badge'],
+                'tag'          => $data['tag'],
+                'click_action' => $data['url'],
             ],
-            'data' => array_merge($payload['data'] ?? [], ['url' => $link]),
+            'data' => $data,
         ];
 
         $response = Http::withHeaders([
@@ -104,8 +120,6 @@ class WebPushService
         }
     }
 
-    // ─── FCM v1 ───────────────────────────────────────────────────────────────
-
     private function sendViaFcmV1(PushSubscription $subscription, array $payload): void
     {
         $projectId = config('webpush.fcm_project_id');
@@ -116,7 +130,7 @@ class WebPushService
         }
 
         if (empty($projectId)) {
-            Log::warning('WebPush: FCM project_id not configured. Skipping FCM push.');
+            Log::error('WebPush: FCM project_id / FCM_SERVICE_ACCOUNT_JSON not configured. Push cannot be sent.');
             return;
         }
 
@@ -132,25 +146,14 @@ class WebPushService
 
         $accessToken = $this->tokenService->getAccessToken();
         if (!$accessToken) {
-            Log::error('WebPush: Failed to obtain FCM access token.');
+            Log::error('WebPush: Failed to obtain FCM access token. Check FCM_SERVICE_ACCOUNT_JSON in .env.');
             return;
         }
 
-        $notification = [
-            'message' => [
-                'token'        => $token,
-                'notification' => [
-                    'title' => $payload['title'] ?? 'Studentcare',
-                    'body'  => $payload['body']  ?? '',
-                ],
-                'webpush' => $this->buildWebpushBlock($payload),
-                'android' => $this->buildAndroidBlock($payload),
-                'apns'    => $this->buildApnsBlock($payload),
-            ],
-        ];
+        $message = FcmMessageBuilder::buildForToken($token, $payload);
 
         $response = Http::withToken($accessToken)
-            ->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", $notification);
+            ->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", $message);
 
         if ($response->successful()) {
             Log::info("WebPush: FCM v1 push sent to user {$subscription->user_id}");
@@ -162,10 +165,13 @@ class WebPushService
         }
     }
 
-    // ─── Standard Web Push / VAPID ────────────────────────────────────────────
-
     private function sendViaWebPush(PushSubscription $subscription, array $payload): void
     {
+        if (empty($subscription->p256dh_key) || empty($subscription->auth_key)) {
+            Log::warning("WebPush: VAPID keys missing for user {$subscription->user_id}; cannot send.");
+            return;
+        }
+
         if (empty(config('webpush.vapid_public_key')) || empty(config('webpush.vapid_private_key'))) {
             Log::warning('WebPush: VAPID keys not configured. Skipping push notification.');
             return;
@@ -214,101 +220,15 @@ class WebPushService
         return $this->webPush;
     }
 
-    // ─── Helpers ──────────────────────────────────────────────────────────────
-
     private function isLegacyFcmToken(string $endpoint): bool
     {
         return str_starts_with($endpoint, 'APA91b')
             || str_starts_with($endpoint, 'f3gskX')
-            || str_contains($endpoint, ':APA91b')
-            || preg_match('/^[A-Za-z0-9_-]+:[A-Za-z0-9_-]{10,}$/', $endpoint);
+            || str_contains($endpoint, ':APA91b');
     }
 
     private function isFcmEndpoint(string $endpoint): bool
     {
-        if (str_contains($endpoint, 'fcm.googleapis.com')) {
-            return true;
-        }
-
-        if (!str_starts_with($endpoint, 'https://') && strlen($endpoint) > 50) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private function buildWebpushBlock(array $payload): array
-    {
-        $appUrl   = rtrim(config('app.url', 'https://studentcare.site'), '/');
-        $rawIcon  = $payload['icon']  ?? '/assets/icons/school-clinic.png';
-        $rawBadge = $payload['badge'] ?? '/assets/icons/notification.png';
-        $rawLink  = $payload['data']['url'] ?? '/adviser/notifications';
-        $icon     = str_starts_with($rawIcon,  'http') ? $rawIcon  : $appUrl . $rawIcon;
-        $badge    = str_starts_with($rawBadge, 'http') ? $rawBadge : $appUrl . $rawBadge;
-        $link     = str_starts_with($rawLink,  'http') ? $rawLink  : $appUrl . $rawLink;
-
-        return [
-            'notification' => [
-                'title'              => $payload['title']   ?? 'Studentcare',
-                'body'               => $payload['body']    ?? '',
-                'icon'               => $icon,
-                'badge'              => $badge,
-                'tag'                => $payload['tag']     ?? 'studentcare-notification',
-                'requireInteraction' => $payload['requireInteraction'] ?? false,
-                'vibrate'            => ($payload['requireInteraction'] ?? false) ? [200, 100, 200, 100, 200] : [200],
-                'actions'            => $payload['actions'] ?? [],
-                'data'               => array_merge($payload['data'] ?? [], ['url' => $link]),
-            ],
-            'fcm_options' => ['link' => $link],
-        ];
-    }
-
-    private function buildAndroidBlock(array $payload): array
-    {
-        $appUrl      = rtrim(config('app.url', 'https://studentcare.site'), '/');
-        $rawIcon     = $payload['icon']  ?? '/assets/icons/school-clinic.png';
-        $rawLink     = $payload['data']['url'] ?? '/adviser/notifications';
-        $icon        = str_starts_with($rawIcon, 'http') ? $rawIcon : $appUrl . $rawIcon;
-        $link        = str_starts_with($rawLink, 'http') ? $rawLink : $appUrl . $rawLink;
-        $isEmergency = $payload['requireInteraction'] ?? false;
-
-        return [
-            'notification' => [
-                'icon'         => $icon,
-                'tag'          => $payload['tag'] ?? 'studentcare-notification',
-                'click_action' => $link,
-                'channel_id'   => $isEmergency ? 'studentcare_urgent' : 'studentcare_default',
-            ],
-            'priority'    => 'high',
-            'fcm_options' => ['analytics_label' => 'studentcare_push'],
-            'data'        => array_merge($payload['data'] ?? [], ['url' => $link]),
-        ];
-    }
-
-    private function buildApnsBlock(array $payload): array
-    {
-        $appUrl      = rtrim(config('app.url', 'https://studentcare.site'), '/');
-        $rawLink     = $payload['data']['url'] ?? '/adviser/notifications';
-        $link        = str_starts_with($rawLink, 'http') ? $rawLink : $appUrl . $rawLink;
-        $isEmergency = $payload['requireInteraction'] ?? false;
-
-        $aps = [
-            'alert' => [
-                'title' => $payload['title'] ?? 'Studentcare',
-                'body'  => $payload['body']  ?? '',
-            ],
-            'badge'             => 1,
-            'content-available' => 1,
-            'mutable-content'   => 1,
-        ];
-
-        if ($isEmergency) {
-            $aps['sound'] = 'default';
-        }
-
-        return [
-            'payload'     => ['aps' => $aps, 'url' => $link],
-            'fcm_options' => ['analytics_label' => 'studentcare_push'],
-        ];
+        return str_contains($endpoint, 'fcm.googleapis.com');
     }
 }

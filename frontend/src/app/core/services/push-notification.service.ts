@@ -140,7 +140,7 @@ export class PushNotificationService {
         const badge  = data['badge'] || '/assets/icons/notification.png';
         const image  = data['image'] || (notif as any).image || undefined;
         const tag    = data['tag']   || 'studentcare-notification';
-        const url    = data['url']   || '/adviser/alerts';
+        const url    = data['url']   || '/dashboard/adviser/alerts';
         const isEmergency = data['requireInteraction'] === 'true';
         const timestamp = data['timestamp'] ? parseInt(data['timestamp'], 10) : Date.now();
 

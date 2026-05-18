@@ -19,9 +19,14 @@ class PushSubscriptionController extends BaseController
             'p256dh_key' => 'nullable|string|max:512',
             'auth_key'   => 'nullable|string|max:512',
             'user_agent' => 'nullable|string|max:512',
+            'token_type' => 'nullable|in:fcm,vapid,legacy',
         ]);
 
         $user = $request->user();
+        $tokenType = $request->input('token_type');
+        if (!$tokenType) {
+            $tokenType = ($request->p256dh_key || $request->auth_key) ? 'vapid' : 'fcm';
+        }
 
         PushSubscription::updateOrCreate(
             [
@@ -29,6 +34,7 @@ class PushSubscriptionController extends BaseController
                 'endpoint' => $request->endpoint,
             ],
             [
+                'token_type' => $tokenType,
                 'p256dh_key' => $request->p256dh_key,
                 'auth_key'   => $request->auth_key,
                 'user_agent' => $request->user_agent ?? $request->header('User-Agent'),
