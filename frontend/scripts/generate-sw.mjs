@@ -1,9 +1,57 @@
 /**
+ * Generates public/sw.js from environment.ts Firebase config.
+ * Run before build: npm run generate:sw
+ */
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const root = join(__dirname, '..');
+
+const envCandidates = [
+  join(root, 'src/environments/environment.ts'),
+  join(root, 'src/environments/environment.development.ts'),
+];
+
+const envPath = envCandidates.find((p) => existsSync(p));
+if (!envPath) {
+  console.error('generate-sw: No environment.ts found. Copy environment.example.ts first.');
+  process.exit(1);
+}
+
+const envSource = readFileSync(envPath, 'utf8');
+const firebaseBlock = envSource.match(/firebase:\s*\{([\s\S]*?)\n\s*\}/);
+if (!firebaseBlock) {
+  console.error('generate-sw: firebase block not found in', envPath);
+  process.exit(1);
+}
+
+const pick = (key) => {
+  const m = firebaseBlock[1].match(new RegExp(`${key}:\\s*['"]([^'"]*)['"]`));
+  return m ? m[1] : '';
+};
+
+const config = {
+  apiKey: pick('apiKey'),
+  authDomain: pick('authDomain'),
+  projectId: pick('projectId'),
+  storageBucket: pick('storageBucket'),
+  messagingSenderId: pick('messagingSenderId'),
+  appId: pick('appId'),
+};
+
+if (!config.apiKey || !config.projectId) {
+  console.error('generate-sw: Firebase config incomplete in', envPath);
+  process.exit(1);
+}
+
+const sw = `/**
  * Studentcare Service Worker (auto-generated — do not edit by hand)
  * Regenerate: npm run generate:sw
  */
 const CACHE_VERSION = 'v2';
-const CACHE_NAME = `studentcare-${CACHE_VERSION}`;
+const CACHE_NAME = \`studentcare-\${CACHE_VERSION}\`;
 const STATIC_ASSETS = ['/', '/index.html', '/favicon.ico', '/manifest.webmanifest'];
 
 try {
@@ -14,14 +62,7 @@ try {
 }
 
 if (typeof firebase !== 'undefined') {
-  firebase.initializeApp({
-  "apiKey": "AIzaSyCZmYxycwEFMg0U_FS4SSewMX8F8sMc6dA",
-  "authDomain": "studentcare-pdmhs.firebaseapp.com",
-  "projectId": "studentcare-pdmhs",
-  "storageBucket": "studentcare-pdmhs.firebasestorage.app",
-  "messagingSenderId": "480384576233",
-  "appId": "1:480384576233:web:c39e628175d40117b81e78"
-});
+  firebase.initializeApp(${JSON.stringify(config, null, 2)});
 
   firebase.messaging().onBackgroundMessage((payload) => {
     const data = payload.data || {};
@@ -105,3 +146,8 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+`;
+
+const outPath = join(root, 'public', 'sw.js');
+writeFileSync(outPath, sw, 'utf8');
+console.log('generate-sw: wrote', outPath);

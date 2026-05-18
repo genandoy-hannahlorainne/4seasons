@@ -675,15 +675,25 @@ class MedicalVisitController extends BaseController
     {
         try {
             $student = Student::with(['currentSection', 'currentGradeLevel'])->find($studentId);
-            if (!$student || !$student->current_adviser_id) {
+            if (!$student) {
+                Log::warning("WebPush: student_id={$studentId} not found; skipping adviser push.");
                 return;
             }
 
-            $adviserUserId = (int) $student->current_adviser_id;
+            $adviserUserId = (int) ($student->current_adviser_id ?? 0);
+            if ($adviserUserId <= 0 && $student->currentSection?->adviser_id) {
+                $adviserUserId = (int) $student->currentSection->adviser_id;
+            }
+
+            if ($adviserUserId <= 0) {
+                Log::info("WebPush: No adviser assigned for student_id={$studentId}; skipping push.");
+                return;
+            }
+
             $isEmergency   = strtolower($visitType) === 'emergency';
 
             // Build section/grade context e.g. "Grade 7 - Sampaguita"
-            $gradeLabel   = $student->currentGradeLevel?->grade_name ?? $student->grade_level ?? null;
+            $gradeLabel   = $student->currentGradeLevel?->level_name ?? $student->grade_level ?? null;
             $sectionLabel = $student->currentSection?->section_name ?? $student->section ?? null;
             $classContext = match(true) {
                 $gradeLabel && $sectionLabel => "{$gradeLabel} - {$sectionLabel}",
@@ -715,27 +725,28 @@ class MedicalVisitController extends BaseController
             $appUrl = rtrim(config('app.url', 'https://studentcare.site'), '/');
 
             $payload = [
-                'title'   => $isEmergency ? '🚨 Emergency Clinic Visit' : '🏥 Clinic Visit Notification',
+                'title'   => $isEmergency ? 'Emergency Clinic Visit' : 'Clinic Visit Notification',
                 'body'    => $body,
                 'icon'    => $appUrl . '/assets/icons/school-clinic.png',
                 'badge'   => $appUrl . '/assets/icons/notification.png',
                 'tag'     => "visit-{$visitId}",
                 'data'    => [
-                    'visit_id'   => $visitId,
-                    'student_id' => $studentId,
+                    'visit_id'   => (string) $visitId,
+                    'student_id' => (string) $studentId,
                     'url'        => "/dashboard/adviser/alerts?visit_id={$visitId}",
-                    'timestamp'  => (string) (now()->timestamp * 1000), // ms for JS Date
+                    'timestamp'  => (string) (now()->timestamp * 1000),
+                    'type'       => 'clinic_visit',
                 ],
                 'actions' => [
-                    ['action' => 'view',    'title' => '👁 View Details'],
-                    ['action' => 'dismiss', 'title' => '✕ Dismiss'],
+                    ['action' => 'view',    'title' => 'View Details'],
+                    ['action' => 'dismiss', 'title' => 'Dismiss'],
                 ],
                 'requireInteraction' => $isEmergency,
             ];
 
             app(WebPushService::class)->sendToUser($adviserUserId, $payload);
 
-            Log::info("WebPush: dispatched to user_id={$adviserUserId} for student_id={$studentId}, visit_id={$visitId}");
+            Log::info("WebPush: clinic visit push dispatched to adviser user_id={$adviserUserId} (student_id={$studentId}, visit_id={$visitId})");
         } catch (\Throwable $e) {
             Log::error('FCM dispatch failed for adviser: ' . $e->getMessage(), [
                 'student_id' => $studentId,
