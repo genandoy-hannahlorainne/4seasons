@@ -10,21 +10,17 @@ class FcmAccessTokenService
     private ?string $accessToken = null;
     private int $accessTokenExpiry = 0;
 
+    public function __construct(private FcmCredentialsResolver $credentialsResolver) {}
+
     public function getAccessToken(): ?string
     {
         if ($this->accessToken && time() < $this->accessTokenExpiry - 60) {
             return $this->accessToken;
         }
 
-        $serviceAccountJson = config('webpush.fcm_service_account_json');
-        if (empty($serviceAccountJson)) {
-            Log::error('FCM: FCM_SERVICE_ACCOUNT_JSON not configured');
-            return null;
-        }
-
-        $credentials = json_decode($serviceAccountJson, true);
+        $credentials = $this->credentialsResolver->resolveCredentials();
         if (!$credentials) {
-            Log::error('FCM: Failed to parse FCM_SERVICE_ACCOUNT_JSON');
+            Log::error('FCM: Service account not configured. Set FCM_SERVICE_ACCOUNT_PATH or FCM_SERVICE_ACCOUNT_JSON in .env');
             return null;
         }
 

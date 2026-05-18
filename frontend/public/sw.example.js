@@ -1,10 +1,5 @@
-// Copy this file to sw.js and fill in your Firebase project values.
-// Get these from Firebase Console → Project Settings → General → Your apps → Web app
-const FIREBASE_CONFIG = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
-};
+// Service worker is generated from environment.ts — do not edit this copy by hand.
+// 1. Copy src/environments/environment.example.ts → environment.ts and fill Firebase values
+// 2. Run: npm run generate:sw
+// This creates public/sw.js (required for FCM background notifications)
+z
