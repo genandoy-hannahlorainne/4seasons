@@ -4,22 +4,11 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\PushSubscription;
 
-/**
- * Direct Firebase Cloud Messaging Service
- * 
- * Sends notifications directly to Firebase using server-to-server authentication.
- * No client subscriptions required - uses Firebase Admin SDK credentials.
- * 
- * Supports:
- * - Sending to specific user IDs (requires device tokens stored in database)
- * - Sending to topics
- * - Sending to conditions
- */
 class FcmDirectService
 {
-    private ?string $accessToken = null;
-    private int $accessTokenExpiry = 0;
+    public function __construct(private FcmAccessTokenService $tokenService) {}
 
     /**
      * Send a notification to a specific user by their user ID.
@@ -27,7 +16,7 @@ class FcmDirectService
      */
     public function sendToUser(int $userId, array $payload): bool
     {
-        $deviceTokens = $this->getDeviceTokensForUser($userId);
+        $deviceTokens = $this->getFcmTokensForUser($userId);
         
         if (empty($deviceTokens)) {
             Log::info("FcmDirect: No device tokens found for user_id={$userId}");
@@ -80,6 +69,12 @@ class FcmDirectService
         if ($response->successful()) {
             Log::info("FcmDirect: Message sent successfully to token: " . substr($deviceToken, 0, 20) . '...');
             return true;
+        }
+
+        if (in_array($response->status(), [404, 410])) {
+            PushSubscription::where('endpoint', $deviceToken)->delete();
+            Log::info("FcmDirect: Removed expired token: " . substr($deviceToken, 0, 20) . '...');
+            return false;
         }
 
         Log::warning("FcmDirect: Failed to send message: " . $response->body());
@@ -174,78 +169,11 @@ class FcmDirectService
 
     // ─── Private Helpers ──────────────────────────────────────────────────────
 
-    /**
-     * Get a valid access token, refreshing if necessary.
-     */
     private function getAccessToken(): ?string
     {
-        // Return cached token if still valid
-        if ($this->accessToken && time() < $this->accessTokenExpiry - 60) {
-            return $this->accessToken;
-        }
-
-        $serviceAccountJson = config('webpush.fcm_service_account_json');
-        if (empty($serviceAccountJson)) {
-            Log::error('FcmDirect: FCM_SERVICE_ACCOUNT_JSON not configured');
-            return null;
-        }
-
-        $credentials = json_decode($serviceAccountJson, true);
-        if (!$credentials) {
-            Log::error('FcmDirect: Failed to parse FCM_SERVICE_ACCOUNT_JSON');
-            return null;
-        }
-
-        $clientEmail = $credentials['client_email'] ?? '';
-        $privateKey  = $credentials['private_key']  ?? '';
-
-        if (empty($clientEmail) || empty($privateKey)) {
-            Log::error('FcmDirect: Service account credentials incomplete');
-            return null;
-        }
-
-        try {
-            // Build JWT for OAuth2 token endpoint
-            $now = time();
-            $header  = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
-            $claims  = $this->base64UrlEncode(json_encode([
-                'iss'   => $clientEmail,
-                'sub'   => $clientEmail,
-                'scope' => 'https://www.googleapis.com/auth/cloud-platform',
-                'aud'   => 'https://oauth2.googleapis.com/token',
-                'iat'   => $now,
-                'exp'   => $now + 3600,
-            ]));
-
-            $signingInput = "{$header}.{$claims}";
-            $privateKeyResource = openssl_pkey_get_private($privateKey);
-            
-            if (!$privateKeyResource) {
-                Log::error('FcmDirect: Failed to load private key');
-                return null;
-            }
-
-            openssl_sign($signingInput, $signature, $privateKeyResource, 'SHA256');
-            $jwt = "{$signingInput}." . $this->base64UrlEncode($signature);
-
-            $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
-                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                'assertion'  => $jwt,
-            ]);
-
-            if ($response->successful()) {
-                $this->accessToken = $response->json('access_token');
-                $this->accessTokenExpiry = time() + ($response->json('expires_in') ?? 3600);
-                return $this->accessToken;
-            }
-
-            Log::error('FcmDirect: Token exchange failed: ' . $response->body());
-            return null;
-        } catch (\Throwable $e) {
-            Log::error('FcmDirect: Access token exception: ' . $e->getMessage());
-            return null;
-        }
+        return $this->tokenService->getAccessToken();
     }
+
 
     private function buildWebpushBlock(array $payload): array
     {
@@ -344,18 +272,9 @@ class FcmDirectService
         ];
     }
 
-    private function base64UrlEncode(string $data): string
+    private function getFcmTokensForUser(int $userId): array
     {
-        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-    }
-
-    /**
-     * Get all device tokens for a user from the database.
-     * Tokens are stored in the push_subscriptions table.
-     */
-    private function getDeviceTokensForUser(int $userId): array
-    {
-        return \App\Models\PushSubscription::where('user_id', $userId)
+        return PushSubscription::where('user_id', $userId)
             ->pluck('endpoint')
             ->toArray();
     }
