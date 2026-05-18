@@ -41,3 +41,10 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Environment files (contain Firebase config — use environment.example.ts as template)
+src/environments/environment.ts
+src/environments/environment.development.ts
+
+# Service worker (contains Firebase config — use sw.example.js as template)
+public/sw.js
