@@ -13,6 +13,9 @@ class FcmCredentialsResolver
     public function resolveJson(): ?string
     {
         $path = trim((string) config('webpush.fcm_service_account_path', ''));
+        if ($path === '') {
+            $path = trim((string) getenv('FCM_SERVICE_ACCOUNT_PATH'));
+        }
         if ($path !== '' && is_readable($path)) {
             $contents = file_get_contents($path);
             if ($contents !== false && trim($contents) !== '') {
@@ -22,6 +25,10 @@ class FcmCredentialsResolver
         }
 
         $json = trim((string) config('webpush.fcm_service_account_json', ''));
+        if ($json === '') {
+            // Bypass stale config:cache when Docker env is set but config key is empty
+            $json = trim((string) getenv('FCM_SERVICE_ACCOUNT_JSON'));
+        }
         if ($json !== '') {
             return $json;
         }
