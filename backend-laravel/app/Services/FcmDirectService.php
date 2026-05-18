@@ -16,7 +16,7 @@ class FcmDirectService
      */
     public function sendToUser(int $userId, array $payload): bool
     {
-        $deviceTokens = $this->getDeviceTokensForUser($userId);
+        $deviceTokens = $this->getFcmTokensForUser($userId);
         
         if (empty($deviceTokens)) {
             Log::info("FcmDirect: No device tokens found for user_id={$userId}");
@@ -272,7 +272,7 @@ class FcmDirectService
         ];
     }
 
-    private function getDeviceTokensForUser(int $userId): array
+    private function getFcmTokensForUser(int $userId): array
     {
         return PushSubscription::where('user_id', $userId)
             ->pluck('endpoint')
