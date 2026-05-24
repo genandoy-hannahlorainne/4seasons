@@ -118,6 +118,99 @@
   margin-top: 0.5rem;
 }
 
+/* ── Adviser Grade Level Cards ── */
+.grade-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.grade-card {
+  @extend .role-card;
+
+  &.unassigned .card-icon { background: linear-gradient(135deg, #94a3b8, #64748b); box-shadow: 0 4px 12px rgba(100,116,139,0.3); }
+  &.unassigned::before    { background: linear-gradient(90deg, #94a3b8, #64748b); }
+
+  .card-icon {
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    box-shadow: 0 4px 12px rgba(168,85,247,0.3);
+  }
+}
+
+.no-grade-card {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #94a3b8;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
+  i { font-size: 3rem; margin-bottom: 1rem; display: block; }
+  p { font-size: 1rem; margin: 0; }
+}
+
+/* ── Adviser Section Table ── */
+.adviser-section-table-wrap {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.adviser-section-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  thead tr {
+    background: #f1f5f9;
+    border-bottom: 2px solid #e2e8f0;
+
+    th {
+      padding: 0.85rem 1.25rem;
+      text-align: left;
+      font-weight: 600;
+      color: #475569;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: #f8fafc; }
+
+    td {
+      padding: 0.85rem 1.25rem;
+      color: #1e293b;
+      vertical-align: middle;
+    }
+
+    .section-name { font-weight: 600; }
+    .adviser-name { color: #334155; }
+  }
+}
+
+.no-adviser-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
 .role-card {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 1.5px solid #cbd5e1;
@@ -184,6 +277,7 @@
   &.adviser .card-icon     { background: linear-gradient(135deg, #a855f7, #7c3aed); box-shadow: 0 4px 12px rgba(168,85,247,0.3); }
   &.clinic_staff .card-icon { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
   &.admin .card-icon       { background: linear-gradient(135deg, #3b82f6, #1e40af); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+  &.unassigned .card-icon  { background: linear-gradient(135deg, #94a3b8, #64748b); box-shadow: 0 4px 12px rgba(100,116,139,0.3); }
 
   .card-stats {
     display: flex;
@@ -231,7 +325,7 @@
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #e9ecef;
   background: #f8f9fa;
-  gap: 1rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
 
   .search-wrap {
@@ -263,6 +357,24 @@
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
       }
+    }
+  }
+
+  .filter-select {
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 150px;
+
+    &:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
   }
 
@@ -871,6 +983,11 @@
     gap: 1rem;
   }
 
+  .grade-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
   .role-card {
     padding: 1.25rem;
     .card-stats .stat .stat-value { font-size: 1.4rem; }
@@ -899,7 +1016,8 @@
 }
 
 @media (max-width: 480px) {
-  .role-cards { grid-template-columns: 1fr; }
+  .role-cards  { grid-template-columns: 1fr; }
+  .grade-cards { grid-template-columns: 1fr; }
 }
 
 

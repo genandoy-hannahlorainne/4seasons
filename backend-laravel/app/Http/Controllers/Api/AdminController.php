@@ -1321,7 +1321,15 @@ class AdminController extends BaseController
 
             $roleFilter = $request->get('role');
 
-            $buildUserData = function($user) {
+            // Pre-load adviser → section mapping in one query to avoid N+1
+            $currentSchoolYearId = \DB::table('school_years')->where('is_current', true)->value('id');
+            $adviserSectionMap = \App\Models\Section::with('gradeLevel')
+                ->whereNotNull('adviser_id')
+                ->when($currentSchoolYearId, fn($q) => $q->where('school_year_id', $currentSchoolYearId))
+                ->get()
+                ->keyBy('adviser_id');  // keyed by user_id (sections.adviser_id = users.user_id)
+
+            $buildUserData = function($user) use ($adviserSectionMap) {
                 $roleName = $user->role->role_name ?? 'unknown';
                 $data = [
                     'user_id'    => $user->user_id,
@@ -1350,10 +1358,16 @@ class AdminController extends BaseController
                     $data['contact_phone']    = $user->adviser->contact_phone;
                     $data['department']       = $user->adviser->department;
 
-                    // Debug log
+                    // Resolve grade_level and section from pre-loaded map (no N+1)
+                    $assignedSection = $adviserSectionMap[$user->user_id] ?? null;
+                    $data['grade_level']  = $assignedSection?->gradeLevel?->level_name ?? null;
+                    $data['section']      = $assignedSection?->section_name ?? null;
+                    $data['section_id']   = $assignedSection?->id ?? null;
+
                     \Log::info('Adviser data for user ' . $user->user_id, [
                         'employee_id' => $user->adviser->employee_id,
-                        'adviser_id' => $user->adviser->adviser_id
+                        'grade_level' => $data['grade_level'],
+                        'section'     => $data['section'],
                     ]);
                 }
 

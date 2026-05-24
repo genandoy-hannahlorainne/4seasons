@@ -429,7 +429,24 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         (user.full_name && user.full_name.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
         (user.username && user.username.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
         (user.email && user.email.toLowerCase().includes(this.searchQuery.toLowerCase()));
-      return matchesRole && matchesSearch;
+
+      // Adviser grade filter — match via grade_level field OR via gradeLevels sections data
+      let matchesGradeLevel = true;
+      if (this.adviserFilterGrade && userRole === 'adviser') {
+        // Primary: match by grade_level field on user
+        const byField = String(user.grade_level || '') === String(this.adviserFilterGrade);
+
+        // Fallback: check if this user's user_id appears as adviser_id in any section of the selected grade
+        const gradeObj = this.gradeLevels.find(g => g.level_name === this.adviserFilterGrade);
+        const bySection = gradeObj?.sections?.some((s: any) => s.adviser_id === user.user_id) ?? false;
+
+        matchesGradeLevel = byField || bySection;
+      }
+
+      const matchesSection = !this.adviserFilterSection ||
+        String(user.section || '').toLowerCase() === String(this.adviserFilterSection).toLowerCase();
+
+      return matchesRole && matchesSearch && matchesGradeLevel && matchesSection;
     });
     this.currentPage = 1;
   }
@@ -445,13 +462,60 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   selectRole(role: string): void {
     this.selectedRole = role;
     this.searchQuery = '';
+    this.adviserFilterGrade = '';
+    this.adviserFilterSection = '';
     this.filterUsers();
   }
 
   backToRoleCards(): void {
     this.selectedRole = 'all';
     this.searchQuery = '';
+    this.adviserFilterGrade = '';
+    this.adviserFilterSection = '';
     this.filterUsers();
+  }
+
+  /** Single back handler — context-aware */
+  handleBack(): void {
+    if (this.selectedRole === 'adviser' && this.adviserFilterGrade) {
+      // Step back from section table → grade cards
+      this.adviserFilterGrade = '';
+      this.adviserFilterSection = '';
+      this.searchQuery = '';
+    } else {
+      this.backToRoleCards();
+    }
+  }
+
+  selectAdviserGrade(grade: string): void {
+    this.adviserFilterGrade = grade;
+    this.adviserFilterSection = '';
+    this.searchQuery = '';
+    this.filterUsers();
+  }
+
+  selectAdviserSection(section: string): void {
+    this.adviserFilterSection = section;
+    this.searchQuery = '';
+    this.filterUsers();
+  }
+
+  getPageTitle(): string {
+    if (this.selectedRole === 'all') return 'Manage Users';
+    if (this.selectedRole === 'adviser') {
+      if (!this.adviserFilterGrade) return 'Faculty / Advisers';
+      return this.adviserFilterGrade + ' Sections';
+    }
+    return this.getRoleLabel(this.selectedRole);
+  }
+
+  getPageSubtitle(): string {
+    if (this.selectedRole === 'all') return 'View, edit, and manage all system users';
+    if (this.selectedRole === 'adviser') {
+      if (!this.adviserFilterGrade) return 'Select a grade level to view sections and advisers';
+      return 'Sections and assigned advisers for ' + this.adviserFilterGrade;
+    }
+    return 'Manage ' + this.getRoleLabel(this.selectedRole) + ' accounts';
   }
 
   getRoleLabel(role: string): string {
@@ -466,6 +530,78 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   getActiveCount(role: string): number {
     return this.users.filter(u => u.role === role && u.is_active).length;
+  }
+
+  // Adviser filters
+  adviserFilterGrade = '';
+  adviserFilterSection = '';
+
+  get adviserGradeLevels(): string[] {
+    return [...new Set(
+      this.users
+        .filter(u => u.role === 'adviser' && u.grade_level)
+        .map(u => String(u.grade_level))
+    )].sort();
+  }
+
+  get adviserSections(): string[] {
+    return [...new Set(
+      this.users
+        .filter(u => u.role === 'adviser' && u.section &&
+          (!this.adviserFilterGrade || String(u.grade_level) === String(this.adviserFilterGrade)))
+        .map(u => String(u.section))
+    )].sort();
+  }
+
+  getAdviserCountForGrade(grade: string): number {
+    if (grade === '__unassigned__') {
+      return this.users.filter(u => u.role === 'adviser' && !u.grade_level).length;
+    }
+    return this.users.filter(u => u.role === 'adviser' && String(u.grade_level) === grade).length;
+  }
+
+  getAdviserSectionCountForGrade(grade: string): number {
+    return [...new Set(
+      this.users
+        .filter(u => u.role === 'adviser' && String(u.grade_level) === grade && u.section)
+        .map(u => String(u.section))
+    )].length;
+  }
+
+  /** Count sections that have an adviser assigned for a grade level */
+  getAssignedAdviserCount(grade: any): number {
+    return (grade.sections || []).filter((s: any) => s.adviser_id != null).length;
+  }
+
+  /** Sections with adviser info for the selected grade level (for the table view) */
+  get adviserSectionRows(): any[] {
+    if (!this.adviserFilterGrade) return [];
+    const grade = this.gradeLevels.find(g => g.level_name === this.adviserFilterGrade);
+    if (!grade?.sections) return [];
+    return grade.sections.map((s: any, i: number) => ({
+      index: i + 1,
+      section_id: s.id,
+      section_name: s.section_name,
+      adviser_name: s.adviser_name || '—',
+      adviser_user_id: s.adviser_id ?? null,
+      capacity: s.capacity,
+      current_enrollment: s.current_enrollment ?? 0
+    }));
+  }
+
+  /** Find a user object by user_id to open the modal */
+  viewAdviserByUserId(userId: number): void {
+    const user = this.users.find(u => u.user_id === userId);
+    if (user) this.viewUser(user);
+  }
+
+  onAdviserFilterChange(): void {
+    this.filterUsers();
+  }
+
+  onAdviserGradeChange(): void {
+    this.adviserFilterSection = '';
+    this.filterUsers();
   }
 
   viewUser(user: any): void {

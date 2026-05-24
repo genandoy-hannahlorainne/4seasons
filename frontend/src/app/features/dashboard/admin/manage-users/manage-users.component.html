@@ -1,11 +1,11 @@
 <div class="manage-users-container">
   <div class="page-header">
     <div class="header-left">
-      <button class="btn btn-back" *ngIf="selectedRole !== 'all'" (click)="backToRoleCards()">
+      <button class="btn btn-back" *ngIf="selectedRole !== 'all'" (click)="handleBack()">
         <i class="fa-solid fa-arrow-left"></i> Back
       </button>
-      <h1>{{ selectedRole === 'all' ? 'Manage Users' : getRoleLabel(selectedRole) }}</h1>
-      <p>{{ selectedRole === 'all' ? 'View, edit, and manage all system users' : 'Manage ' + getRoleLabel(selectedRole) + ' accounts' }}</p>
+      <h1>{{ getPageTitle() }}</h1>
+      <p>{{ getPageSubtitle() }}</p>
     </div>
     <div class="header-actions">
       <button class="btn btn-secondary" (click)="openBulkImportModal()" *ngIf="selectedRole === 'student'">
@@ -98,8 +98,37 @@
     </div>
   </div>
 
-  <!-- Role Detail View (drilled in) -->
-  <div *ngIf="!loading && selectedRole !== 'all'" class="users-section">
+  <!-- Adviser Grade Level Cards (intermediate drill-down) -->
+  <div class="grade-cards" *ngIf="!loading && selectedRole === 'adviser' && !adviserFilterGrade">
+    <div
+      *ngFor="let grade of gradeLevels"
+      class="grade-card"
+      (click)="selectAdviserGrade(grade.level_name)">
+      <div class="card-header">
+        <div class="card-icon adviser"><i class="fa-solid fa-chalkboard-user"></i></div>
+        <span class="card-title">{{ grade.level_name }}</span>
+      </div>
+      <div class="card-stats">
+        <div class="stat">
+          <span class="stat-value">{{ grade.sections?.length || 0 }}</span>
+          <span class="stat-label">Sections</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ getAssignedAdviserCount(grade) }}</span>
+          <span class="stat-label">Advisers</span>
+        </div>
+      </div>
+      <div class="card-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>
+
+    <div *ngIf="gradeLevels.length === 0" class="no-grade-card">
+      <i class="fa-solid fa-inbox"></i>
+      <p>No grade levels found.</p>
+    </div>
+  </div>
+
+  <!-- Adviser Section Table (shown after selecting a grade) -->
+  <div class="users-section" *ngIf="!loading && selectedRole === 'adviser' && adviserFilterGrade">
 
     <!-- Search bar -->
     <div class="detail-toolbar">
@@ -113,6 +142,64 @@
           class="search-input"
         >
       </div>
+      <div class="users-meta">
+        <span class="user-count">{{ filteredUsers.length }} user(s)</span>
+      </div>
+    </div>
+
+    <!-- User Cards Grid -->
+    <div class="user-grid">
+      <div
+        *ngFor="let user of filteredUsers"
+        class="user-item-card"
+        (click)="viewUser(user)">
+        <div class="uic-top">
+          <div class="uic-avatar adviser">
+            <i class="fa-solid fa-chalkboard-user"></i>
+          </div>
+          <div class="uic-info">
+            <span class="uic-name">{{ user.full_name }}</span>
+            <span class="uic-username">@{{ user.username }}</span>
+          </div>
+          <span class="status-badge" [ngClass]="getStatusClass(user.is_active)">{{ getStatusText(user.is_active) }}</span>
+        </div>
+        <div class="uic-email">
+          <i class="fa-solid fa-envelope"></i> {{ user.email || '—' }}
+        </div>
+        <div class="uic-bottom">
+          <span class="uic-date"><i class="fa-regular fa-calendar"></i> {{ user.created_at ? (user.created_at | date:'mediumDate') : 'N/A' }}</span>
+          <button class="action-btn view-btn" (click)="viewUser(user); $event.stopPropagation()" title="View/Edit">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="filteredUsers.length === 0" class="no-users-card">
+        <i class="fa-solid fa-users-slash"></i>
+        <p>No advisers found for this grade level.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role Detail View (non-adviser roles only) -->
+  <div *ngIf="!loading && selectedRole !== 'all' && selectedRole !== 'adviser'" class="users-section">
+
+    <!-- Search bar -->
+    <div class="detail-toolbar">
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+          placeholder="Search by name, username, or email..."
+          class="search-input"
+        >
+      </div>
+
+      <!-- no inline filters needed — navigation is card-based -->
+
+
       <div class="users-meta">
         <span class="user-count">{{ filteredUsers.length }} user(s)</span>
         <!-- Page size only for students -->
