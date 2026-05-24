@@ -139,14 +139,15 @@ class MedicalVisitController extends BaseController
                 $isEmergency = strtolower($request->input('visit_type', '')) === 'emergency';
 
                 Notification::create([
-                    'student_id' => $request->student_id,
-                    'visit_id'   => $visitId,
-                    'channel'    => 'System',
-                    'message'    => $isEmergency
+                    'student_id'        => $request->student_id,
+                    'visit_id'          => $visitId,
+                    'channel'           => 'System',
+                    'notification_type' => $isEmergency ? 'emergency_visit' : 'routine_visit',
+                    'message'           => $isEmergency
                         ? "Emergency visit: {$studentName} requires immediate attention"
                         : "Clinic visit: {$studentName} visited the clinic — {$request->chief_complaint}",
-                    'priority'   => $isEmergency ? 'urgent' : 'normal',
-                    'status'     => 'Pending',
+                    'priority'          => $isEmergency ? 'urgent' : 'normal',
+                    'status'            => 'Pending',
                 ]);
 
                 // Student-facing visit summary notification

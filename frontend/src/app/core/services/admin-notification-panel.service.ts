@@ -8,6 +8,10 @@ export interface NotificationHistoryItem {
   priority?: string;
   status?: string;
   timeAgo?: string;
+  created_at?: string;
+  visit_id?: number;
+  visit?: { visit_type?: string; visit_id?: number };
+  staff?: { name?: string; position?: string };
   student?: { full_name: string; student_number: string };
   user?: { full_name: string; role: string };
   [key: string]: any;
@@ -73,7 +77,33 @@ export class AdminNotificationPanelService {
   getNotificationIcon(notification: NotificationHistoryItem): string {
     if (notification.notification_type === 'password_change_request') return 'fa-key';
     if (notification.notification_type === 'emergency_drill_alert') return 'fa-bell';
-    if (notification.priority === 'urgent') return 'fa-triangle-exclamation';
+    if (notification.notification_type === 'emergency_visit' || notification.priority === 'urgent') {
+      return 'fa-truck-medical';
+    }
+    if (notification.notification_type === 'routine_visit' || notification.visit_id) {
+      return 'fa-stethoscope';
+    }
     return 'fa-circle-info';
+  }
+
+  /** Notifications shown in admin feed (clinic visits, drills, etc. — not password or student-only). */
+  buildAdminFeed(all: NotificationHistoryItem[]): NotificationHistoryItem[] {
+    return all
+      .filter(n => !this.isPasswordRequest(n) && !this.isStudentOnly(n))
+      .map(n => ({ ...n }))
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .slice(0, 30);
+  }
+
+  isPasswordRequest(n: NotificationHistoryItem): boolean {
+    return n.notification_type === 'password_change_request';
+  }
+
+  isStudentOnly(n: NotificationHistoryItem): boolean {
+    return n.notification_type === 'visit_summary' || n.notification_type === 'badge_earned';
+  }
+
+  isClinicVisit(n: NotificationHistoryItem): boolean {
+    return !!n.visit_id || n.notification_type === 'routine_visit' || n.notification_type === 'emergency_visit';
   }
 }

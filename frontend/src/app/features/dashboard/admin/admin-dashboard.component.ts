@@ -1505,13 +1505,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
           // Medical emergency notifications (urgent + pending + has visit_id)
           this.emergencyNotifications = allNotifications.filter(
-            (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending' && notif?.visit_id
+            (notif: any) =>
+              notif?.status === 'Pending' &&
+              notif?.visit_id &&
+              (notif?.notification_type === 'emergency_visit' || notif?.priority === 'urgent')
           );
 
-          // Notification history (all read/sent notifications, or normal priority)
-          this.notificationHistory = allNotifications.filter(
-            (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
-          ).slice(0, 10); // Show last 10
+          this.notificationHistory = this.notifPanelService.buildAdminFeed(allNotifications);
           this.notifPanelService.setNotificationHistory(this.notificationHistory);
 
           // Notifications categorized
@@ -1529,12 +1529,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           );
 
           this.emergencyNotifications = allNotifications.filter(
-            (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending' && notif?.visit_id
+            (notif: any) =>
+              notif?.status === 'Pending' &&
+              notif?.visit_id &&
+              (notif?.notification_type === 'emergency_visit' || notif?.priority === 'urgent')
           );
 
-          this.notificationHistory = allNotifications.filter(
-            (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
-          ).slice(0, 10);
+          this.notificationHistory = this.notifPanelService.buildAdminFeed(allNotifications);
           this.notifPanelService.setNotificationHistory(this.notificationHistory);
 
           // Notifications categorized and loaded
@@ -1763,7 +1764,7 @@ Position: ${notification?.staff?.position || 'N/A'}
           if (response.success) {
             // Move emergency notifications to history
             this.notificationHistory = [
-              ...this.emergencyNotifications.map(n => ({ ...n, status: 'Read' })),
+              ...this.emergencyNotifications.map(n => ({ ...n, status: 'Sent' })),
               ...this.notificationHistory
             ].slice(0, 10);
             this.notifPanelService.setNotificationHistory(this.notificationHistory);

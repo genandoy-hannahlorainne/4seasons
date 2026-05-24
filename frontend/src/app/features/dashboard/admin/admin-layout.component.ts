@@ -165,20 +165,22 @@ interface PasswordChangeRequest {
 
             <!-- History items (All + Unread tabs only) -->
             <ng-container *ngIf="notifTab !== 'password'">
-              <div *ngIf="notifTab === 'all' && (passwordChangeRequests.length > 0 || history.length > 0)" class="dropdown-section-label">Earlier</div>
+              <div *ngIf="notifTab === 'all' && passwordChangeRequests.length > 0 && visibleHistory(notifTab, history).length > 0" class="dropdown-section-label">Clinic visits</div>
               <ng-container *ngFor="let notif of visibleHistory(notifTab, history)">
                 <div class="fb-notif-item"
                      [class.fb-notif-unread]="isUnread(notif)"
                      (click)="openHistoryModal(notif)">
-                  <div class="fb-notif-icon-wrap" [ngClass]="notif.priority === 'urgent' ? 'urgent-icon' : 'normal-icon'">
+                  <div class="fb-notif-icon-wrap"
+                       [ngClass]="notif.priority === 'urgent' || notif.notification_type === 'emergency_visit' ? 'urgent-icon' : 'normal-icon'">
                     <i class="fa-solid" [ngClass]="notifPanelService.getNotificationIcon(notif)"></i>
                   </div>
                   <div class="fb-notif-body">
                     <div class="fb-notif-message" [class.fw-bold]="isUnread(notif)">{{ notif.message }}</div>
                     <div class="fb-notif-meta">
-                      <span *ngIf="notif.student">{{ notif.student.full_name }} · </span>
-                      <span *ngIf="notif.user && !notif.student">{{ notif.user.full_name }} · </span>
-                      <span class="fb-notif-time">{{ notif.timeAgo }}</span>
+                      <span *ngIf="notif.visit?.visit_type" class="visit-type-tag">{{ notif.visit?.visit_type }}</span>
+                      <span *ngIf="notif.student">{{ notif.student.full_name }}</span>
+                      <span *ngIf="notif.staff?.name"> · {{ notif.staff?.name }}</span>
+                      <span class="fb-notif-time"> · {{ notif.timeAgo }}</span>
                     </div>
                   </div>
                   <span class="unread-dot" *ngIf="isUnread(notif)"></span>
@@ -229,12 +231,20 @@ interface PasswordChangeRequest {
                   {{ selectedHistoryNotif.priority | titlecase }}
                 </span>
               </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif.visit?.visit_type">
+                <span class="detail-label">Visit type:</span>
+                <span class="detail-value role-badge">{{ selectedHistoryNotif.visit?.visit_type }}</span>
+              </div>
               <div class="detail-row" *ngIf="selectedHistoryNotif.student">
                 <span class="detail-label">Student:</span>
                 <span class="detail-value">
                   {{ selectedHistoryNotif.student.full_name }}
                   <span style="color:#6b7280"> ({{ selectedHistoryNotif.student.student_number }})</span>
                 </span>
+              </div>
+              <div class="detail-row" *ngIf="selectedHistoryNotif.staff?.name">
+                <span class="detail-label">Clinic staff:</span>
+                <span class="detail-value">{{ selectedHistoryNotif.staff?.name }}</span>
               </div>
               <div class="detail-row" *ngIf="selectedHistoryNotif.user && !selectedHistoryNotif.student">
                 <span class="detail-label">User:</span>
@@ -356,20 +366,14 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
               created_at: n.created_at
             }));
 
-          const history = allNotifications
-            .filter((n: any) =>
-              n.notification_type !== 'password_change_request' ||
-              n.status !== 'Pending'
-            )
-            .filter((n: any) => n.status !== 'Pending' || n.priority === 'normal')
-            .map((n: any) => ({
-              ...n,
-              timeAgo: n.timeAgo || this.formatTimeAgo(n.created_at)
-            }))
-            .slice(0, 20);
+          const mapped = allNotifications.map((n: any) => ({
+            ...n,
+            timeAgo: n.timeAgo || this.formatTimeAgo(n.created_at),
+          }));
 
-          this.notifPanelService.setNotificationHistory(history);
-          this.updateUnreadCount(history);
+          const feed = this.notifPanelService.buildAdminFeed(mapped);
+          this.notifPanelService.setNotificationHistory(feed);
+          this.updateUnreadCount(feed);
         } else {
           // Invalid response structure
         }
@@ -429,7 +433,11 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   isUnread(notif: NotificationHistoryItem): boolean {
     if (notif.notification_id == null) return false;
-    return !this.readHistoryIds.has(notif.notification_id);
+    if (this.notifPanelService.isPasswordRequest(notif)) return false;
+    if (notif.status === 'Pending') {
+      return !this.readHistoryIds.has(notif.notification_id);
+    }
+    return false;
   }
 
   hasUnreadHistory(history: NotificationHistoryItem[]): boolean {
@@ -439,12 +447,23 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   openHistoryModal(notif: NotificationHistoryItem): void {
     this.selectedHistoryNotif = notif;
     this.showHistoryModal = true;
-    if (notif.notification_id != null) {
-      this.readHistoryIds.add(notif.notification_id);
-      this.notifPanelService.notificationHistory$.pipe(take(1)).subscribe(history => {
-        this.updateUnreadCount(history);
+    if (notif.notification_id == null) return;
+
+    this.readHistoryIds.add(notif.notification_id);
+    if (notif.status === 'Pending') {
+      this.adminService.markNotificationAsRead(notif.notification_id).subscribe({
+        next: () => this.loadNotifications(),
+        error: () => this.updateUnreadCountFromFeed(),
       });
+    } else {
+      this.updateUnreadCountFromFeed();
     }
+  }
+
+  private updateUnreadCountFromFeed(): void {
+    this.notifPanelService.notificationHistory$.pipe(take(1)).subscribe(history => {
+      this.updateUnreadCount(history);
+    });
   }
 
   closeHistoryModal(): void {

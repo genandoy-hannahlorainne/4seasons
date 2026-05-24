@@ -2043,14 +2043,23 @@ class AdminController extends BaseController
 
             if ($staleDrillNotifIds->isNotEmpty()) {
                 \App\Models\Notification::whereIn('notification_id', $staleDrillNotifIds)
-                    ->update(['status' => 'Read']);
+                    ->update(['status' => 'Sent', 'sent_at' => now()]);
             }
 
-            $notifications = \App\Models\Notification::with([
+            $query = \App\Models\Notification::with([
                     'student.currentSection.gradeLevel',
                     'medicalVisit.clinicStaff.user',
-                    'user.role'
-                ])
+                    'user.role',
+                ]);
+
+            if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'notification_type')) {
+                $query->where(function ($q) {
+                    $q->whereNull('notification_type')
+                        ->orWhereNotIn('notification_type', ['visit_summary', 'badge_earned']);
+                });
+            }
+
+            $notifications = $query
                 ->orderBy('created_at', 'desc')
                 ->limit(100)
                 ->get()
@@ -2088,7 +2097,7 @@ class AdminController extends BaseController
                         ] : null;
                         $baseData['staff'] = $staff ? [
                             'name'     => trim($staff->first_name . ' ' . $staff->last_name),
-                            'position' => $visit->clinicStaff->position ?? null,
+                            'position' => $visit?->clinicStaff?->position ?? null,
                         ] : null;
                     }
 
@@ -2099,7 +2108,7 @@ class AdminController extends BaseController
                             'user_id' => $notif->user->user_id,
                             'username' => $notif->user->username,
                             'full_name' => trim($notif->user->first_name . ' ' . $notif->user->last_name),
-                            'role' => $notif->user->role->role_name ?? null,
+                            'role' => $notif->user->role?->role_name ?? null,
                         ] : null;
                     }
 

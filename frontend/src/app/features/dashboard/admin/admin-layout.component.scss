@@ -729,6 +729,22 @@ $mobile-bp: 768px;
 
   .fb-notif-meta { font-size: 0.8rem; color: #65676b; }
 
+  .visit-type-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    margin-right: 0.25rem;
+    background: #e7f3ff;
+    color: #1877f2;
+  }
+
+  .fb-notif-unread .visit-type-tag {
+    background: #dbeafe;
+  }
+
   .fb-notif-time {
     font-size: 0.8rem;
     color: #65676b;
