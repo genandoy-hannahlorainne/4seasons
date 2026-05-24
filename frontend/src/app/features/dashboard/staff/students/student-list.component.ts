@@ -315,7 +315,7 @@ export class StudentListComponent implements OnInit {
               id: s.student_id,
               studentNumber: s.student_number,
               name: `${s.first_name} ${s.last_name}`,
-              gradeSection: `Grade ${s.grade_level} - ${s.section}`,
+              gradeSection: `${s.grade_level} - ${s.section}`,
               gender: s.gender,
               lastVisit: s.last_visit || null,
               hasAllergies: !!(s.allergies && s.allergies.length > 0),

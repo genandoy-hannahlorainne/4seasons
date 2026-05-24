@@ -18,6 +18,8 @@ export class ViewReportsComponent implements OnInit {
   loading = false;
   activeReport = 'summary';
   reportData: any = null;
+  // UI state for principal trends tabs
+  activeTrendTab: 'overview' | 'heatmap' | 'reasons' = 'overview';
   startDate = '';
   endDate = '';
   selectedQuarter = 1;
@@ -149,6 +151,27 @@ export class ViewReportsComponent implements OnInit {
     } else {
       this.exportGenericExcel();
     }
+  }
+
+  // Heatmap helpers for Principal Health Trends
+  getMaxVisits(): number {
+    if (!this.reportData || !Array.isArray(this.reportData.visitsByDayHour)) return 0;
+    return this.reportData.visitsByDayHour.reduce((max: number, r: any) => Math.max(max, Number(r.visits || 0)), 0);
+  }
+
+  getHeatmapColor(visits: number): string {
+    const max = this.getMaxVisits();
+    if (!max || visits === undefined || visits === null) return 'transparent';
+    const ratio = Math.min(1, visits / max);
+    // map ratio to alpha for same base color (blue). Use a minimum alpha so small values show.
+    const alpha = 0.12 + (0.72 * ratio);
+    return `rgba(37,99,235,${alpha.toFixed(2)})`;
+  }
+
+  getCellStyle(visits: number): any {
+    const bg = this.getHeatmapColor(Number(visits || 0));
+    const color = (Number(visits || 0) > (this.getMaxVisits() * 0.5)) ? '#fff' : '#1f3b5a';
+    return { 'background': bg, 'color': color };
   }
 
   private exportReportPdf(): void {

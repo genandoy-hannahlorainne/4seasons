@@ -35,6 +35,58 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   creatingUser = false;
   createSuccessMessage = '';
   createErrorMessage = '';
+  createErrorMessages: string[] = [];   // all error messages for the popup list
+  createFieldErrors: Record<string, string> = {};  // field → first error message
+  showErrorModal = false;
+
+  showCreateError(errorsObj: Record<string, string[]> | null, fallbackMessage?: string): void {
+    this.createFieldErrors = {};
+    this.createErrorMessages = [];
+
+    if (errorsObj && typeof errorsObj === 'object' && Object.keys(errorsObj).length > 0) {
+      for (const [field, msgs] of Object.entries(errorsObj)) {
+        const msg = Array.isArray(msgs) ? msgs[0] : String(msgs);
+        this.createFieldErrors[field] = msg;
+        this.createErrorMessages.push(msg);
+      }
+    } else if (fallbackMessage) {
+      this.createErrorMessages = [fallbackMessage];
+    }
+
+    this.createErrorMessage = this.createErrorMessages.join(' | ');
+    this.showErrorModal = true;
+  }
+
+  closeErrorModal(): void {
+    this.showErrorModal = false;
+  }
+
+  hasFieldError(field: string): boolean {
+    return !!this.createFieldErrors[field];
+  }
+
+  getFieldError(field: string): string {
+    return this.createFieldErrors[field] || '';
+  }
+
+  private parseApiErrors(err: any): Record<string, string[]> | null {
+    const errors = err.error?.errors;
+    if (!errors) return null;
+
+    // Backend now returns toArray() — an object like { email: ['msg'], staff_code: ['msg'] }
+    if (typeof errors === 'object' && !Array.isArray(errors)) {
+      return errors as Record<string, string[]>;
+    }
+    // Fallback: plain string message
+    if (typeof errors === 'string') {
+      try {
+        const parsed = JSON.parse(errors);
+        if (typeof parsed === 'object') return parsed;
+      } catch { /* not JSON */ }
+      return { _general: [errors] };
+    }
+    return null;
+  }
   newUser: any = {
     role: '',
     email: '',
@@ -377,7 +429,24 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
         (user.full_name && user.full_name.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
         (user.username && user.username.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
         (user.email && user.email.toLowerCase().includes(this.searchQuery.toLowerCase()));
-      return matchesRole && matchesSearch;
+
+      // Adviser grade filter — match via grade_level field OR via gradeLevels sections data
+      let matchesGradeLevel = true;
+      if (this.adviserFilterGrade && userRole === 'adviser') {
+        // Primary: match by grade_level field on user
+        const byField = String(user.grade_level || '') === String(this.adviserFilterGrade);
+
+        // Fallback: check if this user's user_id appears as adviser_id in any section of the selected grade
+        const gradeObj = this.gradeLevels.find(g => g.level_name === this.adviserFilterGrade);
+        const bySection = gradeObj?.sections?.some((s: any) => s.adviser_id === user.user_id) ?? false;
+
+        matchesGradeLevel = byField || bySection;
+      }
+
+      const matchesSection = !this.adviserFilterSection ||
+        String(user.section || '').toLowerCase() === String(this.adviserFilterSection).toLowerCase();
+
+      return matchesRole && matchesSearch && matchesGradeLevel && matchesSection;
     });
     this.currentPage = 1;
   }
@@ -390,13 +459,172 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.filterUsers();
   }
 
+  selectRole(role: string): void {
+    this.selectedRole = role;
+    this.searchQuery = '';
+    this.adviserFilterGrade = '';
+    this.adviserFilterSection = '';
+    this.filterUsers();
+  }
+
+  backToRoleCards(): void {
+    this.selectedRole = 'all';
+    this.searchQuery = '';
+    this.adviserFilterGrade = '';
+    this.adviserFilterSection = '';
+    this.filterUsers();
+  }
+
+  /** Single back handler — context-aware */
+  handleBack(): void {
+    if (this.selectedRole === 'adviser' && this.adviserFilterGrade) {
+      // Step back from section table → grade cards
+      this.adviserFilterGrade = '';
+      this.adviserFilterSection = '';
+      this.searchQuery = '';
+    } else {
+      this.backToRoleCards();
+    }
+  }
+
+  selectAdviserGrade(grade: string): void {
+    this.adviserFilterGrade = grade;
+    this.adviserFilterSection = '';
+    this.searchQuery = '';
+    this.filterUsers();
+  }
+
+  selectAdviserSection(section: string): void {
+    this.adviserFilterSection = section;
+    this.searchQuery = '';
+    this.filterUsers();
+  }
+
+  getPageTitle(): string {
+    if (this.selectedRole === 'all') return 'Manage Users';
+    if (this.selectedRole === 'adviser') {
+      if (!this.adviserFilterGrade) return 'Faculty / Advisers';
+      return this.adviserFilterGrade + ' Sections';
+    }
+    return this.getRoleLabel(this.selectedRole);
+  }
+
+  getPageSubtitle(): string {
+    if (this.selectedRole === 'all') return 'View, edit, and manage all system users';
+    if (this.selectedRole === 'adviser') {
+      if (!this.adviserFilterGrade) return 'Select a grade level to view sections and advisers';
+      return 'Sections and assigned advisers for ' + this.adviserFilterGrade;
+    }
+    return 'Manage ' + this.getRoleLabel(this.selectedRole) + ' accounts';
+  }
+
+  getRoleLabel(role: string): string {
+    const labels: Record<string, string> = {
+      student: 'Students',
+      adviser: 'Faculty / Advisers',
+      clinic_staff: 'Clinic Staff',
+      admin: 'Admins'
+    };
+    return labels[role] || role;
+  }
+
+  getActiveCount(role: string): number {
+    return this.users.filter(u => u.role === role && u.is_active).length;
+  }
+
+  // Adviser filters
+  adviserFilterGrade = '';
+  adviserFilterSection = '';
+
+  get adviserGradeLevels(): string[] {
+    return [...new Set(
+      this.users
+        .filter(u => u.role === 'adviser' && u.grade_level)
+        .map(u => String(u.grade_level))
+    )].sort();
+  }
+
+  get adviserSections(): string[] {
+    return [...new Set(
+      this.users
+        .filter(u => u.role === 'adviser' && u.section &&
+          (!this.adviserFilterGrade || String(u.grade_level) === String(this.adviserFilterGrade)))
+        .map(u => String(u.section))
+    )].sort();
+  }
+
+  getAdviserCountForGrade(grade: string): number {
+    if (grade === '__unassigned__') {
+      return this.users.filter(u => u.role === 'adviser' && !u.grade_level).length;
+    }
+    return this.users.filter(u => u.role === 'adviser' && String(u.grade_level) === grade).length;
+  }
+
+  getAdviserSectionCountForGrade(grade: string): number {
+    return [...new Set(
+      this.users
+        .filter(u => u.role === 'adviser' && String(u.grade_level) === grade && u.section)
+        .map(u => String(u.section))
+    )].length;
+  }
+
+  /** Count sections that have an adviser assigned for a grade level */
+  getAssignedAdviserCount(grade: any): number {
+    return (grade.sections || []).filter((s: any) => s.adviser_id != null).length;
+  }
+
+  /** Sections with adviser info for the selected grade level (for the table view) */
+  get adviserSectionRows(): any[] {
+    if (!this.adviserFilterGrade) return [];
+    const grade = this.gradeLevels.find(g => g.level_name === this.adviserFilterGrade);
+    if (!grade?.sections) return [];
+    return grade.sections.map((s: any, i: number) => ({
+      index: i + 1,
+      section_id: s.id,
+      section_name: s.section_name,
+      adviser_name: s.adviser_name || '—',
+      adviser_user_id: s.adviser_id ?? null,
+      capacity: s.capacity,
+      current_enrollment: s.current_enrollment ?? 0
+    }));
+  }
+
+  /** Find a user object by user_id to open the modal */
+  viewAdviserByUserId(userId: number): void {
+    const user = this.users.find(u => u.user_id === userId);
+    if (user) this.viewUser(user);
+  }
+
+  onAdviserFilterChange(): void {
+    this.filterUsers();
+  }
+
+  onAdviserGradeChange(): void {
+    this.adviserFilterSection = '';
+    this.filterUsers();
+  }
+
   viewUser(user: any): void {
-    // Viewing user
     this.selectedUser = { ...user };
-    this.editingUser = { ...user };
-    this.showUserModal = true;
+    this.editingUser  = { ...user };
+
+    // Enrich adviser with grade_level + section from gradeLevels if not already set
+    if (user.role === 'adviser' && (!user.grade_level || !user.section)) {
+      for (const grade of this.gradeLevels) {
+        const section = (grade.sections || []).find((s: any) => s.adviser_id === user.user_id);
+        if (section) {
+          this.selectedUser.grade_level = grade.level_name;
+          this.selectedUser.section     = section.section_name;
+          this.editingUser.grade_level  = grade.level_name;
+          this.editingUser.section      = section.section_name;
+          break;
+        }
+      }
+    }
+
+    this.showUserModal  = true;
     this.successMessage = '';
-    this.errorMessage = '';
+    this.errorMessage   = '';
   }
 
   closeUserModal(): void {
@@ -523,6 +751,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.resetNewUserForm();
     this.createSuccessMessage = '';
     this.createErrorMessage = '';
+    this.showErrorModal = false;
     // Reload grade levels if not yet loaded
     if (this.gradeLevels.length === 0) {
       this.loadGradeLevels();
@@ -553,6 +782,10 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       position: ''
     };
     this.availableSections = [];
+    this.createFieldErrors = {};
+    this.createErrorMessages = [];
+    this.createErrorMessage = '';
+    this.showErrorModal = false;
   }
 
   onRoleSelect(): void {
@@ -642,6 +875,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       return !!(
         this.newUser.full_name &&
         this.newUser.staff_code &&
+        this.newUser.staff_code.trim().length <= 20 &&
         this.newUser.position
       );
     }
@@ -651,7 +885,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   createUser(): void {
     if (!this.isCreateFormValid()) {
-      this.createErrorMessage = 'Please fill in all required fields';
+      this.showCreateError(null, 'Please fill in all required fields');
       return;
     }
 
@@ -676,18 +910,32 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
             this.loadUsers();
             setTimeout(() => { this.closeCreateUserModal(); }, 5000);
           } else {
-            this.createErrorMessage = response.message || 'Failed to create student account';
+            this.showCreateError(null, response.message || 'Failed to create student account');
           }
         },
         error: (err) => {
           this.creatingUser = false;
-          const errDetail = err.error?.errors || err.error?.message || 'Failed to create student account.';
-          this.createErrorMessage = typeof errDetail === 'string' ? errDetail : JSON.stringify(errDetail);
+          this.showCreateError(this.parseApiErrors(err), 'Failed to create student account.');
         }
       });
     } else {
       // For other roles, use Laravel endpoint
-      this.adminService.createUserLegacy(this.newUser).subscribe({
+      // Build a clean payload with only relevant fields
+      const payload: any = {
+        role: this.newUser.role,
+        full_name: this.newUser.full_name?.trim() || '',
+        email: this.newUser.email?.trim() || null,
+        phone: this.newUser.phone?.trim() || null,
+      };
+
+      if (this.newUser.role === 'clinic_staff') {
+        payload.staff_code = this.newUser.staff_code?.trim();
+        payload.position   = this.newUser.position?.trim();
+      } else if (this.newUser.role === 'adviser') {
+        payload.employee_id = this.newUser.employee_id?.trim();
+      }
+
+      this.adminService.createUserLegacy(payload).subscribe({
         next: (response) => {
           this.creatingUser = false;
           if (response.success && response.data) {
@@ -702,12 +950,12 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
               this.closeCreateUserModal();
             }, 3000);
           } else {
-            this.createErrorMessage = response.message || 'Failed to create user account';
+            this.showCreateError(null, response.message || 'Failed to create user account');
           }
         },
         error: (err) => {
             this.creatingUser = false;
-            this.createErrorMessage = err.error?.message || 'Failed to create user account. Please try again.';
+            this.showCreateError(this.parseApiErrors(err), 'Failed to create user account. Please try again.');
         }
       });
     }
@@ -727,17 +975,180 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.isDragging = false;
   }
 
-  downloadCSVTemplate(): void {
-    const csvContent = 'student_number,first_name,middle_name,last_name,birth_date,gender,grade_level,section_name,email,phone,emergency_contact_name,emergency_contact_phone\n' +
-                      '2024001,Juan,,Dela Cruz,2010-01-15,M,Grade 7,Genesis,juan.delacruz@email.com,09171234567,Maria Dela Cruz,09181234567\n' +
-                      '2024002,Maria,Santos,Reyes,2010-03-20,F,Grade 7,Isaiah,maria.reyes@email.com,09171234568,Pedro Reyes,09181234568\n' +
-                      '2024003,Pedro,,Santos,2009-05-10,M,Grade 8,Charity,,,Jose Santos,09181234569';
+  async downloadCSVTemplate(): Promise<void> {
+    const ExcelJS = await import('exceljs');
+    const workbook = new ExcelJS.Workbook();
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'student_import_template.csv';
+    // ── Sheet 1: Import Template ──
+    const sheet = workbook.addWorksheet('Student Import');
+
+    // Column definitions
+    sheet.columns = [
+      { header: 'student_number', key: 'student_number', width: 20 },
+      { header: 'first_name',     key: 'first_name',     width: 18 },
+      { header: 'middle_name',    key: 'middle_name',    width: 18 },
+      { header: 'last_name',      key: 'last_name',      width: 18 },
+      { header: 'email',          key: 'email',          width: 28 },
+      { header: 'phone',          key: 'phone',          width: 16 },
+      { header: 'gender',         key: 'gender',         width: 10 },
+      { header: 'birth_date',     key: 'birth_date',     width: 14 },
+      { header: 'grade_level',    key: 'grade_level',    width: 14 },
+      { header: 'section_name',   key: 'section_name',   width: 16 },
+    ];
+
+    // Style header row
+    const headerRow = sheet.getRow(1);
+    headerRow.eachCell(cell => {
+      cell.font      = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF052355' } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      cell.border    = {
+        bottom: { style: 'thin', color: { argb: 'FF5381b2' } }
+      };
+    });
+    headerRow.height = 28;
+
+    // ── Build data ──
+    const gradeNames: string[] = this.gradeLevels.map((g: any) => g.level_name);
+    const gradeSectionMap: Record<string, string[]> = {};
+    for (const grade of this.gradeLevels) {
+      gradeSectionMap[grade.level_name] = (grade.sections || []).map((s: any) => s.section_name);
+    }
+
+    // ── Hidden _Lists sheet — named ranges for INDIRECT dependent dropdown ──
+    const listsSheet = workbook.addWorksheet('_Lists');
+    listsSheet.state = 'veryHidden';
+
+    // Column A: grade names → named range "GradeList"
+    listsSheet.getCell('A1').value = 'Grades';
+    gradeNames.forEach((g, i) => { listsSheet.getCell(`A${i + 2}`).value = g; });
+    workbook.definedNames.add(
+      `_Lists!$A$2:$A$${gradeNames.length + 1}`,
+      'GradeList'
+    );
+
+    // Columns B+: sections per grade → named range "Grade_7", "Grade_8", etc.
+    gradeNames.forEach((gradeName, colIdx) => {
+      const col      = String.fromCharCode(66 + colIdx); // B, C, D...
+      const sections = gradeSectionMap[gradeName] || [];
+      listsSheet.getCell(`${col}1`).value = gradeName;
+      sections.forEach((sec, rowIdx) => {
+        listsSheet.getCell(`${col}${rowIdx + 2}`).value = sec;
+      });
+      if (sections.length > 0) {
+        const safeName = gradeName.replace(/\s+/g, '_'); // "Grade 7" → "Grade_7"
+        workbook.definedNames.add(
+          `_Lists!$${col}$2:$${col}$${sections.length + 1}`,
+          safeName
+        );
+      }
+    });
+
+    // ── Data Validation rows 2–1000 ──
+
+    // Gender: M or F
+    for (let r = 2; r <= 1000; r++) {
+      sheet.getCell(`G${r}`).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: ['"M,F"'],
+        showErrorMessage: true,
+        errorTitle: 'Invalid Gender',
+        error: 'Please select M (Male) or F (Female)',
+        showInputMessage: true,
+        promptTitle: 'Gender',
+        prompt: 'M = Male, F = Female'
+      };
+    }
+
+    // Grade Level — named range GradeList
+    for (let r = 2; r <= 1000; r++) {
+      sheet.getCell(`I${r}`).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: ['GradeList'],
+        showErrorMessage: true,
+        errorTitle: 'Invalid Grade Level',
+        error: `Valid values: ${gradeNames.join(', ')}`,
+        showInputMessage: true,
+        promptTitle: 'Grade Level',
+        prompt: 'Select a grade level first'
+      };
+    }
+
+    // Section — INDIRECT(SUBSTITUTE(I2," ","_")) → resolves to named range per grade
+    for (let r = 2; r <= 1000; r++) {
+      sheet.getCell(`J${r}`).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: [`INDIRECT(SUBSTITUTE(I${r}," ","_"))`],
+        showErrorMessage: true,
+        errorTitle: 'Invalid Section',
+        error: 'Select a grade level first, then choose a section.',
+        showInputMessage: true,
+        promptTitle: 'Section',
+        prompt: 'Sections filter based on selected grade level'
+      };
+    }
+
+    // ── Sheet 2: Sections Reference ──
+    const refSheet = workbook.addWorksheet('Sections Reference');
+    refSheet.columns = [
+      { header: 'Grade Level', key: 'grade', width: 16 },
+      { header: 'Section Name', key: 'section', width: 20 },
+    ];
+    const refHeader = refSheet.getRow(1);
+    refHeader.eachCell(cell => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF052355' } };
+      cell.alignment = { horizontal: 'center' };
+    });
+    refHeader.height = 24;
+
+    for (const grade of this.gradeLevels) {
+      for (const section of (grade.sections || [])) {
+        refSheet.addRow({ grade: grade.level_name, section: section.section_name });
+      }
+    }
+
+    // ── Sheet 3: Instructions ──
+    const instrSheet = workbook.addWorksheet('Instructions');
+    const instructions = [
+      ['Field', 'Required', 'Format / Valid Values'],
+      ['student_number', 'Yes', '12 digits starting with 13 (e.g. 130000000001)'],
+      ['first_name',     'Yes', 'Text'],
+      ['middle_name',    'No',  'Text — leave blank if none'],
+      ['last_name',      'Yes', 'Text'],
+      ['email',          'No',  'Valid email address'],
+      ['phone',          'No',  '11-digit PH number (e.g. 09171234567)'],
+      ['gender',         'Yes', 'M or F  (dropdown in template)'],
+      ['birth_date',     'Yes', 'YYYY-MM-DD (e.g. 2010-01-15)'],
+      ['grade_level',    'Yes', 'See "Sections Reference" sheet  (dropdown in template)'],
+      ['section_name',   'Yes', 'See "Sections Reference" sheet'],
+    ];
+    instrSheet.columns = [
+      { key: 'field',   width: 20 },
+      { key: 'req',     width: 12 },
+      { key: 'format',  width: 55 },
+    ];
+    instructions.forEach((row, i) => {
+      const r = instrSheet.addRow(row);
+      if (i === 0) {
+        r.eachCell(cell => {
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF052355' } };
+        });
+        r.height = 24;
+      }
+    });
+
+    // ── Download ──
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url    = window.URL.createObjectURL(blob);
+    const link   = document.createElement('a');
+    link.href     = url;
+    link.download = 'student_import_template.xlsx';
     link.click();
     window.URL.revokeObjectURL(url);
   }

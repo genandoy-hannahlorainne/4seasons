@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\EmergencyDrill;
+use App\Models\Notification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -41,6 +42,13 @@ class AbandonExpiredDrills extends Command
 
         foreach ($expired as $drill) {
             $drill->update(['status' => 'abandoned']);
+
+            // Dismiss any pending drill alert notifications for this drill
+            Notification::where('notification_type', 'emergency_drill_alert')
+                ->where('status', 'Pending')
+                ->whereJsonContains('request_data->drill_id', $drill->id)
+                ->update(['status' => 'Read']);
+
             Log::info('Drill auto-abandoned', [
                 'drill_id'     => $drill->id,
                 'drill_name'   => $drill->drill_name,

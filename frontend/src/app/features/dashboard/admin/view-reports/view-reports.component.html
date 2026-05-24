@@ -212,70 +212,121 @@
       </table>
     </div>
 
-    <!-- Principal Health Trends Report -->
-    <div *ngIf="activeReport === 'principal-health-trends'" class="report-data">
-      <div class="stats-grid" *ngIf="reportData.summary">
-        <div class="stat-box">
-          <div class="stat-label">Total Visits</div>
-          <div class="stat-value">{{ reportData.summary.totalVisits || 0 }}</div>
+    <!-- Principal Health Trends Report (improved layout) -->
+    <div *ngIf="activeReport === 'principal-health-trends'" class="report-data principal-trends">
+      <div class="trends-grid">
+        <!-- Left column: summary cards + recommendation -->
+        <div class="left-col">
+          <div class="stats-grid" *ngIf="reportData.summary">
+            <div class="stat-box">
+              <div class="stat-label">Total Visits</div>
+              <div class="stat-value">{{ reportData.summary.totalVisits || 0 }}</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Unique Students</div>
+              <div class="stat-value">{{ reportData.summary.uniqueStudents || 0 }}</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Emergency Visits</div>
+              <div class="stat-value">{{ reportData.summary.emergencyVisits || 0 }}</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Hospital Referrals</div>
+              <div class="stat-value">{{ reportData.summary.hospitalReferrals || 0 }}</div>
+            </div>
+          </div>
+
+          <div class="card recommendation" *ngIf="reportData.recommendation">
+            <h4>Recommendation</h4>
+            <p class="rec-title"><strong>{{ reportData.recommendation.title || 'No recommendation' }}</strong></p>
+            <p class="rec-details">{{ reportData.recommendation.details }}</p>
+            <p class="meta"><strong>Peak Slot:</strong>
+              <span *ngIf="reportData.peakSlot">{{ reportData.peakSlot.day }} {{ reportData.peakSlot.timeRangeLabel || reportData.peakSlot.timeRange }} ({{ reportData.peakSlot.visits }} visits)</span>
+              <span *ngIf="!reportData.peakSlot">No peak data available</span>
+            </p>
+            <p class="meta"><strong>Period:</strong> {{ reportData.reportMeta?.periodStart }} to {{ reportData.reportMeta?.periodEnd }}</p>
+          </div>
         </div>
-        <div class="stat-box">
-          <div class="stat-label">Unique Students</div>
-          <div class="stat-value">{{ reportData.summary.uniqueStudents || 0 }}</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">Emergency Visits</div>
-          <div class="stat-value">{{ reportData.summary.emergencyVisits || 0 }}</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">Hospital Referrals</div>
-          <div class="stat-value">{{ reportData.summary.hospitalReferrals || 0 }}</div>
+
+        <!-- Right column: heatmap and top reasons -->
+        <div class="right-col">
+          <div class="tabs">
+            <button class="tab-btn" [class.active]="activeTrendTab==='overview'" (click)="activeTrendTab='overview'">Overview</button>
+            <button class="tab-btn" [class.active]="activeTrendTab==='heatmap'" (click)="activeTrendTab='heatmap'">Heatmap</button>
+            <button class="tab-btn" [class.active]="activeTrendTab==='reasons'" (click)="activeTrendTab='reasons'">Top Reasons</button>
+          </div>
+
+          <div *ngIf="activeTrendTab==='overview'" class="tab-panel">
+            <div class="card">
+              <h4>Overview</h4>
+              <div class="stats-grid compact">
+                <div class="stat-box">
+                  <div class="stat-label">Total Visits</div>
+                  <div class="stat-value">{{ reportData.summary?.totalVisits || 0 }}</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-label">Unique Students</div>
+                  <div class="stat-value">{{ reportData.summary?.uniqueStudents || 0 }}</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-label">Emergency Visits</div>
+                  <div class="stat-value">{{ reportData.summary?.emergencyVisits || 0 }}</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-label">Hospital Referrals</div>
+                  <div class="stat-value">{{ reportData.summary?.hospitalReferrals || 0 }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="activeTrendTab==='heatmap'" class="tab-panel">
+            <div class="card heatmap-card">
+              <h4>Visits by Day &amp; Hour</h4>
+              <div class="heatmap-table">
+                <table class="report-table compact">
+                  <thead>
+                    <tr>
+                      <th>Day</th>
+                      <th>Time Slot</th>
+                      <th>Visits</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let row of reportData.visitsByDayHour">
+                      <td>{{ row.day }}</td>
+                      <td>{{ row.timeRangeLabel || row.timeRange }}</td>
+                      <td [ngStyle]="getCellStyle(row.visits)">{{ row.visits }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div *ngIf="!reportData.visitsByDayHour || reportData.visitsByDayHour.length === 0" class="no-data">No visits data for selected period</div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="activeTrendTab==='reasons'" class="tab-panel">
+            <div class="card top-reasons">
+              <h4>Top Visit Reasons</h4>
+              <table class="report-table compact">
+                <thead>
+                  <tr>
+                    <th>Reason</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of reportData.topReasons">
+                    <td>{{ row.reason }}</td>
+                    <td>{{ row.count }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div *ngIf="!reportData.topReasons || reportData.topReasons.length === 0" class="no-data">No reasons data available</div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="report-table" style="margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-        <p><strong>Period:</strong> {{ reportData.reportMeta?.periodStart }} to {{ reportData.reportMeta?.periodEnd }}</p>
-        <p><strong>Peak Slot:</strong>
-          <span *ngIf="reportData.peakSlot">{{ reportData.peakSlot.day }} {{ reportData.peakSlot.timeRangeLabel || reportData.peakSlot.timeRange }} ({{ reportData.peakSlot.visits }} visits)</span>
-          <span *ngIf="!reportData.peakSlot">No peak data available</span>
-        </p>
-        <p><strong>Recommendation:</strong> {{ reportData.recommendation?.title }}</p>
-        <p>{{ reportData.recommendation?.details }}</p>
-      </div>
-
-      <h3 style="margin-top: 1.5rem;">Top Visit Reasons</h3>
-      <table class="report-table">
-        <thead>
-          <tr>
-            <th>Reason</th>
-            <th>Count</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of reportData.topReasons">
-            <td>{{ row.reason }}</td>
-            <td>{{ row.count }}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h3 style="margin-top: 1.5rem;">Visits by Day and Hour</h3>
-      <table class="report-table">
-        <thead>
-          <tr>
-            <th>Day</th>
-            <th>Time Slot</th>
-            <th>Visits</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of reportData.visitsByDayHour">
-            <td>{{ row.day }}</td>
-            <td>{{ row.timeRangeLabel || row.timeRange }}</td>
-            <td>{{ row.visits }}</td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   </div>
 
