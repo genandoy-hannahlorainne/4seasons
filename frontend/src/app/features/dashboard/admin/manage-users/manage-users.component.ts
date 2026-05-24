@@ -976,8 +976,8 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   async downloadCSVTemplate(): Promise<void> {
-    const ExcelJS = await import('exceljs');
-    const workbook = new ExcelJS.Workbook();
+    const { Workbook } = await import('exceljs');
+    const workbook = new Workbook();
 
     // ── Sheet 1: Import Template ──
     const sheet = workbook.addWorksheet('Student Import');
