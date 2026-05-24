@@ -78,6 +78,62 @@ class AdminController extends BaseController
             $averageBmi = $bmiData && $bmiData->average_bmi ? round((float)$bmiData->average_bmi, 1) : 19.5;
             $overweightObeseCount = $bmiData ? (int)$bmiData->overweight_obese_count : 0;
 
+            // Visits by day (last 30 days) for line chart
+            $visitsByDay = DB::table('medical_visits')
+                ->where('visit_datetime', '>=', now()->subDays(29)->startOfDay())
+                ->selectRaw('DATE(visit_datetime) as date, COUNT(*) as count')
+                ->groupByRaw('DATE(visit_datetime)')
+                ->orderBy('date')
+                ->get()
+                ->map(fn($r) => ['date' => $r->date, 'count' => (int)$r->count]);
+
+            // Visit types breakdown (last 30 days)
+            $visitsByType = DB::table('medical_visits')
+                ->where('visit_datetime', '>=', now()->subDays(29)->startOfDay())
+                ->selectRaw('visit_type, COUNT(*) as count')
+                ->groupBy('visit_type')
+                ->pluck('count', 'visit_type')
+                ->map(fn($c) => (int)$c);
+
+            // Recent visits (last 5) with student info
+            $recentVisits = DB::table('medical_visits as mv')
+                ->leftJoin('students as s', 'mv.student_id', '=', 's.student_id')
+                ->orderByDesc('mv.visit_datetime')
+                ->limit(5)
+                ->get([
+                    'mv.visit_id',
+                    'mv.visit_datetime',
+                    'mv.visit_type',
+                    'mv.chief_complaint',
+                    'mv.notes',
+                    'mv.status',
+                    's.first_name',
+                    's.last_name',
+                    's.grade_level',
+                    's.section',
+                ])
+                ->map(fn($r) => [
+                    'visit_id'       => $r->visit_id,
+                    'visit_datetime' => $r->visit_datetime,
+                    'visit_type'     => match(strtolower($r->visit_type ?? '')) {
+                        'emergency' => 'Emergency',
+                        default     => 'Routine',
+                    },
+                    'chief_complaint'=> $r->chief_complaint ?? $r->notes ?? '',
+                    'status'         => match(strtolower($r->status ?? '')) {
+                        'completed' => 'Closed',
+                        'cancelled' => 'Referred',
+                        'closed'    => 'Closed',
+                        'referred'  => 'Referred',
+                        default     => 'Open',
+                    },
+                    'student'        => [
+                        'full_name'   => trim(($r->first_name ?? '') . ' ' . ($r->last_name ?? '')),
+                        'grade_level' => $r->grade_level ?? '',
+                        'section'     => $r->section ?? '',
+                    ],
+                ]);
+
             return $this->sendResponse([
                 'current_stats' => [
                     'total_users' => $totalUsers,
@@ -85,14 +141,24 @@ class AdminController extends BaseController
                     'faculty' => $advisers,
                     'clinic_staff' => $clinicStaff,
                     'admins' => $admins,
-                    'recent_users_count' => $recentUsersCount
+                    'recent_users_count' => $recentUsersCount,
+                    'visits_today' => DB::table('medical_visits')
+                        ->whereDate('visit_datetime', now()->toDateString())
+                        ->count(),
+                    'emergency_visits_week' => DB::table('medical_visits')
+                        ->where('visit_type', 'Emergency')
+                        ->where('visit_datetime', '>=', now()->startOfWeek())
+                        ->count(),
                 ],
                 'health_insights' => [
                     'total_students_analyzed' => $totalStudentsWithBmi,
                     'school_average_bmi' => $averageBmi,
                     'students_overweight_obese' => $overweightObeseCount,
-                    'highest_risk_grade' => 'Grade 7' // This would be calculated from actual data
-                ]
+                    'highest_risk_grade' => 'Grade 7'
+                ],
+                'visits_by_day'  => $visitsByDay,
+                'visits_by_type' => $visitsByType,
+                'recent_visits'  => $recentVisits,
             ], 'Dashboard data retrieved successfully');
 
         } catch (\Exception $e) {
@@ -1255,7 +1321,15 @@ class AdminController extends BaseController
 
             $roleFilter = $request->get('role');
 
-            $buildUserData = function($user) {
+            // Pre-load adviser → section mapping in one query to avoid N+1
+            $currentSchoolYearId = \DB::table('school_years')->where('is_current', true)->value('id');
+            $adviserSectionMap = \App\Models\Section::with('gradeLevel')
+                ->whereNotNull('adviser_id')
+                ->when($currentSchoolYearId, fn($q) => $q->where('school_year_id', $currentSchoolYearId))
+                ->get()
+                ->keyBy('adviser_id');  // keyed by user_id (sections.adviser_id = users.user_id)
+
+            $buildUserData = function($user) use ($adviserSectionMap) {
                 $roleName = $user->role->role_name ?? 'unknown';
                 $data = [
                     'user_id'    => $user->user_id,
@@ -1284,10 +1358,16 @@ class AdminController extends BaseController
                     $data['contact_phone']    = $user->adviser->contact_phone;
                     $data['department']       = $user->adviser->department;
 
-                    // Debug log
+                    // Resolve grade_level and section from pre-loaded map (no N+1)
+                    $assignedSection = $adviserSectionMap[$user->user_id] ?? null;
+                    $data['grade_level']  = $assignedSection?->gradeLevel?->level_name ?? null;
+                    $data['section']      = $assignedSection?->section_name ?? null;
+                    $data['section_id']   = $assignedSection?->id ?? null;
+
                     \Log::info('Adviser data for user ' . $user->user_id, [
                         'employee_id' => $user->adviser->employee_id,
-                        'adviser_id' => $user->adviser->adviser_id
+                        'grade_level' => $data['grade_level'],
+                        'section'     => $data['section'],
                     ]);
                 }
 
@@ -1532,7 +1612,7 @@ class AdminController extends BaseController
         ]);
 
         if ($validator->fails()) {
-            return $this->sendError('Validation Error', $validator->errors()->toJson());
+            return $this->sendError('Validation Error', $validator->errors()->toArray());
         }
 
         DB::beginTransaction();
@@ -1684,7 +1764,7 @@ class AdminController extends BaseController
             ]);
 
             if ($validator->fails()) {
-                return $this->sendError('Validation Error', $validator->errors()->first());
+                return $this->sendError('Validation Error', $validator->errors()->toArray());
             }
 
             DB::beginTransaction();
@@ -1949,6 +2029,23 @@ class AdminController extends BaseController
     public function getNotifications()
     {
         try {
+            // Auto-dismiss drill alert notifications for drills that are no longer active
+            $staleDrillNotifIds = \App\Models\Notification::where('notification_type', 'emergency_drill_alert')
+                ->where('status', 'Pending')
+                ->get()
+                ->filter(function ($notif) {
+                    $drillId = data_get($notif->request_data, 'drill_id');
+                    if (!$drillId) return false;
+                    $drill = \App\Models\EmergencyDrill::find($drillId);
+                    return $drill && !in_array($drill->status, ['active', 'planned']);
+                })
+                ->pluck('notification_id');
+
+            if ($staleDrillNotifIds->isNotEmpty()) {
+                \App\Models\Notification::whereIn('notification_id', $staleDrillNotifIds)
+                    ->update(['status' => 'Read']);
+            }
+
             $notifications = \App\Models\Notification::with([
                     'student.currentSection.gradeLevel',
                     'medicalVisit.clinicStaff.user',

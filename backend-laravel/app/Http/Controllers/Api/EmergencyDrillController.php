@@ -349,6 +349,12 @@ class EmergencyDrillController extends BaseController
                 'statistics' => $statistics
             ]);
 
+            // Dismiss any pending drill alert notifications for this drill
+            \App\Models\Notification::where('notification_type', 'emergency_drill_alert')
+                ->where('status', 'Pending')
+                ->whereJsonContains('request_data->drill_id', $drill->id)
+                ->update(['status' => 'Read']);
+
             DB::commit();
 
             return $this->sendResponse([

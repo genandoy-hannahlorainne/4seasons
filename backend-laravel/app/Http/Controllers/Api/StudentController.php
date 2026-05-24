@@ -918,6 +918,44 @@ class StudentController extends BaseController
     }
 
     /**
+     * Count weekdays (school days) between two dates, starting from the day AFTER $from.
+     */
+    private function countSchoolDaysSince(\Carbon\Carbon $from): int
+    {
+        $count   = 0;
+        $current = $from->copy()->startOfDay()->addDay();
+        $today   = now()->startOfDay();
+
+        while ($current->lte($today)) {
+            if ($current->isWeekday()) {
+                $count++;
+            }
+            $current->addDay();
+        }
+
+        return $count;
+    }
+
+    /**
+     * Count weekdays between two dates (exclusive of $from, inclusive of $to).
+     */
+    private function countSchoolDaysBetween(\Carbon\Carbon $from, \Carbon\Carbon $to): int
+    {
+        $count   = 0;
+        $current = $from->copy()->startOfDay()->addDay();
+        $end     = $to->copy()->startOfDay();
+
+        while ($current->lte($end)) {
+            if ($current->isWeekday()) {
+                $count++;
+            }
+            $current->addDay();
+        }
+
+        return $count;
+    }
+
+    /**
      * Get lightweight badge summary for authenticated student.
      */
     public function getBadgeSummary(Request $request)
@@ -937,26 +975,55 @@ class StudentController extends BaseController
                 return $this->sendError('Student not found', [], 404);
             }
 
-            $lastVisit = $student->medicalVisits()
-                ->orderBy('visit_datetime', 'desc')
-                ->first(['visit_datetime']);
+            // Get all visits ordered oldest → newest
+            $visits = $student->medicalVisits()
+                ->orderBy('visit_datetime', 'asc')
+                ->pluck('visit_datetime');
 
+            // Calculate the maximum streak ever achieved AND the current ongoing streak.
+            // A streak = school days between consecutive visits (or from enrollment / last visit to today).
+            $maxStreak     = 0;
             $currentStreak = 0;
-            if (!$lastVisit) {
-                $startDate = $student->created_at ?? now()->subDays(365);
-                $currentStreak = max(0, (int) now()->diffInDays($startDate, false));
+
+            if ($visits->isEmpty()) {
+                // No visits at all — streak since enrollment
+                $startDate     = \Carbon\Carbon::parse($student->created_at ?? now()->subDays(365));
+                $currentStreak = $this->countSchoolDaysSince($startDate);
+                $maxStreak     = $currentStreak;
             } else {
-                $currentStreak = max(0, (int) now()->diffInDays($lastVisit->visit_datetime, false));
+                // Check gap from enrollment to first visit
+                $enrollDate  = \Carbon\Carbon::parse($student->created_at ?? $visits->first());
+                $firstVisit  = \Carbon\Carbon::parse($visits->first());
+                $maxStreak   = max($maxStreak, $this->countSchoolDaysBetween($enrollDate, $firstVisit));
+
+                // Check gaps between consecutive visits
+                for ($i = 0; $i < $visits->count() - 1; $i++) {
+                    $from      = \Carbon\Carbon::parse($visits[$i]);
+                    $to        = \Carbon\Carbon::parse($visits[$i + 1]);
+                    $gap       = $this->countSchoolDaysBetween($from, $to);
+                    $maxStreak = max($maxStreak, $gap);
+                }
+
+                // Current ongoing streak = school days since last visit
+                $lastVisitDate = \Carbon\Carbon::parse($visits->last());
+                $currentStreak = $this->countSchoolDaysSince($lastVisitDate);
+                $maxStreak     = max($maxStreak, $currentStreak);
             }
 
-            $badgeData = $this->calculateBadgeStatus($student->student_id, $currentStreak);
+            // Badges unlock based on max streak ever achieved (so a new visit doesn't un-earn a badge)
+            $badgeData = $this->calculateBadgeStatus($student->student_id, $maxStreak);
+
+            $lastVisit = $visits->isNotEmpty()
+                ? $student->medicalVisits()->orderBy('visit_datetime', 'desc')->first(['visit_datetime'])
+                : null;
 
             return $this->sendResponse([
-                'badges' => $badgeData['badges'],
-                'badges_unlocked' => $badgeData['badges_unlocked'],
-                'next_badge' => $badgeData['next_badge'],
-                'current_streak_days' => $currentStreak,
-                'last_clinic_visit' => $lastVisit?->visit_datetime,
+                'badges'               => $badgeData['badges'],
+                'badges_unlocked'      => $badgeData['badges_unlocked'],
+                'next_badge'           => $badgeData['next_badge'],
+                'current_streak_days'  => $currentStreak,
+                'max_streak_days'      => $maxStreak,
+                'last_clinic_visit'    => $lastVisit?->visit_datetime,
             ], 'Badge summary retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve badge summary', [

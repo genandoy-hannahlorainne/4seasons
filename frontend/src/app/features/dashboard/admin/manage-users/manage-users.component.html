@@ -1,11 +1,14 @@
 <div class="manage-users-container">
   <div class="page-header">
-    <div>
-      <h1>Manage Users</h1>
-      <p>View, edit, and manage all system users</p>
+    <div class="header-left">
+      <button class="btn btn-back" *ngIf="selectedRole !== 'all'" (click)="handleBack()">
+        <i class="fa-solid fa-arrow-left"></i> Back
+      </button>
+      <h1>{{ getPageTitle() }}</h1>
+      <p>{{ getPageSubtitle() }}</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-secondary" (click)="openBulkImportModal()" *ngIf="selectedRole === 'student' || selectedRole === 'all'">
+      <button class="btn btn-secondary" (click)="openBulkImportModal()" *ngIf="selectedRole === 'student'">
         <i class="fa-solid fa-file-csv"></i> Bulk Import Students
       </button>
       <button class="btn btn-primary create-user-btn" (click)="openCreateUserModal()">
@@ -14,130 +17,251 @@
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="filters-section">
-    <div class="filter-group">
-      <label for="roleFilter">Filter by Role:</label>
-      <select id="roleFilter" [(ngModel)]="selectedRole" (change)="onRoleChange()" class="filter-select">
-        <option value="all">All Users</option>
-        <option value="student">Students</option>
-        <option value="adviser">Faculty/Advisers</option>
-        <option value="clinic_staff">Clinic Staff</option>
-        <option value="admin">Admins</option>
-      </select>
-    </div>
-
-    <div class="filter-group">
-      <label for="searchInput">Search:</label>
-      <input
-        id="searchInput"
-        type="text"
-        [(ngModel)]="searchQuery"
-        (input)="onSearchChange()"
-        placeholder="Search by name, username, or email..."
-        class="search-input"
-      >
-    </div>
-  </div>
-
-
   <!-- Loading State -->
   <div *ngIf="loading" class="loading-state">
     <div class="spinner"></div>
     <p>Loading users...</p>
   </div>
 
-  <!-- Users Table -->
-  <div *ngIf="!loading" class="users-section">
-    <div class="users-info">
-      <span class="user-count">{{ filteredUsers.length }} user(s) found</span>
-      <div class="page-size-control">
-        <label for="pageSize">Show:</label>
-        <select id="pageSize" [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="page-size-select">
-          <option [value]="10">10</option>
-          <option [value]="25">25</option>
-          <option [value]="50">50</option>
-          <option [value]="100">100</option>
-        </select>
-        <span>per page</span>
+  <!-- Role Cards View -->
+  <div class="role-cards" *ngIf="!loading && selectedRole === 'all'">
+    <div class="role-card student" (click)="selectRole('student')">
+      <div class="card-header">
+        <div class="card-icon"><i class="fa-solid fa-user-graduate"></i></div>
+        <span class="card-title">Students</span>
+      </div>
+      <div class="card-stats">
+        <div class="stat">
+          <span class="stat-value">{{ userCounts.students }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ getActiveCount('student') }}</span>
+          <span class="stat-label">Active</span>
+        </div>
+      </div>
+      <div class="card-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>
+
+    <div class="role-card adviser" (click)="selectRole('adviser')">
+      <div class="card-header">
+        <div class="card-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+        <span class="card-title">Faculty / Advisers</span>
+      </div>
+      <div class="card-stats">
+        <div class="stat">
+          <span class="stat-value">{{ userCounts.advisers }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ getActiveCount('adviser') }}</span>
+          <span class="stat-label">Active</span>
+        </div>
+      </div>
+      <div class="card-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>
+
+    <div class="role-card clinic_staff" (click)="selectRole('clinic_staff')">
+      <div class="card-header">
+        <div class="card-icon"><i class="fa-solid fa-user-nurse"></i></div>
+        <span class="card-title">Clinic Staff</span>
+      </div>
+      <div class="card-stats">
+        <div class="stat">
+          <span class="stat-value">{{ userCounts.clinicStaff }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ getActiveCount('clinic_staff') }}</span>
+          <span class="stat-label">Active</span>
+        </div>
+      </div>
+      <div class="card-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>
+
+    <div class="role-card admin" (click)="selectRole('admin')">
+      <div class="card-header">
+        <div class="card-icon"><i class="fa-solid fa-user-shield"></i></div>
+        <span class="card-title">Admins</span>
+      </div>
+      <div class="card-stats">
+        <div class="stat">
+          <span class="stat-value">{{ userCounts.admins }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ getActiveCount('admin') }}</span>
+          <span class="stat-label">Active</span>
+        </div>
+      </div>
+      <div class="card-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>
+  </div>
+
+  <!-- Adviser Grade Level Cards (intermediate drill-down) -->
+  <div class="grade-cards" *ngIf="!loading && selectedRole === 'adviser' && !adviserFilterGrade">
+    <div
+      *ngFor="let grade of gradeLevels"
+      class="grade-card"
+      (click)="selectAdviserGrade(grade.level_name)">
+      <div class="card-header">
+        <div class="card-icon adviser"><i class="fa-solid fa-chalkboard-user"></i></div>
+        <span class="card-title">{{ grade.level_name }}</span>
+      </div>
+      <div class="card-stats">
+        <div class="stat">
+          <span class="stat-value">{{ grade.sections?.length || 0 }}</span>
+          <span class="stat-label">Sections</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ getAssignedAdviserCount(grade) }}</span>
+          <span class="stat-label">Advisers</span>
+        </div>
+      </div>
+      <div class="card-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>
+
+    <div *ngIf="gradeLevels.length === 0" class="no-grade-card">
+      <i class="fa-solid fa-inbox"></i>
+      <p>No grade levels found.</p>
+    </div>
+  </div>
+
+  <!-- Adviser Section Table (shown after selecting a grade) -->
+  <div class="users-section" *ngIf="!loading && selectedRole === 'adviser' && adviserFilterGrade">
+
+    <!-- Search bar -->
+    <div class="detail-toolbar">
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+          placeholder="Search by name, username, or email..."
+          class="search-input"
+        >
+      </div>
+      <div class="users-meta">
+        <span class="user-count">{{ filteredUsers.length }} user(s)</span>
       </div>
     </div>
 
-    <!-- Mobile Card View -->
-    <div class="user-cards">
-      <div *ngFor="let user of paginatedUsers" class="user-card" (click)="viewUser(user)">
-        <div class="user-card-top">
-          <div class="user-card-info">
-            <span class="user-card-name">{{ user.full_name }}</span>
-            <span class="user-card-username">@{{ user.username }}</span>
+    <!-- User Cards Grid -->
+    <div class="user-grid">
+      <div
+        *ngFor="let user of filteredUsers"
+        class="user-item-card"
+        (click)="viewUser(user)">
+        <div class="uic-top">
+          <div class="uic-avatar adviser">
+            <i class="fa-solid fa-chalkboard-user"></i>
           </div>
-          <span class="role-badge" [ngClass]="user.role">{{ user.roleDisplay }}</span>
-        </div>
-        <div class="user-card-email">{{ user.email }}</div>
-        <div class="user-card-bottom">
+          <div class="uic-info">
+            <span class="uic-name">{{ user.full_name }}</span>
+            <span class="uic-username">@{{ user.username }}</span>
+          </div>
           <span class="status-badge" [ngClass]="getStatusClass(user.is_active)">{{ getStatusText(user.is_active) }}</span>
-          <span class="user-card-date">{{ user.created_at ? (user.created_at | date:'mediumDate') : 'N/A' }}</span>
+        </div>
+        <div class="uic-email">
+          <i class="fa-solid fa-envelope"></i> {{ user.email || '—' }}
+        </div>
+        <div class="uic-bottom">
+          <span class="uic-date"><i class="fa-regular fa-calendar"></i> {{ user.created_at ? (user.created_at | date:'mediumDate') : 'N/A' }}</span>
           <button class="action-btn view-btn" (click)="viewUser(user); $event.stopPropagation()" title="View/Edit">
             <i class="fa-solid fa-pen-to-square"></i>
           </button>
         </div>
       </div>
-      <div *ngIf="filteredUsers.length === 0" class="no-users"><p>No users found matching your criteria</p></div>
+
+      <div *ngIf="filteredUsers.length === 0" class="no-users-card">
+        <i class="fa-solid fa-users-slash"></i>
+        <p>No advisers found for this grade level.</p>
+      </div>
     </div>
+  </div>
 
-    <!-- Desktop Table View -->
-    <div class="users-table-wrapper">
-      <table class="users-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Registered</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let user of paginatedUsers" class="user-row">
-            <td class="user-name">{{ user.full_name }}</td>
-            <td class="user-username">{{ user.username }}</td>
-            <td class="user-email">{{ user.email }}</td>
-            <td class="user-role">
-              <span class="role-badge" [ngClass]="user.role">{{ user.roleDisplay }}</span>
-            </td>
-            <td class="user-status">
-              <span class="status-badge" [ngClass]="getStatusClass(user.is_active)">
-                {{ getStatusText(user.is_active) }}
-              </span>
-            </td>
-            <td class="user-date">
-              {{ user.created_at ? (user.created_at | date:'short') : 'N/A' }}
-            </td>
-            <td class="user-actions">
-              <button class="action-btn view-btn" (click)="viewUser(user)" title="View/Edit">
-                <i class="fa-solid fa-pen-to-square"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- Role Detail View (non-adviser roles only) -->
+  <div *ngIf="!loading && selectedRole !== 'all' && selectedRole !== 'adviser'" class="users-section">
 
-      <div *ngIf="filteredUsers.length === 0" class="no-users">
-        <p>No users found matching your criteria</p>
+    <!-- Search bar -->
+    <div class="detail-toolbar">
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+          placeholder="Search by name, username, or email..."
+          class="search-input"
+        >
+      </div>
+
+      <!-- no inline filters needed — navigation is card-based -->
+
+
+      <div class="users-meta">
+        <span class="user-count">{{ filteredUsers.length }} user(s)</span>
+        <!-- Page size only for students -->
+        <div class="page-size-control" *ngIf="selectedRole === 'student'">
+          <label for="pageSize">Show:</label>
+          <select id="pageSize" [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="page-size-select">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+          <span>per page</span>
+        </div>
       </div>
     </div>
 
-    <!-- Pagination -->
-    <div *ngIf="totalPages > 1" class="pagination">
+    <!-- User Cards Grid -->
+    <div class="user-grid">
+      <div
+        *ngFor="let user of (selectedRole === 'student' ? paginatedUsers : filteredUsers)"
+        class="user-item-card"
+        (click)="viewUser(user)">
+        <div class="uic-top">
+          <div class="uic-avatar" [ngClass]="user.role">
+            <i class="fa-solid" [ngClass]="{
+              'fa-user-graduate': user.role === 'student',
+              'fa-chalkboard-user': user.role === 'adviser',
+              'fa-user-nurse': user.role === 'clinic_staff',
+              'fa-user-shield': user.role === 'admin'
+            }"></i>
+          </div>
+          <div class="uic-info">
+            <span class="uic-name">{{ user.full_name }}</span>
+            <span class="uic-username">@{{ user.username }}</span>
+          </div>
+          <span class="status-badge" [ngClass]="getStatusClass(user.is_active)">{{ getStatusText(user.is_active) }}</span>
+        </div>
+        <div class="uic-email">
+          <i class="fa-solid fa-envelope"></i> {{ user.email || '—' }}
+        </div>
+        <div class="uic-bottom">
+          <span class="uic-date"><i class="fa-regular fa-calendar"></i> {{ user.created_at ? (user.created_at | date:'mediumDate') : 'N/A' }}</span>
+          <button class="action-btn view-btn" (click)="viewUser(user); $event.stopPropagation()" title="View/Edit">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="filteredUsers.length === 0" class="no-users-card">
+        <i class="fa-solid fa-users-slash"></i>
+        <p>No {{ getRoleLabel(selectedRole) }} found matching your search.</p>
+      </div>
+    </div>
+
+    <!-- Pagination (students only) -->
+    <div *ngIf="selectedRole === 'student' && totalPages > 1" class="pagination">
       <button class="page-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="First">
         <i class="fa-solid fa-angles-left"></i>
       </button>
       <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" title="Previous">
         <i class="fa-solid fa-angle-left"></i>
       </button>
-
       <button
         *ngFor="let page of pageNumbers"
         class="page-btn"
@@ -145,135 +269,170 @@
         (click)="goToPage(page)">
         {{ page }}
       </button>
-
       <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" title="Next">
         <i class="fa-solid fa-angle-right"></i>
       </button>
       <button class="page-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages" title="Last">
         <i class="fa-solid fa-angles-right"></i>
       </button>
-
       <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
     </div>
   </div>
 
+
   <!-- User Details Modal -->
   <div class="modal-overlay" *ngIf="showUserModal" (click)="closeUserModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <button class="close-btn" (click)="closeUserModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="user-detail-modal" (click)="$event.stopPropagation()">
 
-      <div class="modal-header">
-        <h2>User Details</h2>
-      </div>
-
-      <!-- Messages -->
-      <div *ngIf="successMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ successMessage }}</div>
-      <div *ngIf="errorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}</div>
-
-      <!-- User Info -->
-      <div class="modal-body">
-        <div class="info-section">
-          <h3>Basic Information</h3>
-          <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" [(ngModel)]="editingUser.full_name" class="form-control">
-          </div>
-          <div class="form-group">
-            <label>Username</label>
-            <input type="text" [value]="selectedUser.username" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" [(ngModel)]="editingUser.email" class="form-control">
-          </div>
-          <div class="form-group">
-            <label>Phone</label>
-            <input type="tel" [(ngModel)]="editingUser.phone" class="form-control">
-          </div>
-          <div class="form-group">
-            <label>Role</label>
-            <input type="text" [value]="selectedUser.roleDisplay" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Status</label>
-            <span class="status-badge" [ngClass]="getStatusClass(selectedUser.is_active)">
-              {{ getStatusText(selectedUser.is_active) }}
-            </span>
-          </div>
-          <div class="form-group">
-            <label>Registered</label>
-            <input type="text" [value]="selectedUser.created_at | date:'medium'" class="form-control" disabled>
-          </div>
+      <!-- Modal Hero Header -->
+      <div class="udm-header" [ngClass]="selectedUser.role">
+        <button class="udm-close" (click)="closeUserModal()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="udm-avatar" [ngClass]="selectedUser.role">
+          <i class="fa-solid" [ngClass]="{
+            'fa-user-graduate':    selectedUser.role === 'student',
+            'fa-chalkboard-user':  selectedUser.role === 'adviser',
+            'fa-user-nurse':       selectedUser.role === 'clinic_staff',
+            'fa-user-shield':      selectedUser.role === 'admin'
+          }"></i>
         </div>
-
-        <!-- Student-Specific Info -->
-        <div *ngIf="selectedUser.role === 'student'" class="info-section">
-          <h3>Student Information</h3>
-          <div class="form-group">
-            <label>Student Number</label>
-            <input type="text" [value]="selectedUser.student_number" class="form-control" disabled>
+        <div class="udm-hero-info">
+          <h2>{{ selectedUser.full_name }}</h2>
+          <span class="udm-username">@{{ selectedUser.username }}</span>
+          <div class="udm-badges">
+            <span class="role-badge" [ngClass]="selectedUser.role">{{ selectedUser.roleDisplay }}</span>
+            <span class="status-badge" [ngClass]="getStatusClass(selectedUser.is_active)">{{ getStatusText(selectedUser.is_active) }}</span>
           </div>
-          <div class="form-group">
-            <label>Grade Level</label>
-            <input type="text" [value]="selectedUser.grade_level" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Section</label>
-            <input type="text" [value]="selectedUser.section" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Gender</label>
-            <input type="text" [value]="selectedUser.gender" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Birth Date</label>
-            <input type="text" [value]="selectedUser.birth_date | date:'medium'" class="form-control" disabled>
-          </div>
-        </div>
-
-        <!-- Adviser-Specific Info -->
-        <div *ngIf="selectedUser.role === 'adviser'" class="info-section">
-          <h3>Adviser Information</h3>
-          <div class="form-group">
-            <label>Employee ID</label>
-            <input type="text" [value]="selectedUser.employee_id || selectedUser.employee_number || 'Not set'" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Contact Phone</label>
-            <input type="text" [value]="selectedUser.contact_phone || ''" class="form-control" disabled>
-          </div>
-        </div>
-
-        <!-- Clinic Staff-Specific Info -->
-        <div *ngIf="selectedUser.role === 'clinic_staff'" class="info-section">
-          <h3>Clinic Staff Information</h3>
-          <div class="form-group">
-            <label>Staff Code</label>
-            <input type="text" [value]="selectedUser.staff_code" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Position</label>
-            <input type="text" [value]="selectedUser.position" class="form-control" disabled>
-          </div>
-        </div>
-
-        <!-- Admin-Specific Info -->
-        <div *ngIf="selectedUser.role === 'admin'" class="info-section">
-          <h3>Admin Information</h3>
-          <p class="admin-note">This is an administrator account with full system access.</p>
         </div>
       </div>
 
-      <!-- Modal Actions -->
-      <div class="modal-actions">
-        <button class="btn btn-primary" (click)="saveUserChanges()">Save Changes</button>
-        <button class="btn btn-warning" (click)="openPasswordModal()">Reset Password</button>
-        <button class="btn" [ngClass]="selectedUser.is_active ? 'btn-danger' : 'btn-success'"
-                (click)="toggleUserStatus()">
+      <!-- Alerts -->
+      <div class="udm-alerts" *ngIf="successMessage || errorMessage">
+        <div *ngIf="successMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ successMessage }}</div>
+        <div *ngIf="errorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}</div>
+      </div>
+
+      <div class="udm-body">
+
+        <!-- ── Editable Basic Info ── -->
+        <div class="udm-section">
+          <div class="udm-section-title"><i class="fa-solid fa-pen-to-square"></i> Edit Information</div>
+          <div class="udm-field-grid">
+            <div class="udm-field">
+              <label>Full Name</label>
+              <input type="text" [(ngModel)]="editingUser.full_name" class="form-control">
+            </div>
+            <div class="udm-field">
+              <label>Email</label>
+              <input type="email" [(ngModel)]="editingUser.email" class="form-control">
+            </div>
+            <div class="udm-field">
+              <label>Phone</label>
+              <input type="tel" [(ngModel)]="editingUser.phone" class="form-control" placeholder="—">
+            </div>
+            <div class="udm-field">
+              <label>Username</label>
+              <input type="text" [value]="selectedUser.username" class="form-control" disabled>
+            </div>
+            <div class="udm-field">
+              <label>Registered</label>
+              <input type="text" [value]="selectedUser.created_at | date:'mediumDate'" class="form-control" disabled>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Student Info (read-only) ── -->
+        <div *ngIf="selectedUser.role === 'student'" class="udm-section">
+          <div class="udm-section-title"><i class="fa-solid fa-id-card"></i> Student Details</div>
+          <div class="udm-info-grid">
+            <div class="udm-info-item">
+              <span class="udm-info-label">Student No.</span>
+              <span class="udm-info-value mono">{{ selectedUser.student_number || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Grade Level</span>
+              <span class="udm-info-value">{{ selectedUser.grade_level || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Section</span>
+              <span class="udm-info-value">{{ selectedUser.section || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Gender</span>
+              <span class="udm-info-value">{{ selectedUser.gender === 'M' ? 'Male' : selectedUser.gender === 'F' ? 'Female' : '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Birth Date</span>
+              <span class="udm-info-value">{{ selectedUser.birth_date ? (selectedUser.birth_date | date:'mediumDate') : '—' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Adviser Info ── -->
+        <div *ngIf="selectedUser.role === 'adviser'" class="udm-section">
+          <div class="udm-section-title"><i class="fa-solid fa-id-badge"></i> Adviser Details</div>
+          <div class="udm-info-grid">
+            <div class="udm-info-item">
+              <span class="udm-info-label">Employee ID</span>
+              <span class="udm-info-value mono">{{ selectedUser.employee_id || selectedUser.employee_number || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Grade Level</span>
+              <span class="udm-info-value">{{ selectedUser.grade_level || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Section</span>
+              <span class="udm-info-value">{{ selectedUser.section || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Contact Phone</span>
+              <span class="udm-info-value">{{ selectedUser.contact_phone || '—' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Clinic Staff Info ── -->
+        <div *ngIf="selectedUser.role === 'clinic_staff'" class="udm-section">
+          <div class="udm-section-title"><i class="fa-solid fa-stethoscope"></i> Clinic Staff Details</div>
+          <div class="udm-info-grid">
+            <div class="udm-info-item">
+              <span class="udm-info-label">Staff Code</span>
+              <span class="udm-info-value mono">{{ selectedUser.staff_code || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Position</span>
+              <span class="udm-info-value">{{ selectedUser.position || '—' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Admin Info ── -->
+        <div *ngIf="selectedUser.role === 'admin'" class="udm-section">
+          <div class="udm-section-title"><i class="fa-solid fa-shield-halved"></i> Admin Account</div>
+          <div class="udm-admin-note">
+            <i class="fa-solid fa-circle-info"></i>
+            This account has full system access and administrative privileges.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Actions -->
+      <div class="udm-actions">
+        <button class="udm-btn primary" (click)="saveUserChanges()">
+          <i class="fa-solid fa-floppy-disk"></i> Save Changes
+        </button>
+        <button class="udm-btn warning" (click)="openPasswordModal()">
+          <i class="fa-solid fa-key"></i> Reset Password
+        </button>
+        <button class="udm-btn" [ngClass]="selectedUser.is_active ? 'danger' : 'success'" (click)="toggleUserStatus()">
+          <i class="fa-solid" [ngClass]="selectedUser.is_active ? 'fa-user-slash' : 'fa-user-check'"></i>
           {{ selectedUser.is_active ? 'Deactivate' : 'Activate' }}
         </button>
-        <button class="btn btn-outline" (click)="closeUserModal()">Close</button>
+        <button class="udm-btn outline" (click)="closeUserModal()">
+          <i class="fa-solid fa-xmark"></i> Close
+        </button>
       </div>
+
     </div>
   </div>
 
@@ -281,14 +440,9 @@
   <div class="modal-overlay" *ngIf="showPasswordModal" (click)="closePasswordModal()">
     <div class="modal-content password-modal" (click)="$event.stopPropagation()">
       <button class="close-btn" (click)="closePasswordModal()"><i class="fa-solid fa-xmark"></i></button>
-
-      <div class="modal-header">
-        <h2>Reset Password</h2>
-      </div>
-
+      <div class="modal-header"><h2>Reset Password</h2></div>
       <div *ngIf="successMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ successMessage }}</div>
       <div *ngIf="errorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}</div>
-
       <div class="modal-body">
         <p class="password-info">Enter a new password for <strong>{{ selectedUser?.full_name }}</strong></p>
         <div class="form-group">
@@ -296,7 +450,6 @@
           <input type="password" [(ngModel)]="newPassword" placeholder="Min 6 characters" class="form-control">
         </div>
       </div>
-
       <div class="modal-actions">
         <button class="btn btn-primary" (click)="resetPassword()">Reset Password</button>
         <button class="btn btn-outline" (click)="closePasswordModal()">Cancel</button>
@@ -304,22 +457,17 @@
     </div>
   </div>
 
+
   <!-- Create User Modal -->
   <div class="modal-overlay" *ngIf="showCreateUserModal" (click)="closeCreateUserModal()">
     <div class="modal-content create-user-modal" (click)="$event.stopPropagation()">
       <button class="close-btn" (click)="closeCreateUserModal()"><i class="fa-solid fa-xmark"></i></button>
-
       <div class="modal-header">
         <h2>Create New User Account</h2>
         <p class="modal-subtitle">Fill in the details to create a new user account. An email will be sent with login credentials.</p>
       </div>
-
-      <!-- Messages -->
       <div *ngIf="createSuccessMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ createSuccessMessage }}</div>
-      <div *ngIf="createErrorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ createErrorMessage }}</div>
-
       <div class="modal-body">
-        <!-- Role Selection -->
         <div class="form-group">
           <label>User Role *</label>
           <select [(ngModel)]="newUser.role" (change)="onRoleSelect()" class="form-control" required>
@@ -329,27 +477,22 @@
             <option value="clinic_staff">Clinic Staff</option>
           </select>
         </div>
-
-        <!-- Basic Information -->
         <div class="info-section">
           <h3>Basic Information</h3>
-
           <div class="form-group">
             <label>Email Address *</label>
-            <input type="email" [(ngModel)]="newUser.email" placeholder="user@example.com" class="form-control" required>
-            <small>Used for login credentials and notifications</small>
+            <input type="email" [(ngModel)]="newUser.email" placeholder="user@example.com"
+              class="form-control" [class.input-error]="hasFieldError('email')" required>
+            <small *ngIf="hasFieldError('email')" class="field-error-text">{{ getFieldError('email') }}</small>
+            <small *ngIf="!hasFieldError('email')">Used for login credentials and notifications</small>
           </div>
-
           <div class="form-group">
             <label>Phone Number</label>
             <input type="tel" [(ngModel)]="newUser.phone" placeholder="09XXXXXXXXX" class="form-control">
           </div>
         </div>
-
-        <!-- Student-Specific Fields -->
         <div *ngIf="newUser.role === 'student'" class="info-section">
           <h3>Student Information</h3>
-
           <div class="form-row">
             <div class="form-group">
               <label>Student Number *</label>
@@ -357,7 +500,6 @@
               <small>Must be exactly 12 digits and start with 13 (e.g. 130000000001)</small>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label>First Name *</label>
@@ -372,7 +514,6 @@
               <input type="text" [(ngModel)]="newUser.last_name" placeholder="Cruz" class="form-control" required>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label>Gender *</label>
@@ -387,7 +528,6 @@
               <input type="date" [(ngModel)]="newUser.birth_date" class="form-control" required>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label>Grade Level *</label>
@@ -399,32 +539,24 @@
             <div class="form-group">
               <label>Section *</label>
               <select [(ngModel)]="newUser.section_id" class="form-control" required [disabled]="!newUser.grade_level || loadingSections">
-                <option value="">
-                  {{ loadingSections ? 'Loading sections...' : (newUser.grade_level ? '-- Select Section --' : 'Select Grade Level First') }}
-                </option>
+                <option value="">{{ loadingSections ? 'Loading sections...' : (newUser.grade_level ? '-- Select Section --' : 'Select Grade Level First') }}</option>
                 <option *ngFor="let section of getAvailableSections()" [value]="section.id">
                   {{ section.section_name }} ({{ section.current_enrollment || 0 }}/{{ section.capacity }})
                 </option>
               </select>
-              <small *ngIf="newUser.grade_level && availableSections.length > 0">
-                Available sections for selected grade level
-              </small>
-              <small *ngIf="newUser.grade_level && availableSections.length === 0 && !loadingSections" style="color: #f44336;">
-                No sections available for this grade level
-              </small>
+              <small *ngIf="newUser.grade_level && availableSections.length > 0">Available sections for selected grade level</small>
+              <small *ngIf="newUser.grade_level && availableSections.length === 0 && !loadingSections" style="color: #f44336;">No sections available for this grade level</small>
             </div>
           </div>
         </div>
-
-        <!-- Adviser-Specific Fields -->
         <div *ngIf="newUser.role === 'adviser'" class="info-section">
           <h3>Faculty/Adviser Information</h3>
-
           <div class="form-group">
             <label>Employee ID *</label>
-            <input type="text" [(ngModel)]="newUser.employee_id" placeholder="EMP-2024-001" class="form-control" required>
+            <input type="text" [(ngModel)]="newUser.employee_id" placeholder="EMP-2024-001"
+              class="form-control" [class.input-error]="hasFieldError('employee_id')" required>
+            <small *ngIf="hasFieldError('employee_id')" class="field-error-text">{{ getFieldError('employee_id') }}</small>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label>First Name *</label>
@@ -435,7 +567,6 @@
               <input type="text" [(ngModel)]="newUser.last_name" placeholder="Santos" class="form-control" required>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label>Advisory Grade Level</label>
@@ -447,33 +578,28 @@
             <div class="form-group">
               <label>Advisory Section</label>
               <select [(ngModel)]="newUser.section_id" class="form-control" [disabled]="!newUser.grade_level || loadingSections">
-                <option value="">
-                  {{ loadingSections ? 'Loading sections...' : (newUser.grade_level ? '-- None --' : 'Select Grade Level First') }}
-                </option>
+                <option value="">{{ loadingSections ? 'Loading sections...' : (newUser.grade_level ? '-- None --' : 'Select Grade Level First') }}</option>
                 <option *ngFor="let section of getAvailableSections()" [value]="section.id">
                   {{ section.section_name }} ({{ section.current_enrollment || 0 }}/{{ section.capacity }})
                 </option>
               </select>
-              <small *ngIf="newUser.grade_level && availableSections.length > 0">
-                Available sections for selected grade level
-              </small>
+              <small *ngIf="newUser.grade_level && availableSections.length > 0">Available sections for selected grade level</small>
             </div>
           </div>
         </div>
-
-        <!-- Clinic Staff-Specific Fields -->
         <div *ngIf="newUser.role === 'clinic_staff'" class="info-section">
           <h3>Clinic Staff Information</h3>
-
           <div class="form-group">
             <label>Full Name *</label>
             <input type="text" [(ngModel)]="newUser.full_name" placeholder="Dr. Juan Dela Cruz" class="form-control" required>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label>Staff Code *</label>
-              <input type="text" [(ngModel)]="newUser.staff_code" placeholder="STAFF-001" class="form-control" required>
+              <input type="text" [(ngModel)]="newUser.staff_code" placeholder="STAFF-001"
+                class="form-control" [class.input-error]="hasFieldError('staff_code')" required maxlength="20">
+              <small *ngIf="hasFieldError('staff_code')" class="field-error-text">{{ getFieldError('staff_code') }}</small>
+              <small *ngIf="!hasFieldError('staff_code')">Max 20 characters</small>
             </div>
             <div class="form-group">
               <label>Position *</label>
@@ -481,8 +607,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Info Box -->
         <div class="info-box">
           <i class="fa-solid fa-circle-info"></i>
           <div>
@@ -495,7 +619,6 @@
           </div>
         </div>
       </div>
-
       <div class="modal-actions">
         <button class="btn btn-primary" (click)="createUser()" [disabled]="creatingUser || !isCreateFormValid()">
           <span *ngIf="!creatingUser"><i class="fa-solid fa-user-plus"></i> Create Account</span>
@@ -508,6 +631,25 @@
 </div>
 
 
+<!-- Error Popup Modal -->
+<div class="error-popup-overlay" *ngIf="showErrorModal" (click)="closeErrorModal()">
+  <div class="error-popup" (click)="$event.stopPropagation()">
+    <div class="error-popup-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+    <div class="error-popup-body">
+      <div class="error-popup-title">Error</div>
+      <ng-container *ngIf="createErrorMessages.length > 1; else singleError">
+        <ul class="error-popup-list">
+          <li *ngFor="let msg of createErrorMessages">{{ msg }}</li>
+        </ul>
+      </ng-container>
+      <ng-template #singleError>
+        <div class="error-popup-message">{{ createErrorMessages[0] || createErrorMessage }}</div>
+      </ng-template>
+    </div>
+    <button class="error-popup-ok" (click)="closeErrorModal()">OK</button>
+  </div>
+</div>
+
 <!-- Bulk Import Modal -->
 <div class="modal-overlay" *ngIf="showBulkImportModal" (click)="closeBulkImportModal()">
   <div class="modal-content bulk-import-modal" (click)="$event.stopPropagation()">
@@ -515,9 +657,7 @@
       <h2><i class="fa-solid fa-file-csv"></i> Bulk Import Students</h2>
       <button class="close-btn" (click)="closeBulkImportModal()">&times;</button>
     </div>
-
     <div class="modal-body">
-      <!-- Instructions -->
       <div class="import-instructions">
         <h3>📋 Instructions</h3>
         <ol>
@@ -527,18 +667,15 @@
           <li>Review the import results</li>
         </ol>
       </div>
-
-      <!-- CSV Template Download -->
       <div class="template-section">
         <h3>1. Download Template</h3>
         <button class="btn btn-outline" (click)="downloadCSVTemplate()">
-          <i class="fa-solid fa-download"></i> Download CSV Template
+          <i class="fa-solid fa-download"></i> Download Excel Template (.xlsx)
         </button>
-        <p class="help-text">Required columns: student_number, first_name, last_name, email, grade_level, section</p>
-        <p class="help-text">Optional columns: gender, date_of_birth</p>
+        <p class="help-text"><strong>Required:</strong> student_number, first_name, middle_name, last_name, gender, birth_date, grade_level, section_name</p>
+        <p class="help-text"><strong>Optional:</strong> email, phone</p>
+        <p class="help-text"><i class="fa-solid fa-circle-info"></i> Gender and Grade Level columns have in-cell dropdowns. See the <em>Sections Reference</em> and <em>Instructions</em> sheets inside the file.</p>
       </div>
-
-      <!-- File Upload -->
       <div class="upload-section">
         <h3>2. Upload CSV File</h3>
         <div class="file-upload-area"
@@ -547,27 +684,16 @@
              (dragover)="onDragOver($event)"
              (dragleave)="onDragLeave($event)"
              (drop)="onDrop($event)">
-          <input
-            type="file"
-            #fileInput
-            accept=".csv,text/csv,application/vnd.ms-excel"
-            (change)="onFileSelected($event)"
-            style="display: none">
+          <input type="file" #fileInput accept=".csv,text/csv,application/vnd.ms-excel" (change)="onFileSelected($event)" style="display: none">
           <div class="upload-content" (click)="fileInput.click()">
             <i class="fa-solid fa-cloud-upload-alt" *ngIf="!selectedFile"></i>
             <i class="fa-solid fa-file-csv" *ngIf="selectedFile" style="color: #4caf50; font-size: 48px;"></i>
             <p *ngIf="!selectedFile">Click to browse or drag and drop CSV file here</p>
-            <p *ngIf="selectedFile" class="selected-file">
-              <strong>{{ selectedFile.name }}</strong> ({{ formatFileSize(selectedFile.size) }})
-            </p>
-            <p *ngIf="selectedFile" style="color: #4caf50; font-size: 14px; margin-top: 10px;">
-              ✓ File ready to import
-            </p>
+            <p *ngIf="selectedFile" class="selected-file"><strong>{{ selectedFile.name }}</strong> ({{ formatFileSize(selectedFile.size) }})</p>
+            <p *ngIf="selectedFile" style="color: #4caf50; font-size: 14px; margin-top: 10px;">✓ File ready to import</p>
           </div>
         </div>
       </div>
-
-      <!-- Import Results -->
       <div class="import-results" *ngIf="importResults">
         <h3>3. Import Results</h3>
         <div class="results-summary" [class.has-errors]="importResults.error_count > 0">
@@ -580,8 +706,6 @@
             <span>{{ importResults.error_count }} Failed</span>
           </div>
         </div>
-
-        <!-- Error Details -->
         <div class="error-details" *ngIf="importResults.errors && importResults.errors.length > 0">
           <h4>❌ Errors:</h4>
           <div class="error-list">
@@ -591,16 +715,11 @@
           </div>
         </div>
       </div>
-
-      <!-- Progress -->
       <div class="import-progress" *ngIf="importing">
-        <div class="progress-bar">
-          <div class="progress-fill"></div>
-        </div>
+        <div class="progress-bar"><div class="progress-fill"></div></div>
         <p><i class="fa-solid fa-spinner fa-spin"></i> Importing students...</p>
       </div>
     </div>
-
     <div class="modal-actions">
       <button class="btn btn-primary" (click)="uploadCSV()" [disabled]="!selectedFile || importing">
         <span *ngIf="!importing"><i class="fa-solid fa-upload"></i> Import Students</span>
