@@ -35,6 +35,16 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   creatingUser = false;
   createSuccessMessage = '';
   createErrorMessage = '';
+  showErrorModal = false;
+
+  showCreateError(message: string): void {
+    this.createErrorMessage = message;
+    this.showErrorModal = true;
+  }
+
+  closeErrorModal(): void {
+    this.showErrorModal = false;
+  }
   newUser: any = {
     role: '',
     email: '',
@@ -523,6 +533,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.resetNewUserForm();
     this.createSuccessMessage = '';
     this.createErrorMessage = '';
+    this.showErrorModal = false;
     // Reload grade levels if not yet loaded
     if (this.gradeLevels.length === 0) {
       this.loadGradeLevels();
@@ -642,6 +653,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       return !!(
         this.newUser.full_name &&
         this.newUser.staff_code &&
+        this.newUser.staff_code.trim().length <= 20 &&
         this.newUser.position
       );
     }
@@ -651,7 +663,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   createUser(): void {
     if (!this.isCreateFormValid()) {
-      this.createErrorMessage = 'Please fill in all required fields';
+      this.showCreateError('Please fill in all required fields');
       return;
     }
 
@@ -676,18 +688,33 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
             this.loadUsers();
             setTimeout(() => { this.closeCreateUserModal(); }, 5000);
           } else {
-            this.createErrorMessage = response.message || 'Failed to create student account';
+            this.showCreateError(response.message || 'Failed to create student account');
           }
         },
         error: (err) => {
           this.creatingUser = false;
           const errDetail = err.error?.errors || err.error?.message || 'Failed to create student account.';
-          this.createErrorMessage = typeof errDetail === 'string' ? errDetail : JSON.stringify(errDetail);
+          this.showCreateError(typeof errDetail === 'string' ? errDetail : JSON.stringify(errDetail));
         }
       });
     } else {
       // For other roles, use Laravel endpoint
-      this.adminService.createUserLegacy(this.newUser).subscribe({
+      // Build a clean payload with only relevant fields
+      const payload: any = {
+        role: this.newUser.role,
+        full_name: this.newUser.full_name?.trim() || '',
+        email: this.newUser.email?.trim() || null,
+        phone: this.newUser.phone?.trim() || null,
+      };
+
+      if (this.newUser.role === 'clinic_staff') {
+        payload.staff_code = this.newUser.staff_code?.trim();
+        payload.position   = this.newUser.position?.trim();
+      } else if (this.newUser.role === 'adviser') {
+        payload.employee_id = this.newUser.employee_id?.trim();
+      }
+
+      this.adminService.createUserLegacy(payload).subscribe({
         next: (response) => {
           this.creatingUser = false;
           if (response.success && response.data) {
@@ -702,12 +729,21 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
               this.closeCreateUserModal();
             }, 3000);
           } else {
-            this.createErrorMessage = response.message || 'Failed to create user account';
+            this.showCreateError(response.message || 'Failed to create user account');
           }
         },
         error: (err) => {
             this.creatingUser = false;
-            this.createErrorMessage = err.error?.message || 'Failed to create user account. Please try again.';
+            const specific = err.error?.errors;
+            const generic  = err.error?.message;
+            if (specific && typeof specific === 'string') {
+              this.showCreateError(specific);
+            } else if (specific && typeof specific === 'object') {
+              const first = Object.values(specific)[0];
+              this.showCreateError(Array.isArray(first) ? first[0] : String(first));
+            } else {
+              this.showCreateError(generic || 'Failed to create user account. Please try again.');
+            }
         }
       });
     }
