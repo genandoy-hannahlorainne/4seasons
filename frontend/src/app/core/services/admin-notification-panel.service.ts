@@ -13,18 +13,45 @@ export interface NotificationHistoryItem {
   [key: string]: any;
 }
 
+export interface NotifDropdownAnchor {
+  top: number;
+  right: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminNotificationPanelService {
   private _open = new BehaviorSubject<boolean>(false);
   private _unreadCount = new BehaviorSubject<number>(0);
   private _notificationHistory = new BehaviorSubject<NotificationHistoryItem[]>([]);
+  private _anchor = new BehaviorSubject<NotifDropdownAnchor>({ top: 64, right: 20 });
 
   open$ = this._open.asObservable();
   unreadCount$ = this._unreadCount.asObservable();
   notificationHistory$ = this._notificationHistory.asObservable();
+  anchor$ = this._anchor.asObservable();
 
   toggle(): void {
     this._open.next(!this._open.value);
+  }
+
+  toggleFromAnchor(trigger?: HTMLElement): void {
+    if (this._open.value) {
+      this.close();
+      return;
+    }
+    if (trigger) {
+      this.setAnchorFromElement(trigger);
+    }
+    this._open.next(true);
+  }
+
+  setAnchorFromElement(el: HTMLElement): void {
+    const rect = el.getBoundingClientRect();
+    const gap = 10;
+    this._anchor.next({
+      top: rect.bottom + gap,
+      right: Math.max(12, window.innerWidth - rect.right),
+    });
   }
 
   open(): void {
