@@ -276,34 +276,7 @@ $mobile-bp: 768px;
 }
 
 @media (min-width: #{$mobile-bp + 1px}) {
-  .content-topbar {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    position: fixed;
-    top: 0;
-    right: 0;
-    left: $sidebar-expanded;
-    height: 52px;
-    padding: 0 1.25rem;
-    z-index: 250;
-    pointer-events: none;
-    transition: left $transition;
-
-    .desktop-notif-bell {
-      pointer-events: auto;
-    }
-  }
-
-  .admin-shell.collapsed .content-topbar {
-    left: $sidebar-collapsed;
-  }
-
   .main-content {
-    padding-top: 52px;
-  }
-
-  .admin-shell.dashboard-route .main-content {
     padding-top: 0;
   }
 }
@@ -540,52 +513,48 @@ $mobile-bp: 768px;
 }
 
 
-/* Notification Bell — stays above dropdown when open */
+/* Mobile topbar notification bell */
 .notification-bell {
   position: relative;
   z-index: 5200;
-  cursor: pointer;
-  padding: 0.75rem;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
   border-radius: 50%;
-  transition: background 0.2s ease;
+  background: #e8ecf1;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
 
-  &:hover {
-    background: rgba(0, 0, 0, 0.05);
-  }
-
   i {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     color: #052355;
+    pointer-events: none;
   }
 
   .notification-badge {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
+    top: -2px;
+    right: -2px;
     background: #ef4444;
-    color: white;
-    font-size: 0.7rem;
+    color: #fff;
+    font-size: 0.65rem;
     font-weight: 700;
-    padding: 0.15rem 0.4rem;
+    padding: 0.1rem 0.35rem;
     border-radius: 10px;
-    min-width: 18px;
+    min-width: 17px;
     text-align: center;
+    border: 2px solid $sidebar-bg;
+    line-height: 1.25;
+    pointer-events: none;
   }
-}
 
-.notification-bell.notif-active,
-.hero-notif-bell.notif-active {
-  z-index: 5200;
-}
-
-/* Bell above dropdown; panel below hero/topbar (not hidden behind blue header) */
-.admin-shell.notif-panel-open {
-  ::ng-deep .hero-notif-bell.notif-active,
-  .notification-bell.notif-active {
+  &.notif-active {
     z-index: 5201;
+    background: #dbeafe;
   }
 }
 

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdminNotificationPanelService } from '../../../core/services/admin-notification-panel.service';
+import { AdminNotificationBellComponent } from './shared/admin-notification-bell.component';
 import { Subject, interval, BehaviorSubject } from 'rxjs';
 import { takeUntil, switchMap, startWith, tap } from 'rxjs/operators';
 import { HealthRiskVisualizationComponent } from './health-risk-visualization/health-risk-visualization.component';
@@ -42,22 +43,13 @@ interface UsersResponse {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, HealthRiskVisualizationComponent],
+  imports: [CommonModule, HealthRiskVisualizationComponent, AdminNotificationBellComponent],
   styleUrls: ['./admin-dashboard.component.scss'],
   template: `
     <div class="admin-dashboard">
       <!-- Hero Section -->
       <div class="hero-section">
-        <button
-          class="hero-notif-bell notification-bell"
-          [class.notif-active]="panelOpen"
-          (click)="toggleNotifications($event)"
-          title="Notifications">
-          <i class="bi bi-bell-fill"></i>
-          <span class="hero-notif-badge" *ngIf="(notifPanelService.unreadCount$ | async) as count">
-            <span *ngIf="count > 0">{{ count > 99 ? '99+' : count }}</span>
-          </span>
-        </button>
+        <app-admin-notification-bell variant="hero" />
         <div class="hero-content">
           <div class="hero-text">
             <h1>Welcome to PDMHS Admin Dashboard</h1>
@@ -1306,17 +1298,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     public notifPanelService: AdminNotificationPanelService
   ) {}
 
-  panelOpen = false;
-
-  toggleNotifications(event: Event): void {
-    event.stopPropagation();
-    this.notifPanelService.toggleFromAnchor(event.currentTarget as HTMLElement);
-  }
-
   ngOnInit(): void {
-    this.notifPanelService.open$.subscribe(open => {
-      this.panelOpen = open;
-    });
     // Enhanced authentication check
     if (!this.authService.checkAuthenticationStatus()) {
       alert('Please login as admin to access the admin panel');

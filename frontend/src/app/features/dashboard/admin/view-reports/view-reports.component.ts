@@ -6,11 +6,12 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 
 @Component({
   selector: 'app-view-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminNotificationBellComponent],
   templateUrl: './view-reports.component.html',
   styleUrls: ['./view-reports.component.scss']
 })

@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 
 @Component({
   selector: 'app-manage-sections',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminNotificationBellComponent],
   templateUrl: './manage-sections.component.html',
   styleUrls: ['./manage-sections.component.scss']
 })

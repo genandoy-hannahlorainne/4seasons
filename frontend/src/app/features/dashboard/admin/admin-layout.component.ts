@@ -1,13 +1,13 @@
 import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, TitleCasePipe } from '@angular/common';
-import { RouterModule, RouterOutlet, NavigationEnd } from '@angular/router';
+import { RouterModule, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { AdminNotificationPanelService, NotificationHistoryItem } from '../../../core/services/admin-notification-panel.service';
 import { formatTimeAgo } from '../../../core/utils/datetime.util';
 import { interval, Subscription } from 'rxjs';
-import { filter, take } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 
 interface PasswordChangeRequest {
   notification_id: number;
@@ -29,7 +29,7 @@ interface PasswordChangeRequest {
   imports: [CommonModule, RouterModule, RouterOutlet, TitleCasePipe],
   styleUrls: ['./admin-layout.component.scss'],
   template: `
-    <div class="admin-shell" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen" [class.dashboard-route]="isOnDashboard" [class.notif-panel-open]="panelOpen">
+    <div class="admin-shell" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen" [class.notif-panel-open]="panelOpen">
 
       <!-- Mobile overlay -->
       <div class="sidebar-overlay" (click)="closeMobile()"></div>
@@ -107,21 +107,13 @@ interface PasswordChangeRequest {
           <span></span><span></span><span></span>
         </button>
         <span class="mobile-brand">PDMHS Admin</span>
-        <button class="notification-bell mobile-notif-bell" [class.notif-active]="panelOpen" (click)="toggleNotificationPanel($event)" title="Notifications">
+        <button type="button" class="notification-bell mobile-notif-bell" [class.notif-active]="panelOpen" (click)="toggleNotificationPanel($event)" title="Notifications">
           <i class="bi bi-bell-fill"></i>
           <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
         </button>
       </header>
 
-      <!-- Desktop topbar bell (hidden on dashboard — bell is in hero section) -->
-      <header class="content-topbar" *ngIf="!isOnDashboard">
-        <button class="notification-bell desktop-notif-bell" [class.notif-active]="panelOpen" (click)="toggleNotificationPanel($event)" title="Notifications">
-          <i class="bi bi-bell-fill"></i>
-          <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-        </button>
-      </header>
-
-      <!-- Facebook-style notification dropdown -->
+      <!-- Notification dropdown (opened from dashboard hero or page headers) -->
       <div class="notification-dropdown" *ngIf="panelOpen" [ngStyle]="dropdownPosition" (click)="$event.stopPropagation()">
         <div class="dropdown-header">
           <h3>Notifications</h3>
@@ -398,7 +390,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   isCollapsed = false;
   mobileOpen = false;
   loggingOut = false;
-  isOnDashboard = false;
 
   // Notification system
   showHistoryModal = false;
@@ -427,11 +418,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.updateDashboardRoute(this.router.url);
-    this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e) => {
-      this.updateDashboardRoute((e as NavigationEnd).urlAfterRedirects);
-    });
-
     this.notifPanelService.open$.subscribe(open => {
       this.panelOpen = open;
       if (!open) this.showAllEarlier = false;
@@ -460,11 +446,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.pollSubscription?.unsubscribe();
     document.body.style.overflow = '';
-  }
-
-  private updateDashboardRoute(url: string): void {
-    const path = url.split('?')[0].replace(/\/$/, '');
-    this.isOnDashboard = path === '/dashboard/admin';
   }
 
   loadNotifications(): void {
@@ -724,7 +705,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.notification-bell') &&
-        !target.closest('.hero-notif-bell') &&
+        !target.closest('.admin-notif-bell') &&
         !target.closest('.notification-dropdown')) {
       this.notifPanelService.close();
     }

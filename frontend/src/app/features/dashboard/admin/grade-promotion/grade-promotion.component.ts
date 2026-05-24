@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../../core/services/admin.service';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 
 interface PromotionSummary {
   grade_level_id: number;
@@ -30,14 +31,15 @@ interface AdviserAssignmentStatus {
 @Component({
   selector: 'app-grade-promotion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminNotificationBellComponent],
   template: `
     <div class="promotion-container">
-      <div class="page-header">
-        <div>
+      <div class="page-header notif-bell-corner">
+        <div class="page-header-main">
           <h2>Grade Promotion Management</h2>
           <p>Promote students from one school year to the next</p>
         </div>
+        <app-admin-notification-bell variant="page-header-corner" />
       </div>
 
       <!-- Setup Card -->
