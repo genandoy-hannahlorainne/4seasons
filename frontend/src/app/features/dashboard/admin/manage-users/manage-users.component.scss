@@ -1434,3 +1434,294 @@
 
 @keyframes epFadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes epSlideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+
+/* ══════════════════════════════════════
+   User Detail Modal (udm)
+══════════════════════════════════════ */
+.user-detail-modal {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: epSlideUp 0.22s ease;
+
+  /* Hero header — color per role */
+  .udm-header {
+    position: relative;
+    padding: 2rem 2rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    border-radius: 20px 20px 0 0;
+
+    &.student    { background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%); }
+    &.adviser    { background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); }
+    &.clinic_staff { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); }
+    &.admin      { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); }
+  }
+
+  .udm-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+
+    &:hover { background: rgba(255,255,255,0.35); }
+  }
+
+  .udm-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+
+  .udm-hero-info {
+    flex: 1;
+    min-width: 0;
+
+    h2 {
+      margin: 0 0 0.2rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .udm-username {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.75);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .udm-badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+
+      .role-badge, .status-badge {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.65rem;
+        border-radius: 20px;
+        font-weight: 600;
+        background: rgba(255,255,255,0.25);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.4);
+      }
+    }
+  }
+
+  /* Alerts */
+  .udm-alerts {
+    padding: 0.75rem 1.5rem 0;
+  }
+
+  /* Body */
+  .udm-body {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* Section block */
+  .udm-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+
+    .udm-section-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+
+      i { color: #94a3b8; }
+    }
+  }
+
+  /* Editable fields grid */
+  .udm-field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+
+    .udm-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+
+      label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+
+      .form-control {
+        padding: 0.55rem 0.75rem;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: #fff;
+        color: #1e293b;
+        transition: border-color 0.2s;
+
+        &:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        &:disabled {
+          background: #f1f5f9;
+          color: #94a3b8;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  /* Read-only info grid */
+  .udm-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+
+    .udm-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+
+      .udm-info-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .udm-info-value {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1e293b;
+
+        &.mono { font-family: 'Courier New', monospace; font-size: 0.85rem; }
+      }
+    }
+  }
+
+  /* Admin note */
+  .udm-admin-note {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: #1e40af;
+
+    i { flex-shrink: 0; }
+  }
+
+  /* Action buttons */
+  .udm-actions {
+    padding: 1rem 1.5rem 1.5rem;
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    border-top: 1px solid #f1f5f9;
+
+    .udm-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &.primary {
+        background: linear-gradient(135deg, #052355, #5381b2);
+        color: #fff;
+        &:hover { opacity: 0.9; }
+      }
+      &.warning {
+        background: #f59e0b;
+        color: #fff;
+        &:hover { background: #d97706; }
+      }
+      &.danger {
+        background: #ef4444;
+        color: #fff;
+        &:hover { background: #dc2626; }
+      }
+      &.success {
+        background: #22c55e;
+        color: #fff;
+        &:hover { background: #16a34a; }
+      }
+      &.outline {
+        background: #f8fafc;
+        color: #64748b;
+        border: 1.5px solid #e2e8f0;
+        &:hover { background: #f1f5f9; }
+      }
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .user-detail-modal {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 95dvh;
+
+    .udm-field-grid { grid-template-columns: 1fr; }
+    .udm-info-grid  { grid-template-columns: 1fr 1fr; }
+    .udm-actions    { flex-direction: column; .udm-btn { width: 100%; justify-content: center; } }
+  }
+}

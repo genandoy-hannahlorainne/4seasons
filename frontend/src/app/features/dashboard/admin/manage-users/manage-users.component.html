@@ -282,105 +282,157 @@
 
   <!-- User Details Modal -->
   <div class="modal-overlay" *ngIf="showUserModal" (click)="closeUserModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <button class="close-btn" (click)="closeUserModal()"><i class="fa-solid fa-xmark"></i></button>
-      <div class="modal-header">
-        <h2>User Details</h2>
-      </div>
-      <div *ngIf="successMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ successMessage }}</div>
-      <div *ngIf="errorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}</div>
-      <div class="modal-body">
-        <div class="info-section">
-          <h3>Basic Information</h3>
-          <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" [(ngModel)]="editingUser.full_name" class="form-control">
-          </div>
-          <div class="form-group">
-            <label>Username</label>
-            <input type="text" [value]="selectedUser.username" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" [(ngModel)]="editingUser.email" class="form-control">
-          </div>
-          <div class="form-group">
-            <label>Phone</label>
-            <input type="tel" [(ngModel)]="editingUser.phone" class="form-control">
-          </div>
-          <div class="form-group">
-            <label>Role</label>
-            <input type="text" [value]="selectedUser.roleDisplay" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Status</label>
-            <span class="status-badge" [ngClass]="getStatusClass(selectedUser.is_active)">
-              {{ getStatusText(selectedUser.is_active) }}
-            </span>
-          </div>
-          <div class="form-group">
-            <label>Registered</label>
-            <input type="text" [value]="selectedUser.created_at | date:'medium'" class="form-control" disabled>
-          </div>
+    <div class="user-detail-modal" (click)="$event.stopPropagation()">
+
+      <!-- Modal Hero Header -->
+      <div class="udm-header" [ngClass]="selectedUser.role">
+        <button class="udm-close" (click)="closeUserModal()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="udm-avatar" [ngClass]="selectedUser.role">
+          <i class="fa-solid" [ngClass]="{
+            'fa-user-graduate':    selectedUser.role === 'student',
+            'fa-chalkboard-user':  selectedUser.role === 'adviser',
+            'fa-user-nurse':       selectedUser.role === 'clinic_staff',
+            'fa-user-shield':      selectedUser.role === 'admin'
+          }"></i>
         </div>
-        <div *ngIf="selectedUser.role === 'student'" class="info-section">
-          <h3>Student Information</h3>
-          <div class="form-group">
-            <label>Student Number</label>
-            <input type="text" [value]="selectedUser.student_number" class="form-control" disabled>
+        <div class="udm-hero-info">
+          <h2>{{ selectedUser.full_name }}</h2>
+          <span class="udm-username">@{{ selectedUser.username }}</span>
+          <div class="udm-badges">
+            <span class="role-badge" [ngClass]="selectedUser.role">{{ selectedUser.roleDisplay }}</span>
+            <span class="status-badge" [ngClass]="getStatusClass(selectedUser.is_active)">{{ getStatusText(selectedUser.is_active) }}</span>
           </div>
-          <div class="form-group">
-            <label>Grade Level</label>
-            <input type="text" [value]="selectedUser.grade_level" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Section</label>
-            <input type="text" [value]="selectedUser.section" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Gender</label>
-            <input type="text" [value]="selectedUser.gender" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Birth Date</label>
-            <input type="text" [value]="selectedUser.birth_date | date:'medium'" class="form-control" disabled>
-          </div>
-        </div>
-        <div *ngIf="selectedUser.role === 'adviser'" class="info-section">
-          <h3>Adviser Information</h3>
-          <div class="form-group">
-            <label>Employee ID</label>
-            <input type="text" [value]="selectedUser.employee_id || selectedUser.employee_number || 'Not set'" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Contact Phone</label>
-            <input type="text" [value]="selectedUser.contact_phone || ''" class="form-control" disabled>
-          </div>
-        </div>
-        <div *ngIf="selectedUser.role === 'clinic_staff'" class="info-section">
-          <h3>Clinic Staff Information</h3>
-          <div class="form-group">
-            <label>Staff Code</label>
-            <input type="text" [value]="selectedUser.staff_code" class="form-control" disabled>
-          </div>
-          <div class="form-group">
-            <label>Position</label>
-            <input type="text" [value]="selectedUser.position" class="form-control" disabled>
-          </div>
-        </div>
-        <div *ngIf="selectedUser.role === 'admin'" class="info-section">
-          <h3>Admin Information</h3>
-          <p class="admin-note">This is an administrator account with full system access.</p>
         </div>
       </div>
-      <div class="modal-actions">
-        <button class="btn btn-primary" (click)="saveUserChanges()">Save Changes</button>
-        <button class="btn btn-warning" (click)="openPasswordModal()">Reset Password</button>
-        <button class="btn" [ngClass]="selectedUser.is_active ? 'btn-danger' : 'btn-success'" (click)="toggleUserStatus()">
+
+      <!-- Alerts -->
+      <div class="udm-alerts" *ngIf="successMessage || errorMessage">
+        <div *ngIf="successMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ successMessage }}</div>
+        <div *ngIf="errorMessage" class="alert alert-danger"><i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}</div>
+      </div>
+
+      <div class="udm-body">
+
+        <!-- ── Editable Basic Info ── -->
+        <div class="udm-section">
+          <div class="udm-section-title"><i class="fa-solid fa-pen-to-square"></i> Edit Information</div>
+          <div class="udm-field-grid">
+            <div class="udm-field">
+              <label>Full Name</label>
+              <input type="text" [(ngModel)]="editingUser.full_name" class="form-control">
+            </div>
+            <div class="udm-field">
+              <label>Email</label>
+              <input type="email" [(ngModel)]="editingUser.email" class="form-control">
+            </div>
+            <div class="udm-field">
+              <label>Phone</label>
+              <input type="tel" [(ngModel)]="editingUser.phone" class="form-control" placeholder="—">
+            </div>
+            <div class="udm-field">
+              <label>Username</label>
+              <input type="text" [value]="selectedUser.username" class="form-control" disabled>
+            </div>
+            <div class="udm-field">
+              <label>Registered</label>
+              <input type="text" [value]="selectedUser.created_at | date:'mediumDate'" class="form-control" disabled>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Student Info (read-only) ── -->
+        <div *ngIf="selectedUser.role === 'student'" class="udm-section">
+          <div class="udm-section-title"><i class="fa-solid fa-id-card"></i> Student Details</div>
+          <div class="udm-info-grid">
+            <div class="udm-info-item">
+              <span class="udm-info-label">Student No.</span>
+              <span class="udm-info-value mono">{{ selectedUser.student_number || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Grade Level</span>
+              <span class="udm-info-value">{{ selectedUser.grade_level || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Section</span>
+              <span class="udm-info-value">{{ selectedUser.section || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Gender</span>
+              <span class="udm-info-value">{{ selectedUser.gender === 'M' ? 'Male' : selectedUser.gender === 'F' ? 'Female' : '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Birth Date</span>
+              <span class="udm-info-value">{{ selectedUser.birth_date ? (selectedUser.birth_date | date:'mediumDate') : '—' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Adviser Info ── -->
+        <div *ngIf="selectedUser.role === 'adviser'" class="udm-section">
+          <div class="udm-section-title"><i class="fa-solid fa-id-badge"></i> Adviser Details</div>
+          <div class="udm-info-grid">
+            <div class="udm-info-item">
+              <span class="udm-info-label">Employee ID</span>
+              <span class="udm-info-value mono">{{ selectedUser.employee_id || selectedUser.employee_number || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Grade Level</span>
+              <span class="udm-info-value">{{ selectedUser.grade_level || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Section</span>
+              <span class="udm-info-value">{{ selectedUser.section || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Contact Phone</span>
+              <span class="udm-info-value">{{ selectedUser.contact_phone || '—' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Clinic Staff Info ── -->
+        <div *ngIf="selectedUser.role === 'clinic_staff'" class="udm-section">
+          <div class="udm-section-title"><i class="fa-solid fa-stethoscope"></i> Clinic Staff Details</div>
+          <div class="udm-info-grid">
+            <div class="udm-info-item">
+              <span class="udm-info-label">Staff Code</span>
+              <span class="udm-info-value mono">{{ selectedUser.staff_code || '—' }}</span>
+            </div>
+            <div class="udm-info-item">
+              <span class="udm-info-label">Position</span>
+              <span class="udm-info-value">{{ selectedUser.position || '—' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Admin Info ── -->
+        <div *ngIf="selectedUser.role === 'admin'" class="udm-section">
+          <div class="udm-section-title"><i class="fa-solid fa-shield-halved"></i> Admin Account</div>
+          <div class="udm-admin-note">
+            <i class="fa-solid fa-circle-info"></i>
+            This account has full system access and administrative privileges.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Actions -->
+      <div class="udm-actions">
+        <button class="udm-btn primary" (click)="saveUserChanges()">
+          <i class="fa-solid fa-floppy-disk"></i> Save Changes
+        </button>
+        <button class="udm-btn warning" (click)="openPasswordModal()">
+          <i class="fa-solid fa-key"></i> Reset Password
+        </button>
+        <button class="udm-btn" [ngClass]="selectedUser.is_active ? 'danger' : 'success'" (click)="toggleUserStatus()">
+          <i class="fa-solid" [ngClass]="selectedUser.is_active ? 'fa-user-slash' : 'fa-user-check'"></i>
           {{ selectedUser.is_active ? 'Deactivate' : 'Activate' }}
         </button>
-        <button class="btn btn-outline" (click)="closeUserModal()">Close</button>
+        <button class="udm-btn outline" (click)="closeUserModal()">
+          <i class="fa-solid fa-xmark"></i> Close
+        </button>
       </div>
+
     </div>
   </div>
 
