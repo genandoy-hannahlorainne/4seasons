@@ -7,6 +7,7 @@ import { AdminNotificationPanelService } from '../../../core/services/admin-noti
 import { Subject, interval, BehaviorSubject } from 'rxjs';
 import { takeUntil, switchMap, startWith, tap } from 'rxjs/operators';
 import { HealthRiskVisualizationComponent } from './health-risk-visualization/health-risk-visualization.component';
+import { formatTimeAgo } from '../../../core/utils/datetime.util';
 
 interface User {
   user_id: number;
@@ -1494,7 +1495,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           const allNotifications = response.data.notifications.map((notif: any) => {
             return {
               ...notif,
-              timeAgo: this.formatTimestamp(notif?.created_at || '')
+              timeAgo: notif?.time_ago || formatTimeAgo(notif?.created_at || ''),
             };
           });
 
@@ -1520,7 +1521,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           const allNotifications = response.notifications.map((notif: any) => {
             return {
               ...notif,
-              timeAgo: this.formatTimestamp(notif?.created_at || '')
+              timeAgo: notif?.time_ago || formatTimeAgo(notif?.created_at || ''),
             };
           });
 
@@ -1680,28 +1681,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   private formatTimestamp(timestamp: string): string {
-    try {
-      const date = new Date(timestamp);
-      if (isNaN(date.getTime())) {
-        return 'Unknown';
-      }
-
-      const now = new Date();
-      const diffMs = now.getTime() - date.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
-
-      if (diffMins < 1) return 'Just now';
-      if (diffMins < 60) return `${diffMins}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      if (diffDays < 7) return `${diffDays}d ago`;
-
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    } catch (error) {
-      // Error formatting timestamp
-      return 'Unknown';
-    }
+    return formatTimeAgo(timestamp);
   }
 
   getActivityIconClass(type: string): string {

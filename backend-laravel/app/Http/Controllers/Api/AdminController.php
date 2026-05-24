@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Services\MailService;
+use App\Support\PhilippineDateTime;
 use Illuminate\Support\Facades\Log;
 
 class AdminController extends BaseController
@@ -2069,7 +2070,8 @@ class AdminController extends BaseController
                         'message'         => $notif->message,
                         'priority'        => $notif->priority,
                         'status'          => $notif->status,
-                        'created_at'      => $notif->created_at?->toISOString(),
+                        'created_at'      => PhilippineDateTime::toApiIso($notif->created_at),
+                        'time_ago'        => PhilippineDateTime::timeAgo($notif->created_at),
                         'notification_type' => $notif->notification_type,
                     ];
 
