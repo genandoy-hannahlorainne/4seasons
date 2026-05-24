@@ -442,6 +442,32 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.filterUsers();
   }
 
+  selectRole(role: string): void {
+    this.selectedRole = role;
+    this.searchQuery = '';
+    this.filterUsers();
+  }
+
+  backToRoleCards(): void {
+    this.selectedRole = 'all';
+    this.searchQuery = '';
+    this.filterUsers();
+  }
+
+  getRoleLabel(role: string): string {
+    const labels: Record<string, string> = {
+      student: 'Students',
+      adviser: 'Faculty / Advisers',
+      clinic_staff: 'Clinic Staff',
+      admin: 'Admins'
+    };
+    return labels[role] || role;
+  }
+
+  getActiveCount(role: string): number {
+    return this.users.filter(u => u.role === role && u.is_active).length;
+  }
+
   viewUser(user: any): void {
     // Viewing user
     this.selectedUser = { ...user };
