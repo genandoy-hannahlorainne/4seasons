@@ -670,10 +670,11 @@
       <div class="template-section">
         <h3>1. Download Template</h3>
         <button class="btn btn-outline" (click)="downloadCSVTemplate()">
-          <i class="fa-solid fa-download"></i> Download CSV Template
+          <i class="fa-solid fa-download"></i> Download Excel Template (.xlsx)
         </button>
-        <p class="help-text">Required columns: student_number, first_name, last_name, email, grade_level, section</p>
-        <p class="help-text">Optional columns: gender, date_of_birth</p>
+        <p class="help-text"><strong>Required:</strong> student_number, first_name, middle_name, last_name, gender, birth_date, grade_level, section_name</p>
+        <p class="help-text"><strong>Optional:</strong> email, phone</p>
+        <p class="help-text"><i class="fa-solid fa-circle-info"></i> Gender and Grade Level columns have in-cell dropdowns. See the <em>Sections Reference</em> and <em>Instructions</em> sheets inside the file.</p>
       </div>
       <div class="upload-section">
         <h3>2. Upload CSV File</h3>

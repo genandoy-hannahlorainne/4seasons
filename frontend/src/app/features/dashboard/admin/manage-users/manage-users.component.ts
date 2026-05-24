@@ -975,17 +975,180 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.isDragging = false;
   }
 
-  downloadCSVTemplate(): void {
-    const csvContent = 'student_number,first_name,middle_name,last_name,birth_date,gender,grade_level,section_name,email,phone,emergency_contact_name,emergency_contact_phone\n' +
-                      '2024001,Juan,,Dela Cruz,2010-01-15,M,Grade 7,Genesis,juan.delacruz@email.com,09171234567,Maria Dela Cruz,09181234567\n' +
-                      '2024002,Maria,Santos,Reyes,2010-03-20,F,Grade 7,Isaiah,maria.reyes@email.com,09171234568,Pedro Reyes,09181234568\n' +
-                      '2024003,Pedro,,Santos,2009-05-10,M,Grade 8,Charity,,,Jose Santos,09181234569';
+  async downloadCSVTemplate(): Promise<void> {
+    const ExcelJS = await import('exceljs');
+    const workbook = new ExcelJS.Workbook();
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'student_import_template.csv';
+    // ── Sheet 1: Import Template ──
+    const sheet = workbook.addWorksheet('Student Import');
+
+    // Column definitions
+    sheet.columns = [
+      { header: 'student_number', key: 'student_number', width: 20 },
+      { header: 'first_name',     key: 'first_name',     width: 18 },
+      { header: 'middle_name',    key: 'middle_name',    width: 18 },
+      { header: 'last_name',      key: 'last_name',      width: 18 },
+      { header: 'email',          key: 'email',          width: 28 },
+      { header: 'phone',          key: 'phone',          width: 16 },
+      { header: 'gender',         key: 'gender',         width: 10 },
+      { header: 'birth_date',     key: 'birth_date',     width: 14 },
+      { header: 'grade_level',    key: 'grade_level',    width: 14 },
+      { header: 'section_name',   key: 'section_name',   width: 16 },
+    ];
+
+    // Style header row
+    const headerRow = sheet.getRow(1);
+    headerRow.eachCell(cell => {
+      cell.font      = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF052355' } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      cell.border    = {
+        bottom: { style: 'thin', color: { argb: 'FF5381b2' } }
+      };
+    });
+    headerRow.height = 28;
+
+    // ── Build data ──
+    const gradeNames: string[] = this.gradeLevels.map((g: any) => g.level_name);
+    const gradeSectionMap: Record<string, string[]> = {};
+    for (const grade of this.gradeLevels) {
+      gradeSectionMap[grade.level_name] = (grade.sections || []).map((s: any) => s.section_name);
+    }
+
+    // ── Hidden _Lists sheet — named ranges for INDIRECT dependent dropdown ──
+    const listsSheet = workbook.addWorksheet('_Lists');
+    listsSheet.state = 'veryHidden';
+
+    // Column A: grade names → named range "GradeList"
+    listsSheet.getCell('A1').value = 'Grades';
+    gradeNames.forEach((g, i) => { listsSheet.getCell(`A${i + 2}`).value = g; });
+    workbook.definedNames.add(
+      `_Lists!$A$2:$A$${gradeNames.length + 1}`,
+      'GradeList'
+    );
+
+    // Columns B+: sections per grade → named range "Grade_7", "Grade_8", etc.
+    gradeNames.forEach((gradeName, colIdx) => {
+      const col      = String.fromCharCode(66 + colIdx); // B, C, D...
+      const sections = gradeSectionMap[gradeName] || [];
+      listsSheet.getCell(`${col}1`).value = gradeName;
+      sections.forEach((sec, rowIdx) => {
+        listsSheet.getCell(`${col}${rowIdx + 2}`).value = sec;
+      });
+      if (sections.length > 0) {
+        const safeName = gradeName.replace(/\s+/g, '_'); // "Grade 7" → "Grade_7"
+        workbook.definedNames.add(
+          `_Lists!$${col}$2:$${col}$${sections.length + 1}`,
+          safeName
+        );
+      }
+    });
+
+    // ── Data Validation rows 2–1000 ──
+
+    // Gender: M or F
+    for (let r = 2; r <= 1000; r++) {
+      sheet.getCell(`G${r}`).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: ['"M,F"'],
+        showErrorMessage: true,
+        errorTitle: 'Invalid Gender',
+        error: 'Please select M (Male) or F (Female)',
+        showInputMessage: true,
+        promptTitle: 'Gender',
+        prompt: 'M = Male, F = Female'
+      };
+    }
+
+    // Grade Level — named range GradeList
+    for (let r = 2; r <= 1000; r++) {
+      sheet.getCell(`I${r}`).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: ['GradeList'],
+        showErrorMessage: true,
+        errorTitle: 'Invalid Grade Level',
+        error: `Valid values: ${gradeNames.join(', ')}`,
+        showInputMessage: true,
+        promptTitle: 'Grade Level',
+        prompt: 'Select a grade level first'
+      };
+    }
+
+    // Section — INDIRECT(SUBSTITUTE(I2," ","_")) → resolves to named range per grade
+    for (let r = 2; r <= 1000; r++) {
+      sheet.getCell(`J${r}`).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: [`INDIRECT(SUBSTITUTE(I${r}," ","_"))`],
+        showErrorMessage: true,
+        errorTitle: 'Invalid Section',
+        error: 'Select a grade level first, then choose a section.',
+        showInputMessage: true,
+        promptTitle: 'Section',
+        prompt: 'Sections filter based on selected grade level'
+      };
+    }
+
+    // ── Sheet 2: Sections Reference ──
+    const refSheet = workbook.addWorksheet('Sections Reference');
+    refSheet.columns = [
+      { header: 'Grade Level', key: 'grade', width: 16 },
+      { header: 'Section Name', key: 'section', width: 20 },
+    ];
+    const refHeader = refSheet.getRow(1);
+    refHeader.eachCell(cell => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF052355' } };
+      cell.alignment = { horizontal: 'center' };
+    });
+    refHeader.height = 24;
+
+    for (const grade of this.gradeLevels) {
+      for (const section of (grade.sections || [])) {
+        refSheet.addRow({ grade: grade.level_name, section: section.section_name });
+      }
+    }
+
+    // ── Sheet 3: Instructions ──
+    const instrSheet = workbook.addWorksheet('Instructions');
+    const instructions = [
+      ['Field', 'Required', 'Format / Valid Values'],
+      ['student_number', 'Yes', '12 digits starting with 13 (e.g. 130000000001)'],
+      ['first_name',     'Yes', 'Text'],
+      ['middle_name',    'No',  'Text — leave blank if none'],
+      ['last_name',      'Yes', 'Text'],
+      ['email',          'No',  'Valid email address'],
+      ['phone',          'No',  '11-digit PH number (e.g. 09171234567)'],
+      ['gender',         'Yes', 'M or F  (dropdown in template)'],
+      ['birth_date',     'Yes', 'YYYY-MM-DD (e.g. 2010-01-15)'],
+      ['grade_level',    'Yes', 'See "Sections Reference" sheet  (dropdown in template)'],
+      ['section_name',   'Yes', 'See "Sections Reference" sheet'],
+    ];
+    instrSheet.columns = [
+      { key: 'field',   width: 20 },
+      { key: 'req',     width: 12 },
+      { key: 'format',  width: 55 },
+    ];
+    instructions.forEach((row, i) => {
+      const r = instrSheet.addRow(row);
+      if (i === 0) {
+        r.eachCell(cell => {
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF052355' } };
+        });
+        r.height = 24;
+      }
+    });
+
+    // ── Download ──
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url    = window.URL.createObjectURL(blob);
+    const link   = document.createElement('a');
+    link.href     = url;
+    link.download = 'student_import_template.xlsx';
     link.click();
     window.URL.revokeObjectURL(url);
   }
