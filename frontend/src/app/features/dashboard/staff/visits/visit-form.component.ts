@@ -228,6 +228,24 @@ import { AuthService } from '../../../../core/services/auth.service';
           </button>
         </div>
       </form>
+
+      <!-- Toast / Popup Modal -->
+      <div class="toast-overlay" *ngIf="toastVisible" (click)="closeToast()">
+        <div class="toast-modal" [class.toast-success]="toastType === 'success'" [class.toast-error]="toastType === 'error'" [class.toast-warning]="toastType === 'warning'" (click)="$event.stopPropagation()">
+          <div class="toast-icon">
+            <i class="bi" [ngClass]="{
+              'bi-check-circle-fill': toastType === 'success',
+              'bi-x-circle-fill':     toastType === 'error',
+              'bi-exclamation-triangle-fill': toastType === 'warning'
+            }"></i>
+          </div>
+          <div class="toast-body">
+            <div class="toast-title">{{ toastTitle }}</div>
+            <div class="toast-message">{{ toastMessage }}</div>
+          </div>
+          <button class="toast-ok" (click)="closeToast()">OK</button>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
@@ -734,6 +752,89 @@ import { AuthService } from '../../../../core/services/auth.service';
       .form-row { grid-template-columns: 1fr; }
       .form-row.vitals-row { grid-template-columns: repeat(2, 1fr); }
     }
+
+    /* ── Toast / Popup Modal ── */
+    .toast-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      animation: fadeIn 0.15s ease;
+    }
+
+    .toast-modal {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem 2rem 1.5rem;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      text-align: center;
+      animation: slideUp 0.2s ease;
+
+      .toast-icon {
+        font-size: 3rem;
+        line-height: 1;
+      }
+
+      .toast-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .toast-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+      }
+
+      .toast-message {
+        font-size: 0.95rem;
+        color: #475569;
+        line-height: 1.5;
+      }
+
+      .toast-ok {
+        margin-top: 0.5rem;
+        padding: 0.6rem 2.5rem;
+        border-radius: 50px;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: white;
+      }
+
+      &.toast-success {
+        border-top: 4px solid #22c55e;
+        .toast-icon { color: #22c55e; }
+        .toast-ok   { background: #22c55e; &:hover { background: #16a34a; } }
+      }
+
+      &.toast-error {
+        border-top: 4px solid #ef4444;
+        .toast-icon { color: #ef4444; }
+        .toast-ok   { background: #ef4444; &:hover { background: #dc2626; } }
+      }
+
+      &.toast-warning {
+        border-top: 4px solid #f59e0b;
+        .toast-icon { color: #f59e0b; }
+        .toast-ok   { background: #f59e0b; &:hover { background: #d97706; } }
+      }
+    }
+
+    @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   `]
 })
 export class VisitFormComponent implements OnInit, OnDestroy {
@@ -752,6 +853,30 @@ export class VisitFormComponent implements OnInit, OnDestroy {
   searchDone = false;
   private searchTimeout: any = null;
   private clockInterval: any = null;
+
+  // Toast modal state
+  toastVisible = false;
+  toastType: 'success' | 'error' | 'warning' = 'success';
+  toastTitle = '';
+  toastMessage = '';
+  private toastCallback: (() => void) | null = null;
+
+  showToast(type: 'success' | 'error' | 'warning', title: string, message: string, callback?: () => void): void {
+    this.toastType = type;
+    this.toastTitle = title;
+    this.toastMessage = message;
+    this.toastCallback = callback || null;
+    this.toastVisible = true;
+  }
+
+  closeToast(): void {
+    this.toastVisible = false;
+    if (this.toastCallback) {
+      const cb = this.toastCallback;
+      this.toastCallback = null;
+      cb();
+    }
+  }
 
   visit = {
     dateTime: '',
@@ -850,14 +975,12 @@ export class VisitFormComponent implements OnInit, OnDestroy {
           if (response.success && response.data.student) {
             this.selectedStudent = this.normalizeStudentData(response.data.student);
           } else {
-            // Failed to load student
-            alert('Student not found');
+            this.showToast('warning', 'Not Found', 'Student not found.');
           }
           this.loading = false;
         },
         error: (error) => {
-          // Error loading student
-          alert('Failed to load student information');
+          this.showToast('error', 'Error', 'Failed to load student information.');
           this.loading = false;
         }
       });
@@ -871,14 +994,12 @@ export class VisitFormComponent implements OnInit, OnDestroy {
           if (response.success && response.data.student) {
             this.selectedStudent = this.normalizeStudentData(response.data.student);
           } else {
-            // Failed to load student
-            alert('Student not found');
+            this.showToast('warning', 'Not Found', 'Student not found.');
           }
           this.loading = false;
         },
         error: (error) => {
-          // Error loading student
-          alert('Failed to load student information');
+          this.showToast('error', 'Error', 'Failed to load student information.');
           this.loading = false;
         }
       });
@@ -975,19 +1096,19 @@ export class VisitFormComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     if (!this.selectedStudent) {
-      alert('Please select a student');
+      this.showToast('warning', 'Missing Information', 'Please select a student.');
       return;
     }
 
     if (!this.visit.visitType || !this.visit.diagnosis) {
-      alert('Please fill in required fields (Visit Type and Diagnosis)');
+      this.showToast('warning', 'Missing Information', 'Please fill in required fields (Visit Type and Diagnosis).');
       return;
     }
 
     const currentUser = this.authService.currentUserValue;
     const clinicStaffId = currentUser?.staff_info?.clinic_staff_id;
     if (!clinicStaffId) {
-      alert('Clinic staff profile not found. Please login again.');
+      this.showToast('error', 'Authentication Error', 'Clinic staff profile not found. Please login again.');
       return;
     }
 
@@ -1041,19 +1162,19 @@ export class VisitFormComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.loading = false;
           if (response.success) {
-            alert('Medical visit saved successfully!');
-            if (this.visitSaved.observed) {
-              this.visitSaved.emit();
-            } else {
-              this.router.navigate(['/dashboard/staff/visits']);
-            }
+            this.showToast('success', 'Visit Saved', 'Medical visit saved successfully!', () => {
+              if (this.visitSaved.observed) {
+                this.visitSaved.emit();
+              } else {
+                this.router.navigate(['/dashboard/staff/visits']);
+              }
+            });
           } else {
-            alert('Failed to save visit: ' + response.message);
+            this.showToast('error', 'Save Failed', 'Failed to save visit: ' + response.message);
           }
         },
         error: (err) => {
           this.loading = false;
-          // Error saving visit
           const apiMessage = err?.error?.message || err?.error?.error || null;
           const validationErrors = err?.error?.errors;
           let details = '';
@@ -1067,7 +1188,7 @@ export class VisitFormComponent implements OnInit, OnDestroy {
             }
           }
 
-          alert(`Failed to save visit${apiMessage ? ': ' + apiMessage : ''}${details}`);
+          this.showToast('error', 'Save Failed', `Failed to save visit${apiMessage ? ': ' + apiMessage : ''}${details}`);
         }
       });
   }

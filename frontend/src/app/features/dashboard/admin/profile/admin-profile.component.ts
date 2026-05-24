@@ -85,8 +85,7 @@ import { AdminService } from '../../../../core/services/admin.service';
             <div class="card-title">Others</div>
             <button type="button" class="other-link" (click)="changePassword()">Change Password</button>
             <button type="button" class="other-link" (click)="enableEdit()">Update Information</button>
-            <div class="others-sep"></div>
-            <button type="button" class="other-link danger" (click)="logout()">Logout</button>
+            <!-- Logout removed from profile settings (use sidebar logout) -->
           </div>
         </div>
       </div>
