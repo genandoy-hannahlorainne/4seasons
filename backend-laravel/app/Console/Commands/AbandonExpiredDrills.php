@@ -47,7 +47,7 @@ class AbandonExpiredDrills extends Command
             Notification::where('notification_type', 'emergency_drill_alert')
                 ->where('status', 'Pending')
                 ->whereJsonContains('request_data->drill_id', $drill->id)
-                ->update(['status' => 'Read']);
+                ->update(['status' => 'Sent', 'sent_at' => now()]);
 
             Log::info('Drill auto-abandoned', [
                 'drill_id'     => $drill->id,

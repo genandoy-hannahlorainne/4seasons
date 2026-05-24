@@ -161,7 +161,7 @@ export class AdminService {
   }
 
   markNotificationAsRead(notificationId: number): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/admin/notifications/${notificationId}/read`, {});
+    return this.http.put<any>(`${environment.apiUrl}/admin/notifications/${notificationId}/read`, {});
   }
 
   markAllNotificationsAsRead(): Observable<any> {
