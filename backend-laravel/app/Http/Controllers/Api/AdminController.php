@@ -1598,7 +1598,7 @@ class AdminController extends BaseController
         ]);
 
         if ($validator->fails()) {
-            return $this->sendError('Validation Error', $validator->errors()->toJson());
+            return $this->sendError('Validation Error', $validator->errors()->toArray());
         }
 
         DB::beginTransaction();
@@ -1750,7 +1750,7 @@ class AdminController extends BaseController
             ]);
 
             if ($validator->fails()) {
-                return $this->sendError('Validation Error', $validator->errors()->first());
+                return $this->sendError('Validation Error', $validator->errors()->toArray());
             }
 
             DB::beginTransaction();

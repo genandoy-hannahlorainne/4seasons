@@ -35,15 +35,57 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   creatingUser = false;
   createSuccessMessage = '';
   createErrorMessage = '';
+  createErrorMessages: string[] = [];   // all error messages for the popup list
+  createFieldErrors: Record<string, string> = {};  // field → first error message
   showErrorModal = false;
 
-  showCreateError(message: string): void {
-    this.createErrorMessage = message;
+  showCreateError(errorsObj: Record<string, string[]> | null, fallbackMessage?: string): void {
+    this.createFieldErrors = {};
+    this.createErrorMessages = [];
+
+    if (errorsObj && typeof errorsObj === 'object' && Object.keys(errorsObj).length > 0) {
+      for (const [field, msgs] of Object.entries(errorsObj)) {
+        const msg = Array.isArray(msgs) ? msgs[0] : String(msgs);
+        this.createFieldErrors[field] = msg;
+        this.createErrorMessages.push(msg);
+      }
+    } else if (fallbackMessage) {
+      this.createErrorMessages = [fallbackMessage];
+    }
+
+    this.createErrorMessage = this.createErrorMessages.join(' | ');
     this.showErrorModal = true;
   }
 
   closeErrorModal(): void {
     this.showErrorModal = false;
+  }
+
+  hasFieldError(field: string): boolean {
+    return !!this.createFieldErrors[field];
+  }
+
+  getFieldError(field: string): string {
+    return this.createFieldErrors[field] || '';
+  }
+
+  private parseApiErrors(err: any): Record<string, string[]> | null {
+    const errors = err.error?.errors;
+    if (!errors) return null;
+
+    // Backend now returns toArray() — an object like { email: ['msg'], staff_code: ['msg'] }
+    if (typeof errors === 'object' && !Array.isArray(errors)) {
+      return errors as Record<string, string[]>;
+    }
+    // Fallback: plain string message
+    if (typeof errors === 'string') {
+      try {
+        const parsed = JSON.parse(errors);
+        if (typeof parsed === 'object') return parsed;
+      } catch { /* not JSON */ }
+      return { _general: [errors] };
+    }
+    return null;
   }
   newUser: any = {
     role: '',
@@ -564,6 +606,10 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       position: ''
     };
     this.availableSections = [];
+    this.createFieldErrors = {};
+    this.createErrorMessages = [];
+    this.createErrorMessage = '';
+    this.showErrorModal = false;
   }
 
   onRoleSelect(): void {
@@ -663,7 +709,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   createUser(): void {
     if (!this.isCreateFormValid()) {
-      this.showCreateError('Please fill in all required fields');
+      this.showCreateError(null, 'Please fill in all required fields');
       return;
     }
 
@@ -688,13 +734,12 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
             this.loadUsers();
             setTimeout(() => { this.closeCreateUserModal(); }, 5000);
           } else {
-            this.showCreateError(response.message || 'Failed to create student account');
+            this.showCreateError(null, response.message || 'Failed to create student account');
           }
         },
         error: (err) => {
           this.creatingUser = false;
-          const errDetail = err.error?.errors || err.error?.message || 'Failed to create student account.';
-          this.showCreateError(typeof errDetail === 'string' ? errDetail : JSON.stringify(errDetail));
+          this.showCreateError(this.parseApiErrors(err), 'Failed to create student account.');
         }
       });
     } else {
@@ -729,21 +774,12 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
               this.closeCreateUserModal();
             }, 3000);
           } else {
-            this.showCreateError(response.message || 'Failed to create user account');
+            this.showCreateError(null, response.message || 'Failed to create user account');
           }
         },
         error: (err) => {
             this.creatingUser = false;
-            const specific = err.error?.errors;
-            const generic  = err.error?.message;
-            if (specific && typeof specific === 'string') {
-              this.showCreateError(specific);
-            } else if (specific && typeof specific === 'object') {
-              const first = Object.values(specific)[0];
-              this.showCreateError(Array.isArray(first) ? first[0] : String(first));
-            } else {
-              this.showCreateError(generic || 'Failed to create user account. Please try again.');
-            }
+            this.showCreateError(this.parseApiErrors(err), 'Failed to create user account. Please try again.');
         }
       });
     }
