@@ -220,22 +220,23 @@ import { filter } from 'rxjs/operators';
 
       <div *ngIf="showBadgeModal && activeBadge" class="badge-modal-overlay" (click)="closeBadgeModal()">
         <div class="badge-modal" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <div class="modal-title">{{ popupBadgeKey ? 'New Badge Unlocked!' : 'Badge Details' }}</div>
-            <button class="modal-close" (click)="closeBadgeModal()">×</button>
-          </div>
+          <button class="modal-close" (click)="closeBadgeModal()">×</button>
 
           <div class="modal-body">
-            <img *ngIf="activeBadge.icon_asset_path" [src]="activeBadge.icon_asset_path" [alt]="activeBadge.badge_name" class="modal-badge-icon">
+            <div class="modal-badge-icon-wrap">
+              <img *ngIf="activeBadge.icon_asset_path" [src]="activeBadge.icon_asset_path" [alt]="activeBadge.badge_name" class="modal-badge-icon">
+              <i *ngIf="!activeBadge.icon_asset_path" class="fa-solid fa-award modal-badge-icon-fallback"></i>
+            </div>
             <div class="modal-badge-name">{{ activeBadge.badge_name }}</div>
             <div class="modal-badge-sub">{{ activeBadge.required_streak_days }}-day streak milestone</div>
             <div class="modal-badge-description">{{ activeBadge.description }}</div>
 
             <div *ngIf="generatingBadgeKey === activeBadge.badge_key" class="modal-message-status">
-              Generating streak message...
+              <div class="loading-spinner-small"></div>
+              Generating message...
             </div>
 
-            <div *ngIf="badgeNarratives[activeBadge.badge_key]" class="narrative modal-narrative">
+            <div *ngIf="badgeNarratives[activeBadge.badge_key] && badgeNarratives[activeBadge.badge_key] !== 'Unable to generate message right now.'" class="narrative modal-narrative">
               {{ badgeNarratives[activeBadge.badge_key] }}
             </div>
           </div>
@@ -434,6 +435,7 @@ export class StudentLayoutComponent implements OnInit, OnDestroy {
   }
 
   openBadgeDetails(badge: any): void {
+    this.showBadgesPanel = false;
     this.activeBadge = badge;
     this.showBadgeModal = true;
     this.popupBadgeKey = null;
@@ -441,12 +443,84 @@ export class StudentLayoutComponent implements OnInit, OnDestroy {
     if (!this.badgeNarratives[badge.badge_key]) {
       this.generateNarrative(badge);
     }
+
+    this.speakCongratulation(badge);
+  }
+
+  speakCongratulation(badge: any): void {
+    if (!('speechSynthesis' in window)) return;
+
+    const currentUser = this.authService.currentUserValue;
+    const firstName = currentUser?.student_info?.first_name
+      || currentUser?.full_name?.split(' ')[0]
+      || 'Student';
+
+    interface BadgeVoiceConfig {
+      message: string;
+      rate: number;
+      pitch: number;
+    }
+
+    const badgeVoice: Record<string, BadgeVoiceConfig> = {
+      streak_3: {
+        message:
+          `Great job, ${firstName}! You earned the Healthy Start badge! ` +
+          `Three days in a row without a clinic visit — that is a wonderful beginning. Keep it going!`,
+        rate: 0.90,
+        pitch: 1.05,   // calm, warm, encouraging
+      },
+      streak_7: {
+        message:
+          `Amazing, ${firstName}! You earned the Rising Star badge! ` +
+          `A full week of staying healthy — you are building a fantastic habit. Keep it up!`,
+        rate: 0.93,
+        pitch: 1.10,   // slightly more upbeat
+      },
+      streak_30: {
+        message:
+          `Incredible, ${firstName}! You earned the Committed badge! ` +
+          `Thirty school days of wellness — that takes real dedication. You should be so proud!`,
+        rate: 0.95,
+        pitch: 1.15,   // energetic and proud
+      },
+      streak_90: {
+        message:
+          `Outstanding, ${firstName}! You earned the Champion badge! ` +
+          `Ninety days of staying healthy is a remarkable achievement. You are truly a health champion!`,
+        rate: 1.00,
+        pitch: 1.20,   // excited, high energy
+      },
+      streak_365: {
+        message:
+          `LEGENDARY! ${firstName}, you earned the three hundred sixty five Day Legend badge! ` +
+          `A full year of wellness — you are an absolute inspiration to everyone around you. Legendary!`,
+        rate: 1.05,
+        pitch: 1.30,   // epic, maximum hype
+      },
+    };
+
+    const config = badgeVoice[badge.badge_key] ?? {
+      message: `Congratulations, ${firstName}! You earned the ${badge.badge_name} badge. Keep up the great work staying healthy!`,
+      rate: 0.92,
+      pitch: 1.10,
+    };
+
+    const utterance = new SpeechSynthesisUtterance(config.message);
+    utterance.rate   = config.rate;
+    utterance.pitch  = config.pitch;
+    utterance.volume = 1;
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
   }
 
   closeBadgeModal(): void {
     this.showBadgeModal = false;
     this.activeBadge = null;
     this.popupBadgeKey = null;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
   }
 
   private syncBadgeAcquisitionState(badges: any[]): void {
