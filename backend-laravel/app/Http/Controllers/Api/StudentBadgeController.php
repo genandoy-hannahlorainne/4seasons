@@ -87,16 +87,37 @@ class StudentBadgeController extends BaseController
                 return $this->sendError('Student not found', [], 404);
             }
 
-            // Calculate wellness streak (weekdays only, no weekends)
-            $lastVisit = \App\Models\MedicalVisit::where('student_id', $studentId)
-                ->orderBy('visit_datetime', 'desc')
-                ->first();
+            // Fetch all visits oldest → newest to compute max streak across entire history
+            $visits = \App\Models\MedicalVisit::where('student_id', $studentId)
+                ->orderBy('visit_datetime', 'asc')
+                ->pluck('visit_datetime');
 
-            $startDate = $lastVisit
-                ? \Carbon\Carbon::parse($lastVisit->visit_datetime)
-                : \Carbon\Carbon::parse($student->created_at ?? now()->subDays(365));
+            $maxStreak     = 0;
+            $currentStreak = 0;
 
-            $currentStreak = $this->countWeekdays($startDate, now());
+            if ($visits->isEmpty()) {
+                // No visits at all — streak runs from enrollment to today
+                $startDate     = \Carbon\Carbon::parse($student->created_at ?? now()->subDays(365));
+                $currentStreak = $this->countWeekdays($startDate, now());
+                $maxStreak     = $currentStreak;
+            } else {
+                // Gap from enrollment to first visit
+                $enrollDate = \Carbon\Carbon::parse($student->created_at ?? $visits->first());
+                $firstVisit = \Carbon\Carbon::parse($visits->first());
+                $maxStreak  = max($maxStreak, $this->countWeekdays($enrollDate, $firstVisit));
+
+                // Gaps between consecutive visits
+                for ($i = 0; $i < $visits->count() - 1; $i++) {
+                    $from      = \Carbon\Carbon::parse($visits[$i]);
+                    $to        = \Carbon\Carbon::parse($visits[$i + 1]);
+                    $maxStreak = max($maxStreak, $this->countWeekdays($from, $to));
+                }
+
+                // Current ongoing streak since last visit (resets on a new visit, but maxStreak won't drop)
+                $lastVisitDate = \Carbon\Carbon::parse($visits->last());
+                $currentStreak = $this->countWeekdays($lastVisitDate, now());
+                $maxStreak     = max($maxStreak, $currentStreak);
+            }
 
             // Load badge metadata
             $metadataPath = base_path('resources/badges/streak/metadata.json');
@@ -107,43 +128,54 @@ class StudentBadgeController extends BaseController
             $metadata = json_decode(file_get_contents($metadataPath), true);
             $badges = collect($metadata['badges'])->sortBy('required_streak_days');
 
-            // Determine badge status for each badge
-            $badgeStatus = $badges->map(function ($badge) use ($currentStreak) {
-                $required = $badge['required_streak_days'];
-                $isUnlocked = $currentStreak >= $required;
-                
+            // Badges unlock based on maxStreak so a new visit never un-earns an already-earned badge.
+            // Progress toward the next badge uses currentStreak (the live ongoing streak).
+            $badgeStatus = $badges->map(function ($badge) use ($maxStreak, $currentStreak) {
+                $required   = $badge['required_streak_days'];
+                $isUnlocked = $maxStreak >= $required;
+
+                // Progress uses whichever is higher: current ongoing streak or max (already earned = 100%)
+                $progressBase = $isUnlocked ? $required : $currentStreak;
+
                 return [
-                    'badge_key' => $badge['badge_key'],
-                    'badge_name' => $badge['badge_name'],
-                    'tier' => $badge['tier'],
+                    'badge_key'            => $badge['badge_key'],
+                    'badge_name'           => $badge['badge_name'],
+                    'tier'                 => $badge['tier'],
                     'required_streak_days' => $required,
-                    'description' => $badge['description'],
-                    'icon_file' => $badge['icon_file'],
-                    'icon_asset_path' => 'assets/badges/streak/' . $badge['icon_file'],
-                    'is_unlocked' => $isUnlocked,
-                    'is_earned' => $isUnlocked,
-                    'progress_percentage' => min(100, ($currentStreak / $required) * 100),
-                    'days_remaining' => $isUnlocked ? 0 : ($required - $currentStreak),
+                    'description'          => $badge['description'],
+                    'icon_file'            => $badge['icon_file'],
+                    'icon_asset_path'      => 'assets/badges/streak/' . $badge['icon_file'],
+                    'is_unlocked'          => $isUnlocked,
+                    'is_earned'            => $isUnlocked,
+                    'progress_percentage'  => min(100, ($progressBase / $required) * 100),
+                    'days_remaining'       => $isUnlocked ? 0 : ($required - $currentStreak),
                 ];
             });
 
             // Find next badge to unlock
-            $nextBadge = $badgeStatus->where('is_unlocked', false)->first();
+            $nextBadge     = $badgeStatus->where('is_unlocked', false)->first();
             $unlockedBadges = $badgeStatus->where('is_unlocked', true);
 
             // Check for new badge notifications
-            $this->checkAndCreateBadgeNotifications($studentId, $unlockedBadges, $currentStreak);
+            $this->checkAndCreateBadgeNotifications($studentId, $unlockedBadges, $maxStreak);
+
+            $lastVisitDatetime = $visits->isNotEmpty()
+                ? \App\Models\MedicalVisit::where('student_id', $studentId)
+                    ->orderBy('visit_datetime', 'desc')
+                    ->value('visit_datetime')
+                : null;
 
             return $this->sendResponse([
-                'student_id' => $studentId,
+                'student_id'              => $studentId,
                 'current_wellness_streak' => $currentStreak,
-                'last_clinic_visit' => $lastVisit ? $lastVisit->visit_datetime : null,
-                'total_badges_available' => $badges->count(),
-                'badges_unlocked' => $unlockedBadges->count(),
-                'badges_remaining' => $badges->count() - $unlockedBadges->count(),
-                'next_badge' => $nextBadge,
-                'badges' => $badgeStatus->values(),
-                'streak_message' => $this->generateStreakMessage($currentStreak, $nextBadge),
+                'max_wellness_streak'     => $maxStreak,
+                'last_clinic_visit'       => $lastVisitDatetime,
+                'total_badges_available'  => $badges->count(),
+                'badges_unlocked'         => $unlockedBadges->count(),
+                'badges_remaining'        => $badges->count() - $unlockedBadges->count(),
+                'next_badge'              => $nextBadge,
+                'badges'                  => $badgeStatus->values(),
+                'streak_message'          => $this->generateStreakMessage($currentStreak, $nextBadge),
             ], 'Student badges retrieved successfully');
 
         } catch (\Exception $e) {
@@ -300,14 +332,17 @@ class StudentBadgeController extends BaseController
 
     private function countWeekdays(\Carbon\Carbon $from, \Carbon\Carbon $to): int
     {
-        $count = 0;
-        $current = $from->copy()->addDay();
-        while ($current->lte($to)) {
+        $count   = 0;
+        $current = $from->copy()->startOfDay()->addDay();
+        $end     = $to->copy()->startOfDay();
+
+        while ($current->lte($end)) {
             if ($current->isWeekday()) {
                 $count++;
             }
             $current->addDay();
         }
+
         return $count;
     }
 
