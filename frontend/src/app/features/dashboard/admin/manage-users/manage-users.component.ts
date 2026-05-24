@@ -605,12 +605,26 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   viewUser(user: any): void {
-    // Viewing user
     this.selectedUser = { ...user };
-    this.editingUser = { ...user };
-    this.showUserModal = true;
+    this.editingUser  = { ...user };
+
+    // Enrich adviser with grade_level + section from gradeLevels if not already set
+    if (user.role === 'adviser' && (!user.grade_level || !user.section)) {
+      for (const grade of this.gradeLevels) {
+        const section = (grade.sections || []).find((s: any) => s.adviser_id === user.user_id);
+        if (section) {
+          this.selectedUser.grade_level = grade.level_name;
+          this.selectedUser.section     = section.section_name;
+          this.editingUser.grade_level  = grade.level_name;
+          this.editingUser.section      = section.section_name;
+          break;
+        }
+      }
+    }
+
+    this.showUserModal  = true;
     this.successMessage = '';
-    this.errorMessage = '';
+    this.errorMessage   = '';
   }
 
   closeUserModal(): void {
