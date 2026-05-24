@@ -353,7 +353,7 @@ class EmergencyDrillController extends BaseController
             \App\Models\Notification::where('notification_type', 'emergency_drill_alert')
                 ->where('status', 'Pending')
                 ->whereJsonContains('request_data->drill_id', $drill->id)
-                ->update(['status' => 'Read']);
+                ->update(['status' => 'Sent', 'sent_at' => now()]);
 
             DB::commit();
 

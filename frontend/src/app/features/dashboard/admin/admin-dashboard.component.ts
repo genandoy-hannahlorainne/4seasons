@@ -47,20 +47,22 @@ interface UsersResponse {
     <div class="admin-dashboard">
       <!-- Hero Section -->
       <div class="hero-section">
+        <button
+          class="hero-notif-bell notification-bell"
+          [class.notif-active]="panelOpen"
+          (click)="toggleNotifications($event)"
+          title="Notifications">
+          <i class="bi bi-bell-fill"></i>
+          <span class="hero-notif-badge" *ngIf="(notifPanelService.unreadCount$ | async) as count">
+            <span *ngIf="count > 0">{{ count > 99 ? '99+' : count }}</span>
+          </span>
+        </button>
         <div class="hero-content">
           <div class="hero-text">
             <h1>Welcome to PDMHS Admin Dashboard</h1>
             <p>Manage your school's medical records system efficiently and securely</p>
           </div>
         </div>
-
-        <!-- Notification Bell (desktop only) -->
-        <button class="hero-notif-bell notification-bell" (click)="notifPanelService.toggle()" title="Notifications">
-          <i class="bi bi-bell-fill"></i>
-          <span class="hero-notif-badge" *ngIf="(notifPanelService.unreadCount$ | async) as count">
-            <span *ngIf="count > 0">{{ count }}</span>
-          </span>
-        </button>
       </div>
 
       <!-- Loading State -->
@@ -70,36 +72,6 @@ interface UsersResponse {
       </div>
 
       <div class="dashboard-content" *ngIf="!loading">
-        <!-- Password Change Requests -->
-        <div class="password-requests-banner" *ngIf="passwordChangeRequests.length > 0">
-          <div class="requests-header">
-            <i class="fa-solid fa-key"></i>
-            <span>{{ passwordChangeRequests.length }} Password Change Request{{ passwordChangeRequests.length > 1 ? 's' : '' }}</span>
-          </div>
-          <div class="requests-list">
-            <div *ngFor="let request of passwordChangeRequests" class="request-item">
-              <div class="request-content">
-                <div class="request-message">
-                  <strong>{{ request.request_data?.full_name }}</strong> ({{ request.request_data?.role }})
-                </div>
-                <div class="request-reason">{{ request.request_data?.reason }}</div>
-                <div class="request-meta">
-                  <span>Username: {{ request.request_data?.username }}</span>
-                  <span>{{ request.timeAgo }}</span>
-                </div>
-              </div>
-              <div class="request-actions">
-                <button class="btn-approve" (click)="approvePasswordChange(request)" title="Approve & Reset Password">
-                  <i class="fa-solid fa-check"></i> Approve
-                </button>
-                <button class="btn-dismiss" (click)="dismissPasswordChange(request)" title="Dismiss Request">
-                  <i class="fa-solid fa-times"></i> Dismiss
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Emergency Drill Alerts -->
         <div class="drill-alerts-banner" *ngIf="drillAlerts.length > 0">
           <div class="drill-header">
@@ -386,56 +358,6 @@ interface UsersResponse {
 
       </div>
 
-      <!-- Password Change Modal -->
-      <div class="modal-overlay" *ngIf="showPasswordChangeModal" (click)="closePasswordChangeModal()">
-        <div class="modal-content" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <h3><i class="fa-solid fa-key"></i> Password Change Request</h3>
-            <button class="modal-close" (click)="closePasswordChangeModal()">
-              <i class="fa-solid fa-times"></i>
-            </button>
-          </div>
-
-          <div class="modal-body" *ngIf="selectedPasswordRequest">
-            <div class="request-details">
-              <div class="detail-row">
-                <span class="detail-label">Name:</span>
-                <span class="detail-value">{{ selectedPasswordRequest.request_data?.full_name }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Role:</span>
-                <span class="detail-value role-badge">{{ selectedPasswordRequest.request_data?.role }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Username:</span>
-                <span class="detail-value">{{ selectedPasswordRequest.request_data?.username }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Reason:</span>
-                <span class="detail-value reason-text">{{ selectedPasswordRequest.request_data?.reason }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Requested:</span>
-                <span class="detail-value">{{ selectedPasswordRequest.timeAgo }}</span>
-              </div>
-            </div>
-
-            <div class="modal-info">
-              <i class="fa-solid fa-circle-info"></i>
-              <p>Approving this request will generate a temporary password and require the user to change it on next login.</p>
-            </div>
-          </div>
-
-          <div class="modal-footer">
-            <button class="btn-modal-dismiss" (click)="dismissPasswordChange(selectedPasswordRequest)">
-              <i class="fa-solid fa-times"></i> Dismiss
-            </button>
-            <button class="btn-modal-approve" (click)="confirmApprovePasswordChange()">
-              <i class="fa-solid fa-check"></i> Approve & Reset Password
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   `,
   styles: [`
@@ -1342,7 +1264,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   activityLog: any[] = [];
   emergencyNotifications: any[] = [];
   notificationHistory: any[] = [];
-  passwordChangeRequests: any[] = [];
   drillAlerts: any[] = [];
 
   // Chart data
@@ -1376,8 +1297,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   recentVisits: any[] = [];
 
   // Modal state
-  showPasswordChangeModal = false;
-  selectedPasswordRequest: any = null;
 
   constructor(
     private router: Router,
@@ -1386,7 +1305,17 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     public notifPanelService: AdminNotificationPanelService
   ) {}
 
+  panelOpen = false;
+
+  toggleNotifications(event: Event): void {
+    event.stopPropagation();
+    this.notifPanelService.toggleFromAnchor(event.currentTarget as HTMLElement);
+  }
+
   ngOnInit(): void {
+    this.notifPanelService.open$.subscribe(open => {
+      this.panelOpen = open;
+    });
     // Enhanced authentication check
     if (!this.authService.checkAuthenticationStatus()) {
       alert('Please login as admin to access the admin panel');
@@ -1569,11 +1498,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             };
           });
 
-          // Password change requests (pending)
-          this.passwordChangeRequests = allNotifications.filter(
-            (notif: any) => notif?.notification_type === 'password_change_request' && notif?.status === 'Pending'
-          );
-
           // Emergency drill alerts (pending)
           this.drillAlerts = allNotifications.filter(
             (notif: any) => notif?.notification_type === 'emergency_drill_alert' && notif?.status === 'Pending'
@@ -1581,13 +1505,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
           // Medical emergency notifications (urgent + pending + has visit_id)
           this.emergencyNotifications = allNotifications.filter(
-            (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending' && notif?.visit_id
+            (notif: any) =>
+              notif?.status === 'Pending' &&
+              notif?.visit_id &&
+              (notif?.notification_type === 'emergency_visit' || notif?.priority === 'urgent')
           );
 
-          // Notification history (all read/sent notifications, or normal priority)
-          this.notificationHistory = allNotifications.filter(
-            (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
-          ).slice(0, 10); // Show last 10
+          this.notificationHistory = this.notifPanelService.buildAdminFeed(allNotifications);
           this.notifPanelService.setNotificationHistory(this.notificationHistory);
 
           // Notifications categorized
@@ -1600,21 +1524,18 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             };
           });
 
-          this.passwordChangeRequests = allNotifications.filter(
-            (notif: any) => notif?.notification_type === 'password_change_request' && notif?.status === 'Pending'
-          );
-
           this.drillAlerts = allNotifications.filter(
             (notif: any) => notif?.notification_type === 'emergency_drill_alert' && notif?.status === 'Pending'
           );
 
           this.emergencyNotifications = allNotifications.filter(
-            (notif: any) => notif?.priority === 'urgent' && notif?.status === 'Pending' && notif?.visit_id
+            (notif: any) =>
+              notif?.status === 'Pending' &&
+              notif?.visit_id &&
+              (notif?.notification_type === 'emergency_visit' || notif?.priority === 'urgent')
           );
 
-          this.notificationHistory = allNotifications.filter(
-            (notif: any) => notif?.status !== 'Pending' || notif?.priority === 'normal'
-          ).slice(0, 10);
+          this.notificationHistory = this.notifPanelService.buildAdminFeed(allNotifications);
           this.notifPanelService.setNotificationHistory(this.notificationHistory);
 
           // Notifications categorized and loaded
@@ -1843,7 +1764,7 @@ Position: ${notification?.staff?.position || 'N/A'}
           if (response.success) {
             // Move emergency notifications to history
             this.notificationHistory = [
-              ...this.emergencyNotifications.map(n => ({ ...n, status: 'Read' })),
+              ...this.emergencyNotifications.map(n => ({ ...n, status: 'Sent' })),
               ...this.notificationHistory
             ].slice(0, 10);
             this.notifPanelService.setNotificationHistory(this.notificationHistory);
@@ -1908,67 +1829,6 @@ ${notification.message || 'N/A'}
     `.trim();
 
     alert(details);
-  }
-
-  approvePasswordChange(request: any): void {
-    this.selectedPasswordRequest = request;
-    this.showPasswordChangeModal = true;
-  }
-
-  confirmApprovePasswordChange(): void {
-    if (!this.selectedPasswordRequest) return;
-
-    const request = this.selectedPasswordRequest;
-    const userName = request.request_data?.full_name || 'this user';
-    const username = request.request_data?.username || '';
-
-    this.adminService.approvePasswordChangeRequest(request.notification_id).subscribe({
-      next: (response) => {
-        if (response?.success) {
-          const tempPassword = response.data?.temp_password;
-          alert(`Password reset successfully!\n\nUsername: ${username}\nTemporary Password: ${tempPassword}\n\nPlease provide this information to the user securely.`);
-
-          // Remove from password change requests
-          this.passwordChangeRequests = this.passwordChangeRequests.filter(
-            r => r.notification_id !== request.notification_id
-          );
-          this.closePasswordChangeModal();
-        } else {
-          alert('Failed to approve password change: ' + (response?.message || 'Unknown error'));
-        }
-      },
-      error: (err) => {
-        // Failed to approve password change
-        alert('Error approving password change request');
-      }
-    });
-  }
-
-  closePasswordChangeModal(): void {
-    this.showPasswordChangeModal = false;
-    this.selectedPasswordRequest = null;
-  }
-
-  dismissPasswordChange(request: any): void {
-    const userName = request.request_data?.full_name || 'this user';
-
-    if (confirm(`Dismiss password change request from ${userName}?`)) {
-      this.adminService.dismissPasswordChangeRequest(request.notification_id).subscribe({
-        next: (response) => {
-          if (response?.success) {
-            // Remove from password change requests
-            this.passwordChangeRequests = this.passwordChangeRequests.filter(
-              r => r.notification_id !== request.notification_id
-            );
-            alert('Request dismissed');
-          }
-        },
-        error: (err) => {
-          // Failed to dismiss request
-          alert('Error dismissing request');
-        }
-      });
-    }
   }
 
   viewDrillDashboard(drillId: number): void {
