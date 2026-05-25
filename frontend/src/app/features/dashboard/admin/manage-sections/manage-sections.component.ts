@@ -18,6 +18,10 @@ export class ManageSectionsComponent implements OnInit {
   loading = false;
   errorMessage = '';
   successMessage = '';
+  sectionSearch = '';
+  currentPage = 1;
+  pageSize = 8;
+  readonly pageSizeOptions = [6, 8, 12, 24];
 
   // Selected grade for viewing details
   selectedGradeId: number | null = null;
@@ -65,14 +69,78 @@ export class ManageSectionsComponent implements OnInit {
 
   selectGrade(gradeId: number): void {
     this.selectedGradeId = gradeId;
+    this.sectionSearch = '';
+    this.currentPage = 1;
   }
 
   backToCards(): void {
     this.selectedGradeId = null;
+    this.sectionSearch = '';
+    this.currentPage = 1;
   }
 
   get selectedGrade(): any {
     return this.gradeLevels.find(g => g.id === this.selectedGradeId);
+  }
+
+  get filteredSections(): any[] {
+    if (!this.selectedGrade?.sections) return [];
+    if (!this.sectionSearch.trim()) return this.selectedGrade.sections;
+
+    const q = this.sectionSearch.toLowerCase();
+    return this.selectedGrade.sections.filter((s: any) =>
+      s.section_name?.toLowerCase().includes(q) ||
+      s.adviser_name?.toLowerCase().includes(q) ||
+      this.getAdviserName(s.adviser_id)?.toLowerCase().includes(q)
+    );
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredSections.length / this.pageSize);
+  }
+
+  get paginatedSections(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredSections.slice(start, start + this.pageSize);
+  }
+
+  get pageStartIndex(): number {
+    if (this.filteredSections.length === 0) return 0;
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get pageEndIndex(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredSections.length);
+  }
+
+  get sectionPageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages;
+    const current = this.currentPage;
+    const delta = 2;
+
+    for (let page = Math.max(1, current - delta); page <= Math.min(total, current + delta); page++) {
+      pages.push(page);
+    }
+
+    return pages;
+  }
+
+  trackBySectionId(index: number, section: any): number | string {
+    return section?.id ?? section?.section_id ?? section?.section_name ?? index;
+  }
+
+  goToPage(page: number): void {
+    if (this.totalPages < 1) {
+      this.currentPage = 1;
+      return;
+    }
+
+    this.currentPage = Math.min(Math.max(page, 1), this.totalPages);
+  }
+
+  onSectionSearchChange(): void {
+    this.currentPage = 1;
   }
 
   emptyForm() {
@@ -223,6 +291,21 @@ export class ManageSectionsComponent implements OnInit {
   getTotalEnrollment(grade: any): number {
     if (!grade.sections || grade.sections.length === 0) return 0;
     return grade.sections.reduce((sum: number, section: any) => sum + (section.current_enrollment || 0), 0);
+  }
+
+  getAssignedCount(grade: any): number {
+    if (!grade?.sections) return 0;
+    return grade.sections.filter((s: any) => s.adviser_id || s.adviser_name).length;
+  }
+
+  getUnassignedCount(grade: any): number {
+    if (!grade?.sections) return 0;
+    return grade.sections.filter((s: any) => !s.adviser_id && !s.adviser_name).length;
+  }
+
+  getFillRate(section: any): number {
+    if (!section.capacity || section.capacity === 0) return 0;
+    return Math.round(((section.current_enrollment || 0) / section.capacity) * 100);
   }
 
   private getCurrentSchoolYearId(): number | null {

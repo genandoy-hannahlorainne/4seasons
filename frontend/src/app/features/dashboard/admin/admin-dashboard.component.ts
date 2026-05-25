@@ -58,10 +58,16 @@ interface UsersResponse {
         </div>
       </div>
 
-      <!-- Loading State -->
-      <div *ngIf="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading dashboard...</p>
+      <!-- Skeleton Loading State -->
+      <div *ngIf="loading" class="skeleton-loading-dashboard">
+        <div class="skeleton-stats-grid">
+          <div *ngFor="let s of [1,2,3,4,5,6]" class="skeleton skeleton-stat"></div>
+        </div>
+        <div class="skeleton-charts-row">
+          <div class="skeleton skeleton-chart-main"></div>
+          <div class="skeleton skeleton-chart-side"></div>
+        </div>
+        <div class="skeleton skeleton-table-card"></div>
       </div>
 
       <div class="dashboard-content" *ngIf="!loading">

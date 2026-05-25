@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -43,22 +43,48 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
         </button>
       </div>
 
-      <!-- Filters -->
-      <div class="filters">
-        <select [(ngModel)]="typeFilter" (change)="loadDrills()" class="form-control">
+      <!-- Filters + Search -->
+      <div class="filters-bar">
+        <div class="drill-search">
+          <i class="fas fa-search"></i>
+          <input
+            type="text"
+            [(ngModel)]="drillSearch"
+            placeholder="Search drills by name..."
+          >
+          <button *ngIf="drillSearch" class="clear-search" (click)="drillSearch=''" type="button">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <select [(ngModel)]="typeFilter" (change)="loadDrills()" class="form-control type-select">
           <option value="">All Types</option>
-          <option value="earthquake">Earthquake</option>
-          <option value="fire">Fire</option>
-          <option value="lockdown">Lockdown</option>
-          <option value="medical">Medical</option>
-          <option value="evacuation">Evacuation</option>
+          <option value="earthquake">ðŸŒ Earthquake</option>
+          <option value="fire">ðŸ”¥ Fire</option>
+          <option value="lockdown">ðŸ”’ Lockdown</option>
+          <option value="medical">ðŸ¥ Medical</option>
+          <option value="evacuation">ðŸšª Evacuation</option>
         </select>
+      </div>
+
+      <!-- Skeleton Loading -->
+      <div *ngIf="loading" class="drills-grid">
+        <div *ngFor="let s of [1,2,3,4,5,6]" class="drill-card-skeleton">
+          <div class="skeleton skeleton-drill-icon"></div>
+          <div class="skeleton-drill-body">
+            <div class="skeleton skeleton-drill-title"></div>
+            <div class="skeleton skeleton-drill-sub"></div>
+            <div class="skeleton-drill-stats">
+              <div class="skeleton skeleton-drill-stat"></div>
+              <div class="skeleton skeleton-drill-stat"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Drills List -->
       <div class="drills-grid" *ngIf="!loading">
         <ng-container *ngIf="activeTab === 'active'">
-          <div class="drill-card active-card" *ngFor="let drill of activeDrills">
+          <div class="drill-card active-card" *ngFor="let drill of filteredActiveDrills">
             <div class="drill-header">
               <div class="drill-type-icon"
                    [style.background]="drill.drill_type === 'fire' ? 'linear-gradient(135deg, #ef4444, #f97316)' :
@@ -73,7 +99,7 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
               </div>
               <div class="drill-title-group">
                 <h3>{{ drill.drill_name }}</h3>
-                <span class="drill-type-label">{{ drill.drill_type | titlecase }} Drill · {{ drill.created_at | date:'MMM d, y' }}</span>
+                <span class="drill-type-label">{{ drill.drill_type | titlecase }} Drill Â· {{ drill.created_at | date:'MMM d, y' }}</span>
               </div>
               <div class="header-badges">
                 <span class="status-badge" [ngClass]="'status-' + drill.status">
@@ -129,15 +155,15 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
               </button>
             </div>
           </div>
-          <div class="empty-state" *ngIf="activeDrills.length === 0">
+          <div class="empty-state" *ngIf="filteredActiveDrills.length === 0">
             <i class="bi bi-exclamation-triangle-fill" style="font-size:56px;opacity:0.4;"></i>
-            <h3>No Active Drills</h3>
-            <p>Create a new drill to get started.</p>
+            <h3>{{ drillSearch ? 'No Matching Drills' : 'No Active Drills' }}</h3>
+            <p>{{ drillSearch ? 'Try a different search term.' : 'Create a new drill to get started.' }}</p>
           </div>
         </ng-container>
 
         <ng-container *ngIf="activeTab === 'completed'">
-          <div class="drill-card completed-card" *ngFor="let drill of completedDrills">
+          <div class="drill-card completed-card" *ngFor="let drill of filteredCompletedDrills">
             <div class="drill-header">
               <div class="drill-type-icon"
                    [style.background]="drill.drill_type === 'fire' ? 'linear-gradient(135deg, #ef4444, #f97316)' :
@@ -152,7 +178,7 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
               </div>
               <div class="drill-title-group">
                 <h3>{{ drill.drill_name }}</h3>
-                <span class="drill-type-label">{{ drill.drill_type | titlecase }} Drill · {{ drill.created_at | date:'MMM d, y' }}</span>
+                <span class="drill-type-label">{{ drill.drill_type | titlecase }} Drill Â· {{ drill.created_at | date:'MMM d, y' }}</span>
               </div>
               <span class="status-badge status-completed">Completed</span>
             </div>
@@ -167,7 +193,7 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
                 <span class="stat-pill-label"><i class="fas fa-qrcode"></i> Scanned</span>
               </div>
               <div class="stat-pill">
-                <span class="stat-pill-value">{{ drill.statistics?.average_response_time ? (drill.statistics?.average_response_time | number:'1.0-1') + 's' : '—' }}</span>
+                <span class="stat-pill-value">{{ drill.statistics?.average_response_time ? (drill.statistics?.average_response_time | number:'1.0-1') + 's' : 'â€”' }}</span>
                 <span class="stat-pill-label"><i class="fas fa-stopwatch"></i> Avg Response</span>
               </div>
             </div>
@@ -178,16 +204,16 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
               </button>
             </div>
           </div>
-          <div class="empty-state" *ngIf="completedDrills.length === 0">
+          <div class="empty-state" *ngIf="filteredCompletedDrills.length === 0">
             <i class="bi bi-check-circle-fill" style="font-size:56px;opacity:0.4;"></i>
-            <h3>No Completed Drills</h3>
-            <p>Completed drills will appear here.</p>
+            <h3>{{ drillSearch ? 'No Matching Drills' : 'No Completed Drills' }}</h3>
+            <p>{{ drillSearch ? 'Try a different search term.' : 'Completed drills will appear here.' }}</p>
           </div>
         </ng-container>
 
         <!-- Abandoned Drills -->
         <ng-container *ngIf="activeTab === 'abandoned'">
-          <div class="drill-card abandoned-card" *ngFor="let drill of abandonedDrills">
+          <div class="drill-card abandoned-card" *ngFor="let drill of filteredAbandonedDrills">
             <div class="drill-header">
               <div class="drill-type-icon"
                    [style.background]="drill.drill_type === 'fire' ? 'linear-gradient(135deg, #ef4444, #f97316)' :
@@ -202,14 +228,14 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
               </div>
               <div class="drill-title-group">
                 <h3>{{ drill.drill_name }}</h3>
-                <span class="drill-type-label">{{ drill.drill_type | titlecase }} Drill · {{ drill.created_at | date:'MMM d, y' }}</span>
+                <span class="drill-type-label">{{ drill.drill_type | titlecase }} Drill Â· {{ drill.created_at | date:'MMM d, y' }}</span>
               </div>
               <span class="status-badge status-abandoned">Abandoned</span>
             </div>
 
             <div class="abandoned-reason">
               <i class="bi bi-exclamation-triangle-fill" style="width:16px;height:16px;color:#92400e;flex-shrink:0;"></i>
-              <span>This drill was automatically abandoned — the scheduled time window passed without being started.</span>
+              <span>This drill was automatically abandoned â€” the scheduled time window passed without being started.</span>
             </div>
 
             <div class="drill-stats-row" *ngIf="drill.statistics">
@@ -232,10 +258,10 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
               </button>
             </div>
           </div>
-          <div class="empty-state" *ngIf="abandonedDrills.length === 0">
+          <div class="empty-state" *ngIf="filteredAbandonedDrills.length === 0">
             <i class="bi bi-slash-circle-fill" style="font-size:56px;opacity:0.4;"></i>
-            <h3>No Abandoned Drills</h3>
-            <p>Drills that expire without being started will appear here.</p>
+            <h3>{{ drillSearch ? 'No Matching Drills' : 'No Abandoned Drills' }}</h3>
+            <p>{{ drillSearch ? 'Try a different search term.' : 'Drills that expire without being started will appear here.' }}</p>
           </div>
         </ng-container>
       </div>
@@ -311,857 +337,7 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
       </div>
     </div>
   `,
-  styles: [`
-    .emergency-drills-container {
-      padding: 2rem;
-      background: #f5f7fa;
-      min-height: 100vh;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 20px;
-      border-bottom: 2px solid #e0e0e0;
-    }
-
-    .tab-btn {
-      padding: 10px 20px;
-      border: none;
-      background: transparent;
-      font-size: 14px;
-      font-weight: 600;
-      color: #666;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      margin-bottom: -2px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-
-    .tab-btn:hover { color: #007bff; }
-
-    .tab-btn.active {
-      color: #007bff;
-      border-bottom-color: #007bff;
-    }
-
-    .tab-count {
-      background: #007bff;
-      color: white;
-      border-radius: 12px;
-      padding: 1px 7px;
-      font-size: 11px;
-    }
-
-    .tab-count.completed {
-      background: #7b1fa2;
-    }
-
-    .tab-count.abandoned {
-      background: #b45309;
-    }
-
-    .completed-card {
-      border-left-color: #7b1fa2 !important;
-      background: #fdf8ff;
-    }
-
-    .active-card {
-      border-left: none !important;
-      background: white !important;
-      border-radius: 12px !important;
-      padding: 1.25rem !important;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08) !important;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-
-      .drill-header {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        margin-bottom: 0;
-        height: 56px;
-        overflow: hidden;
-      }
-
-      .drill-title-group {
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-
-        h3 {
-          margin: 0 0 2px;
-          font-size: 1rem;
-          font-weight: 700;
-          color: #1e293b;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .drill-type-label {
-          font-size: 0.78rem;
-          color: #94a3b8;
-          display: block;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      }
-
-      .header-badges {
-        flex-shrink: 0;
-        align-self: flex-start;
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-      }
-
-      .drill-stats-row {
-        display: flex;
-        gap: 0.5rem;
-        align-items: stretch;
-      }
-
-      .drill-actions {
-        margin-top: auto;
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-
-        .btn { flex: 1; justify-content: center; }
-      }
-    }
-
-    .abandoned-card {
-      border-left-color: #b45309 !important;
-      background: #fffbeb;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-
-      .drill-header {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        margin-bottom: 0;
-        height: 56px;
-        overflow: hidden;
-      }
-
-      .drill-title-group {
-        flex: 1;
-        min-width: 0;
-
-        h3 {
-          margin: 0 0 2px;
-          font-size: 1rem;
-          font-weight: 700;
-          color: #1e293b;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .drill-type-label {
-          font-size: 0.78rem;
-          color: #94a3b8;
-          display: block;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      }
-
-      .status-badge {
-        flex-shrink: 0;
-        align-self: flex-start;
-      }
-
-      .drill-actions {
-        margin-top: auto;
-      }
-    }
-
-    .status-abandoned {
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fcd34d;
-    }
-
-    .drill-type-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-
-      i { font-size: 1.2rem; color: white; }
-
-      &.type-fire { background: linear-gradient(135deg, #ef4444, #f97316); }
-      &.type-earthquake { background: linear-gradient(135deg, #f59e0b, #d97706); }
-      &.type-lockdown { background: linear-gradient(135deg, #6366f1, #4f46e5); }
-      &.type-medical { background: linear-gradient(135deg, #10b981, #059669); }
-      &.type-evacuation { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-    }
-
-    .abandoned-reason {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #fef3c7;
-      border: 1px solid #fcd34d;
-      border-radius: 6px;
-      padding: 8px 12px;
-      margin-bottom: 12px;
-      font-size: 0.8rem;
-      color: #92400e;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      padding: 2rem 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
-
-      .header-left {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-      }
-
-      h2 {
-        font-size: 2rem;
-        color: #ffffff;
-        margin: 0 0 4px;
-        font-weight: 700;
-      }
-
-      p {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1.1rem;
-        margin: 0;
-      }
-
-      .btn-primary {
-        background: rgba(255, 255, 255, 0.15);
-        color: #ffffff;
-        border: 2px solid rgba(255, 255, 255, 0.6);
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-
-        &:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.25);
-          border-color: #ffffff;
-        }
-
-        &:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-      }
-    }
-
-    .filters {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    .filters select {
-      width: 200px;
-    }
-
-    .drills-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 20px;
-      align-items: stretch;
-      justify-items: center;
-    }
-
-    .drill-card {
-      background: white;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      border-left: 4px solid #ddd;
-    }
-
-    .drill-card.active {
-      border-left-color: #28a745;
-      background: #f8fff9;
-    }
-
-    .drill-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    .drill-header h3 {
-      margin: 0;
-      color: #333;
-    }
-
-    .header-badges {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .status-badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-
-    .schedule-badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .schedule-badge.can-start {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .schedule-badge.too-early {
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeaa7;
-    }
-
-    .schedule-badge.too-late {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-
-    .status-planned { background: #e3f2fd; color: #1976d2; }
-    .status-active { background: #e8f5e8; color: #2e7d32; }
-    .status-completed { background: #f3e5f5; color: #7b1fa2; }
-    .status-cancelled { background: #ffebee; color: #c62828; }
-
-    .drill-info p {
-      margin: 5px 0;
-      color: #666;
-    }
-
-    .drill-stats {
-      display: flex;
-      gap: 20px;
-      margin: 15px 0;
-      padding: 15px 0;
-      border-top: 1px solid #eee;
-    }
-
-    .stat {
-      text-align: center;
-    }
-
-    .stat-value {
-      display: block;
-      font-size: 24px;
-      font-weight: bold;
-      color: #333;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: #666;
-      text-transform: uppercase;
-    }
-
-    .drill-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .loading, .empty-state {
-      text-align: center;
-      padding: 40px;
-      color: #666;
-      grid-column: 1 / -1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .empty-state i {
-      font-size: 48px;
-      margin-bottom: 20px;
-      color: #ddd;
-    }
-
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 8px;
-      width: 90%;
-      max-width: 500px;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .modal-header h3 {
-      margin: 0;
-    }
-
-    .close-btn {
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      color: #666;
-    }
-
-    .modal-body {
-      padding: 20px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-      color: #333;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      margin-top: 20px;
-    }
-
-    .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.2s ease;
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      background: #ccc !important;
-      color: #666 !important;
-      border-color: #ccc !important;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      color: white;
-      box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
-      font-weight: 600;
-
-      &:hover:not(:disabled) {
-        background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
-        box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
-        transform: translateY(-1px);
-      }
-    }
-    .btn-danger { background: #dc3545; color: white; }
-    .btn-secondary {
-      background: #e9ecef;
-      color: #2c3e50;
-      font-weight: 600;
-
-      &:hover {
-        background: #dee2e6;
-        transform: translateY(-1px);
-      }
-    }
-    .btn-outline {
-      background: white;
-      color: #052355;
-      border: 2px solid #052355;
-      font-weight: 600;
-
-      &:hover {
-        background: #052355;
-        color: white;
-        transform: translateY(-1px);
-      }
-    }
-    .btn-sm { padding: 4px 8px; font-size: 12px; }
-
-    .btn:hover {
-      opacity: 0.9;
-    }
-
-    /* Confirmation Modal Styles */
-    .confirm-modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      animation: fadeIn 0.2s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .confirm-modal-content {
-      background: #ffffff;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 450px;
-      box-shadow: 0 10px 40px rgba(5, 35, 85, 0.3);
-      animation: slideUp 0.3s ease;
-      overflow: hidden;
-    }
-
-    @keyframes slideUp {
-      from {
-        transform: translateY(20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-
-    .confirm-modal-header {
-      padding: 1.5rem;
-      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      border-bottom: none;
-
-      h3 {
-        margin: 0;
-        font-size: 1.3rem;
-        color: #ffffff;
-        font-weight: 700;
-      }
-    }
-
-    .confirm-modal-body {
-      padding: 2rem 1.5rem;
-      background: #ffffff;
-
-      p {
-        margin: 0;
-        color: #2c3e50;
-        font-size: 1rem;
-        line-height: 1.6;
-      }
-    }
-
-    .confirm-modal-actions {
-      padding: 1rem 1.5rem 1.5rem;
-      display: flex;
-      gap: 0.75rem;
-      justify-content: flex-end;
-      background: #ffffff;
-    }
-
-    .btn-confirm {
-      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      color: #ffffff;
-      border: none;
-      padding: 0.75rem 2rem;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-size: 0.95rem;
-      box-shadow: 0 2px 8px rgba(5, 35, 85, 0.2);
-
-      &:hover {
-        background: linear-gradient(135deg, #041d44 0%, #4270a1 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(5, 35, 85, 0.3);
-      }
-    }
-
-    .btn-cancel-confirm {
-      background: #e9ecef;
-      color: #2c3e50;
-      border: none;
-      padding: 0.75rem 2rem;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-size: 0.95rem;
-
-      &:hover {
-        background: #dee2e6;
-        transform: translateY(-2px);
-      }
-    }
-
-    /* Completed Card - Option B style */
-    .completed-card {
-      border-left: none !important;
-      background: white !important;
-      border-radius: 12px !important;
-      padding: 1.25rem !important;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08) !important;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-
-      .drill-header {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        margin-bottom: 0;
-        height: 56px;
-        overflow: hidden;
-      }
-
-      .drill-title-group {
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-
-        h3 {
-          margin: 0 0 2px;
-          font-size: 1rem;
-          font-weight: 700;
-          color: #1e293b;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .drill-type-label {
-          font-size: 0.78rem;
-          color: #94a3b8;
-          display: block;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      }
-
-      .status-badge {
-        flex-shrink: 0;
-        align-self: flex-start;
-      }
-
-      .drill-stats-row {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: nowrap;
-        align-items: stretch;
-      }
-
-      .stat-pill {
-        flex: 1;
-        min-width: 0;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 0.5rem 0.75rem;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-
-        .stat-pill-value {
-          display: block;
-          font-size: 1.4rem;
-          font-weight: 700;
-          color: #1e293b;
-          line-height: 1.2;
-        }
-
-        .stat-pill-label {
-          font-size: 0.7rem;
-          color: #94a3b8;
-          text-transform: uppercase;
-          letter-spacing: 0.03em;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.25rem;
-          margin-top: 2px;
-
-          i { font-size: 0.65rem; }
-        }
-      }
-
-      .drill-actions {
-        margin-top: auto;
-      }
-
-      .btn-view-details {
-        width: 100%;
-        justify-content: center;
-        padding: 0.55rem 1rem;
-        border-radius: 8px;
-        border: 2px solid #7b1fa2;
-        background: white;
-        color: #7b1fa2;
-        font-weight: 600;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-
-        &:hover {
-          background: #7b1fa2;
-          color: white;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(123, 31, 162, 0.25);
-        }
-      }
-    }
-
-    @media (max-width: 768px) {
-      .emergency-drills-container {
-        padding: 1rem;
-      }
-
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-        padding: 1.25rem 1rem;
-
-        h2 { font-size: 1.4rem; }
-
-        .btn-primary { width: 100%; justify-content: center; }
-      }
-
-      .tabs {
-        gap: 0;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-
-        .tab-btn {
-          font-size: 0.8rem;
-          padding: 0.6rem 0.75rem;
-          white-space: nowrap;
-        }
-      }
-
-      .filters {
-        flex-direction: column;
-
-        select { width: 100%; }
-      }
-
-      .drills-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .drill-card {
-        padding: 1rem;
-      }
-
-      .drill-actions {
-        flex-wrap: wrap;
-
-        .btn { flex: 1; justify-content: center; }
-      }
-
-      .completed-card, .abandoned-card {
-        .drill-stats-row { flex-wrap: wrap; }
-        .stat-pill { min-width: calc(50% - 0.25rem); }
-      }
-
-      .modal-content {
-        width: 95%;
-        max-height: 95vh;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .header h2 { font-size: 1.2rem; }
-
-      .drills-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-
-      .completed-card, .abandoned-card {
-        .stat-pill { min-width: 100%; }
-      }
-    }
-  `]
+  styleUrls: ['./emergency-drills.component.scss']
 })
 export class EmergencyDrillsComponent implements OnInit, OnDestroy {
   drills: EmergencyDrill[] = [];
@@ -1171,6 +347,7 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
   activeTab: 'active' | 'completed' | 'abandoned' = 'active';
   loading = false;
   typeFilter = '';
+  drillSearch = '';
   showCreateModal = false;
   creating = false;
   private pollInterval: any;
@@ -1191,6 +368,24 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
       track_response_time: true
     }
   };
+
+  get filteredActiveDrills(): EmergencyDrill[] {
+    if (!this.drillSearch.trim()) return this.activeDrills;
+    const q = this.drillSearch.toLowerCase();
+    return this.activeDrills.filter(d => d.drill_name?.toLowerCase().includes(q) || d.drill_type?.toLowerCase().includes(q));
+  }
+
+  get filteredCompletedDrills(): EmergencyDrill[] {
+    if (!this.drillSearch.trim()) return this.completedDrills;
+    const q = this.drillSearch.toLowerCase();
+    return this.completedDrills.filter(d => d.drill_name?.toLowerCase().includes(q) || d.drill_type?.toLowerCase().includes(q));
+  }
+
+  get filteredAbandonedDrills(): EmergencyDrill[] {
+    if (!this.drillSearch.trim()) return this.abandonedDrills;
+    const q = this.drillSearch.toLowerCase();
+    return this.abandonedDrills.filter(d => d.drill_name?.toLowerCase().includes(q) || d.drill_type?.toLowerCase().includes(q));
+  }
 
   constructor(
     private drillService: EmergencyDrillService,
@@ -1459,3 +654,4 @@ export class EmergencyDrillsComponent implements OnInit, OnDestroy {
     };
   }
 }
+

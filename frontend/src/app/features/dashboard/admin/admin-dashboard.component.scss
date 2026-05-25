@@ -1,3 +1,53 @@
+/* ── Skeleton Loading ── */
+@keyframes shimmer {
+  0%   { background-position: -800px 0; }
+  100% { background-position: 800px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f4f8 25%, #e2e8f0 50%, #f0f4f8 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 8px;
+}
+
+.skeleton-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  padding: 0 2.5rem;
+}
+
+.skeleton-stat { height: 96px; border-radius: 14px; }
+
+.skeleton-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  padding: 0 2.5rem;
+}
+
+.skeleton-chart-main { height: 260px; border-radius: 14px; }
+.skeleton-chart-side  { height: 260px; border-radius: 14px; }
+
+.skeleton-table-card {
+  height: 220px;
+  border-radius: 14px;
+  margin: 0 2.5rem 1.25rem;
+}
+
+/* ── Stat card counter animation ── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.stat-value {
+  animation: countUp 0.5s ease forwards;
+}
+
 .admin-dashboard {
   padding: 0;
   background: transparent;
