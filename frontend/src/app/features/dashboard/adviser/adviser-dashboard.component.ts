@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -6,6 +6,8 @@ import { AdviserService, AdvisedStudent } from '../../../core/services/adviser.s
 import { StudentProfileModalComponent } from './student-profile-modal/student-profile-modal.component';
 import { PushNotificationService } from '../../../core/services/push-notification.service';
 import { AdviserNotificationBellComponent } from './shared/adviser-notification-bell.component';
+import { AdviserLayoutUiService } from '../../../core/services/adviser-layout-ui.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-adviser-dashboard',
@@ -23,8 +25,8 @@ import { AdviserNotificationBellComponent } from './shared/adviser-notification-
       </div>
 
       <!-- Hero Section -->
-      <div class="hero-section">
-        <app-adviser-notification-bell variant="hero" />
+      <div class="hero-section" [class.sidebar-drawer-open]="mobileSidebarOpen">
+        <app-adviser-notification-bell *ngIf="!mobileSidebarOpen" variant="hero" />
         <div class="hero-content">
           <div class="hero-text">
             <h1>Welcome, {{ adviserTitle ? adviserTitle + ' ' : '' }}{{ adviserName }}</h1>
@@ -199,6 +201,10 @@ import { AdviserNotificationBellComponent } from './shared/adviser-notification-
 
       .hero-text {
         padding-right: 4.5rem;
+      }
+
+      &.sidebar-drawer-open .hero-text {
+        padding-right: 0;
       }
 
       h1 {
@@ -500,10 +506,12 @@ import { AdviserNotificationBellComponent } from './shared/adviser-notification-
     }
   `]
 })
-export class AdviserDashboardComponent implements OnInit {
+export class AdviserDashboardComponent implements OnInit, OnDestroy {
   adviserName = '';
   adviserTitle = '';  // Ma'am or Sir
   advisoryClass = '';
+  mobileSidebarOpen = false;
+  private layoutSub?: Subscription;
   selectedStudent: any = null;
   loading = true;
   error = '';
@@ -522,12 +530,17 @@ export class AdviserDashboardComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private adviserService: AdviserService,
-    private pushService: PushNotificationService
+    private pushService: PushNotificationService,
+    private layoutUi: AdviserLayoutUiService
   ) {}
 
   showNotifBanner = false;
 
   ngOnInit(): void {
+    this.layoutSub = this.layoutUi.mobileSidebarOpen$.subscribe(open => {
+      this.mobileSidebarOpen = open;
+    });
+
     // Show banner if push is supported but permission not yet granted
     if (this.pushService.isSupported() && Notification.permission !== 'granted') {
       this.showNotifBanner = true;
@@ -550,6 +563,10 @@ export class AdviserDashboardComponent implements OnInit {
       },
       error: () => {}
     });
+  }
+
+  ngOnDestroy(): void {
+    this.layoutSub?.unsubscribe();
   }
 
   async enableNotifications(): Promise<void> {

@@ -1,3 +1,5 @@
+$mobile-bp: 768px;
+
 .adviser-notif-bell {
   position: relative;
   flex-shrink: 0;
@@ -91,7 +93,7 @@
   right: 1.5rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: $mobile-bp) {
   .hero-section app-adviser-notification-bell {
     top: 1rem;
     right: 1rem;

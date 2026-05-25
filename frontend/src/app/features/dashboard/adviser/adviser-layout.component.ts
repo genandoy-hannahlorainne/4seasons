@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdviserService } from '../../../core/services/adviser.service';
 import { AdviserNotificationPanelService } from '../../../core/services/adviser-notification-panel.service';
+import { AdviserLayoutUiService } from '../../../core/services/adviser-layout-ui.service';
 import { PushNotificationService } from '../../../core/services/push-notification.service';
 import { interval, Subscription } from 'rxjs';
 import { AdviserNotificationBellComponent } from './shared/adviser-notification-bell.component';
@@ -250,7 +251,8 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
     private router: Router,
     private adviserService: AdviserService,
     public notifPanelService: AdviserNotificationPanelService,
-    private pushNotificationService: PushNotificationService
+    private pushNotificationService: PushNotificationService,
+    private layoutUi: AdviserLayoutUiService
   ) {}
 
   get unreadAlerts(): AdviserAlert[] {
@@ -275,6 +277,7 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.pollSub?.unsubscribe();
     this.pushSub?.unsubscribe();
+    this.layoutUi.setMobileSidebarOpen(false);
   }
 
   loadNotifications(): void {
@@ -345,8 +348,16 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
   }
 
   toggleSidebar(): void { this.isCollapsed = !this.isCollapsed; }
-  openMobile(): void { this.mobileOpen = true; }
-  closeMobile(): void { this.mobileOpen = false; }
+  openMobile(): void {
+    this.mobileOpen = true;
+    this.layoutUi.setMobileSidebarOpen(true);
+    this.notifPanelService.close();
+  }
+
+  closeMobile(): void {
+    this.mobileOpen = false;
+    this.layoutUi.setMobileSidebarOpen(false);
+  }
 
   logout(): void {
     this.loggingOut = true;
