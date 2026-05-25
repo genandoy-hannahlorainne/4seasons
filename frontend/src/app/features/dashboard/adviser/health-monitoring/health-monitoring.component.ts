@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdviserService } from '../../../../core/services/adviser.service';
+import { AdviserNotificationBellComponent } from '../shared/adviser-notification-bell.component';
+import { AdviserNotificationPanelService } from '../../../../core/services/adviser-notification-panel.service';
+import { Subscription } from 'rxjs';
 
 interface HeatmapDay {
   date: string;
@@ -22,13 +25,18 @@ interface Alert {
 @Component({
   selector: 'app-health-monitoring',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdviserNotificationBellComponent],
   template: `
     <div class="health-monitoring">
       <div class="dashboard-wrap">
-      <div class="page-header">
-        <h1 class="page-title">Class Health Monitoring</h1>
-        <p class="page-subtitle">{{ advisoryClass }} • {{ totalStudents }} Students</p>
+      <div class="hero-section" [class.sidebar-drawer-open]="mobileSidebarOpen">
+        <app-adviser-notification-bell *ngIf="!mobileSidebarOpen" variant="hero" />
+        <div class="hero-content">
+          <div class="hero-text">
+            <h1 class="page-title">Class Health Monitoring</h1>
+            <p class="page-subtitle">{{ advisoryClass }} • {{ totalStudents }} Students</p>
+          </div>
+        </div>
       </div>
 
       <div class="toolbar-row">
@@ -240,7 +248,7 @@ interface Alert {
       width: 100%;
     }
 
-    .page-header {
+    .hero-section {
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       border-radius: 12px;
       padding: 2rem;
@@ -248,20 +256,52 @@ interface Alert {
       color: white;
       width: 100%;
       box-sizing: border-box;
+      position: relative;
+
+      .hero-text {
+        padding-right: 4.5rem;
+      }
+
+      &.sidebar-drawer-open .hero-text {
+        padding-right: 0;
+      }
     }
 
     .page-title {
-      font-size: 1.6rem;
+      font-size: 1.8rem;
       font-weight: 700;
       color: #fff;
-      margin: 0 0 0.3rem 0;
+      margin: 0 0 0.4rem 0;
     }
 
     .page-subtitle {
       color: rgba(255,255,255,0.85);
       margin: 0;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       opacity: 0.85;
+    }
+
+    @media (max-width: 768px) {
+      .hero-section {
+        padding: 1.5rem 1.25rem;
+
+        .hero-text { padding-right: 3.75rem; }
+        &.sidebar-drawer-open .hero-text { padding-right: 0; }
+
+        .page-title { font-size: 1.4rem; }
+        .page-subtitle { font-size: 0.875rem; }
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-section {
+        padding: 1.25rem 1rem;
+
+        .hero-text { padding-right: 3.25rem; }
+        &.sidebar-drawer-open .hero-text { padding-right: 0; }
+
+        .page-title { font-size: 1.2rem; }
+      }
     }
 
     .toolbar-row {
@@ -791,9 +831,11 @@ interface Alert {
     }
   `]
 })
-export class HealthMonitoringComponent implements OnInit {
+export class HealthMonitoringComponent implements OnInit, OnDestroy {
   loading = true;
   error = '';
+  mobileSidebarOpen = false;
+  private layoutSub?: Subscription;
 
   advisoryClass = '';
   totalStudents = 0;
@@ -814,10 +856,20 @@ export class HealthMonitoringComponent implements OnInit {
   ];
   private readonly CIRCUMFERENCE = 2 * Math.PI * 50; // r=50
 
-  constructor(private adviserService: AdviserService) {}
+  constructor(
+    private adviserService: AdviserService,
+    private notifPanelService: AdviserNotificationPanelService
+  ) {}
 
   ngOnInit(): void {
+    this.layoutSub = this.notifPanelService.mobileSidebarOpen$.subscribe(open => {
+      this.mobileSidebarOpen = open;
+    });
     this.loadHeatmap();
+  }
+
+  ngOnDestroy(): void {
+    this.layoutSub?.unsubscribe();
   }
 
   loadHeatmap(): void {

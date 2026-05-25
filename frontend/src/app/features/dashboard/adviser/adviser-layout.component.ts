@@ -95,7 +95,7 @@ interface AdviserAlert {
           <span></span><span></span><span></span>
         </button>
         <span class="mobile-brand">PDMHS Adviser</span>
-        <app-adviser-notification-bell *ngIf="!isDashboardRoute" variant="topbar" class="mobile-topbar-bell" />
+        <app-adviser-notification-bell *ngIf="!hideMobileTopbarBell" variant="topbar" class="mobile-topbar-bell" />
       </header>
 
       <!-- Notification Side Panel -->
@@ -236,7 +236,7 @@ interface AdviserAlert {
 export class AdviserLayoutComponent implements OnInit, OnDestroy {
   isCollapsed = false;
   mobileOpen = false;
-  isDashboardRoute = false;
+  hideMobileTopbarBell = false;
   loggingOut = false;
   showAllTab = true;
   alerts: AdviserAlert[] = [];
@@ -258,10 +258,10 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.updateDashboardRoute(this.router.url);
+    this.updateTopbarBellVisibility(this.router.url);
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe(e => this.updateDashboardRoute(e.urlAfterRedirects));
+      .subscribe(e => this.updateTopbarBellVisibility(e.urlAfterRedirects));
 
     this.loadNotifications();
     // Poll every 30 seconds as a fallback
@@ -301,10 +301,12 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  private updateDashboardRoute(url: string): void {
+  private updateTopbarBellVisibility(url: string): void {
     const path = url.split('?')[0].replace(/\/$/, '');
-    this.isDashboardRoute =
+    const isAdviserHome =
       path === '/dashboard/adviser' || path.endsWith('/dashboard/adviser');
+    const isHealthMonitor = path.includes('/dashboard/adviser/health-monitoring');
+    this.hideMobileTopbarBell = isAdviserHome || isHealthMonitor;
   }
 
   closeNotificationPanel(): void {
