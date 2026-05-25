@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../../core/services/admin.service';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Subject, interval } from 'rxjs';
 import { takeUntil, switchMap, startWith } from 'rxjs/operators';
@@ -10,7 +11,7 @@ import { takeUntil, switchMap, startWith } from 'rxjs/operators';
 @Component({
   selector: 'app-manage-users',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminNotificationBellComponent],
   templateUrl: './manage-users.component.html',
   styleUrls: ['./manage-users.component.scss']
 })

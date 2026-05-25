@@ -4,23 +4,27 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EmergencyDrillService } from '../../../../core/services/emergency-drill.service';
 import { EmergencyDrill } from '../../../../core/models/emergency-drill.model';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 
 @Component({
   selector: 'app-emergency-drills',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminNotificationBellComponent],
   template: `
     <div class="emergency-drills-container">
-      <div class="header">
+      <div class="header notif-bell-inline">
         <div class="header-left">
           <div>
             <h2>Emergency Drill Management</h2>
             <p>Create and monitor emergency drills across all grade levels</p>
           </div>
         </div>
-        <button class="btn btn-primary" (click)="showCreateModal = true">
-          <i class="bi bi-plus-circle-fill" style="font-size:16px;"></i> Create New Drill
-        </button>
+        <div class="page-header-end">
+          <app-admin-notification-bell />
+          <button class="btn btn-primary" (click)="showCreateModal = true">
+            <i class="bi bi-plus-circle-fill" style="font-size:16px;"></i> Create New Drill
+          </button>
+        </div>
       </div>
 
       <!-- Tabs -->

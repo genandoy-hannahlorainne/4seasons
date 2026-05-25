@@ -6,6 +6,7 @@ use App\Models\MedicalVisit;
 use App\Models\Notification;
 use App\Models\Student;
 use App\Models\Vital;
+use App\Services\SmsService;
 use App\Services\WebPushService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,9 @@ use Illuminate\Validation\ValidationException;
 
 class MedicalVisitController extends BaseController
 {
+    public function __construct(
+        private readonly SmsService $smsService,
+    ) {}
     /**
      * Display a listing of medical visits
      */
@@ -275,6 +279,12 @@ class MedicalVisitController extends BaseController
                 $request->chief_complaint,
                 $visit->visit_id
             );
+
+            // Send SMS to the student's emergency contact for emergency visits.
+            // Done outside the transaction — an SMS failure must never affect the visit record.
+            if (strtolower($request->input('visit_type', '')) === 'emergency') {
+                $this->dispatchEmergencyContactSms($visit);
+            }
 
             // Load relationships for response
             $visit->load(['student.user', 'clinicStaff.user', 'vitals']);
@@ -665,6 +675,33 @@ class MedicalVisitController extends BaseController
             return $this->sendError('Failed to retrieve emergency visits', [
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Send an SMS to the student's emergency contact when an emergency visit is created.
+     * Called outside the DB transaction so an SMS failure never rolls back the visit.
+     */
+    private function dispatchEmergencyContactSms(MedicalVisit $visit): void
+    {
+        try {
+            // Ensure the student relationship is loaded
+            $visit->loadMissing('student');
+
+            $student = $visit->student;
+
+            if (!$student) {
+                Log::warning('SMS dispatch skipped: student not found on visit.', [
+                    'visit_id' => $visit->visit_id,
+                ]);
+                return;
+            }
+
+            $this->smsService->notifyEmergencyContact($visit, $student);
+        } catch (\Throwable $e) {
+            Log::error('SMS dispatch failed for emergency visit: ' . $e->getMessage(), [
+                'visit_id' => $visit->visit_id,
+            ]);
         }
     }
 

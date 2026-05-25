@@ -1,16 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StudentAssignmentService, AssignmentValidationResult, AssignmentFixResult } from '../../../../core/services/student-assignment.service';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 
 @Component({
   selector: 'app-student-assignments',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AdminNotificationBellComponent],
   template: `
     <div class="student-assignments-container">
-      <div class="page-header">
-        <h1>Student-Adviser Assignments</h1>
-        <p>Monitor and manage student-adviser assignments across the system</p>
+      <div class="page-header has-notif-bell">
+        <div class="page-header-main">
+          <h1>Student-Adviser Assignments</h1>
+          <p>Monitor and manage student-adviser assignments across the system</p>
+        </div>
+        <app-admin-notification-bell />
       </div>
 
       <!-- Health Status Card -->

@@ -4,9 +4,11 @@ import { Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdminNotificationPanelService } from '../../../core/services/admin-notification-panel.service';
+import { AdminNotificationBellComponent } from './shared/admin-notification-bell.component';
 import { Subject, interval, BehaviorSubject } from 'rxjs';
 import { takeUntil, switchMap, startWith, tap } from 'rxjs/operators';
 import { HealthRiskVisualizationComponent } from './health-risk-visualization/health-risk-visualization.component';
+import { formatTimeAgo } from '../../../core/utils/datetime.util';
 
 interface User {
   user_id: number;
@@ -41,22 +43,13 @@ interface UsersResponse {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, HealthRiskVisualizationComponent],
+  imports: [CommonModule, HealthRiskVisualizationComponent, AdminNotificationBellComponent],
   styleUrls: ['./admin-dashboard.component.scss'],
   template: `
     <div class="admin-dashboard">
       <!-- Hero Section -->
       <div class="hero-section">
-        <button
-          class="hero-notif-bell notification-bell"
-          [class.notif-active]="panelOpen"
-          (click)="toggleNotifications($event)"
-          title="Notifications">
-          <i class="bi bi-bell-fill"></i>
-          <span class="hero-notif-badge" *ngIf="(notifPanelService.unreadCount$ | async) as count">
-            <span *ngIf="count > 0">{{ count > 99 ? '99+' : count }}</span>
-          </span>
-        </button>
+        <app-admin-notification-bell variant="hero" />
         <div class="hero-content">
           <div class="hero-text">
             <h1>Welcome to PDMHS Admin Dashboard</h1>
@@ -1305,17 +1298,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     public notifPanelService: AdminNotificationPanelService
   ) {}
 
-  panelOpen = false;
-
-  toggleNotifications(event: Event): void {
-    event.stopPropagation();
-    this.notifPanelService.toggleFromAnchor(event.currentTarget as HTMLElement);
-  }
-
   ngOnInit(): void {
-    this.notifPanelService.open$.subscribe(open => {
-      this.panelOpen = open;
-    });
     // Enhanced authentication check
     if (!this.authService.checkAuthenticationStatus()) {
       alert('Please login as admin to access the admin panel');
@@ -1494,7 +1477,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           const allNotifications = response.data.notifications.map((notif: any) => {
             return {
               ...notif,
-              timeAgo: this.formatTimestamp(notif?.created_at || '')
+              timeAgo: notif?.time_ago || formatTimeAgo(notif?.created_at || ''),
             };
           });
 
@@ -1520,7 +1503,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           const allNotifications = response.notifications.map((notif: any) => {
             return {
               ...notif,
-              timeAgo: this.formatTimestamp(notif?.created_at || '')
+              timeAgo: notif?.time_ago || formatTimeAgo(notif?.created_at || ''),
             };
           });
 
@@ -1680,28 +1663,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   private formatTimestamp(timestamp: string): string {
-    try {
-      const date = new Date(timestamp);
-      if (isNaN(date.getTime())) {
-        return 'Unknown';
-      }
-
-      const now = new Date();
-      const diffMs = now.getTime() - date.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
-
-      if (diffMins < 1) return 'Just now';
-      if (diffMins < 60) return `${diffMins}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      if (diffDays < 7) return `${diffDays}d ago`;
-
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    } catch (error) {
-      // Error formatting timestamp
-      return 'Unknown';
-    }
+    return formatTimeAgo(timestamp);
   }
 
   getActivityIconClass(type: string): string {

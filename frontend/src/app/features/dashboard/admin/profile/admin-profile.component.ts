@@ -4,16 +4,18 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AdminService } from '../../../../core/services/admin.service';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 
 @Component({
   selector: 'app-admin-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminNotificationBellComponent],
   styleUrls: ['./admin-profile.component.scss'],
   template: `
     <div class="admin-profile">
-      <div class="profile-header">
+      <div class="profile-header has-notif-bell">
         <h1>Profile Settings</h1>
+        <app-admin-notification-bell />
       </div>
 
       <div class="profile-content">

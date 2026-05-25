@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../../core/services/admin.service';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 
 interface PromotionSummary {
   grade_level_id: number;
@@ -30,14 +31,15 @@ interface AdviserAssignmentStatus {
 @Component({
   selector: 'app-grade-promotion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminNotificationBellComponent],
   template: `
     <div class="promotion-container">
-      <div class="page-header">
-        <div>
+      <div class="page-header notif-bell-corner">
+        <div class="page-header-main">
           <h2>Grade Promotion Management</h2>
           <p>Promote students from one school year to the next</p>
         </div>
+        <app-admin-notification-bell variant="page-header-corner" />
       </div>
 
       <!-- Setup Card -->
@@ -298,6 +300,22 @@ interface AdviserAssignmentStatus {
           <button class="btn-execute" (click)="copySectionsFromCurrentYear()" [disabled]="isCopyingSections">
             <i class="fa-solid fa-copy"></i>
             {{ isCopyingSections ? 'Copying...' : 'Copy Sections' }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-overlay" *ngIf="showAlertModal" (click)="closeAlert()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-circle-exclamation" style="color:#ef4444"></i> Notice</h3>
+          <button class="modal-close" (click)="closeAlert()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <p>{{ alertMessage }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-execute" (click)="closeAlert()">
+            <i class="fa-solid fa-check"></i> OK
           </button>
         </div>
       </div>
@@ -823,6 +841,8 @@ export class GradePromotionComponent implements OnInit {
   showCopyModal = false;
   showCopyResultModal = false;
   copyResultData: { copied: number; skipped: number } | null = null;
+  showAlertModal = false;
+  alertMessage: string | null = null;
 
   constructor(
     private adminService: AdminService,
@@ -844,8 +864,8 @@ export class GradePromotionComponent implements OnInit {
   onTargetYearChange() { this.promotionSummary = null; this.summaryLoaded = false; }
 
   loadPromotionSummary() {
-    if (!this.currentSchoolYearId || !this.targetSchoolYearId) { alert('Please select both school years'); return; }
-    if (this.currentSchoolYearId == this.targetSchoolYearId) { alert('Current and target school years must be different'); return; }
+    if (!this.currentSchoolYearId || !this.targetSchoolYearId) { this.showAlert('Please select both school years'); return; }
+    if (this.currentSchoolYearId == this.targetSchoolYearId) { this.showAlert('Current and target school years must be different'); return; }
 
     this.isLoadingSummary = true;
     this.summaryLoaded = false;
@@ -863,13 +883,13 @@ export class GradePromotionComponent implements OnInit {
       (error: any) => {
         // Error loading promotion summary
         this.isLoadingSummary = false;
-        alert('Error loading promotion summary: ' + (error.error?.message || 'Unknown error'));
+        this.showAlert('Error loading promotion summary: ' + (error.error?.message || 'Unknown error'));
       }
     );
   }
 
   confirmPromotion() {
-    if (!this.currentSchoolYearId || !this.targetSchoolYearId) { alert('Please select both school years'); return; }
+    if (!this.currentSchoolYearId || !this.targetSchoolYearId) { this.showAlert('Please select both school years'); return; }
     if (!confirm('Are you sure you want to execute the promotion? This action cannot be undone.')) return;
 
     this.isProcessing = true;
@@ -909,9 +929,19 @@ export class GradePromotionComponent implements OnInit {
       },
       (error: any) => {
         this.isCopyingSections = false;
-        alert('Failed to copy sections: ' + (error.error?.message || 'Unknown error'));
+        this.showAlert('Failed to copy sections: ' + (error.error?.message || 'Unknown error'));
       }
     );
+  }
+
+  showAlert(message: string) {
+    this.alertMessage = message;
+    this.showAlertModal = true;
+  }
+
+  closeAlert() {
+    this.alertMessage = null;
+    this.showAlertModal = false;
   }
 
   getYearName(yearId: number | null): string {

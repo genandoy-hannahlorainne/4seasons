@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\BaseController;
 use App\Models\User;
 use App\Models\Section;
 use App\Models\Student;
+use App\Support\PhilippineDateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -684,7 +685,7 @@ class AdviserController extends BaseController
                     'subject' => ucfirst(strtolower($visitType)) . ' Visit',
                     'previewText' => $previewText,
                     'fullMessage' => $messageSource,
-                    'timeAgo' => $this->formatTimeAgo($timestamp),
+                    'timeAgo' => PhilippineDateTime::timeAgo($timestamp),
                     'fullDate' => $timestamp->format('M d, Y \a\t h:i A'),
                     'createdAt' => $timestamp->toISOString(),
                     'visitType' => ucfirst(strtolower($visitType)),
@@ -703,32 +704,6 @@ class AdviserController extends BaseController
         }
     }
 
-    private function formatTimeAgo($timestamp): string
-    {
-        $now = now()->setTimezone(config('app.timezone'));
-
-        if ($timestamp->greaterThan($now)) {
-            return 'Just now';
-        }
-
-        $seconds = (int) $timestamp->diffInSeconds($now);
-        if ($seconds < 60) {
-            return 'Just now';
-        }
-
-        $minutes = (int) $timestamp->diffInMinutes($now);
-        if ($minutes < 60) {
-            return $minutes . 'm ago';
-        }
-
-        $hours = (int) $timestamp->diffInHours($now);
-        if ($hours < 24) {
-            return $hours . 'h ago';
-        }
-
-        $days = (int) $timestamp->diffInDays($now);
-        return $days . 'd ago';
-    }
     /**
      * Download SHDF data for a specific student (adviser must own the student)
      * Returns full SHDF record including basic info and comprehensive form data

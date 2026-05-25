@@ -3,16 +3,20 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 
 @Component({
   selector: 'app-clearance-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminNotificationBellComponent],
   template: `
     <div class="clearance-management">
-      <div class="page-header">
-        <h1>Medical Clearance Management</h1>
-        <p>Manage student medical clearances for off-campus activities</p>
+      <div class="page-header has-notif-bell">
+        <div class="page-header-main">
+          <h1>Medical Clearance Management</h1>
+          <p>Manage student medical clearances for off-campus activities</p>
+        </div>
+        <app-admin-notification-bell />
       </div>
 
       <!-- Filters -->

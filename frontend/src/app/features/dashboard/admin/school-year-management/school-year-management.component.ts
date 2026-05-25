@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -46,13 +47,16 @@ interface GradeLevel {
 @Component({
   selector: 'app-school-year-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminNotificationBellComponent],
   styleUrls: ['./school-year-management.component.scss'],
   template: `
     <div class="school-year-management">
-      <div class="page-header">
-        <h1>School Year & Section Management</h1>
-        <p>Manage school years and assign advisers to sections</p>
+      <div class="page-header notif-bell-corner">
+        <div class="page-header-main">
+          <h1>School Year & Section Management</h1>
+          <p>Manage school years and assign advisers to sections</p>
+        </div>
+        <app-admin-notification-bell variant="page-header-corner" />
       </div>
 
       <!-- School Year Selector -->
@@ -715,6 +719,7 @@ interface GradeLevel {
       padding: 2rem 1.5rem;
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+      align-items: flex-start;
 
       h1 { font-size: 2rem; color: #ffffff; margin-bottom: 0.5rem; font-weight: 700; }
       p { color: rgba(255, 255, 255, 0.8); font-size: 1.1rem; margin: 0; }

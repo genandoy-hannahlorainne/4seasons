@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Support\PhilippineDateTime;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
@@ -281,7 +282,7 @@ class AuthController extends BaseController
                     'role' => $roleName,
                     'reason' => $request->reason ?? 'No reason provided',
                     'new_password' => $request->new_password,
-                    'requested_at' => now()->toISOString()
+                    'requested_at' => PhilippineDateTime::toApiIso(now()),
                 ]);
             } else {
                 $notificationData['message'] .= " Reason: " . ($request->reason ?? 'No reason provided');
