@@ -57,8 +57,13 @@
 
   <!-- Loading State -->
   <div *ngIf="loading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading report...</p>
+    <div class="skeleton-report-layout">
+      <div class="skeleton skeleton-report-header"></div>
+      <div class="skeleton-stats-row">
+        <div *ngFor="let s of [1,2,3,4]" class="skeleton skeleton-stat-box"></div>
+      </div>
+      <div class="skeleton skeleton-table-body"></div>
+    </div>
   </div>
 
   <!-- Report Content -->
@@ -115,6 +120,7 @@
 
     <!-- Users Report -->
     <div *ngIf="activeReport === 'users'" class="report-data">
+      <div class="table-scroll-wrap">
       <table class="report-table">
         <thead>
           <tr>
@@ -139,10 +145,12 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <!-- Medical Report -->
     <div *ngIf="activeReport === 'medical'" class="report-data">
+      <div class="table-scroll-wrap">
       <table class="report-table">
         <thead>
           <tr>
@@ -161,11 +169,13 @@
           </tr>
         </tbody>
       </table>
+      </div>
       <div *ngIf="reportData.length === 0" class="no-data">No medical records found for the selected period</div>
     </div>
 
     <!-- Registration Report -->
     <div *ngIf="activeReport === 'registration'" class="report-data">
+      <div class="table-scroll-wrap">
       <table class="report-table">
         <thead>
           <tr>
@@ -182,11 +192,13 @@
           </tr>
         </tbody>
       </table>
+      </div>
       <div *ngIf="reportData.length === 0" class="no-data">No registrations found for the selected period</div>
     </div>
 
     <!-- Allergies Report -->
     <div *ngIf="activeReport === 'allergies'" class="report-data">
+      <div class="table-scroll-wrap">
       <table class="report-table">
         <thead>
           <tr>
@@ -213,6 +225,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <!-- Principal Health Trends Report (improved layout) -->
