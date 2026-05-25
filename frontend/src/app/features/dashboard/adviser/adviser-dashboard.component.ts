@@ -6,7 +6,7 @@ import { AdviserService, AdvisedStudent } from '../../../core/services/adviser.s
 import { StudentProfileModalComponent } from './student-profile-modal/student-profile-modal.component';
 import { PushNotificationService } from '../../../core/services/push-notification.service';
 import { AdviserNotificationBellComponent } from './shared/adviser-notification-bell.component';
-import { AdviserLayoutUiService } from '../../../core/services/adviser-layout-ui.service';
+import { AdviserNotificationPanelService } from '../../../core/services/adviser-notification-panel.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -531,13 +531,13 @@ export class AdviserDashboardComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private adviserService: AdviserService,
     private pushService: PushNotificationService,
-    private layoutUi: AdviserLayoutUiService
+    private notifPanelService: AdviserNotificationPanelService
   ) {}
 
   showNotifBanner = false;
 
   ngOnInit(): void {
-    this.layoutSub = this.layoutUi.mobileSidebarOpen$.subscribe(open => {
+    this.layoutSub = this.notifPanelService.mobileSidebarOpen$.subscribe(open => {
       this.mobileSidebarOpen = open;
     });
 
