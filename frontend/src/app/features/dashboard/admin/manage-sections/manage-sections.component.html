@@ -13,10 +13,19 @@
     </button>
   </div>
 
-  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
-  <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert alert-success" *ngIf="successMessage">
+    <i class="fa-solid fa-circle-check"></i> {{ successMessage }}
+  </div>
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <i class="fa-solid fa-circle-xmark"></i> {{ errorMessage }}
+  </div>
 
-  <div class="loading" *ngIf="loading">Loading...</div>
+  <!-- Skeleton Loading -->
+  <div *ngIf="loading" class="skeleton-loading">
+    <div class="skeleton-grade-cards">
+      <div *ngFor="let s of [1,2,3,4,5,6]" class="skeleton skeleton-grade-card"></div>
+    </div>
+  </div>
 
   <!-- Grade Level Cards View -->
   <div class="grade-cards" *ngIf="!selectedGradeId && !loading">
@@ -41,11 +50,56 @@
         <i class="bi bi-chevron-right"></i>
       </div>
     </div>
+
+    <!-- Empty state when no grade levels -->
+    <div *ngIf="gradeLevels.length === 0" class="empty-state-card">
+      <div class="empty-icon"><i class="fa-solid fa-layer-group"></i></div>
+      <h3>No Grade Levels Found</h3>
+      <p>Grade levels will appear here once they are configured in the system.</p>
+    </div>
   </div>
 
   <!-- Grade Level Table View -->
   <div class="grade-detail" *ngIf="selectedGradeId && selectedGrade && !loading">
-    <div class="sections-table-wrap" *ngIf="selectedGrade.sections?.length > 0; else noSections">
+
+    <!-- Section search + stats bar -->
+    <div class="section-toolbar">
+      <div class="section-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          [(ngModel)]="sectionSearch"
+            (input)="onSectionSearchChange()"
+          placeholder="Search sections or advisers..."
+        >
+        <button *ngIf="sectionSearch" class="clear-search" (click)="sectionSearch=''" type="button">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="section-stats">
+        <span class="stat-chip">
+          <i class="fa-solid fa-table-cells"></i>
+          {{ selectedGrade.sections?.length || 0 }} sections
+        </span>
+        <span class="stat-chip assigned">
+          <i class="fa-solid fa-user-check"></i>
+          {{ getAssignedCount(selectedGrade) }} assigned
+        </span>
+        <span class="stat-chip unassigned" *ngIf="getUnassignedCount(selectedGrade) > 0">
+          <i class="fa-solid fa-user-xmark"></i>
+          {{ getUnassignedCount(selectedGrade) }} unassigned
+        </span>
+        <div class="section-page-size-control">
+          <label for="sectionPageSize">Show</label>
+          <select id="sectionPageSize" [(ngModel)]="pageSize" (change)="goToPage(1)">
+            <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+          </select>
+          <span>per page</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sections-table-wrap" *ngIf="filteredSections.length > 0; else noSections">
       <table class="sections-table">
         <thead>
           <tr>
@@ -54,33 +108,85 @@
             <th>Adviser</th>
             <th>Capacity</th>
             <th>Enrolled</th>
+            <th>Fill Rate</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let section of selectedGrade.sections; let i = index">
-            <td>{{ i + 1 }}</td>
-            <td>{{ section.section_name }}</td>
-            <td>{{ section.adviser_name || (section.adviser_id ? getAdviserName(section.adviser_id) : '—') }}</td>
+          <tr *ngFor="let section of paginatedSections; let i = index; trackBy: trackBySectionId"
+              [class.row-unassigned]="!section.adviser_id && !section.adviser_name">
+            <td class="td-num">{{ pageStartIndex + i }}</td>
+            <td class="td-name">{{ section.section_name }}</td>
+            <td class="td-adviser">
+              <span *ngIf="section.adviser_name || section.adviser_id" class="adviser-chip">
+                <i class="fa-solid fa-chalkboard-user"></i>
+                {{ section.adviser_name || getAdviserName(section.adviser_id) }}
+              </span>
+              <span *ngIf="!section.adviser_name && !section.adviser_id" class="unassigned-chip">
+                <i class="fa-solid fa-circle-exclamation"></i> Unassigned
+              </span>
+            </td>
             <td>{{ section.capacity }}</td>
             <td>{{ section.current_enrollment || 0 }}</td>
+            <td class="td-fill">
+              <div class="fill-bar-wrap">
+                <div class="fill-bar">
+                  <div class="fill-bar-inner"
+                    [style.width.%]="getFillRate(section)"
+                    [class.fill-high]="getFillRate(section) >= 90"
+                    [class.fill-mid]="getFillRate(section) >= 60 && getFillRate(section) < 90"
+                    [class.fill-low]="getFillRate(section) < 60">
+                  </div>
+                </div>
+                <span class="fill-pct">{{ getFillRate(section) }}%</span>
+              </div>
+            </td>
             <td class="actions">
-              <button class="btn btn-sm btn-outline" (click)="openEdit(section)" title="Edit">
+              <button class="btn btn-sm btn-outline" (click)="openEdit(section)" title="Edit section">
                 <i class="fa-solid fa-pen"></i>
               </button>
-              <button class="btn btn-sm btn-danger" (click)="confirmDelete(section)" title="Delete">
+              <button class="btn btn-sm btn-danger" (click)="confirmDelete(section)" title="Delete section">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </td>
           </tr>
         </tbody>
       </table>
+
+      <div *ngIf="totalPages > 1" class="pagination-enhanced section-pagination">
+        <div class="pagination-info">
+          Showing {{ pageStartIndex }}–{{ pageEndIndex }} of {{ filteredSections.length }} sections
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="First">
+            <i class="fa-solid fa-angles-left"></i>
+          </button>
+          <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" title="Previous">
+            <i class="fa-solid fa-angle-left"></i>
+          </button>
+          <button
+            *ngFor="let page of sectionPageNumbers"
+            class="page-btn"
+            [class.active]="page === currentPage"
+            (click)="goToPage(page)">
+            {{ page }}
+          </button>
+          <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" title="Next">
+            <i class="fa-solid fa-angle-right"></i>
+          </button>
+          <button class="page-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages" title="Last">
+            <i class="fa-solid fa-angles-right"></i>
+          </button>
+        </div>
+      </div>
     </div>
+
     <ng-template #noSections>
-      <div class="no-data-card">
-        <i class="fa-solid fa-inbox"></i>
-        <p>No sections yet for this grade level.</p>
-        <button class="btn btn-primary" (click)="openAdd(selectedGradeId)">
+      <div class="empty-state-card">
+        <div class="empty-icon"><i class="fa-solid fa-inbox"></i></div>
+        <h3>{{ sectionSearch ? 'No Matching Sections' : 'No Sections Yet' }}</h3>
+        <p>{{ sectionSearch ? 'Try a different search term.' : 'Add the first section for this grade level.' }}</p>
+        <button *ngIf="!sectionSearch" class="btn btn-primary" (click)="openAdd(selectedGradeId)">
           <i class="fa-solid fa-plus"></i> Add First Section
         </button>
       </div>
@@ -92,11 +198,16 @@
 <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>{{ isEditing ? 'Edit Section' : 'Add Section' }}</h3>
+      <h3>
+        <i class="fa-solid" [ngClass]="isEditing ? 'fa-pen-to-square' : 'fa-plus-circle'"></i>
+        {{ isEditing ? 'Edit Section' : 'Add Section' }}
+      </h3>
       <button class="close-btn" (click)="closeModal()"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
-    <div class="alert alert-error" *ngIf="modalError">{{ modalError }}</div>
+    <div class="alert alert-error" *ngIf="modalError">
+      <i class="fa-solid fa-circle-xmark"></i> {{ modalError }}
+    </div>
 
     <div class="form-group">
       <label>Grade Level <span class="required">*</span></label>
@@ -119,7 +230,7 @@
       </select>
     </div>
 
-    <!-- Adviser change confirmation fields — shown only when editing and adviser changed -->
+    <!-- Adviser change confirmation fields -->
     <div *ngIf="isEditing && adviserChanged()" class="adviser-change-notice">
       <div class="notice-banner">
         <i class="bi bi-person-badge-fill"></i>
@@ -152,7 +263,8 @@
     <div class="modal-actions">
       <button class="btn btn-primary" (click)="saveSection()" [disabled]="saving">
         <i class="fa-solid fa-spinner fa-spin" *ngIf="saving"></i>
-        {{ saving ? 'Saving...' : (isEditing ? 'Update' : 'Create') }}
+        <i class="fa-solid fa-floppy-disk" *ngIf="!saving"></i>
+        {{ saving ? 'Saving...' : (isEditing ? 'Update Section' : 'Create Section') }}
       </button>
       <button class="btn btn-outline" (click)="closeModal()" [disabled]="saving">Cancel</button>
     </div>
@@ -163,14 +275,19 @@
 <div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="cancelDelete()">
   <div class="modal-content confirm-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3><i class="bi bi-trash3-fill" style="color:#dc3545;"></i> Delete Section</h3>
+      <h3><i class="fa-solid fa-triangle-exclamation" style="color:#dc3545;"></i> Delete Section</h3>
       <button class="close-btn" (click)="cancelDelete()"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
-    <div class="alert alert-error" *ngIf="deleteError">{{ deleteError }}</div>
+    <div class="alert alert-error" *ngIf="deleteError">
+      <i class="fa-solid fa-circle-xmark"></i> {{ deleteError }}
+    </div>
 
     <p>You are about to delete <strong>{{ deletingSection?.section_name }}</strong>.</p>
-    <p class="warning-text"><i class="bi bi-exclamation-triangle-fill"></i> Students assigned to this section will be unassigned.</p>
+    <p class="warning-text">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      Students assigned to this section will be unassigned.
+    </p>
 
     <div class="form-group">
       <label>Reason for deletion <span class="required">*</span></label>
@@ -192,8 +309,10 @@
     </div>
 
     <div class="modal-actions">
-      <button class="btn btn-danger" (click)="deleteSection()" [disabled]="deleting || !deleteReason.trim() || !deletePassword.trim()">
+      <button class="btn btn-danger" (click)="deleteSection()"
+        [disabled]="deleting || !deleteReason.trim() || !deletePassword.trim()">
         <i class="fa-solid fa-spinner fa-spin" *ngIf="deleting"></i>
+        <i class="fa-solid fa-trash" *ngIf="!deleting"></i>
         {{ deleting ? 'Deleting...' : 'Confirm Delete' }}
       </button>
       <button class="btn btn-outline" (click)="cancelDelete()" [disabled]="deleting">Cancel</button>

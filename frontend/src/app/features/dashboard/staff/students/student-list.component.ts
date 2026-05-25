@@ -117,7 +117,7 @@ interface StaffStudentRecord {
   styles: [`
     .student-list-page {
       padding: 2rem;
-      background: #f0f4f8;
+      background: radial-gradient(1200px 600px at 15% 0%, rgba(37, 99, 235, 0.10), transparent 55%), #f6f7fb;
       min-height: 100vh;
     }
 
@@ -125,8 +125,8 @@ interface StaffStudentRecord {
       margin-bottom: 2rem;
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       padding: 2rem 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(5, 35, 85, 0.18);
       
       h1 {
         font-size: 2rem;
@@ -155,25 +155,37 @@ interface StaffStudentRecord {
 
       .search-input {
         width: 100%;
-        padding: 0.75rem 1rem;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        font-size: 1rem;
+        padding: 0.85rem 1rem;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 0.95rem;
         background: white;
-        &:focus { outline: none; border-color: #007bff; }
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        transition: all 0.2s ease;
+        &:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+        }
       }
     }
 
     .filter-group { display: flex; gap: 0.5rem; }
 
     .filter-select {
-      padding: 0.75rem 1rem;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
       font-size: 0.9rem;
       background: white;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
       cursor: pointer;
-      &:focus { outline: none; border-color: #007bff; }
+      transition: all 0.2s ease;
+      &:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+      }
     }
 
     .loading-state {
@@ -192,8 +204,8 @@ interface StaffStudentRecord {
 
     .card {
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
       overflow: hidden;
     }
 
@@ -244,16 +256,17 @@ interface StaffStudentRecord {
     }
 
     .btn {
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 6px;
+      padding: 0.55rem 1rem;
+      border: 1px solid transparent;
+      border-radius: 12px;
       cursor: pointer;
       font-size: 0.85rem;
-      font-weight: 500;
+      font-weight: 700;
       transition: all 0.2s ease;
 
-      &.btn-primary { background: #007bff; color: white; &:hover { background: #0056b3; } }
-      &.btn-success { background: #28a745; color: white; &:hover { background: #1e7e34; } }
+      &.btn-primary { background: linear-gradient(135deg, #052355 0%, #5381b2 100%); color: white; box-shadow: 0 6px 16px rgba(5, 35, 85, 0.18); &:hover { transform: translateY(-1px); } }
+      &.btn-success { background: #16a34a; color: white; &:hover { background: #15803d; } }
+      &.btn-outline { background: #fff; color: #052355; border-color: #cbd5e1; &:hover { background: #eff6ff; border-color: #bfdbfe; } }
       &.btn-sm { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
     }
 

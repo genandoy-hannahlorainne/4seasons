@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,7 +6,7 @@ import { AdminService } from '../../../../core/services/admin.service';
 import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Subject, interval } from 'rxjs';
-import { takeUntil, switchMap, startWith } from 'rxjs/operators';
+import { takeUntil, switchMap, startWith, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-manage-users',
@@ -19,6 +19,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   users: any[] = [];
   filteredUsers: any[] = [];
   loading = false;
+  skeletonRows = Array(6).fill(0); // for skeleton loading
   selectedRole = 'all';
   searchQuery = '';
   selectedUser: any = null;
@@ -28,7 +29,9 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   editingUser: any = null;
   successMessage = '';
   errorMessage = '';
+  showScrollTop = false;
   private destroy$ = new Subject<void>();
+  private searchSubject$ = new Subject<string>();
   private refreshInterval = 30000; // 30 seconds
 
   // Create User Modal
@@ -128,6 +131,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   // Pagination
   currentPage = 1;
   pageSize = 10;
+  readonly pageSizeOptions = [8, 12, 24, 48];
 
   get totalPages(): number {
     return Math.ceil(this.filteredUsers.length / this.pageSize);
@@ -149,10 +153,31 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     return pages;
   }
 
+  get pageStartIndex(): number {
+    if (this.filteredUsers.length === 0) return 0;
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get pageEndIndex(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredUsers.length);
+  }
+
+  get paginationLabel(): string {
+    if (this.selectedRole === 'adviser') return 'advisers';
+    return this.getRoleLabel(this.selectedRole).toLowerCase();
+  }
+
+  trackByUserId(index: number, user: any): number | string {
+    return user?.user_id ?? user?.id ?? user?.username ?? index;
+  }
+
   goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
+    if (this.totalPages < 1) {
+      this.currentPage = 1;
+      return;
     }
+
+    this.currentPage = Math.min(Math.max(page, 1), this.totalPages);
   }
 
   onPageSizeChange(): void {
@@ -165,6 +190,8 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   importing = false;
   isDragging = false;
   importResults: any = null;
+
+  readonly Math = Math;
 
   constructor(private adminService: AdminService, public authService: AuthService, private router: Router) {}
 
@@ -260,6 +287,13 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Debounced search
+    this.searchSubject$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => this.filterUsers());
+
     // Authenticated as admin, loading users
     this.loadGradeLevels();
 
@@ -286,9 +320,19 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
       });
   }
 
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    this.showScrollTop = window.scrollY > 400;
+  }
+
+  scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.searchSubject$.complete();
   }
 
   loadUsers(): void {
@@ -457,7 +501,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   onSearchChange(): void {
-    this.filterUsers();
+    this.searchSubject$.next(this.searchQuery);
   }
 
   selectRole(role: string): void {

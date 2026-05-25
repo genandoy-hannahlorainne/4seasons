@@ -118,16 +118,16 @@ import { saveAs } from 'file-saver';
   styles: [`
     .reports-page {
       padding: 2rem;
-      background: #f0f4f8;
+      background: radial-gradient(1200px 600px at 15% 0%, rgba(37, 99, 235, 0.10), transparent 55%), #f6f7fb;
       min-height: 100vh;
     }
 
     .page-header {
       margin-bottom: 2rem;
-      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      background: linear-gradient(135deg, rgba(5, 35, 85, 0.96) 0%, rgba(83, 129, 178, 0.96) 100%);
       padding: 2rem 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(5, 35, 85, 0.18);
 
       h1 {
         font-size: 2rem;
@@ -144,12 +144,12 @@ import { saveAs } from 'file-saver';
     }
 
     .error-alert {
-      background: #fee;
-      border: 1px solid #fcc;
-      border-radius: 8px;
+      background: #fff1f2;
+      border: 1px solid #fecdd3;
+      border-radius: 12px;
       padding: 1rem;
       margin-bottom: 1.5rem;
-      color: #c33;
+      color: #9f1239;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -184,10 +184,10 @@ import { saveAs } from 'file-saver';
 
     .card {
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 
       h2 { font-size: 1.2rem; color: #2c3e50; margin: 0 0 1rem; }
     }
@@ -213,24 +213,27 @@ import { saveAs } from 'file-saver';
     }
 
     .filter-input, .filter-select {
-      padding: 0.75rem 1rem;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
       font-size: 0.9rem;
-      &:focus { outline: none; border-color: #007bff; }
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      transition: all 0.2s ease;
+      &:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12); }
       &:disabled { background: #f5f7fa; cursor: not-allowed; }
     }
 
     .btn {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 8px;
+      padding: 0.8rem 1.5rem;
+      border: 1px solid transparent;
+      border-radius: 12px;
       cursor: pointer;
-      font-weight: 500;
+      font-weight: 700;
       transition: all 0.2s ease;
 
-      &.btn-primary { background: #007bff; color: white; &:hover:not(:disabled) { background: #0056b3; } }
-      &.btn-outline { background: white; color: #007bff; border: 1px solid #007bff; &:hover:not(:disabled) { background: #e3f2fd; } }
+      &.btn-primary { background: linear-gradient(135deg, #052355 0%, #5381b2 100%); color: white; box-shadow: 0 6px 16px rgba(5, 35, 85, 0.18); &:hover:not(:disabled) { transform: translateY(-1px); } }
+      &.btn-outline { background: white; color: #052355; border: 1.5px solid #cbd5e1; &:hover:not(:disabled) { background: #eff6ff; border-color: #bfdbfe; } }
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
 
@@ -243,10 +246,10 @@ import { saveAs } from 'file-saver';
 
     .summary-card {
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 1.5rem;
       text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 
       .card-value { font-size: 2.5rem; font-weight: 700; color: #007bff; }
       .card-label { color: #7f8c8d; font-size: 0.9rem; margin-top: 0.5rem; }

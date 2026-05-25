@@ -246,16 +246,16 @@ interface StudentVisitSummary {
     /* Enhanced Medical Visits Styling - Updated */
     .visits-page {
       padding: 2rem;
-      background: #f0f4f8;
+      background: radial-gradient(1200px 600px at 15% 0%, rgba(37, 99, 235, 0.10), transparent 55%), #f6f7fb;
       min-height: 100vh;
     }
 
     .page-header {
       margin-bottom: 2rem;
-      background: linear-gradient(135deg, rgba(5, 35, 85, 0.95) 0%, rgba(83, 129, 178, 0.95) 100%);
+      background: linear-gradient(135deg, rgba(5, 35, 85, 0.96) 0%, rgba(83, 129, 178, 0.96) 100%);
       padding: 2.5rem 2.5rem;
-      border-radius: 0 0 24px 24px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(5, 35, 85, 0.2);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -286,7 +286,7 @@ interface StudentVisitSummary {
 
     .btn {
       padding: 0.875rem 2rem;
-      border: none;
+      border: 1px solid transparent;
       border-radius: 12px;
       cursor: pointer;
       font-weight: 700;
@@ -299,22 +299,22 @@ interface StudentVisitSummary {
       &.btn-primary {
         background: white;
         color: #052355;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
         &:hover {
           background: #eef4ff;
           transform: translateY(-2px);
-          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
         }
       }
       &.btn-outline {
         background: white;
         color: #052355;
-        border: 2px solid #052355;
+        border: 1.5px solid #cbd5e1;
         &:hover {
-          background: #052355;
-          color: white;
+          background: #eff6ff;
+          color: #052355;
           transform: translateY(-2px);
-          box-shadow: 0 4px 16px rgba(5, 35, 85, 0.2);
+          box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
         }
       }
       &.btn-sm { padding: 0.75rem 1.5rem; font-size: 0.9rem; }
@@ -372,17 +372,17 @@ interface StudentVisitSummary {
       .search-input {
         width: 100%;
         padding: 0.875rem 1.25rem 0.875rem 3rem;
-        border: 1px solid #e2e8f0;
+        border: 1.5px solid #e2e8f0;
         border-radius: 12px;
         font-size: 0.95rem;
         background: white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
         transition: all 0.2s ease;
 
         &:focus {
           outline: none;
-          border-color: #052355;
-          box-shadow: 0 4px 16px rgba(5, 35, 85, 0.1);
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
         }
 
         &::placeholder {
@@ -409,18 +409,18 @@ interface StudentVisitSummary {
 
     .filter-input, .filter-select {
       padding: 0.875rem 1.25rem;
-      border: 1px solid #e2e8f0;
+      border: 1.5px solid #e2e8f0;
       border-radius: 12px;
       font-size: 0.95rem;
       background: white;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
       transition: all 0.2s ease;
       min-width: 150px;
 
       &:focus {
         outline: none;
-        border-color: #052355;
-        box-shadow: 0 4px 16px rgba(5, 35, 85, 0.1);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
       }
     }
 
@@ -477,9 +477,9 @@ interface StudentVisitSummary {
     .student-summary-card {
       background: white;
       border: 1px solid #e2e8f0;
-      border-radius: 14px;
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
       transition: box-shadow 0.2s ease, transform 0.2s ease;
 
       &:hover {
@@ -700,8 +700,8 @@ interface StudentVisitSummary {
       align-items: center;
       gap: 0.4rem;
       background: none;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
       padding: 0.4rem 0.9rem;
       font-size: 0.82rem;
       font-weight: 600;
