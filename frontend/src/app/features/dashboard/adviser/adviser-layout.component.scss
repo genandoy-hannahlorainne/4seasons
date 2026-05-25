@@ -381,69 +381,12 @@ $mobile-bp: 768px;
   to { transform: rotate(360deg); }
 }
 
-/* ── Notification Bell (sidebar) ── */
-.notification-bell-nav {
-  position: relative;
-
-  .bell-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    flex-shrink: 0;
-  }
-
-  .notif-badge {
-    position: absolute;
-    top: -6px;
-    right: -8px;
-    background: #ef4444;
-    color: white;
-    font-size: 0.6rem;
-    font-weight: 700;
-    padding: 0.1rem 0.3rem;
-    border-radius: 10px;
-    min-width: 16px;
-    text-align: center;
-    border: 1.5px solid white;
-    line-height: 1.2;
-  }
-}
-
-/* ── Mobile bell ── */
-.mobile-notif-bell {
+/* ── Mobile topbar bell (non-dashboard pages) ── */
+.mobile-topbar app-adviser-notification-bell,
+.mobile-topbar-bell {
   margin-left: auto;
-  background: transparent;
-  border: none;
-  color: #1a2744;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
-
-  i { font-size: 1.3rem; color: #1a2744; }
-
-  .notif-badge {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    background: #ef4444;
-    color: white;
-    font-size: 0.6rem;
-    font-weight: 700;
-    padding: 0.1rem 0.3rem;
-    border-radius: 10px;
-    min-width: 16px;
-    text-align: center;
-    border: 1.5px solid white;
-    line-height: 1.2;
-  }
 }
+
 
 /* ── Notification Panel Overlay ── */
 .notification-panel-overlay {

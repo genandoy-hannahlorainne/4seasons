@@ -5,11 +5,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { AdviserService, AdvisedStudent } from '../../../core/services/adviser.service';
 import { StudentProfileModalComponent } from './student-profile-modal/student-profile-modal.component';
 import { PushNotificationService } from '../../../core/services/push-notification.service';
+import { AdviserNotificationBellComponent } from './shared/adviser-notification-bell.component';
 
 @Component({
   selector: 'app-adviser-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, StudentProfileModalComponent],
+  imports: [CommonModule, RouterModule, StudentProfileModalComponent, AdviserNotificationBellComponent],
   template: `
     <div class="adviser-dashboard">
 
@@ -23,6 +24,7 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
 
       <!-- Hero Section -->
       <div class="hero-section">
+        <app-adviser-notification-bell variant="hero" />
         <div class="hero-content">
           <div class="hero-text">
             <h1>Welcome, {{ adviserTitle ? adviserTitle + ' ' : '' }}{{ adviserName }}</h1>
@@ -193,6 +195,11 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
       padding: 2rem;
       margin-bottom: 2rem;
       color: white;
+      position: relative;
+
+      .hero-text {
+        padding-right: 4.5rem;
+      }
 
       h1 {
         font-size: 1.8rem;
@@ -203,6 +210,27 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
         margin: 0;
         opacity: 0.85;
         font-size: 0.95rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero-section {
+        padding: 1.5rem 1.25rem;
+
+        .hero-text { padding-right: 3.75rem; }
+
+        h1 { font-size: 1.4rem; }
+        p  { font-size: 0.875rem; }
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-section {
+        padding: 1.25rem 1rem;
+
+        .hero-text { padding-right: 3.25rem; }
+
+        h1 { font-size: 1.2rem; }
       }
     }
 

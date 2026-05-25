@@ -1,11 +1,13 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, RouterOutlet, Router } from '@angular/router';
+import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdviserService } from '../../../core/services/adviser.service';
 import { AdviserNotificationPanelService } from '../../../core/services/adviser-notification-panel.service';
 import { PushNotificationService } from '../../../core/services/push-notification.service';
 import { interval, Subscription } from 'rxjs';
+import { AdviserNotificationBellComponent } from './shared/adviser-notification-bell.component';
 
 interface AdviserAlert {
   id: number;
@@ -29,7 +31,7 @@ interface AdviserAlert {
 @Component({
   selector: 'app-adviser-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet],
+  imports: [CommonModule, RouterModule, RouterOutlet, AdviserNotificationBellComponent],
   styleUrls: ['./adviser-layout.component.scss'],
   template: `
     <div class="adviser-shell" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen">
@@ -76,13 +78,6 @@ interface AdviserAlert {
         </nav>
 
         <div class="sidebar-footer">
-          <button class="nav-item notification-bell-nav" (click)="toggleNotificationPanel()" title="Notifications">
-            <span class="bell-wrap">
-              <i class="fa-solid fa-bell nav-icon-fa"></i>
-              <span class="notif-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-            </span>
-            <span class="nav-label">Notifications</span>
-          </button>
           <a routerLink="/dashboard/adviser/profile" routerLinkActive="active" class="nav-item" title="Profile" (click)="closeMobile()">
             <i class="fa-solid fa-user nav-icon-fa"></i>
             <span class="nav-label">Profile</span>
@@ -100,10 +95,7 @@ interface AdviserAlert {
           <span></span><span></span><span></span>
         </button>
         <span class="mobile-brand">PDMHS Adviser</span>
-        <button class="notification-bell mobile-notif-bell" (click)="toggleNotificationPanel()" title="Notifications">
-          <i class="fa-solid fa-bell"></i>
-          <span class="notif-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-        </button>
+        <app-adviser-notification-bell *ngIf="!isDashboardRoute" variant="topbar" class="mobile-topbar-bell" />
       </header>
 
       <!-- Notification Side Panel -->
@@ -244,6 +236,7 @@ interface AdviserAlert {
 export class AdviserLayoutComponent implements OnInit, OnDestroy {
   isCollapsed = false;
   mobileOpen = false;
+  isDashboardRoute = false;
   loggingOut = false;
   showAllTab = true;
   alerts: AdviserAlert[] = [];
@@ -265,6 +258,11 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.updateDashboardRoute(this.router.url);
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(e => this.updateDashboardRoute(e.urlAfterRedirects));
+
     this.loadNotifications();
     // Poll every 30 seconds as a fallback
     this.pollSub = interval(30000).subscribe(() => this.loadNotifications());
@@ -302,9 +300,10 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleNotificationPanel(): void {
-    this.closeMobile();
-    this.notifPanelService.toggle();
+  private updateDashboardRoute(url: string): void {
+    const path = url.split('?')[0].replace(/\/$/, '');
+    this.isDashboardRoute =
+      path === '/dashboard/adviser' || path.endsWith('/dashboard/adviser');
   }
 
   closeNotificationPanel(): void {
@@ -339,8 +338,7 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    if (!target.closest('.notification-bell') &&
-        !target.closest('.notification-bell-nav') &&
+    if (!target.closest('.adviser-notif-bell') &&
         !target.closest('.notification-panel')) {
       this.notifPanelService.close();
     }

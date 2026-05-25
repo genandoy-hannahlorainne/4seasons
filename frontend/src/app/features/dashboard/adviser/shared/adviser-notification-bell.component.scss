@@ -1,0 +1,110 @@
+.adviser-notif-bell {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 5200;
+  background: transparent;
+  border: none;
+
+  i {
+    font-size: 1.25rem;
+    pointer-events: none;
+  }
+
+  .notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.1rem 0.35rem;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    border: 2px solid rgba(5, 35, 85, 0.9);
+    line-height: 1.3;
+    pointer-events: none;
+  }
+
+  &.variant-topbar {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: #052355;
+
+    i { color: #052355; }
+
+    &:hover {
+      background: rgba(5, 35, 85, 0.06);
+      transform: scale(1.06);
+    }
+
+    &.notif-active {
+      background: rgba(5, 35, 85, 0.1);
+    }
+
+    .notif-badge {
+      border-color: #fff;
+    }
+  }
+
+  &.variant-hero,
+  &.variant-page-header,
+  &.variant-page-header-corner {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    color: #fff;
+
+    i { color: #fff; }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.28);
+      transform: scale(1.06);
+    }
+
+    &.notif-active {
+      background: rgba(255, 255, 255, 0.32);
+      z-index: 5201;
+    }
+
+    .notif-badge {
+      border-color: rgba(5, 35, 85, 0.9);
+    }
+  }
+}
+
+.hero-section app-adviser-notification-bell {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .hero-section app-adviser-notification-bell {
+    top: 1rem;
+    right: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section app-adviser-notification-bell {
+    top: 0.85rem;
+    right: 0.85rem;
+    width: 44px;
+    height: 44px;
+
+    i { font-size: 1.15rem; }
+  }
+}
