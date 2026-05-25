@@ -19,7 +19,7 @@ export interface NotificationHistoryItem {
 
 export interface NotifDropdownAnchor {
   top: number;
-  right: number;
+  left: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -27,7 +27,7 @@ export class AdminNotificationPanelService {
   private _open = new BehaviorSubject<boolean>(false);
   private _unreadCount = new BehaviorSubject<number>(0);
   private _notificationHistory = new BehaviorSubject<NotificationHistoryItem[]>([]);
-  private _anchor = new BehaviorSubject<NotifDropdownAnchor>({ top: 64, right: 20 });
+  private _anchor = new BehaviorSubject<NotifDropdownAnchor>({ top: 64, left: 0 });
 
   open$ = this._open.asObservable();
   unreadCount$ = this._unreadCount.asObservable();
@@ -51,10 +51,17 @@ export class AdminNotificationPanelService {
 
   setAnchorFromElement(el: HTMLElement): void {
     const rect = el.getBoundingClientRect();
-    const gap = 10;
+    const gap = 8;
+    const edgeInset = 12;
+    const panelWidth = 360;
+
+    // Right edge of panel aligns with right edge of bell; clamp so it stays on screen
+    let left = rect.right - panelWidth;
+    left = Math.max(edgeInset, Math.min(left, window.innerWidth - panelWidth - edgeInset));
+
     this._anchor.next({
       top: rect.bottom + gap,
-      right: Math.max(12, window.innerWidth - rect.right),
+      left,
     });
   }
 

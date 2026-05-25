@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../../../core/services/admin.service';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 
 @Component({
   selector: 'app-backup-recovery',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AdminNotificationBellComponent],
   templateUrl: './backup-recovery.component.html',
   styleUrls: ['./backup-recovery.component.scss']
 })

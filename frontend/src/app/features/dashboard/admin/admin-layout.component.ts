@@ -1,12 +1,13 @@
 import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, TitleCasePipe } from '@angular/common';
-import { RouterModule, RouterOutlet, NavigationEnd } from '@angular/router';
+import { RouterModule, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { AdminNotificationPanelService, NotificationHistoryItem } from '../../../core/services/admin-notification-panel.service';
+import { formatTimeAgo } from '../../../core/utils/datetime.util';
 import { interval, Subscription } from 'rxjs';
-import { filter, take } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 
 interface PasswordChangeRequest {
   notification_id: number;
@@ -28,7 +29,7 @@ interface PasswordChangeRequest {
   imports: [CommonModule, RouterModule, RouterOutlet, TitleCasePipe],
   styleUrls: ['./admin-layout.component.scss'],
   template: `
-    <div class="admin-shell" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen" [class.dashboard-route]="isOnDashboard">
+    <div class="admin-shell" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen" [class.notif-panel-open]="panelOpen">
 
       <!-- Mobile overlay -->
       <div class="sidebar-overlay" (click)="closeMobile()"></div>
@@ -106,93 +107,149 @@ interface PasswordChangeRequest {
           <span></span><span></span><span></span>
         </button>
         <span class="mobile-brand">PDMHS Admin</span>
-        <button class="notification-bell mobile-notif-bell" [class.notif-active]="panelOpen" (click)="toggleNotificationPanel($event)" title="Notifications">
+        <button type="button" class="notification-bell mobile-notif-bell" [class.notif-active]="panelOpen" (click)="toggleNotificationPanel($event)" title="Notifications">
           <i class="bi bi-bell-fill"></i>
           <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
         </button>
       </header>
 
-      <!-- Desktop topbar bell (hidden on dashboard — bell is in hero section) -->
-      <header class="content-topbar" *ngIf="!isOnDashboard">
-        <button class="notification-bell desktop-notif-bell" [class.notif-active]="panelOpen" (click)="toggleNotificationPanel($event)" title="Notifications">
-          <i class="bi bi-bell-fill"></i>
-          <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-        </button>
-      </header>
-
-      <!-- FB-style notification dropdown (does not cover whole page) -->
+      <!-- Notification dropdown (opened from dashboard hero or page headers) -->
       <div class="notification-dropdown" *ngIf="panelOpen" [ngStyle]="dropdownPosition" (click)="$event.stopPropagation()">
         <div class="dropdown-header">
           <h3>Notifications</h3>
-          <button class="dropdown-close" (click)="closeNotificationPanel()" title="Close">
+          <button class="dropdown-menu-btn" type="button" (click)="markAllNotificationsRead()" title="Mark all as read">
             <i class="fa-solid fa-ellipsis"></i>
           </button>
         </div>
 
         <div class="dropdown-tabs">
-          <button class="tab-pill" [class.active]="notifTab === 'all'" (click)="notifTab = 'all'">All</button>
-          <button class="tab-pill" [class.active]="notifTab === 'unread'" (click)="notifTab = 'unread'">Unread</button>
-          <button class="tab-pill" [class.active]="notifTab === 'password'" (click)="notifTab = 'password'">
-            Password <span class="tab-count" *ngIf="passwordChangeRequests.length">{{ passwordChangeRequests.length }}</span>
+          <button type="button" class="tab-btn" [class.tab-active]="notifTab === 'all'" (click)="setNotifTab('all')">All</button>
+          <button type="button" class="tab-btn" [class.tab-active]="notifTab === 'unread'" (click)="setNotifTab('unread')">Unread</button>
+          <button type="button" class="tab-btn" [class.tab-active]="notifTab === 'password'" (click)="setNotifTab('password')">
+            Password<span class="tab-count" *ngIf="passwordChangeRequests.length"> {{ passwordChangeRequests.length }}</span>
           </button>
         </div>
 
         <div class="dropdown-content">
           <ng-container *ngIf="notifPanelService.notificationHistory$ | async as history">
 
-            <!-- Password requests (All + Unread + Password tabs) -->
-            <ng-container *ngIf="notifTab !== 'password' || passwordChangeRequests.length > 0">
-              <div *ngFor="let request of visiblePasswordRequests(notifTab, history)"
-                   class="fb-notif-item fb-notif-password fb-notif-unread">
-                <div class="fb-notif-icon-wrap pending-icon">
-                  <i class="fa-solid fa-key"></i>
+            <!-- Password tab -->
+            <ng-container *ngIf="notifTab === 'password'">
+              <div *ngFor="let request of passwordChangeRequests"
+                   class="fb-notif-item"
+                   (click)="openPasswordRequestModal(request)">
+                <div class="fb-avatar">
+                  <div class="fb-avatar-main">{{ getInitials(request.request_data.full_name) }}</div>
+                  <span class="fb-avatar-badge badge-key"><i class="fa-solid fa-key"></i></span>
                 </div>
                 <div class="fb-notif-body">
-                  <div class="fb-notif-message fw-bold">
-                    <strong>{{ request.request_data.full_name }}</strong> requested a password change
-                    <span class="fb-notif-role">({{ request.request_data.role }})</span>
-                  </div>
-                  <div class="fb-notif-reason">{{ request.request_data.reason }}</div>
-                  <div class="fb-notif-time">{{ request.timeAgo }}</div>
-                  <div class="fb-notif-actions">
-                    <button class="btn-fb-approve" (click)="approvePasswordChangeInline(request)">Approve</button>
-                    <button class="btn-fb-dismiss" (click)="dismissPasswordChangeInline(request)">Dismiss</button>
+                  <p class="fb-notif-text">
+                    <strong>{{ request.request_data.full_name }}</strong>
+                    <span> requested a password change ({{ request.request_data.role }}).</span>
+                  </p>
+                  <span class="fb-notif-sub">{{ request.timeAgo }} · PDMHS Admin</span>
+                  <div class="fb-notif-actions" (click)="$event.stopPropagation()">
+                    <button type="button" class="btn-fb-primary" (click)="approvePasswordChangeInline(request)">Approve</button>
+                    <button type="button" class="btn-fb-secondary" (click)="dismissPasswordChangeInline(request)">Dismiss</button>
                   </div>
                 </div>
-                <span class="unread-dot"></span>
+                <span class="unread-dot" aria-hidden="true"></span>
               </div>
             </ng-container>
 
-            <!-- History items (All + Unread tabs only) -->
+            <!-- All / Unread tabs -->
             <ng-container *ngIf="notifTab !== 'password'">
-              <div *ngIf="notifTab === 'all' && passwordChangeRequests.length > 0 && visibleHistory(notifTab, history).length > 0" class="dropdown-section-label">Clinic visits</div>
-              <ng-container *ngFor="let notif of visibleHistory(notifTab, history)">
-                <div class="fb-notif-item"
-                     [class.fb-notif-unread]="isUnread(notif)"
-                     (click)="openHistoryModal(notif)">
-                  <div class="fb-notif-icon-wrap"
-                       [ngClass]="notif.priority === 'urgent' || notif.notification_type === 'emergency_visit' ? 'urgent-icon' : 'normal-icon'">
-                    <i class="fa-solid" [ngClass]="notifPanelService.getNotificationIcon(notif)"></i>
+
+              <ng-container *ngIf="visiblePasswordRequests(notifTab, history).length > 0 || getTodayHistory(notifTab, history).length > 0">
+                <div class="fb-section-head">
+                  <span>Today</span>
+                </div>
+
+                <div *ngFor="let request of visiblePasswordRequests(notifTab, history)"
+                     class="fb-notif-item"
+                     (click)="openPasswordRequestModal(request)">
+                  <div class="fb-avatar">
+                    <div class="fb-avatar-main">{{ getInitials(request.request_data.full_name) }}</div>
+                    <span class="fb-avatar-badge badge-key"><i class="fa-solid fa-key"></i></span>
                   </div>
                   <div class="fb-notif-body">
-                    <div class="fb-notif-message" [class.fw-bold]="isUnread(notif)">{{ notif.message }}</div>
-                    <div class="fb-notif-meta">
-                      <span *ngIf="notif.visit?.visit_type" class="visit-type-tag">{{ notif.visit?.visit_type }}</span>
-                      <span *ngIf="notif.student">{{ notif.student.full_name }}</span>
-                      <span *ngIf="notif.staff?.name"> · {{ notif.staff?.name }}</span>
-                      <span class="fb-notif-time"> · {{ notif.timeAgo }}</span>
+                    <p class="fb-notif-text">
+                      <strong>{{ request.request_data.full_name }}</strong>
+                      <span> requested a password change ({{ request.request_data.role }}).</span>
+                    </p>
+                    <span class="fb-notif-sub">{{ request.timeAgo }} · PDMHS Admin</span>
+                    <div class="fb-notif-actions" (click)="$event.stopPropagation()">
+                      <button type="button" class="btn-fb-primary" (click)="approvePasswordChangeInline(request)">Approve</button>
+                      <button type="button" class="btn-fb-secondary" (click)="dismissPasswordChangeInline(request)">Dismiss</button>
                     </div>
                   </div>
-                  <span class="unread-dot" *ngIf="isUnread(notif)"></span>
+                  <span class="unread-dot" aria-hidden="true"></span>
+                </div>
+
+                <div *ngFor="let notif of getTodayHistory(notifTab, history)"
+                     class="fb-notif-item"
+                     (click)="openHistoryModal(notif)">
+                  <div class="fb-avatar">
+                    <div class="fb-avatar-main avatar-clinic">
+                      <i class="fa-solid" [ngClass]="notifPanelService.getNotificationIcon(notif)"></i>
+                    </div>
+                    <span class="fb-avatar-badge" [ngClass]="getNotifBadgeClass(notif)">
+                      <i class="fa-solid" [ngClass]="getNotifBadgeIcon(notif)"></i>
+                    </span>
+                  </div>
+                  <div class="fb-notif-body">
+                    <p class="fb-notif-text" [class.text-unread]="isUnread(notif)">{{ notif.message }}</p>
+                    <span class="fb-notif-sub">
+                      <span class="fb-notif-link" *ngIf="notif.student">{{ notif.student.full_name }}</span>
+                      <span *ngIf="notif.staff?.name">{{ notif.student ? ' · ' : '' }}{{ notif.staff?.name }}</span>
+                      <span *ngIf="notif.timeAgo"> · {{ notif.timeAgo }}</span>
+                    </span>
+                  </div>
+                  <span class="unread-dot" *ngIf="isUnread(notif)" aria-hidden="true"></span>
+                </div>
+              </ng-container>
+
+              <ng-container *ngIf="getEarlierHistory(notifTab, history).length > 0">
+                <div class="fb-section-head">
+                  <span>Earlier</span>
+                  <button type="button" class="fb-see-all" *ngIf="notifTab === 'all' && hasMoreEarlier(notifTab, history)" (click)="toggleShowAllEarlier()">See all</button>
+                </div>
+
+                <div *ngFor="let notif of getDisplayedEarlier(notifTab, history)"
+                     class="fb-notif-item"
+                     (click)="openHistoryModal(notif)">
+                  <div class="fb-avatar">
+                    <div class="fb-avatar-main avatar-clinic">
+                      <i class="fa-solid" [ngClass]="notifPanelService.getNotificationIcon(notif)"></i>
+                    </div>
+                    <span class="fb-avatar-badge" [ngClass]="getNotifBadgeClass(notif)">
+                      <i class="fa-solid" [ngClass]="getNotifBadgeIcon(notif)"></i>
+                    </span>
+                  </div>
+                  <div class="fb-notif-body">
+                    <p class="fb-notif-text" [class.text-unread]="isUnread(notif)">{{ notif.message }}</p>
+                    <span class="fb-notif-sub">
+                      <span class="fb-notif-link" *ngIf="notif.student">{{ notif.student.full_name }}</span>
+                      <span *ngIf="notif.staff?.name">{{ notif.student ? ' · ' : '' }}{{ notif.staff?.name }}</span>
+                      <span *ngIf="notif.timeAgo"> · {{ notif.timeAgo }}</span>
+                    </span>
+                  </div>
+                  <span class="unread-dot" *ngIf="isUnread(notif)" aria-hidden="true"></span>
                 </div>
               </ng-container>
             </ng-container>
 
-            <!-- Empty states -->
             <div *ngIf="isDropdownEmpty(notifTab, history)" class="no-notifications">
               <i class="fa-solid fa-bell-slash"></i>
               <p>{{ notifTab === 'unread' ? 'No unread notifications' : notifTab === 'password' ? 'No password requests' : 'No notifications' }}</p>
             </div>
+
+            <button type="button"
+                    class="dropdown-footer-btn"
+                    *ngIf="notifTab !== 'password' && hasMoreEarlier(notifTab, history)"
+                    (click)="toggleShowAllEarlier()">
+              See previous notifications
+            </button>
           </ng-container>
         </div>
       </div>
@@ -275,6 +332,57 @@ interface PasswordChangeRequest {
         </div>
       </div>
 
+      <!-- Password change request detail modal -->
+      <div class="modal-overlay" *ngIf="showPasswordRequestModal" (click)="closePasswordRequestModal()">
+        <div class="modal-content password-request-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>
+              <i class="fa-solid fa-key"></i>
+              Password Change Request
+            </h3>
+            <button class="modal-close" (click)="closePasswordRequestModal()" type="button">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+
+          <div class="modal-body" *ngIf="selectedPasswordRequest">
+            <div class="request-details">
+              <div class="detail-row">
+                <span class="detail-label">Name:</span>
+                <span class="detail-value">{{ selectedPasswordRequest.request_data.full_name }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Username:</span>
+                <span class="detail-value">{{ selectedPasswordRequest.request_data.username }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Role:</span>
+                <span class="detail-value role-badge">{{ selectedPasswordRequest.request_data.role }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Reason:</span>
+                <span class="detail-value reason-text">{{ selectedPasswordRequest.request_data.reason }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Requested:</span>
+                <span class="detail-value">{{ selectedPasswordRequest.timeAgo }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer" *ngIf="selectedPasswordRequest">
+            <button class="btn-modal-dismiss" type="button" (click)="closePasswordRequestModal()">Close</button>
+            <button class="btn-modal-dismiss-request" type="button" (click)="dismissPasswordChangeInline(selectedPasswordRequest)">
+              Dismiss
+            </button>
+            <button class="btn-modal-approve" type="button" (click)="approvePasswordChangeInline(selectedPasswordRequest)">
+              <i class="fa-solid fa-check"></i>
+              Approve
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   `,
 })
@@ -282,19 +390,22 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   isCollapsed = false;
   mobileOpen = false;
   loggingOut = false;
-  isOnDashboard = false;
 
   // Notification system
   showHistoryModal = false;
+  showPasswordRequestModal = false;
   selectedHistoryNotif: NotificationHistoryItem | null = null;
+  selectedPasswordRequest: PasswordChangeRequest | null = null;
   readHistoryIds = new Set<number>();
   passwordChangeRequests: PasswordChangeRequest[] = [];
   unreadCount = 0;
   notifTab: 'all' | 'unread' | 'password' = 'all';
+  showAllEarlier = false;
+  readonly earlierPreviewLimit = 5;
   panelOpen = false;
-  dropdownPosition: { top: string; right: string; maxHeight: string } = {
+  dropdownPosition: { top: string; left: string; maxHeight: string } = {
     top: '64px',
-    right: '20px',
+    left: 'auto',
     maxHeight: '520px',
   };
   private pollSubscription?: Subscription;
@@ -307,19 +418,16 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.updateDashboardRoute(this.router.url);
-    this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e) => {
-      this.updateDashboardRoute((e as NavigationEnd).urlAfterRedirects);
-    });
-
     this.notifPanelService.open$.subscribe(open => {
       this.panelOpen = open;
+      if (!open) this.showAllEarlier = false;
     });
     this.notifPanelService.anchor$.subscribe(anchor => {
-      const maxH = Math.max(200, window.innerHeight - anchor.top - 16);
+      const topPx = anchor.top;
+      const maxH = Math.max(200, window.innerHeight - topPx - 16);
       this.dropdownPosition = {
-        top: `${anchor.top}px`,
-        right: `${anchor.right}px`,
+        top: `${topPx}px`,
+        left: `${anchor.left}px`,
         maxHeight: `${Math.min(520, maxH)}px`,
       };
     });
@@ -340,11 +448,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     document.body.style.overflow = '';
   }
 
-  private updateDashboardRoute(url: string): void {
-    const path = url.split('?')[0].replace(/\/$/, '');
-    this.isOnDashboard = path === '/dashboard/admin';
-  }
-
   loadNotifications(): void {
     this.adminService.getNotifications().subscribe({
       next: (response) => {
@@ -359,16 +462,11 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
           this.passwordChangeRequests = allNotifications
             .filter((n: any) => n.notification_type === 'password_change_request' && n.status === 'Pending')
-            .map((n: any) => ({
-              notification_id: n.notification_id,
-              request_data: n.request_data,
-              timeAgo: this.formatTimeAgo(n.created_at),
-              created_at: n.created_at
-            }));
+            .map((n: any) => this.normalizePasswordRequest(n));
 
           const mapped = allNotifications.map((n: any) => ({
             ...n,
-            timeAgo: n.timeAgo || this.formatTimeAgo(n.created_at),
+            timeAgo: n.time_ago || n.timeAgo || formatTimeAgo(n.created_at),
           }));
 
           const feed = this.notifPanelService.buildAdminFeed(mapped);
@@ -384,16 +482,30 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  formatTimeAgo(dateString: string): string {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  private normalizePasswordRequest(n: any): PasswordChangeRequest {
+    let requestData = n.request_data;
+    if (typeof requestData === 'string') {
+      try {
+        requestData = JSON.parse(requestData);
+      } catch {
+        requestData = {};
+      }
+    }
+    requestData = requestData || {};
 
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString();
+    return {
+      notification_id: n.notification_id,
+      request_data: {
+        user_id: requestData.user_id ?? n.user?.user_id,
+        username: requestData.username ?? n.user?.username ?? '',
+        full_name: requestData.full_name ?? n.user?.full_name ?? 'Unknown user',
+        role: requestData.role ?? n.user?.role ?? '',
+        reason: requestData.reason ?? 'No reason provided',
+        new_password: requestData.new_password,
+      },
+      timeAgo: n.time_ago || n.timeAgo || formatTimeAgo(n.created_at),
+      created_at: n.created_at,
+    };
   }
 
   toggleNotificationPanel(event?: Event): void {
@@ -405,6 +517,68 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   closeNotificationPanel(): void {
     this.notifPanelService.close();
+  }
+
+  setNotifTab(tab: 'all' | 'unread' | 'password'): void {
+    this.notifTab = tab;
+    this.showAllEarlier = false;
+  }
+
+  isNotifToday(item: { created_at?: string }): boolean {
+    if (!item.created_at) return true;
+    const d = new Date(item.created_at);
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  }
+
+  getTodayHistory(tab: 'all' | 'unread' | 'password', history: NotificationHistoryItem[]): NotificationHistoryItem[] {
+    return this.visibleHistory(tab, history).filter(n => this.isNotifToday(n));
+  }
+
+  getEarlierHistory(tab: 'all' | 'unread' | 'password', history: NotificationHistoryItem[]): NotificationHistoryItem[] {
+    return this.visibleHistory(tab, history).filter(n => !this.isNotifToday(n));
+  }
+
+  getDisplayedEarlier(tab: 'all' | 'unread' | 'password', history: NotificationHistoryItem[]): NotificationHistoryItem[] {
+    const items = this.getEarlierHistory(tab, history);
+    return this.showAllEarlier ? items : items.slice(0, this.earlierPreviewLimit);
+  }
+
+  hasMoreEarlier(tab: 'all' | 'unread' | 'password', history: NotificationHistoryItem[]): boolean {
+    return this.getEarlierHistory(tab, history).length > this.earlierPreviewLimit && !this.showAllEarlier;
+  }
+
+  toggleShowAllEarlier(): void {
+    this.showAllEarlier = !this.showAllEarlier;
+  }
+
+  getInitials(name: string): string {
+    const parts = (name || '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return (parts[0] || '?').slice(0, 2).toUpperCase();
+  }
+
+  getNotifBadgeClass(notif: NotificationHistoryItem): string {
+    if (notif.notification_type === 'emergency_visit' || notif.priority === 'urgent') return 'badge-urgent';
+    if (notif.notification_type === 'emergency_drill_alert') return 'badge-alert';
+    return 'badge-info';
+  }
+
+  getNotifBadgeIcon(notif: NotificationHistoryItem): string {
+    if (notif.notification_type === 'emergency_visit' || notif.priority === 'urgent') return 'fa-truck-medical';
+    if (notif.notification_type === 'emergency_drill_alert') return 'fa-bell';
+    return 'fa-stethoscope';
+  }
+
+  markAllNotificationsRead(): void {
+    this.adminService.markAllNotificationsAsRead().subscribe({
+      next: () => {
+        this.readHistoryIds.clear();
+        this.loadNotifications();
+      },
+    });
   }
 
   visiblePasswordRequests(tab: 'all' | 'unread' | 'password', history: NotificationHistoryItem[]): PasswordChangeRequest[] {
@@ -471,6 +645,16 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.selectedHistoryNotif = null;
   }
 
+  openPasswordRequestModal(request: PasswordChangeRequest): void {
+    this.selectedPasswordRequest = request;
+    this.showPasswordRequestModal = true;
+  }
+
+  closePasswordRequestModal(): void {
+    this.showPasswordRequestModal = false;
+    this.selectedPasswordRequest = null;
+  }
+
   approvePasswordChangeInline(request: PasswordChangeRequest): void {
     const userName = request.request_data?.full_name || 'this user';
     const username = request.request_data?.username || '';
@@ -485,6 +669,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
             const tempPassword = response.data?.temp_password;
             alert(`Password reset successfully!\n\nUsername: ${username}\nTemporary Password: ${tempPassword}\n\nPlease provide this information to the user securely.`);
           }
+          this.closePasswordRequestModal();
           this.removePasswordRequest(request.notification_id);
         } else {
           alert('Failed to approve password change: ' + (response?.message || 'Unknown error'));
@@ -504,6 +689,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.adminService.dismissPasswordChangeRequest(request.notification_id).subscribe({
       next: (response) => {
         if (response?.success) {
+          this.closePasswordRequestModal();
           this.removePasswordRequest(request.notification_id);
         }
       },
@@ -519,7 +705,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.notification-bell') &&
-        !target.closest('.hero-notif-bell') &&
+        !target.closest('.admin-notif-bell') &&
         !target.closest('.notification-dropdown')) {
       this.notifPanelService.close();
     }

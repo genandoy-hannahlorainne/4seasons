@@ -1,0 +1,127 @@
+.admin-notif-bell {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 5200;
+
+  i {
+    font-size: 1.25rem;
+    pointer-events: none;
+  }
+
+  .notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.1rem 0.35rem;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    border: 2px solid rgba(5, 35, 85, 0.9);
+    line-height: 1.3;
+    pointer-events: none;
+  }
+
+  &.variant-hero,
+  &.variant-page-header,
+  &.variant-page-header-corner {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    color: #fff;
+
+    i { color: #fff; }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.28);
+      transform: scale(1.06);
+    }
+
+    &.notif-active {
+      background: rgba(255, 255, 255, 0.32);
+      z-index: 5201;
+    }
+
+    .notif-badge {
+      border-color: rgba(5, 35, 85, 0.9);
+    }
+  }
+}
+
+/* Dashboard-style: bell fixed top-right of header card */
+.page-header.notif-bell-corner,
+.profile-header.notif-bell-corner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  app-admin-notification-bell {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.5rem;
+    z-index: 2;
+  }
+
+  .page-header-main,
+  .header-left {
+    flex: 1;
+    min-width: 0;
+    padding-right: 4.5rem;
+  }
+
+  > .btn,
+  > .btn-primary {
+    flex-shrink: 0;
+    align-self: center;
+    margin-right: 0.25rem;
+  }
+}
+
+/* Inline: bell on the right beside action buttons */
+.page-header.notif-bell-inline,
+.emergency-drills-container .header.notif-bell-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  .page-header-main,
+  .header-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .page-header-end {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header.notif-bell-corner app-admin-notification-bell,
+  .page-header.notif-bell-inline app-admin-notification-bell,
+  .profile-header.notif-bell-corner app-admin-notification-bell,
+  .emergency-drills-container .header.notif-bell-inline app-admin-notification-bell {
+    display: none;
+  }
+}

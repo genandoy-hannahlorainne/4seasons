@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../../core/services/admin.service';
+import { AdminNotificationBellComponent } from '../shared/admin-notification-bell.component';
 
 @Component({
   selector: 'app-system-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminNotificationBellComponent],
   templateUrl: './system-settings.component.html',
   styleUrls: ['./system-settings.component.scss']
 })

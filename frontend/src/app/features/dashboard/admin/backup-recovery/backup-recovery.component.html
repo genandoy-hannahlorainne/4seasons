@@ -1,13 +1,16 @@
 <div class="backup-recovery-page">
-  <div class="page-header">
+  <div class="page-header has-notif-bell">
     <div class="header-left">
       <h1>Backup & Recovery</h1>
       <p>Manage database backups and system recovery</p>
     </div>
-    <button class="btn btn-create-backup" (click)="createBackup()" [disabled]="creating">
+    <div class="page-header-end">
+      <app-admin-notification-bell />
+      <button class="btn btn-create-backup" (click)="createBackup()" [disabled]="creating">
       <span *ngIf="!creating"><i class="fa-solid fa-box-archive"></i> Create Backup</span>
-      <span *ngIf="creating"><i class="fa-solid fa-hourglass-half"></i> Creating Backup...</span>
-    </button>
+        <span *ngIf="creating"><i class="fa-solid fa-hourglass-half"></i> Creating Backup...</span>
+      </button>
+    </div>
   </div>
 
   <!-- Success/Error Messages -->
