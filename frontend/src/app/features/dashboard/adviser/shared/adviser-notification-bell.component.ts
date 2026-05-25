@@ -45,6 +45,9 @@ export class AdviserNotificationBellComponent implements OnInit, OnDestroy {
 
   onClick(event: Event): void {
     event.stopPropagation();
+    if (!this.notifPanelService.isOpen) {
+      this.notifPanelService.bindAnchorButton(event.currentTarget as HTMLElement);
+    }
     this.notifPanelService.toggle();
   }
 }

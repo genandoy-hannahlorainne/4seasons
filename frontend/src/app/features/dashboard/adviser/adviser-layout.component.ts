@@ -98,9 +98,13 @@ interface AdviserAlert {
         <app-adviser-notification-bell *ngIf="!hideMobileTopbarBell" variant="topbar" class="mobile-topbar-bell" />
       </header>
 
-      <!-- Notification Side Panel -->
+      <!-- Notification Dropdown Panel -->
       <div class="notification-panel-overlay" *ngIf="notifPanelService.open$ | async" (click)="closeNotificationPanel()">
-        <div class="notification-panel" (click)="$event.stopPropagation()">
+        <div
+          class="notification-panel"
+          [style.top.px]="panelTop"
+          [style.right.px]="panelRight"
+          (click)="$event.stopPropagation()">
 
           <div class="panel-header">
             <h3>Notifications</h3>
@@ -242,8 +246,20 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
   alerts: AdviserAlert[] = [];
   selectedAlert: AdviserAlert | null = null;
   unreadCount = 0;
+  panelTop = 64;
+  panelRight = 12;
   private pollSub?: Subscription;
   private pushSub?: Subscription;
+  private anchorSub?: Subscription;
+  private openSub?: Subscription;
+  private repositionRaf = 0;
+  private readonly repositionPanel = (): void => {
+    if (!this.notifPanelService.isOpen) return;
+    cancelAnimationFrame(this.repositionRaf);
+    this.repositionRaf = requestAnimationFrame(() => {
+      this.notifPanelService.updateAnchorPosition();
+    });
+  };
 
   constructor(
     private authService: AuthService,
@@ -270,11 +286,37 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
     this.pushSub = this.pushNotificationService.foregroundMessage$.subscribe(() => {
       this.loadNotifications();
     });
+    this.anchorSub = this.notifPanelService.anchor$.subscribe(anchor => {
+      if (anchor) {
+        this.panelTop = anchor.top;
+        this.panelRight = anchor.right;
+      }
+    });
+    this.openSub = this.notifPanelService.open$.subscribe(open => {
+      if (open) {
+        this.attachPanelRepositionListeners();
+      } else {
+        this.detachPanelRepositionListeners();
+      }
+    });
+  }
+
+  private attachPanelRepositionListeners(): void {
+    window.addEventListener('scroll', this.repositionPanel, true);
+    window.addEventListener('resize', this.repositionPanel);
+  }
+
+  private detachPanelRepositionListeners(): void {
+    window.removeEventListener('scroll', this.repositionPanel, true);
+    window.removeEventListener('resize', this.repositionPanel);
   }
 
   ngOnDestroy(): void {
+    this.detachPanelRepositionListeners();
     this.pollSub?.unsubscribe();
     this.pushSub?.unsubscribe();
+    this.anchorSub?.unsubscribe();
+    this.openSub?.unsubscribe();
     this.notifPanelService.setMobileSidebarOpen(false);
   }
 

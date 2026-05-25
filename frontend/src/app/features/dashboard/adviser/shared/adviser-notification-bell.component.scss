@@ -12,7 +12,7 @@ $mobile-bp: 768px;
   align-items: center;
   justify-content: center;
   transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  z-index: 5200;
+  z-index: 10001;
   background: transparent;
   border: none;
 
@@ -78,7 +78,6 @@ $mobile-bp: 768px;
 
     &.notif-active {
       background: rgba(255, 255, 255, 0.32);
-      z-index: 5201;
     }
 
     .notif-badge {
