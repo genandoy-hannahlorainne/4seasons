@@ -52,26 +52,28 @@ import { Subscription } from 'rxjs';
       <div *ngIf="!loading && !error" class="dashboard-content">
 
         <!-- Stats -->
-        <div class="stats-grid">
-          <div class="stat-card students">
-            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
-            <div class="stat-info">
-              <div class="stat-value">{{ totalStudents }}</div>
-              <div class="stat-label">Total Students</div>
+        <div class="stats-container">
+          <div class="stats-grid">
+            <div class="stat-card students">
+              <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ totalStudents }}</div>
+                <div class="stat-label">Total Students</div>
+              </div>
             </div>
-          </div>
-          <div class="stat-card visits">
-            <div class="stat-icon"><i class="fa-solid fa-notes-medical"></i></div>
-            <div class="stat-info">
-              <div class="stat-value">{{ clinicVisitsThisMonth }}</div>
-              <div class="stat-label">Clinic Visits This Month</div>
+            <div class="stat-card visits">
+              <div class="stat-icon"><i class="fa-solid fa-notes-medical"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ clinicVisitsThisMonth }}</div>
+                <div class="stat-label">Clinic Visits This Month</div>
+              </div>
             </div>
-          </div>
-          <div class="stat-card allergies">
-            <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <div class="stat-info">
-              <div class="stat-value">{{ studentsWithAllergies }}</div>
-              <div class="stat-label">Students With Allergies</div>
+            <div class="stat-card allergies">
+              <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ studentsWithAllergies }}</div>
+                <div class="stat-label">Students With Allergies</div>
+              </div>
             </div>
           </div>
         </div>
@@ -273,11 +275,20 @@ import { Subscription } from 'rxjs';
     }
 
     /* ── Stats Grid ── */
+    .stats-container {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border: 1px solid #e5e7eb;
+      margin-bottom: 1.5rem;
+    }
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
-      margin-bottom: 2rem;
+      gap: 1rem;
+      margin-bottom: 0;
     }
 
     .stat-card {
