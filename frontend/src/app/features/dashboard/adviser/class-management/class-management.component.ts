@@ -376,13 +376,21 @@ interface ClassRoster {
     }
 
     .stat-card {
-      background: #f8fafc;
-      border-radius: 8px;
-      padding: 1rem;
+      background: white;
+      border-radius: 12px;
+      padding: 1.25rem;
       text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e5e7eb;
+      transition: all 0.2s ease;
 
-      .label { margin: 0 0 0.5rem; color: #64748b; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-      .value { margin: 0; font-size: 1.8rem; font-weight: 700; color: #052355; }
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      }
+
+      .label { margin: 0 0 0.5rem; color: #6b7280; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+      .value { margin: 0; font-size: 2rem; font-weight: 700; color: #111827; }
     }
 
     /* ── Empty States ── */
