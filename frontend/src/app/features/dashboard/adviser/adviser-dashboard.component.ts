@@ -195,7 +195,7 @@ import { Subscription } from 'rxjs';
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       border-radius: 12px;
       padding: 2rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       color: white;
       position: relative;
 
