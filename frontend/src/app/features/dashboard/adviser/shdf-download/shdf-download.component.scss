@@ -61,31 +61,43 @@
   }
 
   /* ── Overview Card ── */
-  .overview-card {
+  .hero-section {
     background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
     border-radius: 12px;
     padding: 2rem;
     margin-bottom: 2rem;
     color: white;
     box-shadow: 0 4px 12px rgba(5, 35, 85, 0.15);
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+
+    .hero-text {
+      padding-right: 4.5rem;
+    }
+
+    &.sidebar-drawer-open .hero-text {
+      padding-right: 0;
+    }
   }
 
-  .overview-title {
-    font-size: 1.6rem;
+  .page-title {
+    font-size: 1.8rem;
     font-weight: 700;
-    margin-bottom: 0.25rem;
+    color: #fff;
+    margin: 0 0 0.4rem 0;
   }
 
-  .overview-sub {
-    opacity: 0.85;
+  .page-subtitle {
+    color: rgba(255, 255, 255, 0.85);
     font-size: 0.95rem;
-    margin-bottom: 0.2rem;
+    margin: 0 0 0.2rem 0;
   }
 
-  .overview-meta {
-    opacity: 0.75;
+  .page-meta {
+    color: rgba(255, 255, 255, 0.75);
     font-size: 0.85rem;
-    margin-bottom: 0;
+    margin: 0;
   }
 
   /* ── Stats Card (below overview) ── */
@@ -423,6 +435,16 @@
 
     .overview-card {
       padding: 1.25rem;
+    }
+
+    .hero-section {
+      padding: 1.5rem 1.25rem;
+
+      .hero-text { padding-right: 3.75rem; }
+      &.sidebar-drawer-open .hero-text { padding-right: 0; }
+
+      .page-title { font-size: 1.4rem; }
+      .page-subtitle { font-size: 0.875rem; }
     }
 
     .stats-card .stats-row {

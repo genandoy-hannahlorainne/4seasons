@@ -14,10 +14,15 @@
   <!-- Content -->
   <div *ngIf="!loading && !error" class="dashboard-wrap">
     <!-- Header -->
-    <div class="overview-card">
-      <div class="overview-title">SHDF Download Center</div>
-      <div class="overview-sub">Access and download student health forms</div>
-      <div class="overview-meta">{{ advisoryClass || 'Advisory Class' }} • School Year: {{ schoolYear }}</div>
+    <div class="hero-section" [class.sidebar-drawer-open]="mobileSidebarOpen">
+      <app-adviser-notification-bell *ngIf="!mobileSidebarOpen" variant="hero" />
+      <div class="hero-content">
+        <div class="hero-text">
+          <h1 class="page-title">SHDF Download Center</h1>
+          <p class="page-subtitle">Access and download student health forms</p>
+          <p class="page-meta">{{ advisoryClass || 'Advisory Class' }} • School Year: {{ schoolYear }}</p>
+        </div>
+      </div>
     </div>
 
     <!-- Stats (separate from overview card) -->
