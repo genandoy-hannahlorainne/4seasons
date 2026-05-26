@@ -85,10 +85,14 @@
   .overview-meta {
     opacity: 0.75;
     font-size: 0.85rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0;
   }
 
-  /* ── Stat Tiles ── */
+  /* ── Stats Card (below overview) ── */
+  .stats-card {
+    margin-bottom: 2rem;
+  }
+
   .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -100,17 +104,17 @@
   }
 
   .stat-tile {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
+    background: white;
+    border-radius: 12px;
     padding: 1.25rem;
     text-align: center;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.25);
       transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
   }
 
@@ -118,14 +122,20 @@
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
+    color: #052355;
   }
 
   .tile-label {
-    opacity: 0.85;
+    color: #6b7280;
     font-size: 0.8rem;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
+
+  .tile-basic .tile-value { color: #2563eb; }
+  .tile-comprehensive .tile-value { color: #7c3aed; }
+  .tile-fully .tile-value { color: #059669; }
 
   /* ── Table Card ── */
   .table-card {
@@ -410,7 +420,7 @@
       padding: 1.25rem;
     }
 
-    .stats-row {
+    .stats-card .stats-row {
       grid-template-columns: repeat(2, 1fr);
     }
 

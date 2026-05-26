@@ -18,8 +18,10 @@
       <div class="overview-title">SHDF Download Center</div>
       <div class="overview-sub">Access and download student health forms</div>
       <div class="overview-meta">{{ advisoryClass || 'Advisory Class' }} • School Year: {{ schoolYear }}</div>
+    </div>
 
-      <!-- Stats -->
+    <!-- Stats (separate from overview card) -->
+    <div class="stats-card">
       <div class="stats-row">
         <div class="stat-tile tile-total">
           <div class="tile-value">{{ stats?.total || 0 }}</div>
