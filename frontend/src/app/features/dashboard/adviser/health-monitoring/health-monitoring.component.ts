@@ -252,7 +252,7 @@ interface Alert {
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       border-radius: 12px;
       padding: 2rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.5rem;
       color: white;
       width: 100%;
       box-sizing: border-box;
@@ -307,7 +307,7 @@ interface Alert {
     .toolbar-row {
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0;
     }
 
     .header-actions {
