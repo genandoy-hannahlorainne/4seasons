@@ -106,6 +106,7 @@ interface ClassRoster {
             </div>
           </div>
         </div>
+
       </div>
 
       <div *ngIf="!classRoster && selectedSchoolYear" class="no-data">
@@ -379,7 +380,6 @@ interface ClassRoster {
       border-radius: 8px;
       padding: 1rem;
       text-align: center;
-      border-left: 4px solid #052355;
 
       .label { margin: 0 0 0.5rem; color: #64748b; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
       .value { margin: 0; font-size: 1.8rem; font-weight: 700; color: #052355; }
