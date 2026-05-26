@@ -349,7 +349,8 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
       path === '/dashboard/adviser' || path.endsWith('/dashboard/adviser');
     const isHealthMonitor = path.includes('/dashboard/adviser/health-monitoring');
     const isSHDFDownload = path.includes('/dashboard/adviser/shdf-download');
-    this.hideMobileTopbarBell = isAdviserHome || isHealthMonitor || isSHDFDownload;
+    const isClassManagement = path.includes('/dashboard/adviser/class-management');
+    this.hideMobileTopbarBell = isAdviserHome || isHealthMonitor || isSHDFDownload || isClassManagement;
   }
 
   closeNotificationPanel(): void {
