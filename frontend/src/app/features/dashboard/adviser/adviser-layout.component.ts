@@ -1,11 +1,13 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, RouterOutlet, Router } from '@angular/router';
+import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdviserService } from '../../../core/services/adviser.service';
 import { AdviserNotificationPanelService } from '../../../core/services/adviser-notification-panel.service';
 import { PushNotificationService } from '../../../core/services/push-notification.service';
 import { interval, Subscription } from 'rxjs';
+import { AdviserNotificationBellComponent } from './shared/adviser-notification-bell.component';
 
 interface AdviserAlert {
   id: number;
@@ -29,7 +31,7 @@ interface AdviserAlert {
 @Component({
   selector: 'app-adviser-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet],
+  imports: [CommonModule, RouterModule, RouterOutlet, AdviserNotificationBellComponent],
   styleUrls: ['./adviser-layout.component.scss'],
   template: `
     <div class="adviser-shell" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileOpen">
@@ -76,13 +78,6 @@ interface AdviserAlert {
         </nav>
 
         <div class="sidebar-footer">
-          <button class="nav-item notification-bell-nav" (click)="toggleNotificationPanel()" title="Notifications">
-            <span class="bell-wrap">
-              <i class="fa-solid fa-bell nav-icon-fa"></i>
-              <span class="notif-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-            </span>
-            <span class="nav-label">Notifications</span>
-          </button>
           <a routerLink="/dashboard/adviser/profile" routerLinkActive="active" class="nav-item" title="Profile" (click)="closeMobile()">
             <i class="fa-solid fa-user nav-icon-fa"></i>
             <span class="nav-label">Profile</span>
@@ -100,15 +95,16 @@ interface AdviserAlert {
           <span></span><span></span><span></span>
         </button>
         <span class="mobile-brand">PDMHS Adviser</span>
-        <button class="notification-bell mobile-notif-bell" (click)="toggleNotificationPanel()" title="Notifications">
-          <i class="fa-solid fa-bell"></i>
-          <span class="notif-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-        </button>
+        <app-adviser-notification-bell *ngIf="!hideMobileTopbarBell" variant="topbar" class="mobile-topbar-bell" />
       </header>
 
-      <!-- Notification Side Panel -->
+      <!-- Notification Dropdown Panel -->
       <div class="notification-panel-overlay" *ngIf="notifPanelService.open$ | async" (click)="closeNotificationPanel()">
-        <div class="notification-panel" (click)="$event.stopPropagation()">
+        <div
+          class="notification-panel"
+          [style.top.px]="panelTop"
+          [style.right.px]="panelRight"
+          (click)="$event.stopPropagation()">
 
           <div class="panel-header">
             <h3>Notifications</h3>
@@ -244,13 +240,26 @@ interface AdviserAlert {
 export class AdviserLayoutComponent implements OnInit, OnDestroy {
   isCollapsed = false;
   mobileOpen = false;
+  hideMobileTopbarBell = false;
   loggingOut = false;
   showAllTab = true;
   alerts: AdviserAlert[] = [];
   selectedAlert: AdviserAlert | null = null;
   unreadCount = 0;
+  panelTop = 64;
+  panelRight = 12;
   private pollSub?: Subscription;
   private pushSub?: Subscription;
+  private anchorSub?: Subscription;
+  private openSub?: Subscription;
+  private repositionRaf = 0;
+  private readonly repositionPanel = (): void => {
+    if (!this.notifPanelService.isOpen) return;
+    cancelAnimationFrame(this.repositionRaf);
+    this.repositionRaf = requestAnimationFrame(() => {
+      this.notifPanelService.updateAnchorPosition();
+    });
+  };
 
   constructor(
     private authService: AuthService,
@@ -265,6 +274,11 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.updateTopbarBellVisibility(this.router.url);
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(e => this.updateTopbarBellVisibility(e.urlAfterRedirects));
+
     this.loadNotifications();
     // Poll every 30 seconds as a fallback
     this.pollSub = interval(30000).subscribe(() => this.loadNotifications());
@@ -272,11 +286,38 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
     this.pushSub = this.pushNotificationService.foregroundMessage$.subscribe(() => {
       this.loadNotifications();
     });
+    this.anchorSub = this.notifPanelService.anchor$.subscribe(anchor => {
+      if (anchor) {
+        this.panelTop = anchor.top;
+        this.panelRight = anchor.right;
+      }
+    });
+    this.openSub = this.notifPanelService.open$.subscribe(open => {
+      if (open) {
+        this.attachPanelRepositionListeners();
+      } else {
+        this.detachPanelRepositionListeners();
+      }
+    });
+  }
+
+  private attachPanelRepositionListeners(): void {
+    window.addEventListener('scroll', this.repositionPanel, true);
+    window.addEventListener('resize', this.repositionPanel);
+  }
+
+  private detachPanelRepositionListeners(): void {
+    window.removeEventListener('scroll', this.repositionPanel, true);
+    window.removeEventListener('resize', this.repositionPanel);
   }
 
   ngOnDestroy(): void {
+    this.detachPanelRepositionListeners();
     this.pollSub?.unsubscribe();
     this.pushSub?.unsubscribe();
+    this.anchorSub?.unsubscribe();
+    this.openSub?.unsubscribe();
+    this.notifPanelService.setMobileSidebarOpen(false);
   }
 
   loadNotifications(): void {
@@ -302,9 +343,14 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleNotificationPanel(): void {
-    this.closeMobile();
-    this.notifPanelService.toggle();
+  private updateTopbarBellVisibility(url: string): void {
+    const path = url.split('?')[0].replace(/\/$/, '');
+    const isAdviserHome =
+      path === '/dashboard/adviser' || path.endsWith('/dashboard/adviser');
+    const isHealthMonitor = path.includes('/dashboard/adviser/health-monitoring');
+    const isSHDFDownload = path.includes('/dashboard/adviser/shdf-download');
+    const isClassManagement = path.includes('/dashboard/adviser/class-management');
+    this.hideMobileTopbarBell = isAdviserHome || isHealthMonitor || isSHDFDownload || isClassManagement;
   }
 
   closeNotificationPanel(): void {
@@ -339,16 +385,23 @@ export class AdviserLayoutComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    if (!target.closest('.notification-bell') &&
-        !target.closest('.notification-bell-nav') &&
+    if (!target.closest('.adviser-notif-bell') &&
         !target.closest('.notification-panel')) {
       this.notifPanelService.close();
     }
   }
 
   toggleSidebar(): void { this.isCollapsed = !this.isCollapsed; }
-  openMobile(): void { this.mobileOpen = true; }
-  closeMobile(): void { this.mobileOpen = false; }
+  openMobile(): void {
+    this.mobileOpen = true;
+    this.notifPanelService.setMobileSidebarOpen(true);
+    this.notifPanelService.close();
+  }
+
+  closeMobile(): void {
+    this.mobileOpen = false;
+    this.notifPanelService.setMobileSidebarOpen(false);
+  }
 
   logout(): void {
     this.loggingOut = true;

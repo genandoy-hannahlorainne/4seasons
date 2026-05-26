@@ -61,34 +61,55 @@
   }
 
   /* ── Overview Card ── */
-  .overview-card {
+  .hero-section {
     background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
     border-radius: 12px;
     padding: 2rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     color: white;
     box-shadow: 0 4px 12px rgba(5, 35, 85, 0.15);
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+
+    .hero-text {
+      padding-right: 4.5rem;
+    }
+
+    &.sidebar-drawer-open .hero-text {
+      padding-right: 0;
+    }
   }
 
-  .overview-title {
-    font-size: 1.6rem;
+  .page-title {
+    font-size: 1.8rem;
     font-weight: 700;
-    margin-bottom: 0.25rem;
+    color: #fff;
+    margin: 0 0 0.4rem 0;
   }
 
-  .overview-sub {
-    opacity: 0.85;
+  .page-subtitle {
+    color: rgba(255, 255, 255, 0.85);
     font-size: 0.95rem;
-    margin-bottom: 0.2rem;
+    margin: 0 0 0.2rem 0;
   }
 
-  .overview-meta {
-    opacity: 0.75;
+  .page-meta {
+    color: rgba(255, 255, 255, 0.75);
     font-size: 0.85rem;
-    margin-bottom: 1.5rem;
+    margin: 0;
   }
 
-  /* ── Stat Tiles ── */
+  /* ── Stats Card (below overview) ── */
+  .stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+  }
+
   .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -100,17 +121,17 @@
   }
 
   .stat-tile {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
+    background: white;
+    border-radius: 12px;
     padding: 1.25rem;
     text-align: center;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.25);
       transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
   }
 
@@ -118,14 +139,20 @@
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
+    color: #111827;
   }
 
   .tile-label {
-    opacity: 0.85;
+    color: #6b7280;
     font-size: 0.8rem;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
+
+  .tile-basic .tile-value { color: #111827; }
+  .tile-comprehensive .tile-value { color: #111827; }
+  .tile-fully .tile-value { color: #111827; }
 
   /* ── Table Card ── */
   .table-card {
@@ -410,7 +437,17 @@
       padding: 1.25rem;
     }
 
-    .stats-row {
+    .hero-section {
+      padding: 1.5rem 1.25rem;
+
+      .hero-text { padding-right: 3.75rem; }
+      &.sidebar-drawer-open .hero-text { padding-right: 0; }
+
+      .page-title { font-size: 1.4rem; }
+      .page-subtitle { font-size: 0.875rem; }
+    }
+
+    .stats-card .stats-row {
       grid-template-columns: repeat(2, 1fr);
     }
 

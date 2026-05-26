@@ -1,15 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdviserService, AdvisedStudent } from '../../../core/services/adviser.service';
 import { StudentProfileModalComponent } from './student-profile-modal/student-profile-modal.component';
 import { PushNotificationService } from '../../../core/services/push-notification.service';
+import { AdviserNotificationBellComponent } from './shared/adviser-notification-bell.component';
+import { AdviserNotificationPanelService } from '../../../core/services/adviser-notification-panel.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-adviser-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, StudentProfileModalComponent],
+  imports: [CommonModule, RouterModule, StudentProfileModalComponent, AdviserNotificationBellComponent],
   template: `
     <div class="adviser-dashboard">
 
@@ -22,7 +25,8 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
       </div>
 
       <!-- Hero Section -->
-      <div class="hero-section">
+      <div class="hero-section" [class.sidebar-drawer-open]="mobileSidebarOpen">
+        <app-adviser-notification-bell *ngIf="!mobileSidebarOpen" variant="hero" />
         <div class="hero-content">
           <div class="hero-text">
             <h1>Welcome, {{ adviserTitle ? adviserTitle + ' ' : '' }}{{ adviserName }}</h1>
@@ -48,26 +52,28 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
       <div *ngIf="!loading && !error" class="dashboard-content">
 
         <!-- Stats -->
-        <div class="stats-grid">
-          <div class="stat-card students">
-            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
-            <div class="stat-info">
-              <div class="stat-value">{{ totalStudents }}</div>
-              <div class="stat-label">Total Students</div>
+        <div class="stats-container">
+          <div class="stats-grid">
+            <div class="stat-card students">
+              <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ totalStudents }}</div>
+                <div class="stat-label">Total Students</div>
+              </div>
             </div>
-          </div>
-          <div class="stat-card visits">
-            <div class="stat-icon"><i class="fa-solid fa-notes-medical"></i></div>
-            <div class="stat-info">
-              <div class="stat-value">{{ clinicVisitsThisMonth }}</div>
-              <div class="stat-label">Clinic Visits This Month</div>
+            <div class="stat-card visits">
+              <div class="stat-icon"><i class="fa-solid fa-notes-medical"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ clinicVisitsThisMonth }}</div>
+                <div class="stat-label">Clinic Visits This Month</div>
+              </div>
             </div>
-          </div>
-          <div class="stat-card allergies">
-            <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <div class="stat-info">
-              <div class="stat-value">{{ studentsWithAllergies }}</div>
-              <div class="stat-label">Students With Allergies</div>
+            <div class="stat-card allergies">
+              <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ studentsWithAllergies }}</div>
+                <div class="stat-label">Students With Allergies</div>
+              </div>
             </div>
           </div>
         </div>
@@ -191,8 +197,17 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       border-radius: 12px;
       padding: 2rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       color: white;
+      position: relative;
+
+      .hero-text {
+        padding-right: 4.5rem;
+      }
+
+      &.sidebar-drawer-open .hero-text {
+        padding-right: 0;
+      }
 
       h1 {
         font-size: 1.8rem;
@@ -203,6 +218,27 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
         margin: 0;
         opacity: 0.85;
         font-size: 0.95rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero-section {
+        padding: 1.5rem 1.25rem;
+
+        .hero-text { padding-right: 3.75rem; }
+
+        h1 { font-size: 1.4rem; }
+        p  { font-size: 0.875rem; }
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-section {
+        padding: 1.25rem 1rem;
+
+        .hero-text { padding-right: 3.25rem; }
+
+        h1 { font-size: 1.2rem; }
       }
     }
 
@@ -239,11 +275,20 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
     }
 
     /* ── Stats Grid ── */
+    .stats-container {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border: 1px solid #e5e7eb;
+      margin-bottom: 1.5rem;
+    }
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
-      margin-bottom: 2rem;
+      gap: 1rem;
+      margin-bottom: 0;
     }
 
     .stat-card {
@@ -472,10 +517,12 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
     }
   `]
 })
-export class AdviserDashboardComponent implements OnInit {
+export class AdviserDashboardComponent implements OnInit, OnDestroy {
   adviserName = '';
   adviserTitle = '';  // Ma'am or Sir
   advisoryClass = '';
+  mobileSidebarOpen = false;
+  private layoutSub?: Subscription;
   selectedStudent: any = null;
   loading = true;
   error = '';
@@ -494,12 +541,17 @@ export class AdviserDashboardComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private adviserService: AdviserService,
-    private pushService: PushNotificationService
+    private pushService: PushNotificationService,
+    private notifPanelService: AdviserNotificationPanelService
   ) {}
 
   showNotifBanner = false;
 
   ngOnInit(): void {
+    this.layoutSub = this.notifPanelService.mobileSidebarOpen$.subscribe(open => {
+      this.mobileSidebarOpen = open;
+    });
+
     // Show banner if push is supported but permission not yet granted
     if (this.pushService.isSupported() && Notification.permission !== 'granted') {
       this.showNotifBanner = true;
@@ -522,6 +574,10 @@ export class AdviserDashboardComponent implements OnInit {
       },
       error: () => {}
     });
+  }
+
+  ngOnDestroy(): void {
+    this.layoutSub?.unsubscribe();
   }
 
   async enableNotifications(): Promise<void> {
