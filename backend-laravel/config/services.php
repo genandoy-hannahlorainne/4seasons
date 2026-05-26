@@ -35,4 +35,21 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Semaphore SMS
+    |--------------------------------------------------------------------------
+    |
+    | Credentials for the Semaphore SMS gateway (https://semaphore.co).
+    | Set SEMAPHORE_ENABLED=true to activate SMS notifications.
+    | SEMAPHORE_SENDER_NAME must match a registered sender name in your
+    | Semaphore account (defaults to "SEMAPHORE" for sandbox testing).
+    |
+    */
+    'semaphore' => [
+        'api_key'     => env('SEMAPHORE_API_KEY', ''),
+        'sender_name' => env('SEMAPHORE_SENDER_NAME', 'SEMAPHORE'),
+        'enabled'     => env('SEMAPHORE_ENABLED', false),
+    ],
+
 ];

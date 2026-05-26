@@ -20,10 +20,13 @@
     </div>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="loading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading users...</p>
+  <!-- Skeleton Loading State -->
+  <div *ngIf="loading" class="skeleton-loading">
+    <div class="skeleton-role-cards">
+      <div *ngFor="let s of skeletonRows.slice(0,4)" class="skeleton-card-item">
+        <div class="skeleton skeleton-stat"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Role Cards View -->
@@ -135,15 +138,17 @@
 
     <!-- Search bar -->
     <div class="detail-toolbar">
-      <div class="search-wrap">
+      <div class="search-input-enhanced">
         <i class="fa-solid fa-magnifying-glass search-icon"></i>
         <input
           type="text"
           [(ngModel)]="searchQuery"
           (input)="onSearchChange()"
           placeholder="Search by name, username, or email..."
-          class="search-input"
         >
+        <button *ngIf="searchQuery" class="clear-btn" (click)="searchQuery=''; filterUsers()" type="button" title="Clear search">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
       <div class="users-meta">
         <span class="user-count">{{ filteredUsers.length }} user(s)</span>
@@ -189,15 +194,17 @@
 
     <!-- Search bar -->
     <div class="detail-toolbar">
-      <div class="search-wrap">
+      <div class="search-input-enhanced">
         <i class="fa-solid fa-magnifying-glass search-icon"></i>
         <input
           type="text"
           [(ngModel)]="searchQuery"
           (input)="onSearchChange()"
           placeholder="Search by name, username, or email..."
-          class="search-input"
         >
+        <button *ngIf="searchQuery" class="clear-btn" (click)="searchQuery=''; filterUsers()" type="button" title="Clear search">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
 
       <!-- no inline filters needed — navigation is card-based -->
@@ -205,14 +212,10 @@
 
       <div class="users-meta">
         <span class="user-count">{{ filteredUsers.length }} user(s)</span>
-        <!-- Page size only for students -->
-        <div class="page-size-control" *ngIf="selectedRole === 'student'">
+        <div class="page-size-control" *ngIf="selectedRole !== 'all'">
           <label for="pageSize">Show:</label>
           <select id="pageSize" [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="page-size-select">
-            <option [value]="10">10</option>
-            <option [value]="25">25</option>
-            <option [value]="50">50</option>
-            <option [value]="100">100</option>
+            <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
           </select>
           <span>per page</span>
         </div>
@@ -222,7 +225,7 @@
     <!-- User Cards Grid -->
     <div class="user-grid">
       <div
-        *ngFor="let user of (selectedRole === 'student' ? paginatedUsers : filteredUsers)"
+        *ngFor="let user of paginatedUsers; trackBy: trackByUserId"
         class="user-item-card"
         (click)="viewUser(user)">
         <div class="uic-top">
@@ -257,28 +260,35 @@
       </div>
     </div>
 
-    <!-- Pagination (students only) -->
-    <div *ngIf="selectedRole === 'student' && totalPages > 1" class="pagination">
-      <button class="page-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="First">
-        <i class="fa-solid fa-angles-left"></i>
-      </button>
-      <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" title="Previous">
-        <i class="fa-solid fa-angle-left"></i>
-      </button>
-      <button
-        *ngFor="let page of pageNumbers"
-        class="page-btn"
-        [class.active]="page === currentPage"
-        (click)="goToPage(page)">
-        {{ page }}
-      </button>
-      <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" title="Next">
-        <i class="fa-solid fa-angle-right"></i>
-      </button>
-      <button class="page-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages" title="Last">
-        <i class="fa-solid fa-angles-right"></i>
-      </button>
-      <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1" class="pagination-enhanced">
+      <div class="pagination-info">
+        Showing {{ pageStartIndex }}–{{ pageEndIndex }} of {{ filteredUsers.length }} {{ paginationLabel }}
+      </div>
+      <div class="pagination-controls">
+        <button class="page-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="First">
+          <i class="fa-solid fa-angles-left"></i>
+        </button>
+        <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" title="Previous">
+          <i class="fa-solid fa-angle-left"></i>
+        </button>
+        <button
+          *ngFor="let page of pageNumbers"
+          class="page-btn"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)">
+          {{ page }}
+        </button>
+        <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" title="Next">
+          <i class="fa-solid fa-angle-right"></i>
+        </button>
+        <button class="page-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages" title="Last">
+          <i class="fa-solid fa-angles-right"></i>
+        </button>
+      </div>
+      <select class="page-size-select" [(ngModel)]="pageSize" (change)="onPageSizeChange()" title="Rows per page">
+        <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }} / page</option>
+      </select>
     </div>
   </div>
 
@@ -732,3 +742,8 @@
     </div>
   </div>
 </div>
+
+<!-- Scroll to Top Button -->
+<button class="scroll-top-btn" [class.visible]="showScrollTop" (click)="scrollToTop()" title="Back to top" aria-label="Scroll to top">
+  <i class="fa-solid fa-chevron-up"></i>
+</button>

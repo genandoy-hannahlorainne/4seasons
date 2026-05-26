@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Infrastructure\Sms\SemaphoreClient;
 use App\Models\Student;
 use App\Policies\SHDFPolicy;
+use App\Services\SmsService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -15,7 +17,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bind SemaphoreClient as a singleton so the HTTP client is reused
+        // across multiple SMS sends within the same request lifecycle.
+        $this->app->singleton(SemaphoreClient::class, function () {
+            return new SemaphoreClient(
+                apiKey:     config('services.semaphore.api_key', ''),
+                senderName: config('services.semaphore.sender_name', 'SEMAPHORE'),
+            );
+        });
+
+        // SmsService depends on SemaphoreClient — the container resolves it automatically.
+        $this->app->singleton(SmsService::class);
     }
 
     /**

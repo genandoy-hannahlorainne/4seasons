@@ -1,11 +1,20 @@
 // Shared styles for all clinic staff pages
 
+:host {
+  --staff-brand: #052355;
+  --staff-brand-soft: #5381b2;
+  --staff-surface: #ffffff;
+  --staff-border: #e2e8f0;
+  --staff-text: #0f172a;
+  --staff-muted: #64748b;
+}
+
 .page-header {
   margin-bottom: 2rem;
-  background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+  background: linear-gradient(135deg, var(--staff-brand) 0%, var(--staff-brand-soft) 100%);
   padding: 2rem 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(5, 35, 85, 0.18);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -43,6 +52,76 @@
   .btn {
     flex-shrink: 0;
   }
+}
+
+.form-control,
+input.form-control,
+select.form-control,
+textarea.form-control,
+.filter-select,
+.page-size-select,
+.form-select {
+  border: 1.5px solid var(--staff-border);
+  border-radius: 12px;
+  background: var(--staff-surface);
+  color: var(--staff-text);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.form-control:focus,
+input.form-control:focus,
+select.form-control:focus,
+textarea.form-control:focus,
+.filter-select:focus,
+.page-size-select:focus,
+.form-select:focus {
+  border-color: rgba(37, 99, 235, 0.6);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.btn {
+  min-height: 42px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn.btn-primary {
+  background: linear-gradient(135deg, var(--staff-brand) 0%, var(--staff-brand-soft) 100%);
+  box-shadow: 0 6px 16px rgba(5, 35, 85, 0.18);
+}
+
+.btn.btn-outline,
+.btn.btn-secondary {
+  background: #fff;
+  color: var(--staff-brand);
+  border: 1.5px solid var(--staff-border);
+}
+
+.btn.btn-outline:hover,
+.btn.btn-secondary:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.other-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid var(--staff-border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--staff-text);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.other-link:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: var(--staff-brand);
 }
 
 @media (max-width: 768px) {
