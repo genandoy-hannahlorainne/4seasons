@@ -271,9 +271,9 @@ import { AuthService } from '../../../../core/services/auth.service';
       max-width: 800px;
       margin-bottom: 1.5rem;
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
-      padding: 2rem 2rem 1.5rem;
-      border-radius: 0 0 24px 24px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      padding: 2rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
       box-sizing: border-box;
 
       .modal-mode & {

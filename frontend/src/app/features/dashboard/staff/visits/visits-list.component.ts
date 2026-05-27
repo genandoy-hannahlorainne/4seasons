@@ -288,19 +288,19 @@ interface StudentVisitSummary {
 
     .page-header {
       margin-bottom: 2rem;
-      background: linear-gradient(135deg, rgba(5, 35, 85, 0.96) 0%, rgba(83, 129, 178, 0.96) 100%);
-      padding: 2.5rem 2.5rem;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(5, 35, 85, 0.2);
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+      padding: 2rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 2rem;
+      gap: 1rem;
 
       .header-content {
         h1 {
-          font-size: 2.5rem;
+          font-size: 2rem;
           color: #ffffff;
           margin-bottom: 0.5rem;
           font-weight: 700;
@@ -746,7 +746,7 @@ interface StudentVisitSummary {
 
         .stat-label {
           font-size: 0.72rem;
-          color: #94a3b8;
+          color: #475569;
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.4px;
@@ -763,7 +763,7 @@ interface StudentVisitSummary {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.6px;
-        color: #94a3b8;
+        color: #475569;
         margin-bottom: 0.75rem;
         display: flex;
         align-items: center;
@@ -792,7 +792,7 @@ interface StudentVisitSummary {
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.4px;
-        color: #94a3b8;
+        color: #475569;
       }
 
       .field-value {
