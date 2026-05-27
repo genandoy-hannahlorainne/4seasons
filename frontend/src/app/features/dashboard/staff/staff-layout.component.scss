@@ -220,11 +220,59 @@ $mobile-bp: 768px;
   flex: 1;
   min-height: 100vh;
   overflow-x: hidden;
+  overflow-y: auto;
   transition: margin-left $transition;
+
+  // Styled scrollbar
+  scrollbar-width: thin;
+  scrollbar-color: rgba(5, 35, 85, 0.25) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(5, 35, 85, 0.25);
+    border-radius: 99px;
+
+    &:hover {
+      background: rgba(5, 35, 85, 0.45);
+    }
+  }
 }
 
 .staff-layout.collapsed .main-content {
   margin-left: $sidebar-collapsed;
+}
+
+// Styled scrollbar for sidebar nav and any overflow-y containers
+.sidebar-nav,
+.modal-body,
+.visits-list,
+.allergy-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(5, 35, 85, 0.2) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(5, 35, 85, 0.2);
+    border-radius: 99px;
+
+    &:hover {
+      background: rgba(5, 35, 85, 0.4);
+    }
+  }
 }
 
 .content-area {
