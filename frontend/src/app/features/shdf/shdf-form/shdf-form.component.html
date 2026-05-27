@@ -1,5 +1,4 @@
-<div class="modal-card">
-    <div class="modal-header">
+<div class="modal-header">
       <img src="assets/pdmhs-logo.png" alt="PDMHS Logo" class="modal-logo" />
       <h1 class="modal-title">Student Health Data Form</h1>
       <p class="modal-subtitle">Complete all steps to submit your health information</p>
@@ -105,6 +104,16 @@
           <span class="error-text" *ngIf="form.get('student.emergency_contact_phone')?.touched && form.get('student.emergency_contact_phone')?.invalid">Required</span>
         </div>
       </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-cancel" *ngIf="isModal" (click)="onCancel()">
+          ← Back to Dashboard
+        </button>
+        <button type="button" class="btn-next" (click)="nextStep()">
+          Next →
+        </button>
+      </div>
     </div>
 
     <!-- Step 2: PhilHealth -->
@@ -147,6 +156,16 @@
           <span class="error-text" *ngIf="form.get('philhealth.parent_relationship')?.touched && form.get('philhealth.parent_relationship')?.invalid">Required</span>
         </div>
       </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-back" (click)="previousStep()">
+          ← Previous
+        </button>
+        <button type="button" class="btn-next" (click)="nextStep()">
+          Next →
+        </button>
+      </div>
     </div>
 
     <!-- Step 3: Immunizations -->
@@ -174,6 +193,16 @@
             </label>
           </div>
         </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-back" (click)="previousStep()">
+          ← Previous
+        </button>
+        <button type="button" class="btn-next" (click)="nextStep()">
+          Next →
+        </button>
       </div>
     </div>
 
@@ -307,6 +336,16 @@
           Has Surgery History
         </label>
       </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-back" (click)="previousStep()">
+          ← Previous
+        </button>
+        <button type="button" class="btn-next" (click)="nextStep()">
+          Next →
+        </button>
+      </div>
     </div>
 
     <!-- Step 5: Family History -->
@@ -387,6 +426,16 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-back" (click)="previousStep()">
+          ← Previous
+        </button>
+        <button type="button" class="btn-next" (click)="nextStep()">
+          Next →
+        </button>
       </div>
     </div>
 
@@ -487,24 +536,17 @@
         <p class="file-info" *ngIf="signatureFile">Selected: {{ signatureFile.name }}</p>
         <span class="error-text" *ngIf="submitted && !signatureFile">Signature file is required</span>
       </div>
-    </div>
 
-    <!-- Navigation Buttons -->
-    <div class="form-navigation">
-      <button type="button" class="btn-back" *ngIf="currentStep > 1" (click)="previousStep()">
-        ← Previous
-      </button>
-      <button type="button" class="btn-cancel" *ngIf="isModal && currentStep === 1" (click)="onCancel()">
-        ← Back to Dashboard
-      </button>
-      <button type="button" class="btn-next" *ngIf="currentStep < totalSteps" (click)="nextStep()">
-        Next →
-      </button>
-      <button type="submit" class="btn-submit" *ngIf="currentStep === totalSteps" [disabled]="loading">
-        {{ loading ? 'Submitting...' : 'Submit Form' }}
-      </button>
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-back" (click)="previousStep()">
+          ← Previous
+        </button>
+        <button type="submit" class="btn-submit" [disabled]="loading">
+          {{ loading ? 'Submitting...' : 'Submit Form' }}
+        </button>
+      </div>
     </div>
 
   </form>
 </div><!-- end multistep-form-container -->
-  </div><!-- end modal-card -->

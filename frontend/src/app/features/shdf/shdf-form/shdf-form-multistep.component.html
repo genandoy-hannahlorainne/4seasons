@@ -87,6 +87,16 @@
           <input formControlName="emergency_contact_phone" />
         </div>
       </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-cancel" *ngIf="isModal" (click)="onCancel()">
+          ← Back to Dashboard
+        </button>
+        <button type="button" class="btn-next" (click)="nextStep()">
+          Next →
+        </button>
+      </div>
     </div>
 
     <!-- Step 2: PhilHealth -->
@@ -119,6 +129,16 @@
           </select>
         </div>
       </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-back" (click)="previousStep()">
+          ← Previous
+        </button>
+        <button type="button" class="btn-next" (click)="nextStep()">
+          Next →
+        </button>
+      </div>
     </div>
 
     <!-- Step 3: Immunizations -->
@@ -146,6 +166,16 @@
             </label>
           </div>
         </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-back" (click)="previousStep()">
+          ← Previous
+        </button>
+        <button type="button" class="btn-next" (click)="nextStep()">
+          Next →
+        </button>
       </div>
     </div>
 
@@ -200,6 +230,16 @@
           <label><input type="checkbox" formControlName="medications_none" /> Don't Give Any</label>
         </div>
       </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-back" (click)="previousStep()">
+          ← Previous
+        </button>
+        <button type="button" class="btn-next" (click)="nextStep()">
+          Next →
+        </button>
+      </div>
     </div>
 
     <!-- Step 5: Family History -->
@@ -231,6 +271,16 @@
           <label><input type="checkbox" formControlName="is_4ps_beneficiary" /> 4P's Beneficiary</label>
           <label><input type="checkbox" formControlName="is_sbfp_beneficiary" /> SBFP Beneficiary</label>
         </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-back" (click)="previousStep()">
+          ← Previous
+        </button>
+        <button type="button" class="btn-next" (click)="nextStep()">
+          Next →
+        </button>
       </div>
     </div>
 
@@ -267,22 +317,16 @@
         <input type="file" (change)="onSignatureChange($event)" accept=".pdf,.jpeg,.jpg,.png" />
         <p class="file-info" *ngIf="signatureFile">Selected: {{ signatureFile.name }}</p>
       </div>
-    </div>
 
-    <!-- Navigation Buttons -->
-    <div class="form-navigation">
-      <button type="button" class="btn-back" *ngIf="currentStep > 1" (click)="previousStep()">
-        ← Previous
-      </button>
-      <button type="button" class="btn-cancel" *ngIf="isModal && currentStep === 1" (click)="onCancel()">
-        ← Back to Dashboard
-      </button>
-      <button type="button" class="btn-next" *ngIf="currentStep < totalSteps" (click)="nextStep()">
-        Next →
-      </button>
-      <button type="submit" class="btn-submit" *ngIf="currentStep === totalSteps" [disabled]="loading">
-        {{ loading ? 'Submitting...' : 'Submit Form' }}
-      </button>
+      <!-- Navigation Buttons -->
+      <div class="form-navigation">
+        <button type="button" class="btn-back" (click)="previousStep()">
+          ← Previous
+        </button>
+        <button type="submit" class="btn-submit" [disabled]="loading">
+          {{ loading ? 'Submitting...' : 'Submit Form' }}
+        </button>
+      </div>
     </div>
 
   </form>
