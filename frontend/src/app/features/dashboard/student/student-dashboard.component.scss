@@ -53,7 +53,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
 
 .student-dashboard {
   padding: 0;
-  background: $color-background;
+  background: #f5f7fa;
   min-height: 100vh;
   position: relative;
 
@@ -113,36 +113,37 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   .overview-card {
-    background: $color-white;
-    padding: 1.5rem;
+    background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
+    padding: 2rem;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 1px solid $color-border;
+    border: none;
     margin-bottom: 0.5rem;
+    color: #fff;
   }
 
   .overview-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-family: $font-secondary;
     font-weight: 700;
-    color: $color-text-dark;
-    margin-bottom: 0.5rem;
+    color: #fff;
+    margin-bottom: 0.4rem;
   }
 
   .overview-sub {
-    color: $color-text-muted;
+    color: rgba(255, 255, 255, 0.9);
     font-weight: 400;
     font-family: $font-primary;
     margin: 0.25rem 0;
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .overview-meta {
-    color: #5b8db8;
-    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
     font-family: $font-primary;
-    font-size: 1rem;
-    margin: 0.25rem 0 1rem;
+    font-size: 0.95rem;
+    margin: 0.25rem 0 0;
   }
 
   .stats-row {
