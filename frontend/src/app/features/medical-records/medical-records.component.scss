@@ -31,8 +31,8 @@
 .loading {
   position: fixed;
   top: 0;
-  left: 0;
-  width: 100%;
+  left: 262px;
+  width: calc(100% - 262px);
   height: 100%;
   background: transparent;
   display: flex;
@@ -42,6 +42,11 @@
   z-index: 9999;
   gap: 1rem;
 
+  @media (max-width: 768px) {
+    left: 0;
+    width: 100%;
+  }
+
   .loading-spinner {
     width: 50px;
     height: 50px;
@@ -49,8 +54,6 @@
     border-top: 4px solid #052355;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    position: relative;
-    z-index: 2;
   }
 
   p {
@@ -59,23 +62,6 @@
     font-weight: 600;
     text-align: center;
     margin: 0;
-    position: relative;
-    z-index: 2;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #fff;
-    border-radius: 16px;
-    padding: 3rem 4rem;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
-    min-width: 300px;
-    min-height: 200px;
-    z-index: 1;
   }
 }
 

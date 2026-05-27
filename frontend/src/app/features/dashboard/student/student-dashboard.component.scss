@@ -61,34 +61,28 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   .loading-overlay {
     position: fixed;
     top: 0;
-    left: 0;
-    width: 100%;
+    left: 262px;
+    width: calc(100% - 262px);
     height: 100%;
     background: transparent;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 9999;
-    pointer-events: all;
-  }
-
-  .loading-spinner {
-    background: #fff;
-    border-radius: 16px;
-    padding: 2rem 2.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     gap: 1rem;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.2);
-    min-width: 180px;
+
+    @media (max-width: 768px) {
+      left: 0;
+      width: 100%;
+    }
   }
 
   .spinner {
     width: 50px;
     height: 50px;
     border: 4px solid #e3f2fd;
-    border-top: 4px solid #2563eb;
+    border-top: 4px solid #052355;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -101,7 +95,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   .loading-text {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #2563eb;
+    color: #052355;
     text-align: center;
   }
 
