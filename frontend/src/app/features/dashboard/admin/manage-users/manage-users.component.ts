@@ -577,6 +577,28 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     return this.users.filter(u => u.role === role && u.is_active).length;
   }
 
+  get totalUsersCount(): number {
+    return this.users.length;
+  }
+
+  get activeUsersCount(): number {
+    return this.users.filter(u => !!u.is_active).length;
+  }
+
+  get inactiveUsersCount(): number {
+    return Math.max(this.totalUsersCount - this.activeUsersCount, 0);
+  }
+
+  get recentUsers(): any[] {
+    return [...this.users]
+      .sort((a, b) => {
+        const aTime = new Date(a.created_at || 0).getTime();
+        const bTime = new Date(b.created_at || 0).getTime();
+        return bTime - aTime;
+      })
+      .slice(0, 5);
+  }
+
   // Adviser filters
   adviserFilterGrade = '';
   adviserFilterSection = '';

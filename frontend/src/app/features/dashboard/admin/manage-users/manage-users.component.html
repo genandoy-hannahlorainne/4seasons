@@ -20,6 +20,75 @@
     </div>
   </div>
 
+  <section class="management-hero" *ngIf="!loading && selectedRole === 'all'">
+    <div class="hero-copy">
+      <span class="hero-eyebrow">Admin workspace</span>
+      <h2>Keep every account organized from one place.</h2>
+      <p>Review access, create accounts, import student records, and jump straight into the user group that needs attention.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" (click)="openCreateUserModal()">
+          <i class="fa-solid fa-user-plus"></i> Create user
+        </button>
+        <button class="btn btn-secondary" (click)="loadUsers()">
+          <i class="fa-solid fa-rotate"></i> Refresh data
+        </button>
+      </div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-value">{{ totalUsersCount }}</span>
+        <span class="hero-stat-label">Total users</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-value">{{ activeUsersCount }}</span>
+        <span class="hero-stat-label">Active</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-value">{{ inactiveUsersCount }}</span>
+        <span class="hero-stat-label">Inactive</span>
+      </div>
+    </div>
+
+    <div class="hero-recent">
+      <div class="panel-head">
+        <div>
+          <h3>Newest accounts</h3>
+          <p>Most recent sign-ins and enrollments</p>
+        </div>
+        <span class="panel-pill">Top 5</span>
+      </div>
+
+      <div class="recent-list" *ngIf="recentUsers.length > 0; else noRecentUsers">
+        <div class="recent-user" *ngFor="let user of recentUsers" (click)="viewUser(user)">
+          <div class="recent-avatar" [ngClass]="user.role">
+            <i class="fa-solid" [ngClass]="{
+              'fa-user-graduate': user.role === 'student',
+              'fa-chalkboard-user': user.role === 'adviser',
+              'fa-user-nurse': user.role === 'clinic_staff',
+              'fa-user-shield': user.role === 'admin'
+            }"></i>
+          </div>
+          <div class="recent-body">
+            <div class="recent-topline">
+              <strong>{{ user.full_name }}</strong>
+              <span class="status-badge" [ngClass]="getStatusClass(user.is_active)">{{ getStatusText(user.is_active) }}</span>
+            </div>
+            <span class="recent-subline">@{{ user.username }} · {{ getRoleLabel(user.role) }}</span>
+          </div>
+          <span class="recent-date">{{ user.created_at ? (user.created_at | date:'MMM d') : 'N/A' }}</span>
+        </div>
+      </div>
+
+      <ng-template #noRecentUsers>
+        <div class="recent-empty">
+          <i class="fa-solid fa-inbox"></i>
+          <p>No user activity yet.</p>
+        </div>
+      </ng-template>
+    </div>
+  </section>
+
   <!-- Skeleton Loading State -->
   <div *ngIf="loading" class="skeleton-loading">
     <div class="skeleton-role-cards">
