@@ -49,8 +49,8 @@ interface UsersResponse {
     <div class="admin-dashboard">
       <!-- Hero Section -->
       <div class="hero-section">
-        <app-admin-notification-bell variant="page-header-corner" />
         <div class="hero-content">
+          <app-admin-notification-bell variant="page-header-corner" />
           <div class="hero-text">
             <h1>Welcome to PDMHS Admin Dashboard</h1>
             <p>Manage your school's medical records system efficiently and securely</p>

@@ -155,3 +155,21 @@
   right: 1.5rem;
   z-index: 5200;
 }
+
+/* Align bell to central content column so visual offset is consistent across pages.
+   Uses a fixed inner max width (matches common `hero-content` max-width). Fallback
+   to 1.5rem when calc is not supported or viewport is narrow. */
+.page-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner,
+.hero-section app-admin-notification-bell.variant-page-header-corner,
+.profile-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner {
+  right: 1.5rem; /* baseline */
+}
+
+@supports (right: calc(0px)) {
+  .page-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner,
+  .hero-section app-admin-notification-bell.variant-page-header-corner,
+  .profile-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner {
+    /* 1400px mirrors the common centered content max-width used across pages */
+    right: calc((100% - 1400px) / 2 + 1.5rem);
+  }
+}

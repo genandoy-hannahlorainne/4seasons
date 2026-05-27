@@ -6,8 +6,9 @@
       </button>
       <h1>{{ getPageTitle() }}</h1>
       <p>{{ getPageSubtitle() }}</p>
+      <!-- bell moved inside header-left so it anchors to the inner content column -->
+      <app-admin-notification-bell variant="page-header-corner" />
     </div>
-    <app-admin-notification-bell variant="page-header-corner" />
     <div class="page-header-end">
       <div class="header-actions">
       <button class="btn btn-secondary" (click)="openBulkImportModal()" *ngIf="selectedRole === 'student'">

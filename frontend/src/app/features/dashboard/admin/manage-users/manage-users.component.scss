@@ -83,8 +83,9 @@
   justify-content: space-between;
   padding: 1rem 1.5rem;
   border-top: 1px solid #f1f5f9;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* keep controls on a single line */
   gap: 0.75rem;
+  overflow: hidden;
 
   .pagination-info {
     font-size: 0.85rem;
@@ -94,24 +95,29 @@
   .pagination-controls {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+    overflow-x: auto; /* allow horizontal scroll on very small widths */
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
   }
 
   .page-btn {
-    min-width: 36px;
+    min-width: 40px;
     height: 36px;
-    padding: 0 0.5rem;
+    padding: 0 0.6rem;
     border: 1.5px solid #e2e8f0;
     border-radius: 8px;
     background: #fff;
     color: #475569;
-    font-size: 0.875rem;
+    font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
+    transition: all 0.18s ease;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    white-space: nowrap;
 
     &:hover:not(:disabled) {
       border-color: #052355;
@@ -176,6 +182,16 @@
   padding: 2rem;
   background: #f5f7fa;
   min-height: 100vh;
+}
+
+/* Position header-left as relative so bell inside it can be absolutely positioned to the inner column */
+.page-header .header-left { position: relative; }
+
+.page-header .header-left app-admin-notification-bell.variant-page-header-corner {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  z-index: 5200;
 }
 
 .management-hero {

@@ -70,6 +70,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 3rem;
+  /* ensure inner content can be used as positioning context for the bell */
+  position: relative;
 }
 
 .hero-text {
