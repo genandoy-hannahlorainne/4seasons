@@ -428,11 +428,12 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
 
     &.recent-activities {
-      flex: 1;
+      flex: 0 1 auto;
       min-height: 0;
 
       .activities-list {
         overflow-y: auto;
+        max-height: 320px;
 
         .activity-item {
           display: flex;
