@@ -102,70 +102,62 @@ import { takeUntil } from 'rxjs/operators';
           </div>
           
           <!-- Pie Chart View -->
-          <div class="pie-chart-container" *ngIf="healthData.grade_statistics && healthData.grade_statistics.length > 0">
-            <div class="chart-legend">
-              <div class="legend-item underweight">
-                <span class="legend-color"></span>
-                <span class="legend-label">Underweight</span>
-              </div>
-              <div class="legend-item normal">
-                <span class="legend-color"></span>
-                <span class="legend-label">Normal Weight</span>
-              </div>
-              <div class="legend-item overweight">
-                <span class="legend-color"></span>
-                <span class="legend-label">Overweight</span>
-              </div>
-              <div class="legend-item obese">
-                <span class="legend-color"></span>
-                <span class="legend-label">Obese</span>
-              </div>
-            </div>
-
+          <ng-container *ngIf="healthData.grade_statistics && healthData.grade_statistics.length > 0">
             <div class="pie-charts-grid">
               <div *ngFor="let grade of healthData.grade_statistics" class="pie-chart-item">
                 <h4 class="grade-title">{{ grade.grade_name }}</h4>
-                <div class="pie-chart-wrapper">
-                  <svg class="pie-chart" viewBox="0 0 200 200">
-                    <circle cx="100" cy="100" r="90" fill="none" stroke="#17a2b8" 
-                            [attr.stroke-dasharray]="calculateStrokeDasharray(grade.underweight_percentage, 0)"
-                            stroke-width="40" transform="rotate(-90 100 100)"></circle>
-                    <circle cx="100" cy="100" r="90" fill="none" stroke="#28a745" 
-                            [attr.stroke-dasharray]="calculateStrokeDasharray(grade.normal_percentage, grade.underweight_percentage)"
-                            stroke-width="40" transform="rotate(-90 100 100)"></circle>
-                    <circle cx="100" cy="100" r="90" fill="none" stroke="#ffc107" 
-                            [attr.stroke-dasharray]="calculateStrokeDasharray(grade.overweight_percentage, grade.underweight_percentage + grade.normal_percentage)"
-                            stroke-width="40" transform="rotate(-90 100 100)"></circle>
-                    <circle cx="100" cy="100" r="90" fill="none" stroke="#dc3545" 
-                            [attr.stroke-dasharray]="calculateStrokeDasharray(grade.obese_percentage, grade.underweight_percentage + grade.normal_percentage + grade.overweight_percentage)"
-                            stroke-width="40" transform="rotate(-90 100 100)"></circle>
-                  </svg>
-                  <div class="pie-chart-center">
-                    <div class="total-count">{{ grade.total_students }}</div>
-                    <div class="total-label">Students</div>
+                <div class="pie-chart-content">
+                  <div class="pie-chart-wrapper">
+                    <div class="donut" role="img" [attr.aria-label]="grade.grade_name + ' BMI distribution'" [style.background]="buildDonutGradient(grade)">
+                      <div class="donut-hole">
+                        <div class="pie-chart-center">
+                          <div class="total-count">{{ grade.total_students }}</div>
+                          <div class="total-label">Students</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div class="pie-chart-stats">
-                  <div class="stat-row">
-                    <span class="stat-color underweight"></span>
-                    <span class="stat-text">{{ grade.underweight_count }} ({{ grade.underweight_percentage }}%)</span>
-                  </div>
-                  <div class="stat-row">
-                    <span class="stat-color normal"></span>
-                    <span class="stat-text">{{ grade.normal_count }} ({{ grade.normal_percentage }}%)</span>
-                  </div>
-                  <div class="stat-row">
-                    <span class="stat-color overweight"></span>
-                    <span class="stat-text">{{ grade.overweight_count }} ({{ grade.overweight_percentage }}%)</span>
-                  </div>
-                  <div class="stat-row">
-                    <span class="stat-color obese"></span>
-                    <span class="stat-text">{{ grade.obese_count }} ({{ grade.obese_percentage }}%)</span>
+                  <div class="pie-chart-stats">
+                    <div class="inline-legend">
+                      <div class="legend-item underweight">
+                        <span class="legend-color"></span>
+                        <span class="legend-label">Underweight</span>
+                      </div>
+                      <div class="legend-item normal">
+                        <span class="legend-color"></span>
+                        <span class="legend-label">Normal</span>
+                      </div>
+                      <div class="legend-item overweight">
+                        <span class="legend-color"></span>
+                        <span class="legend-label">Overweight</span>
+                      </div>
+                      <div class="legend-item obese">
+                        <span class="legend-color"></span>
+                        <span class="legend-label">Obese</span>
+                      </div>
+                    </div>
+                    <div class="stat-row">
+                      <span class="stat-color underweight"></span>
+                      <span class="stat-text">{{ grade.underweight_count }} ({{ grade.underweight_percentage }}%)</span>
+                    </div>
+                    <div class="stat-row">
+                      <span class="stat-color normal"></span>
+                      <span class="stat-text">{{ grade.normal_count }} ({{ grade.normal_percentage }}%)</span>
+                    </div>
+                    <div class="stat-row">
+                      <span class="stat-color overweight"></span>
+                      <span class="stat-text">{{ grade.overweight_count }} ({{ grade.overweight_percentage }}%)</span>
+                    </div>
+                    <div class="stat-row">
+                      <span class="stat-color obese"></span>
+                      <span class="stat-text">{{ grade.obese_count }} ({{ grade.obese_percentage }}%)</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+
+          </ng-container>
 
           <!-- Bar Chart View (fallback) -->
           <div class="chart-container" *ngIf="!healthData.grade_statistics || healthData.grade_statistics.length === 0">
@@ -400,11 +392,12 @@ import { takeUntil } from 'rxjs/operators';
       padding: 1.5rem;
     }
 
-    .pie-charts-grid {
+      .pie-charts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
-      margin-top: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+        justify-items: stretch;
     }
 
     .pie-chart-item {
@@ -412,50 +405,122 @@ import { takeUntil } from 'rxjs/operators';
       border-radius: 12px;
       padding: 1.5rem;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      text-align: center;
+      width: 100%;
+      max-width: none;
+      text-align: left;
 
       .grade-title {
         font-size: 1.1rem;
         font-weight: 700;
         color: #2c3e50;
-        margin-bottom: 1rem;
+        margin: 0 0 1rem 0;
+      }
+
+      .pie-chart-content {
+        display: grid;
+        grid-template-columns: 180px minmax(0, 1fr);
+        gap: 1rem;
+        align-items: center;
       }
 
       .pie-chart-wrapper {
         position: relative;
-        width: 200px;
-        height: 200px;
-        margin: 0 auto 1rem;
+        width: 180px;
+        max-width: 180px;
+        height: auto;
+        margin: 0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+      }
 
-        .pie-chart {
+      .donut {
+        width: 100%;
+        max-width: 180px;
+        aspect-ratio: 1/1;
+        border-radius: 50%;
+        display: block;
+        position: relative;
+      }
+
+      .donut-hole {
+        position: absolute;
+        inset: 40px;
+        border-radius: 50%;
+        background: var(--panel-background, #fff);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow: 0 0 0 8px var(--panel-background, #fff);
+      }
+
+      .pie-chart-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+
+        .total-count {
+          font-size: 2rem;
+          font-weight: 700;
+          color: #2c3e50;
+          line-height: 1;
+        }
+
+        .total-label {
+          font-size: 0.85rem;
+          color: #7f8c8d;
+          margin-top: 0.25rem;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .pie-chart-content {
+          grid-template-columns: 1fr;
+          justify-items: center;
+        }
+
+        .pie-chart-stats {
           width: 100%;
-          height: 100%;
         }
 
-        .pie-chart-center {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          text-align: center;
-
-          .total-count {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #2c3e50;
-            line-height: 1;
-          }
-
-          .total-label {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-            margin-top: 0.25rem;
-          }
-        }
+        .donut { max-width: 140px; }
+        .donut-hole { inset: 22px; }
       }
 
       .pie-chart-stats {
         text-align: left;
+        min-width: 0;
+
+        .inline-legend {
+          display: flex;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+
+        .inline-legend .legend-item {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.9rem;
+          color: #2c3e50;
+          font-weight: 600;
+        }
+
+        .inline-legend .legend-color {
+          width: 12px;
+          height: 12px;
+          border-radius: 3px;
+          display: inline-block;
+        }
+
+        .inline-legend .underweight .legend-color { background: #17a2b8; }
+        .inline-legend .normal .legend-color { background: #28a745; }
+        .inline-legend .overweight .legend-color { background: #ffc107; }
+        .inline-legend .obese .legend-color { background: #dc3545; }
 
         .stat-row {
           display: flex;
@@ -974,5 +1039,33 @@ export class HealthRiskVisualizationComponent implements OnInit, OnDestroy {
     const segmentLength = (percentage / 100) * circumference;
     const gapLength = circumference - segmentLength;
     return `${segmentLength} ${gapLength}`;
+  }
+
+  calculateStrokeDashoffset(offset: number): number {
+    const circumference = 2 * Math.PI * 90; // radius = 90
+    return - (offset / 100) * circumference;
+  }
+
+  buildDonutGradient(grade: any): string {
+    const u = Number(grade.underweight_percentage) || 0;
+    const n = Number(grade.normal_percentage) || 0;
+    const o = Number(grade.overweight_percentage) || 0;
+    const e = Number(grade.obese_percentage) || 0;
+
+    const p1 = u;
+    const p2 = u + n;
+    const p3 = u + n + o;
+
+    // Use transparent stops for zero values to avoid rendering thin slices
+    const stops = [] as string[];
+    if (p1 > 0) stops.push(`#17a2b8 0% ${p1}%`);
+    if (p2 > p1) stops.push(`#28a745 ${p1}% ${p2}%`);
+    if (p3 > p2) stops.push(`#ffc107 ${p2}% ${p3}%`);
+    if (100 > p3) stops.push(`#dc3545 ${p3}% 100%`);
+
+    // Fallback if all zeros
+    if (!stops.length) return '#e9ecef';
+
+    return `conic-gradient(${stops.join(', ')})`;
   }
 }
