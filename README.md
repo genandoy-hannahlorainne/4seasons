@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,14,20&height=200&section=header&text=PDMHS%20Medical%20Record%20System&fontSize=38&fontColor=ffffff&fontAlignY=38&desc=Student%20Health%20Management%20%C2%B7%20Medical%20Visits%20%C2%B7%20Emergency%20Drills&descAlignY=58&descSize=16&descColor=d0fff8&animation=fadeIn"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,14,20&height=200&section=header&text=PDMHS%20Clinic%20Management%20System&fontSize=38&fontColor=ffffff&fontAlignY=38&desc=Student%20Health%20Management%20%C2%B7%20Medical%20Visits%20%C2%B7%20SMS%20Notification&descAlignY=58&descSize=16&descColor=d0fff8&animation=fadeIn"/>
 
 <br/>
 
@@ -14,7 +14,7 @@
 
 <br/>
 
-> **StudentCare+** — A Digital Clinic Management System with QR Scanning and SMS Alerts at President Diosdado Macapagal High School (PDMHS). Streamlines student health data, medical visits, emergency drills, and health monitoring across multiple user roles.
+> **Studentcare+: A Web-Based Clinic Management System with QR Scanning and SMS Notifications at President Diosdado Macapagal High School (PDMHS). Streamlines student health data, medical visits, and health monitoring across multiple user roles.
 
 </div>
 
@@ -52,7 +52,7 @@
     </tr>
     <tr>
       <td>KRISLYN JANELLE FRANCISCO</td>
-      <td>System Analyst / Document Analyst</td>
+      <td>Document Analyst</td>
       <td><a href="https://github.com/francisco-krislynjanelle"><img src="https://img.shields.io/badge/GitHub-francisco--krislynjanelle-181717?style=flat-square&logo=github"/></a></td>
     </tr>
   </tbody>
@@ -79,6 +79,7 @@
 | Emergency drill management | Medical history tracking | BMI distribution tracking | Wellness streak badges |
 | Health risk visualization | Visit statistics | Advisory student management | QR code access |
 | System settings & audit logs | Analytics & reports | Notifications | Profile management |
+| Semaphore SMS settings | Emergency visit SMS alerts |
 
 </div>
 
@@ -98,6 +99,7 @@
 | 🔐 Auth | Laravel Sanctum (token-based) |
 | 📧 Email | Resend (production), Mailtrap (dev) |
 | 🤖 AI Integration | Groq API |
+| 📱 SMS | Semaphore SMS Gateway |
 | 🐳 Containerization | Docker, Docker Compose |
 | 🔀 Reverse Proxy | Nginx |
 | 📄 PDF / Excel Export | jsPDF, ExcelJS |
@@ -136,7 +138,8 @@
 │   ├── ERD.md
 │   └── USE_CASE.md
 │
-├── 🐳 docker-compose.yml         # Dev environment
+├── 🐳 docker-compose.local.yml   # Local/dev environment
+├── 🐳 docker-compose.prod.yml    # Production environment
 └── 📖 README.md
 ```
 
@@ -160,8 +163,10 @@ cd 4seasons
 cp backend-laravel/.env.example backend-laravel/.env
 
 # Start all services
-docker compose up --build
+docker compose -f docker-compose.local.yml up --build
 ```
+
+Use `docker-compose.prod.yml` for production deployments.
 
 <div align="center">
 
@@ -175,6 +180,22 @@ docker compose up --build
 </div>
 
 > Migrations and default seeds (roles, admin, sections) run automatically on first start.
+
+> Emergency clinic visits can trigger an SMS notification to the student's emergency contact through Semaphore when SMS is enabled.
+
+### 📱 SMS Notification Setup
+
+Add the Semaphore values to `backend-laravel/.env`:
+
+```env
+SEMAPHORE_ENABLED=false
+SEMAPHORE_API_KEY=your_semaphore_api_key_here
+SEMAPHORE_SENDER_NAME=SEMAPHORE
+```
+
+Set `SEMAPHORE_ENABLED=true` to turn on emergency contact SMS alerts. The sender name must match a registered Semaphore sender name, and `SEMAPHORE` can be used while testing in sandbox mode.
+
+When a clinic staff member records an emergency medical visit, the backend sends the SMS after the visit is saved. The service uses the student's `emergency_contact_phone` first, then falls back to the student's own `phone` if needed.
 
 ### 💻 Run Locally (without Docker)
 
