@@ -29,12 +29,14 @@ import { StaffService } from '../../../../core/services/staff.service';
               <div class="profile-item">
                 <div class="profile-label">Full Name</div>
                 <div class="profile-value">{{ profileData.fullName }}</div>
-                <div class="profile-label">Position</div>
-                <div class="profile-value">{{ profileData.position }}</div>
               </div>
               <div class="profile-item">
                 <div class="profile-label">Staff Code</div>
                 <div class="profile-value">{{ profileData.staffCode || 'Not set' }}</div>
+              </div>
+              <div class="profile-item">
+                <div class="profile-label">Position</div>
+                <div class="profile-value">{{ profileData.position }}</div>
               </div>
             </div>
           </div>

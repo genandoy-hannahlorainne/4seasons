@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -65,17 +65,53 @@ interface StudentVisitSummary {
         </div>
         <div class="filter-group">
           <input type="date" [(ngModel)]="dateFilter" (ngModelChange)="loadVisits()" class="filter-input">
-          <select [(ngModel)]="statusFilter" (ngModelChange)="filterVisits()" class="filter-select">
-            <option value="">All Status</option>
-            <option value="Open">Open</option>
-            <option value="Closed">Closed</option>
-            <option value="Referred">Referred</option>
-          </select>
-          <select [(ngModel)]="typeFilter" (ngModelChange)="filterVisits()" class="filter-select">
-            <option value="">All Types</option>
-            <option value="Routine">Routine</option>
-            <option value="Emergency">Emergency</option>
-          </select>
+
+          <!-- Status dropdown -->
+          <div class="custom-dropdown" [class.open]="statusDropdownOpen">
+            <button type="button" class="dropdown-trigger" (click)="toggleStatusDropdown($event)">
+              <span class="dropdown-label">
+                <span class="dropdown-dot" [class]="'dot-' + (statusFilter || 'all').toLowerCase()"></span>
+                {{ statusFilter || 'All Status' }}
+              </span>
+              <i class="bi bi-chevron-down dropdown-chevron"></i>
+            </button>
+            <div class="dropdown-panel" *ngIf="statusDropdownOpen">
+              <button type="button" class="dropdown-option" [class.active]="statusFilter === ''" (click)="setStatus('')">
+                <span class="dropdown-dot dot-all"></span> All Status
+              </button>
+              <button type="button" class="dropdown-option" [class.active]="statusFilter === 'Open'" (click)="setStatus('Open')">
+                <span class="dropdown-dot dot-open"></span> Open
+              </button>
+              <button type="button" class="dropdown-option" [class.active]="statusFilter === 'Closed'" (click)="setStatus('Closed')">
+                <span class="dropdown-dot dot-closed"></span> Closed
+              </button>
+              <button type="button" class="dropdown-option" [class.active]="statusFilter === 'Referred'" (click)="setStatus('Referred')">
+                <span class="dropdown-dot dot-referred"></span> Referred
+              </button>
+            </div>
+          </div>
+
+          <!-- Type dropdown -->
+          <div class="custom-dropdown" [class.open]="typeDropdownOpen">
+            <button type="button" class="dropdown-trigger" (click)="toggleTypeDropdown($event)">
+              <span class="dropdown-label">
+                <i class="bi" [class.bi-clipboard2-check]="typeFilter !== 'Emergency'" [class.bi-heart-pulse]="typeFilter === 'Emergency'"></i>
+                {{ typeFilter || 'All Types' }}
+              </span>
+              <i class="bi bi-chevron-down dropdown-chevron"></i>
+            </button>
+            <div class="dropdown-panel" *ngIf="typeDropdownOpen">
+              <button type="button" class="dropdown-option" [class.active]="typeFilter === ''" (click)="setType('')">
+                <i class="bi bi-clipboard2-check"></i> All Types
+              </button>
+              <button type="button" class="dropdown-option" [class.active]="typeFilter === 'Routine'" (click)="setType('Routine')">
+                <i class="bi bi-clipboard2-check"></i> Routine
+              </button>
+              <button type="button" class="dropdown-option" [class.active]="typeFilter === 'Emergency'" (click)="setType('Emergency')">
+                <i class="bi bi-heart-pulse"></i> Emergency
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -405,9 +441,10 @@ interface StudentVisitSummary {
       display: flex;
       gap: 1rem;
       flex-wrap: wrap;
+      align-items: center;
     }
 
-    .filter-input, .filter-select {
+    .filter-input {
       padding: 0.875rem 1.25rem;
       border: 1.5px solid #e2e8f0;
       border-radius: 12px;
@@ -422,6 +459,120 @@ interface StudentVisitSummary {
         border-color: #3b82f6;
         box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
       }
+    }
+
+    /* ── Custom Dropdown ── */
+    .custom-dropdown {
+      position: relative;
+    }
+
+    .dropdown-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.875rem 1.1rem;
+      background: white;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #0f172a;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      min-width: 140px;
+      justify-content: space-between;
+
+      &:hover {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+      }
+    }
+
+    .custom-dropdown.open .dropdown-trigger {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+
+    .dropdown-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dropdown-chevron {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      transition: transform 0.2s ease;
+    }
+
+    .custom-dropdown.open .dropdown-chevron {
+      transform: rotate(180deg);
+    }
+
+    .dropdown-panel {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      min-width: 100%;
+      background: white;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+      z-index: 200;
+      overflow: hidden;
+      animation: dropdownIn 0.15s ease;
+    }
+
+    @keyframes dropdownIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .dropdown-option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      width: 100%;
+      padding: 0.7rem 1rem;
+      background: none;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #334155;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+
+      &:hover {
+        background: #f1f5f9;
+        color: #052355;
+      }
+
+      &.active {
+        background: #1d4ed8;
+        color: white;
+        font-weight: 700;
+
+        .dropdown-dot { border-color: rgba(255,255,255,0.6); }
+      }
+
+      i { font-size: 0.85rem; }
+    }
+
+    /* Status dots */
+    .dropdown-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 1.5px solid transparent;
+
+      &.dot-all      { background: #94a3b8; }
+      &.dot-open     { background: #f59e0b; }
+      &.dot-closed   { background: #22c55e; }
+      &.dot-referred { background: #3b82f6; }
     }
 
     .card {
@@ -624,16 +775,16 @@ interface StudentVisitSummary {
 
     .visit-record-grid {
       display: grid;
-      grid-template-columns: auto auto 1fr;
-      gap: 0.6rem 1.5rem;
-      align-items: center;
+      grid-template-columns: 160px 160px 1fr 1fr;
+      gap: 0.5rem 2rem;
+      align-items: start;
 
       .record-field {
         display: flex;
         flex-direction: column;
-        gap: 0.2rem;
+        gap: 0.25rem;
 
-        &.full-width { grid-column: 1 / -1; }
+        &.full-width { grid-column: 3 / -1; }
       }
 
       .field-label {
@@ -869,6 +1020,7 @@ interface StudentVisitSummary {
       .student-header { flex-direction: column; align-items: flex-start; }
       .visit-stats { width: 100%; justify-content: flex-start; }
       .visit-record-grid { grid-template-columns: 1fr 1fr; }
+      .visit-record-grid .record-field.full-width { grid-column: 1 / -1; }
       .card-footer { flex-direction: column; align-items: flex-start; }
       .history-table th:nth-child(2), .history-table td:nth-child(2) { display: none; }
     }
@@ -879,6 +1031,8 @@ export class VisitsListComponent implements OnInit, OnDestroy {
   dateFilter = '';
   statusFilter = '';
   typeFilter = '';
+  statusDropdownOpen = false;
+  typeDropdownOpen = false;
   loading = true;
   error: string | null = null;
 
@@ -995,6 +1149,36 @@ export class VisitsListComponent implements OnInit, OnDestroy {
 
       return matchesSearch && matchesStatus && matchesType;
     });
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.statusDropdownOpen = false;
+    this.typeDropdownOpen = false;
+  }
+
+  toggleStatusDropdown(e: Event): void {
+    e.stopPropagation();
+    this.typeDropdownOpen = false;
+    this.statusDropdownOpen = !this.statusDropdownOpen;
+  }
+
+  toggleTypeDropdown(e: Event): void {
+    e.stopPropagation();
+    this.statusDropdownOpen = false;
+    this.typeDropdownOpen = !this.typeDropdownOpen;
+  }
+
+  setStatus(value: string): void {
+    this.statusFilter = value;
+    this.statusDropdownOpen = false;
+    this.filterVisits();
+  }
+
+  setType(value: string): void {
+    this.typeFilter = value;
+    this.typeDropdownOpen = false;
+    this.filterVisits();
   }
 
   clearFilters(): void {
