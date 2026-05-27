@@ -31,12 +31,12 @@
   <!-- Form Content -->
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
-    <!-- Error/Success Messages -->
-    <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
-    <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+    <!-- Error/Success Messages are shown inside each step -->
 
     <!-- Step 1: Student Information -->
     <div class="form-step" *ngIf="currentStep === 1" formGroupName="student">
+      <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
       <div class="step-header">
         <i class="bi bi-person-vcard-fill step-icon-img"></i>
         <h2>Student Information</h2>
@@ -107,17 +107,15 @@
 
       <!-- Navigation Buttons -->
       <div class="form-navigation">
-        <button type="button" class="btn-cancel" *ngIf="isModal" (click)="onCancel()">
-          ← Back to Dashboard
-        </button>
-        <button type="button" class="btn-next" (click)="nextStep()">
-          Next →
-        </button>
+        <button type="button" class="btn-cancel" *ngIf="isModal" (click)="onCancel()"><i class="bi bi-house-door-fill"></i> Back</button>
+        <button type="button" class="btn-next" (click)="nextStep()">Next <i class="bi bi-chevron-right"></i></button>
       </div>
     </div>
 
     <!-- Step 2: PhilHealth -->
     <div class="form-step" *ngIf="currentStep === 2" formGroupName="philhealth">
+      <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
       <div class="step-header">
         <i class="bi bi-shield-plus-fill step-icon-img"></i>
         <h2>PhilHealth Information</h2>
@@ -159,17 +157,15 @@
 
       <!-- Navigation Buttons -->
       <div class="form-navigation">
-        <button type="button" class="btn-back" (click)="previousStep()">
-          ← Previous
-        </button>
-        <button type="button" class="btn-next" (click)="nextStep()">
-          Next →
-        </button>
+        <button type="button" class="btn-back" (click)="previousStep()"><i class="bi bi-chevron-left"></i> Previous</button>
+        <button type="button" class="btn-next" (click)="nextStep()">Next <i class="bi bi-chevron-right"></i></button>
       </div>
     </div>
 
     <!-- Step 3: Immunizations -->
     <div class="form-step" *ngIf="currentStep === 3" formGroupName="immunizations">
+      <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
       <div class="step-header">
         <i class="bi bi-clipboard2-pulse-fill step-icon-img"></i>
         <h2>Immunization Records</h2>
@@ -197,17 +193,15 @@
 
       <!-- Navigation Buttons -->
       <div class="form-navigation">
-        <button type="button" class="btn-back" (click)="previousStep()">
-          ← Previous
-        </button>
-        <button type="button" class="btn-next" (click)="nextStep()">
-          Next →
-        </button>
+        <button type="button" class="btn-back" (click)="previousStep()"><i class="bi bi-chevron-left"></i> Previous</button>
+        <button type="button" class="btn-next" (click)="nextStep()">Next <i class="bi bi-chevron-right"></i></button>
       </div>
     </div>
 
     <!-- Step 4: Medical History -->
     <div class="form-step" *ngIf="currentStep === 4" formGroupName="medical">
+      <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
       <div class="step-header">
         <i class="bi bi-heart-pulse-fill step-icon-img"></i>
         <h2>Medical History</h2>
@@ -339,17 +333,15 @@
 
       <!-- Navigation Buttons -->
       <div class="form-navigation">
-        <button type="button" class="btn-back" (click)="previousStep()">
-          ← Previous
-        </button>
-        <button type="button" class="btn-next" (click)="nextStep()">
-          Next →
-        </button>
+        <button type="button" class="btn-back" (click)="previousStep()"><i class="bi bi-chevron-left"></i> Previous</button>
+        <button type="button" class="btn-next" (click)="nextStep()">Next <i class="bi bi-chevron-right"></i></button>
       </div>
     </div>
 
     <!-- Step 5: Family History -->
     <div class="form-step" *ngIf="currentStep === 5" formGroupName="family">
+      <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
       <div class="step-header">
         <i class="bi bi-people-fill step-icon-img"></i>
         <h2>Family History</h2>
@@ -430,17 +422,15 @@
 
       <!-- Navigation Buttons -->
       <div class="form-navigation">
-        <button type="button" class="btn-back" (click)="previousStep()">
-          ← Previous
-        </button>
-        <button type="button" class="btn-next" (click)="nextStep()">
-          Next →
-        </button>
+        <button type="button" class="btn-back" (click)="previousStep()"><i class="bi bi-chevron-left"></i> Previous</button>
+        <button type="button" class="btn-next" (click)="nextStep()">Next <i class="bi bi-chevron-right"></i></button>
       </div>
     </div>
 
     <!-- Step 6: Parental Consent -->
     <div class="form-step" *ngIf="currentStep === 6" formGroupName="consent">
+      <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
       <div class="step-header">
         <i class="bi bi-file-earmark-check-fill step-icon-img"></i>
         <h2>Parental Consent</h2>
@@ -539,9 +529,7 @@
 
       <!-- Navigation Buttons -->
       <div class="form-navigation">
-        <button type="button" class="btn-back" (click)="previousStep()">
-          ← Previous
-        </button>
+        <button type="button" class="btn-back" (click)="previousStep()"><i class="bi bi-chevron-left"></i> Previous</button>
         <button type="submit" class="btn-submit" [disabled]="loading">
           {{ loading ? 'Submitting...' : 'Submit Form' }}
         </button>
