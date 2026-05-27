@@ -419,6 +419,26 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  getThisMonthVisits(): number {
+    const now = new Date();
+    return this.visitSummaries.filter(v => {
+      const d = new Date(v.visit_datetime);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+  }
+
+  getEmergencyVisits(): number {
+    return this.visitSummaries.filter(v =>
+      (v.visit_type || '').toLowerCase() === 'emergency'
+    ).length;
+  }
+
+  getRoutineVisits(): number {
+    return this.visitSummaries.filter(v =>
+      (v.visit_type || '').toLowerCase() === 'routine'
+    ).length;
+  }
+
   calculateAge(birthDate: string): number {
     const today = new Date();
     const birth = new Date(birthDate);
