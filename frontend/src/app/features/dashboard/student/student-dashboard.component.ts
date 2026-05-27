@@ -441,8 +441,15 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     return 'bi bi-person-circle';
   }
 
-  goToSHDFForm(): void {
+  goToSHDFBasic(): void {
     const currentUser = this.authService.currentUserValue;
+    const studentId = currentUser?.student_info?.student_id;
+    if (studentId) {
+      this.router.navigate(['/shdf', studentId, 'basic']);
+    }
+  }
+
+  goToSHDFForm(): void {    const currentUser = this.authService.currentUserValue;
     if (currentUser && currentUser.user_id) {
       // Get student_id from the loaded profile
       this.studentService.getStudentProfile(currentUser.user_id).subscribe({

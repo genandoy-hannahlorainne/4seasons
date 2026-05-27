@@ -11,6 +11,14 @@
         <div class="overview-title">Dashboard Overview</div>
         <div class="overview-sub">Welcome back, {{ studentName }}!</div>
         <div class="overview-meta">{{ studentId }} • {{ gradeLevel }}</div>
+
+        <!-- SHDF Alert Banner -->
+        <div *ngIf="shdfStatus && !shdfStatus.is_fully_compliant" class="shdf-alert-banner" (click)="goToSHDFBasic()">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span *ngIf="!shdfStatus.basic_completed">Complete your Student Health Data Form (SHDF)</span>
+          <span *ngIf="shdfStatus.basic_completed && !shdfStatus.comprehensive_completed">Complete Your SHDF – Comprehensive Form</span>
+          <span class="banner-arrow">→</span>
+        </div>
       </div>
 
       <div class="stats-container">

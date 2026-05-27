@@ -140,6 +140,35 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     margin: 0.25rem 0 0;
   }
 
+  .shdf-alert-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    padding: 0.5rem 0.875rem;
+    background: rgba(255, 193, 7, 0.15);
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    max-width: 100%;
+
+    i { font-size: 0.85rem; color: #ffc107; flex-shrink: 0; }
+
+    .banner-arrow {
+      font-size: 0.9rem;
+      opacity: 0.75;
+      margin-left: 0.25rem;
+    }
+
+    &:hover {
+      background: rgba(255, 193, 7, 0.25);
+    }
+  }
+
   .stats-container {
     background: white;
     border-radius: 12px;

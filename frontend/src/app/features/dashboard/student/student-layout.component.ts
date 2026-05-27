@@ -46,11 +46,6 @@ import { filter } from 'rxjs/operators';
             <i class="bi bi-heart-pulse-fill nav-icon"></i>
             <span class="nav-label">My Medical</span>
           </a>
-          <button class="nav-item notification" (click)="toggleNotifications($event)" title="Notifications">
-            <i class="bi bi-bell-fill nav-icon"></i>
-            <span class="nav-label">Notifications</span>
-            <span *ngIf="notificationCount > 0" class="notif-count">{{ notificationCount }}</span>
-          </button>
           <button class="nav-item" (click)="toggleBadges($event)" title="Badges">
             <i class="bi bi-award-fill nav-icon"></i>
             <span class="nav-label">Badges</span>
@@ -273,6 +268,7 @@ export class StudentLayoutComponent implements OnInit, OnDestroy {
   isCollapsed = false;
   mobileOpen = false;
   loggingOut = false;
+  isDashboardRoute = false;
   showNotificationsPanel = false;
   showBadgesPanel = false;
   notificationsLoading = false;
@@ -306,15 +302,19 @@ export class StudentLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.checkSHDFStatus();
+    this.updateDashboardRoute(this.router.url);
 
-    // Re-check SHDF status on every navigation so the notification
-    // clears immediately after the student submits the comprehensive form
-    // and navigates back to the dashboard.
     this.routerSub = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
+      .subscribe((event: any) => {
         this.checkSHDFStatus();
+        this.updateDashboardRoute(event.urlAfterRedirects);
       });
+  }
+
+  private updateDashboardRoute(url: string): void {
+    const path = url.split('?')[0].replace(/\/$/, '');
+    this.isDashboardRoute = path === '/dashboard/student' || path.endsWith('/dashboard/student');
   }
 
   ngOnDestroy(): void {
