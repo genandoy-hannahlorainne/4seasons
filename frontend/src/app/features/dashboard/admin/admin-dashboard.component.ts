@@ -50,12 +50,12 @@ interface UsersResponse {
       <!-- Hero Section -->
       <div class="hero-section">
         <div class="hero-content">
-          <app-admin-notification-bell variant="page-header-corner" />
           <div class="hero-text">
             <h1>Welcome to PDMHS Admin Dashboard</h1>
             <p>Manage your school's medical records system efficiently and securely</p>
           </div>
         </div>
+        <app-admin-notification-bell variant="page-header-corner" />
       </div>
 
       <!-- Skeleton Loading State -->
@@ -1089,8 +1089,6 @@ interface UsersResponse {
         }
         .alert-dismiss {
           background: none;
-          border: none;
-          font-size: 1.25rem;
           color: #7f8c8d;
           cursor: pointer;
           &:hover { color: #2c3e50; }

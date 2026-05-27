@@ -6,9 +6,8 @@
       </button>
       <h1>{{ getPageTitle() }}</h1>
       <p>{{ getPageSubtitle() }}</p>
-      <!-- bell moved inside header-left so it anchors to the inner content column -->
-      <app-admin-notification-bell variant="page-header-corner" />
     </div>
+    <app-admin-notification-bell variant="page-header-corner" />
     <div class="page-header-end">
       <div class="header-actions">
       <button class="btn btn-secondary" (click)="openBulkImportModal()" *ngIf="selectedRole === 'student'">
@@ -544,166 +543,212 @@
       <button class="close-btn" (click)="closeCreateUserModal()"><i class="fa-solid fa-xmark"></i></button>
       <div class="modal-header">
         <h2>Create New User Account</h2>
-        <p class="modal-subtitle">Fill in the details to create a new user account. An email will be sent with login credentials.</p>
+        <p class="modal-subtitle">Please complete the required fields to provision a new user account. A notification containing login credentials will be transmitted to the specified email address.</p>
       </div>
       <div *ngIf="createSuccessMessage" class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ createSuccessMessage }}</div>
       <div class="modal-body">
-        <div class="form-group">
-          <label>User Role *</label>
-          <select [(ngModel)]="newUser.role" (change)="onRoleSelect()" class="form-control" required>
-            <option value="">-- Select Role --</option>
-            <option value="student">Student</option>
-            <option value="adviser">Faculty/Adviser</option>
-            <option value="clinic_staff">Clinic Staff</option>
-          </select>
-        </div>
-        <div class="info-section">
-          <h3>Basic Information</h3>
-          <div class="form-group">
-            <label>Email Address *</label>
-            <input type="email" [(ngModel)]="newUser.email" placeholder="user@example.com"
-              class="form-control" [class.input-error]="hasFieldError('email')" required>
-            <small *ngIf="hasFieldError('email')" class="field-error-text">{{ getFieldError('email') }}</small>
-            <small *ngIf="!hasFieldError('email')">Used for login credentials and notifications</small>
+        <div class="create-stepper">
+          <div class="create-stepper-header" aria-label="Create user steps">
+            <button
+              type="button"
+              class="step-node"
+              [class.active]="createUserStep >= 1"
+              (click)="goToCreateUserStep(1)">
+              <span class="step-circle">1</span>
+              <span class="step-label">Basic Information</span>
+            </button>
+
+            <span class="step-connector" [class.active]="createUserStep >= 2"></span>
+
+            <button
+              type="button"
+              class="step-node"
+              [class.active]="createUserStep === 2"
+              [class.disabled]="!canProceedToRoleStep"
+              (click)="goToCreateUserStep(2)">
+              <span class="step-circle">2</span>
+              <span class="step-label">{{ createRoleLabel }} Information</span>
+            </button>
           </div>
-          <div class="form-group">
-            <label>Phone Number</label>
-            <input type="tel" [(ngModel)]="newUser.phone" placeholder="09XXXXXXXXX" class="form-control">
-          </div>
-        </div>
-        <div *ngIf="newUser.role === 'student'" class="info-section">
-          <h3>Student Information</h3>
-          <div class="form-row">
+
+          <div class="step-panel" *ngIf="createUserStep === 1">
+            <div class="step-panel-title">Step 1 of 2: Basic Information</div>
             <div class="form-group">
-              <label>Student Number *</label>
-              <input type="text" [(ngModel)]="newUser.student_number" placeholder="13XXXXXXXXXX" pattern="^13\d{10}$" maxlength="12" class="form-control" required>
-              <small>Must be exactly 12 digits and start with 13 (e.g. 130000000001)</small>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>First Name *</label>
-              <input type="text" [(ngModel)]="newUser.first_name" placeholder="Juan" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label>Middle Name</label>
-              <input type="text" [(ngModel)]="newUser.middle_name" placeholder="Dela" class="form-control">
-            </div>
-            <div class="form-group">
-              <label>Last Name *</label>
-              <input type="text" [(ngModel)]="newUser.last_name" placeholder="Cruz" class="form-control" required>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Gender *</label>
-              <select [(ngModel)]="newUser.gender" class="form-control" required>
-                <option value="">-- Select --</option>
-                <option value="M">Male</option>
-                <option value="F">Female</option>
+              <label>User Role *</label>
+              <select [(ngModel)]="newUser.role" (change)="onRoleSelect()" class="form-control" required>
+                <option value="">Please select role</option>
+                <option value="student">Student</option>
+                <option value="adviser">Faculty/Adviser</option>
+                <option value="clinic_staff">Clinic Staff</option>
               </select>
             </div>
-            <div class="form-group">
-              <label>Birth Date *</label>
-              <input type="date" [(ngModel)]="newUser.birth_date" class="form-control" required>
+            <div class="info-section compact">
+              <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" [(ngModel)]="newUser.email" placeholder="user@example.com"
+                  class="form-control" [class.input-error]="hasFieldError('email')" required>
+                <small *ngIf="hasFieldError('email')" class="field-error-text">{{ getFieldError('email') }}</small>
+                <small *ngIf="!hasFieldError('email')">This address will be used for account access and official communications.</small>
+              </div>
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" [(ngModel)]="newUser.phone" placeholder="09XXXXXXXXX" class="form-control">
+              </div>
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Grade Level *</label>
-              <select [(ngModel)]="newUser.grade_level" (change)="onGradeLevelChange()" class="form-control" required>
-                <option value="">-- Select --</option>
-                <option *ngFor="let grade of gradeLevels" [value]="grade.id">{{ grade.level_name }}</option>
-              </select>
+
+          <div class="step-panel" *ngIf="createUserStep === 2">
+            <div class="step-panel-title">Step 2 of 2: {{ createRoleLabel }} Information</div>
+
+            <div *ngIf="newUser.role === 'student'" class="info-section">
+              <h3>Student Information</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Student Number *</label>
+                  <input type="text" [(ngModel)]="newUser.student_number" placeholder="13XXXXXXXXXX" pattern="^13\d{10}$" maxlength="12" class="form-control" required>
+                  <small>The student number must comprise exactly 12 digits and begin with "13" (for example: 130000000001).</small>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>First Name *</label>
+                  <input type="text" [(ngModel)]="newUser.first_name" placeholder="Juan" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label>Middle Name</label>
+                  <input type="text" [(ngModel)]="newUser.middle_name" placeholder="Dela" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>Last Name *</label>
+                  <input type="text" [(ngModel)]="newUser.last_name" placeholder="Cruz" class="form-control" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Gender *</label>
+                  <select [(ngModel)]="newUser.gender" class="form-control" required>
+                    <option value="">-- Select --</option>
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Birth Date *</label>
+                  <input type="date" [(ngModel)]="newUser.birth_date" class="form-control" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Grade Level *</label>
+                  <select [(ngModel)]="newUser.grade_level" (change)="onGradeLevelChange()" class="form-control" required>
+                    <option value="">-- Select --</option>
+                    <option *ngFor="let grade of gradeLevels" [value]="grade.id">{{ grade.level_name }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Section *</label>
+                  <select [(ngModel)]="newUser.section_id" class="form-control" required [disabled]="!newUser.grade_level || loadingSections">
+                    <option value="">{{ loadingSections ? 'Loading sections...' : (newUser.grade_level ? '-- Select Section --' : 'Select Grade Level First') }}</option>
+                    <option *ngFor="let section of getAvailableSections()" [value]="section.id">
+                      {{ section.section_name }} ({{ section.current_enrollment || 0 }}/{{ section.capacity }})
+                    </option>
+                  </select>
+                  <small *ngIf="newUser.grade_level && availableSections.length > 0">Available sections for the selected grade level.</small>
+                  <small *ngIf="newUser.grade_level && availableSections.length === 0 && !loadingSections" style="color: #f44336;">No sections are available for the selected grade level.</small>
+                </div>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Section *</label>
-              <select [(ngModel)]="newUser.section_id" class="form-control" required [disabled]="!newUser.grade_level || loadingSections">
-                <option value="">{{ loadingSections ? 'Loading sections...' : (newUser.grade_level ? '-- Select Section --' : 'Select Grade Level First') }}</option>
-                <option *ngFor="let section of getAvailableSections()" [value]="section.id">
-                  {{ section.section_name }} ({{ section.current_enrollment || 0 }}/{{ section.capacity }})
-                </option>
-              </select>
-              <small *ngIf="newUser.grade_level && availableSections.length > 0">Available sections for selected grade level</small>
-              <small *ngIf="newUser.grade_level && availableSections.length === 0 && !loadingSections" style="color: #f44336;">No sections available for this grade level</small>
+
+            <div *ngIf="newUser.role === 'adviser'" class="info-section">
+              <h3>Faculty/Adviser Information</h3>
+              <div class="form-group">
+                <label>Employee ID *</label>
+                <input type="text" [(ngModel)]="newUser.employee_id" placeholder="EMP-2024-001"
+                  class="form-control" [class.input-error]="hasFieldError('employee_id')" required>
+                <small *ngIf="hasFieldError('employee_id')" class="field-error-text">{{ getFieldError('employee_id') }}</small>
+                <small *ngIf="!hasFieldError('employee_id')">Provide the official employee identifier where applicable.</small>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>First Name *</label>
+                  <input type="text" [(ngModel)]="newUser.first_name" placeholder="Maria" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label>Last Name *</label>
+                  <input type="text" [(ngModel)]="newUser.last_name" placeholder="Santos" class="form-control" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Advisory Grade Level</label>
+                  <select [(ngModel)]="newUser.grade_level" (change)="onGradeLevelChange()" class="form-control">
+                    <option value="">-- None --</option>
+                    <option *ngFor="let grade of gradeLevels" [value]="grade.id">{{ grade.level_name }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Advisory Section</label>
+                  <select [(ngModel)]="newUser.section_id" class="form-control" [disabled]="!newUser.grade_level || loadingSections">
+                    <option value="">{{ loadingSections ? 'Loading sections...' : (newUser.grade_level ? '-- None --' : 'Select Grade Level First') }}</option>
+                    <option *ngFor="let section of getAvailableSections()" [value]="section.id">
+                      {{ section.section_name }} ({{ section.current_enrollment || 0 }}/{{ section.capacity }})
+                    </option>
+                  </select>
+                  <small *ngIf="newUser.grade_level && availableSections.length > 0">Available sections for the selected grade level.</small>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="newUser.role === 'clinic_staff'" class="info-section">
+              <h3>Clinic Staff Information</h3>
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" [(ngModel)]="newUser.full_name" placeholder="Dr. Juan Dela Cruz" class="form-control" required>
+                <small>Include academic or professional prefixes where appropriate.</small>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Staff Code *</label>
+                  <input type="text" [(ngModel)]="newUser.staff_code" placeholder="STAFF-001"
+                    class="form-control" [class.input-error]="hasFieldError('staff_code')" required maxlength="20">
+                  <small *ngIf="hasFieldError('staff_code')" class="field-error-text">{{ getFieldError('staff_code') }}</small>
+                  <small *ngIf="!hasFieldError('staff_code')">Maximum 20 characters.</small>
+                </div>
+                <div class="form-group">
+                  <label>Position *</label>
+                  <input type="text" [(ngModel)]="newUser.position" placeholder="School Nurse" class="form-control" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-box">
+              <i class="fa-solid fa-circle-info"></i>
+              <div>
+                <strong>Next steps</strong>
+                <ul>
+                  <li>A temporary password will be generated automatically.</li>
+                  <li>The system will send an email to the user containing their login credentials.</li>
+                  <li>The user will be required to change their password upon first sign-in.</li>
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
-        <div *ngIf="newUser.role === 'adviser'" class="info-section">
-          <h3>Faculty/Adviser Information</h3>
-          <div class="form-group">
-            <label>Employee ID *</label>
-            <input type="text" [(ngModel)]="newUser.employee_id" placeholder="EMP-2024-001"
-              class="form-control" [class.input-error]="hasFieldError('employee_id')" required>
-            <small *ngIf="hasFieldError('employee_id')" class="field-error-text">{{ getFieldError('employee_id') }}</small>
+
+            <div class="step-actions">
+            <button class="btn btn-outline" *ngIf="createUserStep === 2" type="button" (click)="goToCreateUserStep(1)" [disabled]="creatingUser">
+              <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <div class="step-actions-spacer" *ngIf="createUserStep === 1"></div>
+            <button *ngIf="createUserStep === 1" class="btn btn-primary" type="button" (click)="goToCreateUserStep(2)" [disabled]="!canProceedToRoleStep">
+              Continue <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            <button *ngIf="createUserStep === 2" class="btn btn-primary" type="button" (click)="createUser()" [disabled]="creatingUser || !isCreateFormValid()">
+              <span *ngIf="!creatingUser"><i class="fa-solid fa-user-plus"></i> Create Account</span>
+              <span *ngIf="creatingUser"><i class="fa-solid fa-spinner fa-spin"></i> Creating...</span>
+            </button>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>First Name *</label>
-              <input type="text" [(ngModel)]="newUser.first_name" placeholder="Maria" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label>Last Name *</label>
-              <input type="text" [(ngModel)]="newUser.last_name" placeholder="Santos" class="form-control" required>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Advisory Grade Level</label>
-              <select [(ngModel)]="newUser.grade_level" (change)="onGradeLevelChange()" class="form-control">
-                <option value="">-- None --</option>
-                <option *ngFor="let grade of gradeLevels" [value]="grade.id">{{ grade.level_name }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Advisory Section</label>
-              <select [(ngModel)]="newUser.section_id" class="form-control" [disabled]="!newUser.grade_level || loadingSections">
-                <option value="">{{ loadingSections ? 'Loading sections...' : (newUser.grade_level ? '-- None --' : 'Select Grade Level First') }}</option>
-                <option *ngFor="let section of getAvailableSections()" [value]="section.id">
-                  {{ section.section_name }} ({{ section.current_enrollment || 0 }}/{{ section.capacity }})
-                </option>
-              </select>
-              <small *ngIf="newUser.grade_level && availableSections.length > 0">Available sections for selected grade level</small>
-            </div>
-          </div>
-        </div>
-        <div *ngIf="newUser.role === 'clinic_staff'" class="info-section">
-          <h3>Clinic Staff Information</h3>
-          <div class="form-group">
-            <label>Full Name *</label>
-            <input type="text" [(ngModel)]="newUser.full_name" placeholder="Dr. Juan Dela Cruz" class="form-control" required>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Staff Code *</label>
-              <input type="text" [(ngModel)]="newUser.staff_code" placeholder="STAFF-001"
-                class="form-control" [class.input-error]="hasFieldError('staff_code')" required maxlength="20">
-              <small *ngIf="hasFieldError('staff_code')" class="field-error-text">{{ getFieldError('staff_code') }}</small>
-              <small *ngIf="!hasFieldError('staff_code')">Max 20 characters</small>
-            </div>
-            <div class="form-group">
-              <label>Position *</label>
-              <input type="text" [(ngModel)]="newUser.position" placeholder="School Nurse" class="form-control" required>
-            </div>
-          </div>
-        </div>
-        <div class="info-box">
-          <i class="fa-solid fa-circle-info"></i>
-          <div>
-            <strong>What happens next?</strong>
-            <ul>
-              <li>A temporary password will be automatically generated</li>
-              <li>An email will be sent to the user with their login credentials</li>
-              <li>The user must change their password on first login</li>
-            </ul>
-          </div>
-        </div>
       </div>
       <div class="modal-actions">
-        <button class="btn btn-primary" (click)="createUser()" [disabled]="creatingUser || !isCreateFormValid()">
-          <span *ngIf="!creatingUser"><i class="fa-solid fa-user-plus"></i> Create Account</span>
-          <span *ngIf="creatingUser"><i class="fa-solid fa-spinner fa-spin"></i> Creating...</span>
-        </button>
         <button class="btn btn-outline" (click)="closeCreateUserModal()" [disabled]="creatingUser">Cancel</button>
       </div>
     </div>

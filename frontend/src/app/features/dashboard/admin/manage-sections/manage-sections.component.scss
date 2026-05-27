@@ -270,6 +270,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    align-items: flex-start;
   }
 
   h1 {
@@ -303,6 +304,7 @@
       background: rgba(255, 255, 255, 0.25);
       border-color: #ffffff;
     }
+    align-self: flex-start;
   }
 
   .btn-primary {
@@ -329,6 +331,18 @@
       opacity: 0.6;
       cursor: not-allowed;
     }
+  }
+}
+
+/* Page-specific bell offset to avoid overlapping the Add Section button */
+.page-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner {
+  /* baseline bump to the right to clear the action button */
+  right: calc((100% - 1400px) / 2 + 1.5rem + 96px);
+}
+
+@supports not (right: calc(0px)) {
+  .page-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner {
+    right: 110px; /* fallback for older browsers */
   }
 }
 

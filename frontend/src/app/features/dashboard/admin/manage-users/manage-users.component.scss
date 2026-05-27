@@ -184,16 +184,6 @@
   min-height: 100vh;
 }
 
-/* Position header-left as relative so bell inside it can be absolutely positioned to the inner column */
-.page-header .header-left { position: relative; }
-
-.page-header .header-left app-admin-notification-bell.variant-page-header-corner {
-  position: absolute;
-  top: 1.25rem;
-  right: 1.5rem;
-  z-index: 5200;
-}
-
 .management-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.75fr) minmax(320px, 1fr);
@@ -398,14 +388,60 @@
   padding: 1.5rem;
   border-radius: 14px;
   background: #f8fbff;
-  border: 1px dashed #d3e0ee;
-  text-align: center;
-  color: #6b7f95;
 
-  i {
-    display: block;
-    font-size: 1.75rem;
-    margin-bottom: 0.5rem;
+}
+
+/* ── Create User Modal Formal Styling Overrides ── */
+.create-user-modal {
+  .modal-header {
+    .modal-subtitle {
+      margin-top: 0.25rem;
+      color: #425569;
+      font-size: 0.95rem;
+      line-height: 1.35;
+      max-width: 64ch;
+    }
+  }
+
+  .create-stepper {
+    .step-panel-title {
+      font-weight: 600;
+      color: #243b53;
+      margin-bottom: 0.65rem;
+      font-size: 0.98rem;
+    }
+
+    .info-box {
+      background: #f8fafc;
+      border: 1px solid #e6eef8;
+      border-radius: 10px;
+      padding: 0.9rem;
+      display: flex;
+      gap: 0.8rem;
+      color: #2f485e;
+
+      i { color: #0f4c81; margin-top: 3px; }
+
+      strong { display: block; margin-bottom: 0.25rem; font-weight: 700; }
+
+      ul { margin: 0; padding-left: 1.15rem; }
+      li { margin-bottom: 0.25rem; }
+    }
+
+    .form-group small, .field-error-text {
+      display: block;
+      margin-top: 0.35rem;
+      color: #5b6b7d;
+      font-size: 0.85rem;
+    }
+
+    .step-actions .btn { min-width: 140px; }
+  }
+
+  /* Make modal content slightly more restrained */
+  .modal-content {
+    box-shadow: 0 8px 28px rgba(5, 35, 85, 0.06);
+    border-radius: 12px;
   }
 }
 
@@ -1466,9 +1502,122 @@
   max-width: 700px;
   max-height: 90vh;
   overflow-y: auto;
+  background: var(--card-bg);
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   
+  .create-stepper {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .create-stepper-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+    align-items: start;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem 0.25rem;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 2px);
+  }
+
+  .step-node {
+    border: none;
+    background: transparent;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: transform 0.15s ease, color 0.15s ease;
+    text-align: center;
+    min-width: 0;
+
+    &:hover:not(.disabled) {
+      color: var(--brand-600);
+      transform: translateY(-2px);
+    }
+
+    &.active {
+      color: var(--brand);
+    }
+
+    &.disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  .step-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(15,23,42,0.06);
+    background: #ffffff;
+    color: var(--muted);
+    font-weight: 800;
+    font-size: 1rem;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    flex-shrink: 0;
+  }
+
+  .step-node.active .step-circle {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #ffffff;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
+  }
+
+  .step-label {
+    font-weight: 700;
+    line-height: 1.1;
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+    display: block;
+  }
+
+  .step-node.active .step-label {
+    color: var(--brand-600);
+  }
+
+  .step-connector {
+    align-self: center;
+    height: 2px;
+    margin-top: 0.6rem;
+    border-radius: 999px;
+    background: #e6edf6;
+    position: relative;
+
+    &.active {
+      background: linear-gradient(90deg, var(--brand) 0%, var(--brand-600) 100%);
+    }
+  }
+
+  .step-panel {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  }
+
+  .step-panel-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
   .modal-subtitle {
-    color: #7f8c8d;
+    color: var(--muted);
     font-size: 0.95rem;
     margin-top: 0.5rem;
   }
@@ -1482,7 +1631,7 @@
   .info-section {
     margin-bottom: 1.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid #ecf0f1;
+    border-bottom: 1px solid var(--border);
     
     &:last-of-type {
       border-bottom: none;
@@ -1490,23 +1639,48 @@
     
     h3 {
       font-size: 1.1rem;
-      color: #2c3e50;
+      color: var(--text);
       margin-bottom: 1rem;
       font-weight: 600;
     }
   }
+
+  .info-section.compact {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .step-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 1rem;
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  .step-actions-spacer {
+    flex: 1;
+  }
   
   .info-box {
-    background: linear-gradient(135deg, rgba(5, 35, 85, 0.05) 0%, rgba(83, 129, 178, 0.05) 100%);
-    border-left: 4px solid #052355;
+    background: linear-gradient(180deg, rgba(37, 99, 235, 0.06) 0%, rgba(37, 99, 235, 0.02) 100%);
+    border: 1px solid rgba(37, 99, 235, 0.14);
+    border-left: 4px solid var(--brand);
     padding: 1rem;
-    border-radius: 6px;
+    border-radius: 12px;
     display: flex;
     gap: 1rem;
     margin-top: 1.5rem;
     
     i {
-      color: #052355;
+      color: var(--brand);
       font-size: 1.5rem;
       flex-shrink: 0;
     }
@@ -1514,7 +1688,7 @@
     strong {
       display: block;
       margin-bottom: 0.5rem;
-      color: #2c3e50;
+      color: var(--text);
     }
     
     ul {
@@ -1523,7 +1697,7 @@
       
       li {
         margin-bottom: 0.3rem;
-        color: #555;
+        color: var(--muted);
         font-size: 0.9rem;
       }
     }
@@ -1531,9 +1705,61 @@
   
   small {
     display: block;
-    color: #7f8c8d;
+    color: var(--muted);
     font-size: 0.85rem;
     margin-top: 0.3rem;
+  }
+
+  .modal-actions {
+    justify-content: space-between;
+  }
+}
+
+.create-user-modal .modal-actions .btn-outline {
+  background: #fff;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.create-user-modal .modal-actions .btn-outline:hover {
+  background: rgba(37, 99, 235, 0.04);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+.create-user-modal .modal-actions .btn-primary {
+  min-width: 150px;
+}
+
+@media (max-width: 640px) {
+  .create-user-modal {
+    max-width: 100%;
+
+    .create-stepper-header {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .step-node {
+      width: 100%;
+    }
+
+    .step-connector {
+      display: none;
+    }
+
+    .step-actions {
+      flex-direction: column;
+      align-items: stretch;
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .modal-actions {
+      padding-top: 0;
+    }
   }
 }
 
