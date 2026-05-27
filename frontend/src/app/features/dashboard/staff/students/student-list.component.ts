@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -38,14 +38,39 @@ interface StaffStudentRecord {
             class="search-input">
         </div>
         <div class="filter-group">
-          <select [(ngModel)]="gradeFilter" (ngModelChange)="filterStudents()" class="filter-select">
-            <option value="">All Grades</option>
-            <option *ngFor="let grade of grades" [value]="grade">{{ grade }}</option>
-          </select>
-          <select [(ngModel)]="sectionFilter" (ngModelChange)="filterStudents()" class="filter-select">
-            <option value="">All Sections</option>
-            <option *ngFor="let section of sections" [value]="section">{{ section }}</option>
-          </select>
+          <!-- Grade dropdown -->
+          <div class="custom-dropdown" [class.open]="gradeDropdownOpen">
+            <button type="button" class="dropdown-trigger" (click)="toggleGradeDropdown($event)">
+              <span class="dropdown-label">{{ gradeFilter || 'All Grades' }}</span>
+              <i class="bi bi-chevron-down dropdown-chevron"></i>
+            </button>
+            <div class="dropdown-panel" *ngIf="gradeDropdownOpen">
+              <button type="button" class="dropdown-option" [class.active]="gradeFilter === ''" (click)="setGrade('')">
+                All Grades
+              </button>
+              <button type="button" class="dropdown-option" *ngFor="let grade of grades"
+                [class.active]="gradeFilter === grade" (click)="setGrade(grade)">
+                {{ grade }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Section dropdown -->
+          <div class="custom-dropdown" [class.open]="sectionDropdownOpen">
+            <button type="button" class="dropdown-trigger" (click)="toggleSectionDropdown($event)">
+              <span class="dropdown-label">{{ sectionFilter || 'All Sections' }}</span>
+              <i class="bi bi-chevron-down dropdown-chevron"></i>
+            </button>
+            <div class="dropdown-panel" *ngIf="sectionDropdownOpen">
+              <button type="button" class="dropdown-option" [class.active]="sectionFilter === ''" (click)="setSection('')">
+                All Sections
+              </button>
+              <button type="button" class="dropdown-option" *ngFor="let section of sections"
+                [class.active]="sectionFilter === section" (click)="setSection(section)">
+                {{ section }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -125,8 +150,8 @@ interface StaffStudentRecord {
       margin-bottom: 2rem;
       background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       padding: 2rem 1.5rem;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(5, 35, 85, 0.18);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
       
       h1 {
         font-size: 2rem;
@@ -170,21 +195,113 @@ interface StaffStudentRecord {
       }
     }
 
-    .filter-group { display: flex; gap: 0.5rem; }
+    .filter-group { display: flex; gap: 0.5rem; align-items: center; }
 
-    .filter-select {
-      padding: 0.85rem 1rem;
+    /* ── Custom Dropdown ── */
+    .custom-dropdown {
+      position: relative;
+    }
+
+    .dropdown-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 1.1rem;
+      background: white;
       border: 1.5px solid #e2e8f0;
       border-radius: 12px;
       font-size: 0.9rem;
-      background: white;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      font-weight: 600;
+      color: #0f172a;
       cursor: pointer;
-      transition: all 0.2s ease;
-      &:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      min-width: 140px;
+      justify-content: space-between;
+
+      &:hover {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+      }
+    }
+
+    .custom-dropdown.open .dropdown-trigger {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+
+    .dropdown-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      i { font-size: 0.85rem; color: #5381b2; }
+    }
+
+    .dropdown-chevron {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      transition: transform 0.2s ease;
+    }
+
+    .custom-dropdown.open .dropdown-chevron {
+      transform: rotate(180deg);
+    }
+
+    .dropdown-panel {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      min-width: 100%;
+      background: white;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+      z-index: 200;
+      overflow: hidden;
+      animation: dropdownIn 0.15s ease;
+      max-height: 260px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(5, 35, 85, 0.2) transparent;
+
+      &::-webkit-scrollbar { width: 4px; }
+      &::-webkit-scrollbar-track { background: transparent; }
+      &::-webkit-scrollbar-thumb { background: rgba(5, 35, 85, 0.2); border-radius: 99px; }
+    }
+
+    @keyframes dropdownIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .dropdown-option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      width: 100%;
+      padding: 0.7rem 1rem;
+      background: none;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #334155;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+
+      i { font-size: 0.82rem; color: #5381b2; }
+
+      &:hover {
+        background: #f1f5f9;
+        color: #052355;
+      }
+
+      &.active {
+        background: #1d4ed8;
+        color: white;
+        font-weight: 700;
+        i { color: rgba(255,255,255,0.85); }
       }
     }
 
@@ -283,6 +400,8 @@ export class StudentListComponent implements OnInit {
   searchTerm = '';
   gradeFilter = '';
   sectionFilter = '';
+  gradeDropdownOpen = false;
+  sectionDropdownOpen = false;
   loading = true;
   grades = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
   sections: string[] = [];
@@ -295,6 +414,36 @@ export class StudentListComponent implements OnInit {
   selectedStudentId: number | null = null;
 
   constructor(private staffService: StaffService) {}
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.gradeDropdownOpen = false;
+    this.sectionDropdownOpen = false;
+  }
+
+  toggleGradeDropdown(e: Event): void {
+    e.stopPropagation();
+    this.sectionDropdownOpen = false;
+    this.gradeDropdownOpen = !this.gradeDropdownOpen;
+  }
+
+  toggleSectionDropdown(e: Event): void {
+    e.stopPropagation();
+    this.gradeDropdownOpen = false;
+    this.sectionDropdownOpen = !this.sectionDropdownOpen;
+  }
+
+  setGrade(value: string): void {
+    this.gradeFilter = value;
+    this.gradeDropdownOpen = false;
+    this.filterStudents();
+  }
+
+  setSection(value: string): void {
+    this.sectionFilter = value;
+    this.sectionDropdownOpen = false;
+    this.filterStudents();
+  }
 
   openProfile(studentId: number): void {
     this.selectedStudentId = studentId;

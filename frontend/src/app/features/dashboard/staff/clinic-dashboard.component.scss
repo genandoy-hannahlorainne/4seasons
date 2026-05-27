@@ -48,7 +48,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   position: relative;
 
   .page-header {
-    margin: 0 2.5rem 2rem 2.5rem;
+    margin: 2.5rem 2.5rem 2rem 2.5rem;
     background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
     padding: 2rem 1.5rem;
     border-radius: 12px;
@@ -73,7 +73,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   .dashboard-wrap {
-    padding: 0 2.5rem 2.5rem 2.5rem;
+    padding: 0 2rem 2rem 2rem;
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -187,6 +187,7 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
           width: 48px;
           height: 48px;
           object-fit: contain;
+          font-size: 2.2rem;
         }
 
         .action-text {

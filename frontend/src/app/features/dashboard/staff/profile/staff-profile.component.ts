@@ -29,12 +29,14 @@ import { StaffService } from '../../../../core/services/staff.service';
               <div class="profile-item">
                 <div class="profile-label">Full Name</div>
                 <div class="profile-value">{{ profileData.fullName }}</div>
-                <div class="profile-label">Position</div>
-                <div class="profile-value">{{ profileData.position }}</div>
               </div>
               <div class="profile-item">
                 <div class="profile-label">Staff Code</div>
                 <div class="profile-value">{{ profileData.staffCode || 'Not set' }}</div>
+              </div>
+              <div class="profile-item">
+                <div class="profile-label">Position</div>
+                <div class="profile-value">{{ profileData.position }}</div>
               </div>
             </div>
           </div>
@@ -113,23 +115,47 @@ import { StaffService } from '../../../../core/services/staff.service';
     <!-- Request Password Reset Modal -->
     <div class="modal-overlay" *ngIf="showRequestPasswordModal" (click)="closeRequestPasswordModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
-        <button class="close-btn" (click)="closeRequestPasswordModal()">×</button>
+        <button class="close-btn" (click)="closeRequestPasswordModal()"><i class="fa-solid fa-xmark"></i></button>
         <h3>Request Password Change</h3>
-        <p style="color: #666; margin-bottom: 1rem;">Submit your desired new password. Admin will review and approve your request.</p>
+        <p class="modal-desc">Submit your desired new password. Admin will review and approve your request.</p>
 
-        <div class="modal-error" *ngIf="requestPasswordError" style="background: #fee; color: #c33; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem;">{{ requestPasswordError }}</div>
+        <div class="modal-error" *ngIf="requestPasswordError">{{ requestPasswordError }}</div>
 
         <div class="form-group">
           <label>New Password *</label>
-          <input type="password" [(ngModel)]="passwordRequestNewPassword" class="form-control" placeholder="Enter your desired new password (min 6 characters)">
+          <div class="input-password-wrap">
+            <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="passwordRequestNewPassword" class="form-control" placeholder="Enter your desired new password (min 6 characters)">
+            <button type="button" class="toggle-pw-btn" (click)="showNewPassword = !showNewPassword" tabindex="-1">
+              <svg *ngIf="!showNewPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showNewPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="form-group">
           <label>Confirm New Password *</label>
-          <input type="password" [(ngModel)]="passwordRequestConfirmPassword" class="form-control" placeholder="Re-enter your new password">
+          <div class="input-password-wrap">
+            <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="passwordRequestConfirmPassword" class="form-control" placeholder="Re-enter your new password">
+            <button type="button" class="toggle-pw-btn" (click)="showConfirmPassword = !showConfirmPassword" tabindex="-1">
+              <svg *ngIf="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="form-group">
           <label>Reason for Request (Optional)</label>
-          <textarea [(ngModel)]="passwordRequestReason" class="form-control" rows="3" placeholder="e.g., I forgot my password, Security concern, etc."></textarea>
+          <textarea [(ngModel)]="passwordRequestReason" class="form-control" rows="2" placeholder="e.g., I forgot my password, Security concern, etc."></textarea>
         </div>
 
         <div class="modal-actions">
@@ -175,6 +201,8 @@ export class StaffProfileComponent implements OnInit {
   passwordRequestNewPassword = '';
   passwordRequestConfirmPassword = '';
   requestPasswordError = '';
+  showNewPassword = false;
+  showConfirmPassword = false;
 
   constructor(
     private authService: AuthService,
@@ -299,6 +327,8 @@ export class StaffProfileComponent implements OnInit {
     this.passwordRequestNewPassword = '';
     this.passwordRequestConfirmPassword = '';
     this.requestPasswordError = '';
+    this.showNewPassword = false;
+    this.showConfirmPassword = false;
   }
 
   submitPasswordRequest(): void {

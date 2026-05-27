@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StaffService } from '../../../../core/services/staff.service';
@@ -36,10 +36,21 @@ import { saveAs } from 'file-saver';
           </div>
           <div class="filter-group">
             <label>Grade Level</label>
-            <select [(ngModel)]="gradeFilter" (change)="onFilterChange()" class="filter-select" [disabled]="loading">
-              <option value="">All Grades</option>
-              <option *ngFor="let grade of grades" [value]="grade">Grade {{ grade }}</option>
-            </select>
+            <div class="custom-dropdown" [class.open]="gradeDropdownOpen">
+              <button type="button" class="dropdown-trigger" (click)="toggleGradeDropdown($event)" [disabled]="loading">
+                <span class="dropdown-label">{{ gradeFilter ? 'Grade ' + gradeFilter : 'All Grades' }}</span>
+                <i class="bi bi-chevron-down dropdown-chevron"></i>
+              </button>
+              <div class="dropdown-panel" *ngIf="gradeDropdownOpen">
+                <button type="button" class="dropdown-option" [class.active]="gradeFilter === ''" (click)="setGrade('')">
+                  All Grades
+                </button>
+                <button type="button" class="dropdown-option" *ngFor="let grade of grades"
+                  [class.active]="gradeFilter === grade.toString()" (click)="setGrade(grade)">
+                  Grade {{ grade }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -124,10 +135,10 @@ import { saveAs } from 'file-saver';
 
     .page-header {
       margin-bottom: 2rem;
-      background: linear-gradient(135deg, rgba(5, 35, 85, 0.96) 0%, rgba(83, 129, 178, 0.96) 100%);
+      background: linear-gradient(135deg, #052355 0%, #5381b2 100%);
       padding: 2rem 1.5rem;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(5, 35, 85, 0.18);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(5, 35, 85, 0.25);
 
       h1 {
         font-size: 2rem;
@@ -202,7 +213,7 @@ import { saveAs } from 'file-saver';
     }
 
     .filter-group {
-      label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; }
+      label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #0f172a; font-size: 0.85rem; }
     }
 
     .date-range {
@@ -212,16 +223,115 @@ import { saveAs } from 'file-saver';
       span { color: #7f8c8d; }
     }
 
-    .filter-input, .filter-select {
-      padding: 0.85rem 1rem;
+    .filter-input {
+      padding: 0.875rem 1.1rem;
       border: 1.5px solid #e2e8f0;
       border-radius: 12px;
       font-size: 0.9rem;
+      font-weight: 600;
       background: #fff;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
       transition: all 0.2s ease;
       &:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12); }
       &:disabled { background: #f5f7fa; cursor: not-allowed; }
+    }
+
+    /* ── Custom Dropdown ── */
+    .custom-dropdown {
+      position: relative;
+    }
+
+    .dropdown-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.875rem 1.1rem;
+      background: white;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #0f172a;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      min-width: 150px;
+      justify-content: space-between;
+
+      &:hover:not(:disabled) {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+      }
+
+      &:disabled {
+        background: #f5f7fa;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+    }
+
+    .custom-dropdown.open .dropdown-trigger {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+
+    .dropdown-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dropdown-chevron {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      transition: transform 0.2s ease;
+    }
+
+    .custom-dropdown.open .dropdown-chevron {
+      transform: rotate(180deg);
+    }
+
+    .dropdown-panel {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      min-width: 100%;
+      background: white;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+      z-index: 200;
+      overflow: hidden;
+      animation: dropdownIn 0.15s ease;
+    }
+
+    @keyframes dropdownIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .dropdown-option {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 0.7rem 1rem;
+      background: none;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #334155;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+
+      &:hover { background: #f1f5f9; color: #052355; }
+
+      &.active {
+        background: #1d4ed8;
+        color: white;
+        font-weight: 700;
+      }
     }
 
     .btn {
@@ -309,6 +419,7 @@ export class ReportsComponent implements OnInit {
   endDate = '';
   gradeFilter = '';
   grades = [7, 8, 9, 10, 11, 12];
+  gradeDropdownOpen = false;
 
   totalVisits = 0;
   uniqueStudents = 0;
@@ -330,6 +441,22 @@ export class ReportsComponent implements OnInit {
   }
 
   constructor(private staffService: StaffService) {}
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.gradeDropdownOpen = false;
+  }
+
+  toggleGradeDropdown(e: Event): void {
+    e.stopPropagation();
+    this.gradeDropdownOpen = !this.gradeDropdownOpen;
+  }
+
+  setGrade(value: number | ''): void {
+    this.gradeFilter = value === '' ? '' : String(value);
+    this.gradeDropdownOpen = false;
+    this.onFilterChange();
+  }
 
   ngOnInit(): void {
     const end = new Date();
