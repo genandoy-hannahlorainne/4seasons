@@ -23,7 +23,7 @@ import { AdminDashboardComponent } from './admin/admin-dashboard.component';
 import { AdminProfileComponent } from './admin/profile/admin-profile.component';
 import { ManageUsersComponent } from './admin/manage-users/manage-users.component';
 import { ManageSectionsComponent } from './admin/manage-sections/manage-sections.component';
-import { SystemSettingsComponent } from './admin/system-settings/system-settings.component';
+import { BackupRecoveryComponent } from './admin/backup-recovery/backup-recovery.component';
 import { ViewReportsComponent } from './admin/view-reports/view-reports.component';
 import { GradePromotionComponent } from './admin/grade-promotion/grade-promotion.component';
 import { SchoolYearManagementComponent } from './admin/school-year-management/school-year-management.component';
@@ -94,7 +94,8 @@ export const dashboardRoutes: Routes = [
       { path: 'manage-users', component: ManageUsersComponent },
       { path: 'manage-sections', component: ManageSectionsComponent },
       { path: 'school-year-management', component: SchoolYearManagementComponent },
-      { path: 'settings', component: SystemSettingsComponent },
+      { path: 'settings', component: BackupRecoveryComponent },
+      { path: 'backup-recovery', component: BackupRecoveryComponent },
       { path: 'reports', component: ViewReportsComponent },
       { path: 'grade-promotion', component: GradePromotionComponent },
       { path: 'emergency-drills', component: EmergencyDrillsComponent },
