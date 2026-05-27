@@ -1,5 +1,5 @@
 <div class="manage-users-container">
-  <div class="page-header notif-bell-inline">
+  <div class="page-header notif-bell-corner">
     <div class="header-left">
       <button class="btn btn-back" *ngIf="selectedRole !== 'all'" (click)="handleBack()">
         <i class="fa-solid fa-arrow-left"></i> Back
@@ -7,14 +7,11 @@
       <h1>{{ getPageTitle() }}</h1>
       <p>{{ getPageSubtitle() }}</p>
     </div>
+    <app-admin-notification-bell variant="page-header-corner" />
     <div class="page-header-end">
-      <app-admin-notification-bell />
       <div class="header-actions">
       <button class="btn btn-secondary" (click)="openBulkImportModal()" *ngIf="selectedRole === 'student'">
         <i class="fa-solid fa-file-csv"></i> Bulk Import Students
-      </button>
-      <button class="btn btn-primary create-user-btn" (click)="openCreateUserModal()">
-        <i class="fa-solid fa-user-plus"></i> Create New User
       </button>
       </div>
     </div>
