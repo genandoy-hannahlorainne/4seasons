@@ -71,7 +71,8 @@
 
 /* Dashboard-style: bell fixed top-right of header card */
 .page-header.notif-bell-corner,
-.profile-header.notif-bell-corner {
+.profile-header.notif-bell-corner,
+.hero-section {
   position: relative;
   display: flex;
   align-items: center;
@@ -127,7 +128,8 @@
 @media (max-width: 768px) {
   .page-header.notif-bell-corner app-admin-notification-bell,
   .page-header.notif-bell-inline app-admin-notification-bell,
-  .profile-header.notif-bell-corner app-admin-notification-bell {
+  .profile-header.notif-bell-corner app-admin-notification-bell,
+  .hero-section app-admin-notification-bell {
     display: none;
   }
 }
@@ -146,7 +148,8 @@
 .page-header app-admin-notification-bell.variant-page-header-corner,
 .profile-header app-admin-notification-bell.variant-page-header-corner,
 .management-hero app-admin-notification-bell.variant-hero,
-.page-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner {
+.page-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner,
+.hero-section app-admin-notification-bell.variant-page-header-corner {
   position: absolute;
   top: 1.25rem;
   right: 1.5rem;

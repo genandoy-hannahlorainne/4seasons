@@ -13,9 +13,11 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
   styleUrls: ['./admin-profile.component.scss'],
   template: `
     <div class="admin-profile">
-      <div class="profile-header has-notif-bell">
-        <h1>Profile Settings</h1>
-        <app-admin-notification-bell />
+      <div class="profile-header notif-bell-corner">
+        <div class="header-left">
+          <h1>Profile Settings</h1>
+        </div>
+        <app-admin-notification-bell variant="page-header-corner" />
       </div>
 
       <div class="profile-content">

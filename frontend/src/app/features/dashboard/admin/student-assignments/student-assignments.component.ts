@@ -9,12 +9,12 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
   imports: [CommonModule, AdminNotificationBellComponent],
   template: `
     <div class="student-assignments-container">
-      <div class="page-header has-notif-bell">
+      <div class="page-header notif-bell-corner">
         <div class="page-header-main">
           <h1>Student-Adviser Assignments</h1>
           <p>Monitor and manage student-adviser assignments across the system</p>
         </div>
-        <app-admin-notification-bell />
+        <app-admin-notification-bell variant="page-header-corner" />
       </div>
 
       <!-- Health Status Card -->

@@ -49,7 +49,7 @@ interface UsersResponse {
     <div class="admin-dashboard">
       <!-- Hero Section -->
       <div class="hero-section">
-        <app-admin-notification-bell variant="hero" />
+        <app-admin-notification-bell variant="page-header-corner" />
         <div class="hero-content">
           <div class="hero-text">
             <h1>Welcome to PDMHS Admin Dashboard</h1>
