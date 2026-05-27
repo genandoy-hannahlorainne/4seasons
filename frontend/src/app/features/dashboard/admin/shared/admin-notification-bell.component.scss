@@ -94,8 +94,7 @@
 }
 
 /* Inline: bell on the right beside action buttons */
-.page-header.notif-bell-inline,
-.emergency-drills-container .header.notif-bell-inline {
+.page-header.notif-bell-inline {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -120,8 +119,7 @@
 @media (max-width: 768px) {
   .page-header.notif-bell-corner app-admin-notification-bell,
   .page-header.notif-bell-inline app-admin-notification-bell,
-  .profile-header.notif-bell-corner app-admin-notification-bell,
-  .emergency-drills-container .header.notif-bell-inline app-admin-notification-bell {
+  .profile-header.notif-bell-corner app-admin-notification-bell {
     display: none;
   }
 }

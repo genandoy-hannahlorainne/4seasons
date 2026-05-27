@@ -586,30 +586,6 @@ Submit full SHDF (legacy endpoint).
 
 ---
 
-## Emergency Drills
-
-### GET /emergency-drills
-List all drills. Query: `?status=planned|active|completed&drill_type=fire`
-
-### POST /emergency-drills
-Create a new drill.
-
-**Body:**
-```json
-{
-  "drill_name": "string",
-  "drill_type": "earthquake | fire | lockdown | medical | evacuation",
-  "description": "string",
-  "scheduled_at": "2026-04-01T08:00:00",
-  "settings": {}
-}
-```
-
-### GET /emergency-drills/{id}
-Get drill details with participants and statistics.
-
----
-
 ## Student Badges
 
 ### GET /student/streak-badges/metadata

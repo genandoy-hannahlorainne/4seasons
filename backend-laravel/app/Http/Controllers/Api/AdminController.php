@@ -2030,23 +2030,6 @@ class AdminController extends BaseController
     public function getNotifications()
     {
         try {
-            // Auto-dismiss drill alert notifications for drills that are no longer active
-            $staleDrillNotifIds = \App\Models\Notification::where('notification_type', 'emergency_drill_alert')
-                ->where('status', 'Pending')
-                ->get()
-                ->filter(function ($notif) {
-                    $drillId = data_get($notif->request_data, 'drill_id');
-                    if (!$drillId) return false;
-                    $drill = \App\Models\EmergencyDrill::find($drillId);
-                    return $drill && !in_array($drill->status, ['active', 'planned']);
-                })
-                ->pluck('notification_id');
-
-            if ($staleDrillNotifIds->isNotEmpty()) {
-                \App\Models\Notification::whereIn('notification_id', $staleDrillNotifIds)
-                    ->update(['status' => 'Sent', 'sent_at' => now()]);
-            }
-
             $query = \App\Models\Notification::with([
                     'student.currentSection.gradeLevel',
                     'medicalVisit.clinicStaff.user',

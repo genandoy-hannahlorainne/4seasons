@@ -76,7 +76,7 @@
 | User management | Student record search | Class roster management | Personal medical records |
 | Section & class management | Medical visit recording | Health monitoring dashboard | SHDF form submission |
 | School year & grade promotion | Vitals & diagnosis tracking | Health heatmap & alerts | Visit history |
-| Emergency drill management | Medical history tracking | BMI distribution tracking | Wellness streak badges |
+| Backup & recovery | Medical history tracking | BMI distribution tracking | Wellness streak badges |
 | Health risk visualization | Visit statistics | Advisory student management | QR code access |
 | System settings & audit logs | Analytics & reports | Notifications | Profile management |
 | Semaphore SMS settings | Emergency visit SMS alerts |
@@ -232,7 +232,6 @@ All protected routes require `Authorization: Bearer <token>` from `POST /api/log
 | `/api/staff/*` | Clinic Staff | Students, dashboard, reports |
 | `/api/students/*` | All | Medical data, visits, badges |
 | `/api/medical-visits/*` | Staff | Visit records |
-| `/api/emergency-drills/*` | Admin / Staff | Drill management |
 | `/api/shdf/*` | All | Student Health Data Form |
 
 </div>

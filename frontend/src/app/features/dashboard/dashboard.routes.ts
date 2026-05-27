@@ -27,10 +27,6 @@ import { BackupRecoveryComponent } from './admin/backup-recovery/backup-recovery
 import { ViewReportsComponent } from './admin/view-reports/view-reports.component';
 import { GradePromotionComponent } from './admin/grade-promotion/grade-promotion.component';
 import { SchoolYearManagementComponent } from './admin/school-year-management/school-year-management.component';
-import { EmergencyDrillsComponent } from './admin/emergency-drills/emergency-drills.component';
-import { DrillDetailComponent } from './admin/emergency-drills/drill-detail.component';
-import { DrillDashboardComponent } from './admin/emergency-drills/drill-dashboard.component';
-import { QrScannerComponent } from './admin/emergency-drills/qr-scanner.component';
 import { adminGuard } from '../../core/guards/admin.guard';
 import { roleGuard } from '../../core/guards/role.guard';
 
@@ -98,10 +94,6 @@ export const dashboardRoutes: Routes = [
       { path: 'backup-recovery', component: BackupRecoveryComponent },
       { path: 'reports', component: ViewReportsComponent },
       { path: 'grade-promotion', component: GradePromotionComponent },
-      { path: 'emergency-drills', component: EmergencyDrillsComponent },
-      { path: 'emergency-drills/:id', component: DrillDetailComponent },
-      { path: 'emergency-drills/:id/dashboard', component: DrillDashboardComponent },
-      { path: 'emergency-drills/:id/scanner', component: QrScannerComponent }
     ]
   }
 ];
