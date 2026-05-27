@@ -27,33 +27,6 @@ import { takeUntil, switchMap } from 'rxjs/operators';
       <div *ngIf="error" class="error-message">{{ error }}</div>
 
       <div *ngIf="medicalRecord && !loading" class="content">
-        <div class="overview-section">
-          <div class="overview-section-title">Visit Overview</div>
-          <div class="overview-cards">
-            <div class="overview-card">
-              <div class="card-content">
-                <h3>Total Visits</h3>
-                <div class="card-value">{{ medicalRecord.total_visits_count }}</div>
-              </div>
-            </div>
-            <div class="overview-card">
-              <div class="card-content">
-                <h3>Recent Visits</h3>
-                <div class="card-value">{{ medicalRecord.recent_visits_count }}</div>
-                <div class="card-subtitle">Last 30 days</div>
-              </div>
-            </div>
-            <div class="overview-card">
-              <div class="card-content">
-                <h3>Adviser</h3>
-                <div class="card-value adviser-value">
-                  {{ medicalRecord.personal_info.adviser_name || 'Not assigned' }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="medical-info-section">
           <div class="medical-info-title">Medical Information</div>
           <div class="medical-info-grid">
@@ -80,6 +53,33 @@ import { takeUntil, switchMap } from 'rxjs/operators';
             <div class="medical-info-item">
               <div class="mi-label">Adviser</div>
               <div class="mi-value">{{ medicalRecord.personal_info.adviser_name || 'Not assigned' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overview-section">
+          <div class="overview-section-title">Visit Overview</div>
+          <div class="overview-cards">
+            <div class="overview-card">
+              <div class="card-content">
+                <h3>Total Visits</h3>
+                <div class="card-value">{{ medicalRecord.total_visits_count }}</div>
+              </div>
+            </div>
+            <div class="overview-card">
+              <div class="card-content">
+                <h3>Recent Visits</h3>
+                <div class="card-value">{{ medicalRecord.recent_visits_count }}</div>
+                <div class="card-subtitle">Last 30 days</div>
+              </div>
+            </div>
+            <div class="overview-card">
+              <div class="card-content">
+                <h3>Adviser</h3>
+                <div class="card-value adviser-value">
+                  {{ medicalRecord.personal_info.adviser_name || 'Not assigned' }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
