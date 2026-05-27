@@ -27,35 +27,28 @@ import { takeUntil, switchMap } from 'rxjs/operators';
       <div *ngIf="error" class="error-message">{{ error }}</div>
 
       <div *ngIf="medicalRecord && !loading" class="content">
-        <div class="overview-cards">
-          <div class="overview-card">
-            <div class="card-icon"><i class="bi bi-clipboard2-pulse-fill" style="font-size:28px;color:#052355;"></i></div>
-            <div class="card-content">
-              <h3>Total Visits</h3>
-              <div class="card-value">{{ medicalRecord.total_visits_count }}</div>
+        <div class="overview-section">
+          <div class="overview-section-title">Visit Overview</div>
+          <div class="overview-cards">
+            <div class="overview-card">
+              <div class="card-content">
+                <h3>Total Visits</h3>
+                <div class="card-value">{{ medicalRecord.total_visits_count }}</div>
+              </div>
             </div>
-          </div>
-          <div class="overview-card">
-            <div class="card-icon"><i class="bi bi-calendar-check-fill" style="font-size:28px;color:#052355;"></i></div>
-            <div class="card-content">
-              <h3>Recent Visits</h3>
-              <div class="card-value">{{ medicalRecord.recent_visits_count }}</div>
-              <div class="card-subtitle">Last 30 days</div>
+            <div class="overview-card">
+              <div class="card-content">
+                <h3>Recent Visits</h3>
+                <div class="card-value">{{ medicalRecord.recent_visits_count }}</div>
+                <div class="card-subtitle">Last 30 days</div>
+              </div>
             </div>
-          </div>
-          <div class="overview-card">
-            <div class="card-icon"><i class="bi bi-exclamation-triangle-fill" style="font-size:28px;color:#052355;"></i></div>
-            <div class="card-content">
-              <h3>Allergies</h3>
-              <div class="card-value">{{ medicalRecord.allergies.length }}</div>
-            </div>
-          </div>
-          <div class="overview-card">
-            <div class="card-icon"><i class="bi bi-person-badge-fill" style="font-size:28px;color:#052355;"></i></div>
-            <div class="card-content">
-              <h3>Adviser</h3>
-              <div class="card-value" style="font-size: 0.9rem;">
-                {{ medicalRecord.personal_info.adviser_name || 'Not assigned' }}
+            <div class="overview-card">
+              <div class="card-content">
+                <h3>Adviser</h3>
+                <div class="card-value adviser-value">
+                  {{ medicalRecord.personal_info.adviser_name || 'Not assigned' }}
+                </div>
               </div>
             </div>
           </div>

@@ -96,70 +96,74 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.overview-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.25rem;
+.overview-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   margin-bottom: 1.5rem;
 }
 
+.overview-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0 0 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.overview-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
 .overview-card {
-  background: #ffffff;
-  padding: 1.5rem;
+  background: white;
+  padding: 1.25rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  transition: all 0.2s ease;
 
   &:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   }
 
-  .card-icon {
-    font-size: 2rem;
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #e3f2fd;
-    border-radius: 50%;
-    flex-shrink: 0;
-
-    img {
-      width: 28px;
-      height: 28px;
-      object-fit: contain;
-    }
-  }
-
   .card-content {
-    flex: 1;
-
     h3 {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #64748b;
-      margin: 0 0 0.4rem 0;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #6b7280;
+      margin: 0 0 0.5rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.5px;
     }
 
     .card-value {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: #1e293b;
-      line-height: 1;
-      margin-bottom: 0.25rem;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #111827;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .adviser-value {
+      font-size: 0.85rem;
+      white-space: normal;
+      word-break: break-word;
     }
 
     .card-subtitle {
       font-size: 0.75rem;
-      color: #64748b;
+      color: #6b7280;
       font-weight: 500;
+      margin-top: 0.25rem;
     }
   }
 }
@@ -234,6 +238,12 @@
   }
 }
 
+@media (max-width: 900px) {
+  .overview-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .medical-records-container {
     padding: 1.5rem;
@@ -251,24 +261,13 @@
     }
   }
 
-  .overview-cards {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .overview-section {
+    padding: 1.25rem;
   }
 
-  .overview-card {
-    padding: 1.25rem;
-    gap: 1rem;
-
-    .card-icon {
-      font-size: 1.75rem;
-      width: 45px;
-      height: 45px;
-    }
-
-    .card-content .card-value {
-      font-size: 1.25rem;
-    }
+  .overview-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
 
   .action-card {
@@ -288,6 +287,12 @@
     .action-content p {
       font-size: 0.8rem;
     }
+  }
+}
+
+@media (max-width: 480px) {
+  .overview-cards {
+    grid-template-columns: 1fr;
   }
 }
 
