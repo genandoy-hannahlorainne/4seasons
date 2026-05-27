@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../../../core/services/admin.service';
 import { Subject } from 'rxjs';
@@ -29,7 +29,7 @@ import { takeUntil } from 'rxjs/operators';
         
         <!-- Card 1: Key Health Insights -->
         <div class="viz-card">
-          <div class="viz-card-header">
+          <div class="viz-card-header" *ngIf="!hideHeader">
             <div class="viz-card-header-main">
               <h3><i class="fas fa-chart-bar"></i> Health Risk Visualization</h3>
               <p class="viz-card-desc">BMI distribution analysis across grade levels</p>
@@ -97,7 +97,7 @@ import { takeUntil } from 'rxjs/operators';
 
         <!-- Card 2: BMI Distribution Chart -->
         <div class="viz-card">
-          <div class="viz-card-header">
+          <div class="viz-card-header" *ngIf="!hideHeader">
             <h3><i class="fas fa-chart-pie"></i> BMI Distribution by Grade Level</h3>
           </div>
           
@@ -203,7 +203,7 @@ import { takeUntil } from 'rxjs/operators';
 
         <!-- Card 3: Detailed Statistics Table -->
         <div class="viz-card">
-          <div class="viz-card-header">
+          <div class="viz-card-header" *ngIf="!hideHeader">
             <h3><i class="fas fa-table"></i> Detailed Statistics by Grade</h3>
           </div>
           <div class="statistics-table">
@@ -230,7 +230,7 @@ import { takeUntil } from 'rxjs/operators';
 
         <!-- Card 4: Recent BMI Update Trends -->
         <div class="viz-card" *ngIf="healthData.recent_trends && healthData.recent_trends.length > 0">
-          <div class="viz-card-header">
+          <div class="viz-card-header" *ngIf="!hideHeader">
             <h3><i class="fas fa-chart-line"></i> Recent BMI Update Trends <span class="viz-card-subtitle">Last 30 Days</span></h3>
           </div>
           <div class="trends-list">
@@ -821,6 +821,7 @@ import { takeUntil } from 'rxjs/operators';
   `]
 })
 export class HealthRiskVisualizationComponent implements OnInit, OnDestroy {
+  @Input() hideHeader = false;
   loading = false;
   error: string | null = null;
   healthData: any = null;

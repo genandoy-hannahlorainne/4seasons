@@ -325,7 +325,7 @@ interface UsersResponse {
               <span class="dash-card-sub">BMI distribution</span>
             </div>
           </div>
-          <app-health-risk-visualization></app-health-risk-visualization>
+          <app-health-risk-visualization [hideHeader]="true"></app-health-risk-visualization>
         </div>
 
       </div>
@@ -949,6 +949,8 @@ interface UsersResponse {
         margin-bottom: 1rem;
         &:last-child { margin-bottom: 0; }
       }
+      /* When embedded in the admin dashboard, hide the internal viz header to avoid duplicate titles */
+      /* Inner visualization cards use their own padding; keep minimal overrides */
     }
 
     /* Empty state */
