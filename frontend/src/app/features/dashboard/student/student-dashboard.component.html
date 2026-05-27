@@ -15,22 +15,25 @@
         <div class="overview-meta">{{ studentId }} • {{ gradeLevel }}</div>
       </div>
 
-      <div class="stats-row">
-        <div class="stat-tile tile-bmi">
-          <div class="tile-value">{{ bmi }}</div>
-          <div class="tile-label">BMI</div>
-        </div>
-        <div class="stat-tile tile-blood-type">
-          <div class="tile-value">{{ bloodType }}</div>
-          <div class="tile-label">Blood Type</div>
-        </div>
-        <div class="stat-tile tile-allergies">
-          <div class="tile-value">{{ allergiesCount }}</div>
-          <div class="tile-label">Allergies</div>
-        </div>
-        <div class="stat-tile tile-last-visit">
-          <div class="tile-value">{{ lastVisit }}</div>
-          <div class="tile-label">Last Visit</div>
+      <div class="stats-container">
+        <div class="stats-container-title">Health Summary</div>
+        <div class="stats-row">
+          <div class="stat-tile tile-bmi">
+            <div class="tile-value">{{ bmi }}</div>
+            <div class="tile-label">BMI</div>
+          </div>
+          <div class="stat-tile tile-blood-type">
+            <div class="tile-value">{{ bloodType }}</div>
+            <div class="tile-label">Blood Type</div>
+          </div>
+          <div class="stat-tile tile-allergies">
+            <div class="tile-value">{{ allergiesCount }}</div>
+            <div class="tile-label">Allergies</div>
+          </div>
+          <div class="stat-tile tile-last-visit">
+            <div class="tile-value">{{ lastVisit }}</div>
+            <div class="tile-label">Last Visit</div>
+          </div>
         </div>
       </div>
 

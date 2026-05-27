@@ -146,52 +146,83 @@ $shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     margin: 0.25rem 0 0;
   }
 
+  .stats-container {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .stats-container-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #2c3e50;
+      margin: 0 0 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e9ecef;
+    }
+  }
+
   .stats-row {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
+
+    @media (max-width: 900px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+    }
   }
 
   .stat-tile {
-    border-radius: 10px;
-    padding: 1rem 1.1rem;
-    color: $color-white;
-    min-height: 72px;
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    box-shadow: $shadow-card;
-  }
+    align-items: center;
+    gap: 0;
 
-  .tile-value {
-    font-size: 1.4rem;
-    font-family: $font-secondary;
-    font-weight: 700;
-    line-height: 1;
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
   }
 
   .tile-label {
+    margin: 0 0 0.5rem;
+    color: #6b7280;
     font-size: 0.8rem;
-    font-family: $font-primary;
     font-weight: 600;
-    opacity: 0.95;
+    font-family: $font-primary;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  .tile-bmi { background: $gradient-bmi; }
-  .tile-blood-type { background: $gradient-blood-type; }
-  .tile-allergies { background: $gradient-allergies; }
-  .tile-last-visit { background: $gradient-last-visit; }
-
-  @media (max-width: 900px) {
-    .stats-row {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  .tile-value {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #111827;
+    font-family: $font-secondary;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
-  @media (max-width: 520px) {
-    .stats-row {
-      grid-template-columns: 1fr;
-    }
+  .tile-bmi,
+  .tile-blood-type,
+  .tile-allergies,
+  .tile-last-visit {
+    background: white;
   }
 
   @media (max-width: 768px) {
