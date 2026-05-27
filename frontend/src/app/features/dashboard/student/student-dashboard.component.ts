@@ -251,7 +251,7 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
 
           // Set recent activities (medical visits)
           if (data.recent_visits && data.recent_visits.length > 0) {
-            this.recentActivities = data.recent_visits.slice(0, 3).map((visit: any) => ({
+            this.recentActivities = data.recent_visits.slice(0, 5).map((visit: any) => ({
               activity: `Clinic Visit - ${visit.diagnosis || 'General checkup'}`,
               date: this.formatDate(visit.visit_datetime),
               type: visit.visit_type || 'Routine',
@@ -419,6 +419,26 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  getThisMonthVisits(): number {
+    const now = new Date();
+    return this.visitSummaries.filter(v => {
+      const d = new Date(v.visit_datetime);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+  }
+
+  getEmergencyVisits(): number {
+    return this.visitSummaries.filter(v =>
+      (v.visit_type || '').toLowerCase() === 'emergency'
+    ).length;
+  }
+
+  getRoutineVisits(): number {
+    return this.visitSummaries.filter(v =>
+      (v.visit_type || '').toLowerCase() === 'routine'
+    ).length;
+  }
+
   calculateAge(birthDate: string): number {
     const today = new Date();
     const birth = new Date(birthDate);
@@ -441,8 +461,15 @@ export class StudentDashboardComponent implements OnInit, OnDestroy {
     return 'bi bi-person-circle';
   }
 
-  goToSHDFForm(): void {
+  goToSHDFBasic(): void {
     const currentUser = this.authService.currentUserValue;
+    const studentId = currentUser?.student_info?.student_id;
+    if (studentId) {
+      this.router.navigate(['/shdf', studentId, 'basic']);
+    }
+  }
+
+  goToSHDFForm(): void {    const currentUser = this.authService.currentUserValue;
     if (currentUser && currentUser.user_id) {
       // Get student_id from the loaded profile
       this.studentService.getStudentProfile(currentUser.user_id).subscribe({
