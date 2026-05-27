@@ -624,16 +624,16 @@ interface StudentVisitSummary {
 
     .visit-record-grid {
       display: grid;
-      grid-template-columns: auto auto 1fr;
-      gap: 0.6rem 1.5rem;
-      align-items: center;
+      grid-template-columns: 160px 160px 1fr 1fr;
+      gap: 0.5rem 2rem;
+      align-items: start;
 
       .record-field {
         display: flex;
         flex-direction: column;
-        gap: 0.2rem;
+        gap: 0.25rem;
 
-        &.full-width { grid-column: 1 / -1; }
+        &.full-width { grid-column: 3 / -1; }
       }
 
       .field-label {
@@ -869,6 +869,7 @@ interface StudentVisitSummary {
       .student-header { flex-direction: column; align-items: flex-start; }
       .visit-stats { width: 100%; justify-content: flex-start; }
       .visit-record-grid { grid-template-columns: 1fr 1fr; }
+      .visit-record-grid .record-field.full-width { grid-column: 1 / -1; }
       .card-footer { flex-direction: column; align-items: flex-start; }
       .history-table th:nth-child(2), .history-table td:nth-child(2) { display: none; }
     }
