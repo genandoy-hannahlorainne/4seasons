@@ -38,6 +38,9 @@ jobs:
     
     - name: Install dependencies
       working-directory: ./backend-laravel
+      env:
+        APP_ENV: testing
+        APP_KEY: base64:ts45ilpSzvWpMDLq+TQAot+nH6YzM28YSFfC/wFWFG4=
       run: composer install --no-progress --prefer-dist --optimize-autoloader
     
     - name: Setup environment
@@ -150,6 +153,9 @@ jobs:
     
     - name: Install backend dependencies
       working-directory: ./backend-laravel
+      env:
+        APP_ENV: testing
+        APP_KEY: base64:ts45ilpSzvWpMDLq+TQAot+nH6YzM28YSFfC/wFWFG4=
       run: composer install --no-progress --prefer-dist --optimize-autoloader
     
     - name: Install frontend dependencies

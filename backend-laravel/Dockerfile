@@ -28,8 +28,9 @@ RUN echo "Cache bust: ${CACHE_BUST}"
 # Copy the rest of the app
 COPY . /var/www/html
 
-# Run post-install scripts after full copy
-RUN composer run-script post-autoload-dump || true
+# Run post-install scripts after full copy (APP_KEY placeholder satisfies Laravel bootstrap during build)
+RUN APP_ENV=production APP_KEY=base64:ts45ilpSzvWpMDLq+TQAot+nH6YzM28YSFfC/wFWFG4= \
+    composer run-script post-autoload-dump || true
 
 # Serve Laravel from /public
 RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf /etc/apache2/apache2.conf
