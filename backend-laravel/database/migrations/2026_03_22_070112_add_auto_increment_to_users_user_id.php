@@ -38,6 +38,11 @@ return new class extends Migration
 
     public function up(): void
     {
+        // Skip MySQL-specific ALTER TABLE operations when not using MySQL (e.g., sqlite for tests)
+        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Drop all foreign keys referencing users.user_id
         foreach ($this->foreignKeys as $table => $fk) {
             $this->dropForeignKeyIfExists($table, $fk);
@@ -65,6 +70,11 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Skip MySQL-specific ALTER TABLE operations when not using MySQL
+        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Drop all foreign keys
         foreach ($this->foreignKeys as $table => $fk) {
             $this->dropForeignKeyIfExists($table, $fk);
