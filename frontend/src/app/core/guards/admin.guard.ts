@@ -10,7 +10,8 @@ export const adminGuard: CanActivateFn = (route, state) => {
   // First check: Local authentication state
   if (!authService.isAuthenticated()) {
     // console.warn(...); // Removed for production
-    return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+    router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+    return false;
   }
 
   // Second check: Verify with backend and check admin role
@@ -18,7 +19,8 @@ export const adminGuard: CanActivateFn = (route, state) => {
     map(user => {
       if (!user) {
         // console.warn(...); // Removed for production
-        return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+        router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+        return false;
       }
 
       // Case-insensitive role check for admin access
@@ -34,7 +36,8 @@ export const adminGuard: CanActivateFn = (route, state) => {
         };
 
         const redirectUrl = roleRoutes[userRole || ''] || '/role-selection';
-        return router.createUrlTree([redirectUrl]);
+        router.navigate([redirectUrl]);
+        return false;
       }
 
       // console.log(...); // Removed for production
@@ -43,7 +46,8 @@ export const adminGuard: CanActivateFn = (route, state) => {
     catchError(error => {
       // Admin Guard: Backend verification error
       authService.logout().subscribe();
-      return of(router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } }));
+      router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+      return of(false);
     })
   );
 };

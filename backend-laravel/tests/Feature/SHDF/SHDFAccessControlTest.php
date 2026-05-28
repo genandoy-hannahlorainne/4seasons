@@ -7,7 +7,6 @@ use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SHDFAccessControlTest extends TestCase
@@ -21,7 +20,7 @@ class SHDFAccessControlTest extends TestCase
         SchoolYear::factory()->create(['is_current' => true]);
     }
 
-    #[Test]
+    /** @test */
     public function it_rejects_unauthenticated_request()
     {
         $student = Student::factory()->create();
@@ -31,7 +30,7 @@ class SHDFAccessControlTest extends TestCase
         $response->assertStatus(401);
     }
 
-    #[Test]
+    /** @test */
     public function clinic_staff_can_view_any_student_shdf()
     {
         $clinicRole = Role::where('role_name', 'Clinic Staff')->first();
@@ -43,7 +42,7 @@ class SHDFAccessControlTest extends TestCase
         $response->assertStatus(200);
     }
 
-    #[Test]
+    /** @test */
     public function adviser_can_view_own_section_student()
     {
         $adviserRole = Role::where('role_name', 'Adviser')->first();
@@ -55,7 +54,7 @@ class SHDFAccessControlTest extends TestCase
         $response->assertStatus(200);
     }
 
-    #[Test]
+    /** @test */
     public function adviser_cannot_view_other_section_student()
     {
         $adviserRole = Role::where('role_name', 'Adviser')->first();
@@ -68,7 +67,7 @@ class SHDFAccessControlTest extends TestCase
         $response->assertStatus(403);
     }
 
-    #[Test]
+    /** @test */
     public function student_can_view_own_shdf()
     {
         $studentRole = Role::where('role_name', 'Student')->first();
@@ -80,7 +79,7 @@ class SHDFAccessControlTest extends TestCase
         $response->assertStatus(200);
     }
 
-    #[Test]
+    /** @test */
     public function student_cannot_view_another_students_shdf()
     {
         $studentRole = Role::where('role_name', 'Student')->first();

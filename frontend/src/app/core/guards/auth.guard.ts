@@ -10,26 +10,25 @@ export const authGuard: CanActivateFn = (route, state) => {
   // First check: Local authentication state
   if (!authService.isAuthenticated()) {
     // console.warn(...); // Removed for production
-    return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+    router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+    return false;
   }
 
   // Second check: Verify with backend that token is still valid
   return authService.getCurrentUser().pipe(
     map(user => {
       if (user) {
-        if (user.password_must_change && state.url !== '/force-change-password') {
-          return router.createUrlTree(['/force-change-password']);
-        }
-
         return true;
       }
       // console.warn(...); // Removed for production
-      return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+      router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+      return false;
     }),
     catchError(error => {
       // Auth Guard: Backend verification error
       authService.logout().subscribe();
-      return of(router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } }));
+      router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+      return of(false);
     })
   );
 };

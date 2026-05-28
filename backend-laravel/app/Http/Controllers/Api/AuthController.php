@@ -7,7 +7,6 @@ use App\Models\Student;
 use App\Models\Adviser;
 use App\Models\ClinicStaff;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends BaseController
 {
     /**
-     * Login user and establish a session
+     * Login user and create token
      */
     public function login(Request $request)
     {
@@ -67,17 +66,18 @@ class AuthController extends BaseController
             // Fetch role-specific data
             $userInfo = $this->addRoleSpecificData($user, $userInfo);
 
-            // Establish a first-party session for Sanctum SPA authentication
-            Auth::guard('web')->login($user);
-            $request->session()->regenerate();
-            $request->session()->regenerateToken();
+            // Create Sanctum token — expiry driven by security settings
+            $sessionMinutes = \App\Models\SystemSetting::get('security', 'session_timeout_minutes', 1440);
+            $token = $user->createToken('auth-token', ['*'], now()->addMinutes((int) $sessionMinutes))->plainTextToken;
 
             // Log activity
             $this->logActivity($user->user_id, 'Login', $request->ip());
 
             return $this->sendResponse([
                 'user' => $userInfo,
-                'session_expires_in' => config('session.lifetime') * 60,
+                'token' => $token,
+                'token_type' => 'Bearer',
+                'expires_in' => $sessionMinutes * 60
             ], 'Login successful');
 
         } catch (ValidationException $e) {
@@ -92,7 +92,7 @@ class AuthController extends BaseController
     }
 
     /**
-     * Logout user and invalidate the session
+     * Logout user and revoke token
      */
     public function logout(Request $request)
     {
@@ -104,14 +104,9 @@ class AuthController extends BaseController
                 // Log activity
                 $this->logActivity($user->user_id, 'Logout', $request->ip());
 
-                if ($request->user()->currentAccessToken()) {
-                    $request->user()->currentAccessToken()->delete();
-                }
+                // Revoke current token
+                $request->user()->currentAccessToken()->delete();
             }
-
-            Auth::guard('web')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
 
             return $this->sendResponse([], 'Logout successful');
 
@@ -134,11 +129,16 @@ class AuthController extends BaseController
                 return $this->sendError('Unauthorized', [], 401);
             }
 
-            $request->session()->regenerate();
-            $request->session()->regenerateToken();
+            // Revoke current token
+            $request->user()->currentAccessToken()->delete();
+
+            // Create new token
+            $token = $user->createToken('auth-token', ['*'], now()->addHours(24))->plainTextToken;
 
             return $this->sendResponse([
-                'session_expires_in' => config('session.lifetime') * 60,
+                'token' => $token,
+                'token_type' => 'Bearer',
+                'expires_in' => 24 * 60 * 60
             ], 'Token refreshed successfully');
 
         } catch (\Exception $e) {

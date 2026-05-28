@@ -16,31 +16,31 @@ export class AuthInitService {
 
   /**
    * Initialize authentication state on app startup
-   * Verifies the current session with backend
+   * Verifies token validity with backend
    */
   async initializeAuth(): Promise<void> {
-    try {
-      await firstValueFrom(this.authService.ensureCsrfCookie());
-    } catch {
-      // CSRF bootstrap is best-effort; the login flow will retry it if needed.
+    // Check if we have local auth data
+    if (!this.authService.isAuthenticated()) {
+      return;
     }
 
     try {
-      const user = await firstValueFrom(this.authService.getCurrentUser(true));
+      // Verify with backend that token is still valid
+      const user = await firstValueFrom(this.authService.getCurrentUser());
 
       // Re-initialize push notifications on page refresh for adviser users.
+      // This ensures the service worker stays registered and the subscription
+      // is active even when the user refreshes without logging out/in.
       if (user && this.isAdviserUser(user)) {
         this.pushNotificationService.init().catch(() => {
           // Push init failed silently — non-critical
         });
       }
-    } catch {
-      try {
-        await firstValueFrom(this.authService.logout());
-      } catch {
-        this.authService.clearAuth();
-      }
+    } catch (error) {
+      // Clear invalid auth data
+      await firstValueFrom(this.authService.logout());
 
+      // Only redirect to login if we're on a protected route
       const currentUrl = this.router.url;
       const publicRoutes = ['/', '/login', '/admin/login', '/role-selection'];
 

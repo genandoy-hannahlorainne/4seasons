@@ -12,23 +12,6 @@ use Illuminate\Support\Facades\Cache;
 
 class StudentController extends BaseController
 {
-    private function getNormalizedRoleName($user): string
-    {
-        return strtolower(trim((string) ($user?->role?->role_name ?? '')));
-    }
-
-    private function isStudentRole($user): bool
-    {
-        return $this->getNormalizedRoleName($user) === 'student';
-    }
-
-    private function resolveOwnedStudentId(int $userId): ?int
-    {
-        return Student::where('user_id', $userId)
-            ->where('is_active', true)
-            ->value('student_id');
-    }
-
     /**
      * Display a listing of students
      */
@@ -77,14 +60,6 @@ class StudentController extends BaseController
     public function show(Student $student)
     {
         try {
-            $authUser = request()->user();
-            if ($authUser && $this->isStudentRole($authUser)) {
-                $ownedStudentId = $this->resolveOwnedStudentId((int) $authUser->user_id);
-                if ((int) $student->student_id !== (int) $ownedStudentId) {
-                    return $this->sendError('Forbidden', [], 403);
-                }
-            }
-
             $student->load([
                 'user',
                 'medicalHistory',
@@ -234,14 +209,6 @@ class StudentController extends BaseController
     public function getMedicalData(Student $student)
     {
         try {
-            $authUser = request()->user();
-            if ($authUser && $this->isStudentRole($authUser)) {
-                $ownedStudentId = $this->resolveOwnedStudentId((int) $authUser->user_id);
-                if ((int) $student->student_id !== (int) $ownedStudentId) {
-                    return $this->sendError('Forbidden', [], 403);
-                }
-            }
-
             $student->load([
                 'medicalHistory',
                 'allergies',
@@ -1071,120 +1038,115 @@ class StudentController extends BaseController
     public function getMedicalDataByUserId(Request $request)
     {
         try {
-            $authUser = $request->user();
-            $userId = $request->get('user_id');
-            if (!$userId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Missing user_id parameter',
-                    'error' => 'user_id is required'
-                ], 400);
-            }
-
-            if ($authUser && $this->isStudentRole($authUser) && (int) $userId !== (int) $authUser->user_id) {
-                return $this->sendError('Forbidden', [], 403);
-            }
-
-            $student = Student::where('user_id', $userId)->first();
-            if (!$student) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No student record found for this user',
-                    'error' => 'Student not found'
-                ], 404);
-            }
-
-            // Load the medical history and other relationships
-            $student->load([
-                'user', // Add user relationship to get phone number
-                'medicalHistory',
-                'allergies',
-                'currentAdviser',
-                'currentSection.adviser',
-                'medicalVisits' => function($query) {
-                    $query->with(['vitals', 'clinicStaff.user'])
-                          ->orderBy('visit_datetime', 'desc')
-                          ->limit(20);
-                }
-            ]);
-
-            $resolvedAdviser = $student->currentAdviser ?: ($student->currentSection ? $student->currentSection->adviser : null);
-
-            // Calculate visit statistics
-            $totalVisits = $student->medicalVisits()->count();
-            $recentVisits = $student->medicalVisits()
-                                ->where('visit_datetime', '>=', now()->subDays(30))
-                                ->count();
-
-            // Get the last visit
-            $lastVisit = $student->medicalVisits()
-                               ->orderBy('visit_datetime', 'desc')
-                               ->first();
-
-            // Calculate wellness streak (days without clinic visits)
-            $currentStreak = 0;
-            if (!$lastVisit) {
-                // No visits ever - streak since enrollment or a reasonable start date
-                $startDate = $student->created_at ?? now()->subDays(365);
-                $currentStreak = max(0, (int) now()->diffInDays($startDate, false));
-            } else {
-                // Days since last visit
-                $currentStreak = max(0, (int) now()->diffInDays($lastVisit->visit_datetime, false));
-            }
-
-            // Load badge metadata and calculate badge status
-            $badgeData = $this->calculateBadgeStatus($student->student_id, $currentStreak);
-
-            $medicalData = [
-                'personal_info' => [
-                    'student_id' => $student->student_id,
-                    'student_number' => $student->student_number,
-                    'full_name' => $student->full_name,
-                    'first_name' => $student->first_name,
-                    'middle_name' => $student->middle_name,
-                    'last_name' => $student->last_name,
-                    'birth_date' => $student->birth_date,
-                    'gender' => $student->gender,
-                    'blood_type' => $student->blood_type,
-                    'address' => $student->address,
-                    'emergency_contact' => $student->emergency_contact,
-                    'emergency_contact_relation' => $student->emergency_contact_relation,
-                    'emergency_contact_phone' => $student->emergency_contact_phone,
-                    'grade_level' => $student->grade_level,
-                    'section' => $student->section,
-                    'adviser_name' => $resolvedAdviser ? $resolvedAdviser->full_name : null,
-                    'adviser_contact' => $resolvedAdviser ? $resolvedAdviser->phone : null,
-                    'height_cm' => $student->height_cm,
-                    'weight_kg' => $student->weight_kg,
-                    'bmi' => $student->bmi,
-                    'bmi_category' => $student->bmi_category,
-                    // Phone: prefer students.phone, fallback to users.phone
-                    'phone' => $student->phone ?? ($student->user ? $student->user->phone : null),
-                    'contact_number' => $student->phone ?? ($student->user ? $student->user->phone : null),
-                    'email' => $student->user ? $student->user->email : null,
-                ],
-                'medical_history' => $student->medicalHistory,
-                'allergies' => $student->allergies,
-                'recent_visits_count' => $recentVisits,
-                'total_visits_count' => $totalVisits,
-                'recent_visits' => $student->medicalVisits,
-                'last_visit' => $lastVisit,
-                // Add wellness streak and badge information
-                'wellness_streak' => [
-                    'current_streak_days' => $currentStreak,
-                    'last_clinic_visit' => $lastVisit ? $lastVisit->visit_datetime : null,
-                    'streak_message' => $badgeData['streak_message'],
-                    'badges_unlocked' => $badgeData['badges_unlocked'],
-                    'next_badge' => $badgeData['next_badge'],
-                ],
-                'badges' => $badgeData['badges']
-            ];
-
+        $userId = $request->get('user_id');
+        if (!$userId) {
             return response()->json([
-                'success' => true,
-                'message' => 'Student medical data retrieved successfully',
-                'data' => $medicalData
-            ]);
+                'success' => false,
+                'message' => 'Missing user_id parameter',
+                'error' => 'user_id is required'
+            ], 400);
+        }
+
+        $student = Student::where('user_id', $userId)->first();
+        if (!$student) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No student record found for this user',
+                'error' => 'Student not found'
+            ], 404);
+        }
+
+        // Load the medical history and other relationships
+        $student->load([
+            'user', // Add user relationship to get phone number
+            'medicalHistory',
+            'allergies',
+            'currentAdviser',
+            'currentSection.adviser',
+            'medicalVisits' => function($query) {
+                $query->with(['vitals', 'clinicStaff.user'])
+                      ->orderBy('visit_datetime', 'desc')
+                      ->limit(20);
+            }
+        ]);
+
+        $resolvedAdviser = $student->currentAdviser ?: ($student->currentSection ? $student->currentSection->adviser : null);
+
+        // Calculate visit statistics
+        $totalVisits = $student->medicalVisits()->count();
+        $recentVisits = $student->medicalVisits()
+                              ->where('visit_datetime', '>=', now()->subDays(30))
+                              ->count();
+
+        // Get the last visit
+        $lastVisit = $student->medicalVisits()
+                           ->orderBy('visit_datetime', 'desc')
+                           ->first();
+
+        // Calculate wellness streak (days without clinic visits)
+        $currentStreak = 0;
+        if (!$lastVisit) {
+            // No visits ever - streak since enrollment or a reasonable start date
+            $startDate = $student->created_at ?? now()->subDays(365);
+            $currentStreak = max(0, (int) now()->diffInDays($startDate, false));
+        } else {
+            // Days since last visit
+            $currentStreak = max(0, (int) now()->diffInDays($lastVisit->visit_datetime, false));
+        }
+
+        // Load badge metadata and calculate badge status
+        $badgeData = $this->calculateBadgeStatus($student->student_id, $currentStreak);
+
+        $medicalData = [
+            'personal_info' => [
+                'student_id' => $student->student_id,
+                'student_number' => $student->student_number,
+                'full_name' => $student->full_name,
+                'first_name' => $student->first_name,
+                'middle_name' => $student->middle_name,
+                'last_name' => $student->last_name,
+                'birth_date' => $student->birth_date,
+                'gender' => $student->gender,
+                'blood_type' => $student->blood_type,
+                'address' => $student->address,
+                'emergency_contact' => $student->emergency_contact,
+                'emergency_contact_relation' => $student->emergency_contact_relation,
+                'emergency_contact_phone' => $student->emergency_contact_phone,
+                'grade_level' => $student->grade_level,
+                'section' => $student->section,
+                'adviser_name' => $resolvedAdviser ? $resolvedAdviser->full_name : null,
+                'adviser_contact' => $resolvedAdviser ? $resolvedAdviser->phone : null,
+                'height_cm' => $student->height_cm,
+                'weight_kg' => $student->weight_kg,
+                'bmi' => $student->bmi,
+                'bmi_category' => $student->bmi_category,
+                // Phone: prefer students.phone, fallback to users.phone
+                'phone' => $student->phone ?? ($student->user ? $student->user->phone : null),
+                'contact_number' => $student->phone ?? ($student->user ? $student->user->phone : null),
+                'email' => $student->user ? $student->user->email : null,
+            ],
+            'medical_history' => $student->medicalHistory,
+            'allergies' => $student->allergies,
+            'recent_visits_count' => $recentVisits,
+            'total_visits_count' => $totalVisits,
+            'recent_visits' => $student->medicalVisits,
+            'last_visit' => $lastVisit,
+            // Add wellness streak and badge information
+            'wellness_streak' => [
+                'current_streak_days' => $currentStreak,
+                'last_clinic_visit' => $lastVisit ? $lastVisit->visit_datetime : null,
+                'streak_message' => $badgeData['streak_message'],
+                'badges_unlocked' => $badgeData['badges_unlocked'],
+                'next_badge' => $badgeData['next_badge'],
+            ],
+            'badges' => $badgeData['badges']
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Student medical data retrieved successfully',
+            'data' => $medicalData
+        ]);
         } catch (\Exception $e) {
             return $this->sendError('Failed to retrieve medical data', [
                 'error' => $e->getMessage(),
