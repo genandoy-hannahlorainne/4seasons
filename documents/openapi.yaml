@@ -1,0 +1,1344 @@
+openapi: 3.0.3
+info:
+  title: 4seasons / StudentCare+ API
+  version: 1.0.0
+  description: >-
+    OpenAPI specification for the 4seasons medical record system.
+    The API covers authentication, admin management, adviser dashboards,
+    clinic staff workflows, SHDF submissions, medical visits, student badges,
+    push notifications, direct FCM messaging, and Semaphore SMS integration
+    for emergency clinic visits.
+servers:
+  - url: http://localhost:8081/api
+    description: Local API
+  - url: https://api.studentcare.site/api
+    description: Production API
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+  - name: Admin
+  - name: Adviser
+  - name: Staff
+  - name: Students
+  - name: Medical Visits
+  - name: SHDF
+  - name: Badges
+  - name: Push
+  - name: FCM
+  - name: Utility
+
+paths:
+  /login:
+    post:
+      tags: [Auth]
+      summary: Log in and receive an access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current access token
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /me:
+    get:
+      tags: [Auth]
+      summary: Get the authenticated user
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh the current access token
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /force-change-password:
+    post:
+      tags: [Auth]
+      summary: Force a password change for the current user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForceChangePasswordRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /request-password-change:
+    post:
+      tags: [Auth]
+      summary: Request a password change notification for the current account
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /health:
+    get:
+      tags: [Utility]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    example: '2026-05-27T08:00:00.000000Z'
+                  database:
+                    type: string
+                    example: connected
+
+  /debug/auth:
+    get:
+      tags: [Utility]
+      summary: Debug authentication state
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /admin/dashboard:
+    get:
+      tags: [Admin]
+      summary: Get admin dashboard metrics
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List all users
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    post:
+      tags: [Admin]
+      summary: Create a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/users/{id}:
+    put:
+      tags: [Admin]
+      summary: Update a user
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    delete:
+      tags: [Admin]
+      summary: Delete a user
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/users/{id}/reset-password:
+    post:
+      tags: [Admin]
+      summary: Reset a user's password
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/users/{id}/activate:
+    post:
+      tags: [Admin]
+      summary: Activate a user account
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/users/{id}/deactivate:
+    post:
+      tags: [Admin]
+      summary: Deactivate a user account
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/grade-levels:
+    get:
+      tags: [Admin]
+      summary: List grade levels with section counts
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/advisers:
+    get:
+      tags: [Admin]
+      summary: List active adviser users
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/sections:
+    get:
+      tags: [Admin]
+      summary: List sections
+      parameters:
+        - name: school_year_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    post:
+      tags: [Admin]
+      summary: Create a section
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SectionCreateRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/sections/{id}:
+    put:
+      tags: [Admin]
+      summary: Update a section
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SectionUpdateRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    delete:
+      tags: [Admin]
+      summary: Delete a section
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/sections/assign-adviser:
+    post:
+      tags: [Admin]
+      summary: Assign or remove an adviser from a section
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignAdviserRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/sections/get-students:
+    get:
+      tags: [Admin]
+      summary: Get students in a section
+      parameters:
+        - name: section_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/notifications:
+    get:
+      tags: [Admin]
+      summary: Get admin notifications
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/notifications/{id}/read:
+    put:
+      tags: [Admin]
+      summary: Mark an admin notification as read
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/notifications/mark-all-read:
+    post:
+      tags: [Admin]
+      summary: Mark all admin notifications as read
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/notifications/{id}/approve-password-change:
+    post:
+      tags: [Admin]
+      summary: Approve a password change request
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/notifications/{id}/dismiss:
+    post:
+      tags: [Admin]
+      summary: Dismiss a password change request
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/activity-logs:
+    get:
+      tags: [Admin]
+      summary: List system activity logs
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/health-risk-visualization:
+    get:
+      tags: [Admin]
+      summary: Get health risk visualization data
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/reports:
+    get:
+      tags: [Admin]
+      summary: Get general reports
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/reports/principal-health-trends:
+    get:
+      tags: [Admin]
+      summary: Get principal health trends report
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/settings:
+    get:
+      tags: [Admin]
+      summary: Get system settings
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    put:
+      tags: [Admin]
+      summary: Update system settings
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/system-settings:
+    get:
+      tags: [Admin]
+      summary: Get all system settings
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    put:
+      tags: [Admin]
+      summary: Update all system settings
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/backup/history:
+    get:
+      tags: [Admin]
+      summary: List backup history
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/backup/create:
+    post:
+      tags: [Admin]
+      summary: Create a backup
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/backup/restore:
+    post:
+      tags: [Admin]
+      summary: Restore from a backup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackupRestoreRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/backup/download/{filename}:
+    get:
+      tags: [Admin]
+      summary: Download a backup file
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File download
+  /admin/backup/{filename}:
+    delete:
+      tags: [Admin]
+      summary: Delete a backup file
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/promotion/summary:
+    get:
+      tags: [Admin]
+      summary: Get grade promotion summary
+      parameters:
+        - name: current_school_year_id
+          in: query
+          schema:
+            type: integer
+        - name: target_school_year_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/promotion/copy-sections:
+    post:
+      tags: [Admin]
+      summary: Copy sections to another school year
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromotionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/promotion/bulk:
+    post:
+      tags: [Admin]
+      summary: Promote all active students
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromotionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/school-years:
+    get:
+      tags: [Admin]
+      summary: List school years
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    post:
+      tags: [Admin]
+      summary: Create a school year
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchoolYearCreateRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/school-years/current:
+    get:
+      tags: [Admin]
+      summary: Get the current school year
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/school-years/check-current-auto:
+    get:
+      tags: [Admin]
+      summary: Check whether the current school year should auto-set
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/school-years/set-current:
+    post:
+      tags: [Admin]
+      summary: Set the current school year
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchoolYearSetCurrentRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /admin/school-years/{id}:
+    put:
+      tags: [Admin]
+      summary: Update a school year
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /adviser/dashboard:
+    get:
+      tags: [Adviser]
+      summary: Get adviser dashboard data
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /adviser/students:
+    get:
+      tags: [Adviser]
+      summary: Get advisory students
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /adviser/advisory-students:
+    get:
+      tags: [Adviser]
+      summary: Get advisory students (alias)
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /adviser/advisory-students-shdf:
+    get:
+      tags: [Adviser]
+      summary: Get advisory students with SHDF status
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /adviser/profile:
+    get:
+      tags: [Adviser]
+      summary: Get adviser profile
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    put:
+      tags: [Adviser]
+      summary: Update adviser profile
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /adviser/health-heatmap:
+    get:
+      tags: [Adviser]
+      summary: Get adviser health heatmap data
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 7
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /adviser/class-roster:
+    get:
+      tags: [Adviser]
+      summary: Get class roster
+      parameters:
+        - name: school_year_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /adviser/notifications:
+    get:
+      tags: [Adviser]
+      summary: Get adviser notifications
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /adviser/students/{studentId}/shdf-download:
+    get:
+      tags: [Adviser]
+      summary: Download a student's SHDF form
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: File download
+
+  /staff/students:
+    get:
+      tags: [Staff]
+      summary: List students for clinic staff
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /staff/sections:
+    get:
+      tags: [Staff]
+      summary: List sections for clinic staff
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /staff/dashboard:
+    get:
+      tags: [Staff]
+      summary: Get clinic overview
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /staff/reports:
+    get:
+      tags: [Staff]
+      summary: Get clinic staff reports
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /staff/profile:
+    get:
+      tags: [Staff]
+      summary: Get staff profile
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    put:
+      tags: [Staff]
+      summary: Update staff profile
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /students:
+    get:
+      tags: [Students]
+      summary: List students
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: grade_level
+          in: query
+          schema:
+            type: string
+        - name: section
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    post:
+      tags: [Students]
+      summary: Create a student
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+  /students/search:
+    get:
+      tags: [Students]
+      summary: Search students
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /students/medical-data:
+    get:
+      tags: [Students]
+      summary: Get medical data for the authenticated student
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /students/{student}:
+    get:
+      tags: [Students]
+      summary: Get a student profile
+      parameters:
+        - $ref: '#/components/parameters/StudentPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    put:
+      tags: [Students]
+      summary: Update a student profile
+      parameters:
+        - $ref: '#/components/parameters/StudentPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentUpdateRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /students/{student}/medical-data:
+    get:
+      tags: [Students]
+      summary: Get a student's medical data
+      parameters:
+        - $ref: '#/components/parameters/StudentPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    put:
+      tags: [Students]
+      summary: Update a student's medical data
+      parameters:
+        - $ref: '#/components/parameters/StudentPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /students/{student}/visits:
+    get:
+      tags: [Students]
+      summary: Get visit history for a student
+      parameters:
+        - $ref: '#/components/parameters/StudentPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /students/{student}/visit-history:
+    get:
+      tags: [Students]
+      summary: Get full visit history for a student
+      parameters:
+        - $ref: '#/components/parameters/StudentPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /students/{studentId}/badges:
+    get:
+      tags: [Badges]
+      summary: Get student badges
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /students/{studentId}/badge-notifications:
+    get:
+      tags: [Badges]
+      summary: Get student badge notifications
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /medical-visits:
+    get:
+      tags: [Medical Visits]
+      summary: List medical visits
+      parameters:
+        - name: student_id
+          in: query
+          schema:
+            type: integer
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: emergency_only
+          in: query
+          schema:
+            type: boolean
+        - name: visit_type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    post:
+      tags: [Medical Visits]
+      summary: Create a medical visit
+      description: >-
+        When an emergency visit is saved, the backend attempts to send an SMS to
+        the student's emergency contact through Semaphore. It uses
+        emergency_contact_phone first, then falls back to the student's phone.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MedicalVisitCreateRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+  /medical-visits/{id}:
+    get:
+      tags: [Medical Visits]
+      summary: Get a medical visit
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /student/streak-badges/metadata:
+    get:
+      tags: [Badges]
+      summary: Get streak badge metadata
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /student-badges/{studentId}:
+    get:
+      tags: [Badges]
+      summary: Get student badge summary
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /notifications/{notificationId}/read:
+    put:
+      tags: [Badges]
+      summary: Mark a badge notification as read
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /students/{studentId}/badges/generate-text:
+    post:
+      tags: [Badges]
+      summary: Generate badge narrative text
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /shdf/{studentId}:
+    get:
+      tags: [SHDF]
+      summary: Get SHDF for a student
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /shdf/{studentId}/status:
+    get:
+      tags: [SHDF]
+      summary: Get SHDF completion status
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /shdf/{studentId}/{schoolYearId}:
+    get:
+      tags: [SHDF]
+      summary: Get SHDF for a specific school year
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPath'
+        - name: schoolYearId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /shdf/basic:
+    post:
+      tags: [SHDF]
+      summary: Submit the basic SHDF form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SHDFBasicRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /shdf/comprehensive:
+    post:
+      tags: [SHDF]
+      summary: Submit the comprehensive SHDF form
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /shdf:
+    post:
+      tags: [SHDF]
+      summary: Submit the legacy full SHDF form
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /push/vapid-public-key:
+    get:
+      tags: [Push]
+      summary: Get the VAPID public key
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /push/subscribe:
+    post:
+      tags: [Push]
+      summary: Register a browser push subscription or token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscribeRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /push/unsubscribe:
+    delete:
+      tags: [Push]
+      summary: Remove a browser push subscription or token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                endpoint:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /fcm/send-to-user:
+    post:
+      tags: [FCM]
+      summary: Send a direct FCM message to a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FcmSendToUserRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /fcm/send-to-token:
+    post:
+      tags: [FCM]
+      summary: Send a direct FCM message to a token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FcmSendToTokenRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /fcm/send-to-topic:
+    post:
+      tags: [FCM]
+      summary: Send a direct FCM message to a topic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FcmSendToTopicRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+  /fcm/send-to-condition:
+    post:
+      tags: [FCM]
+      summary: Send a direct FCM message to a condition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FcmSendToConditionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    StudentPath:
+      name: student
+      in: path
+      required: true
+      schema:
+        type: integer
+    StudentIdPath:
+      name: studentId
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    SuccessResponse:
+      description: Successful response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessResponse'
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operation completed successfully
+        data:
+          nullable: true
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Something went wrong
+        data:
+          nullable: true
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          type: object
+        token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+    ForceChangePasswordRequest:
+      type: object
+      required: [current_password, new_password, new_password_confirmation]
+      properties:
+        current_password:
+          type: string
+        new_password:
+          type: string
+        new_password_confirmation:
+          type: string
+    UserCreateRequest:
+      type: object
+      required: [username, email, full_name, role_id, password]
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        full_name:
+          type: string
+        role_id:
+          type: integer
+        password:
+          type: string
+    SectionCreateRequest:
+      type: object
+      required: [section_name, grade_level_id, school_year_id, capacity]
+      properties:
+        section_name:
+          type: string
+        grade_level_id:
+          type: integer
+        school_year_id:
+          type: integer
+        capacity:
+          type: integer
+    SectionUpdateRequest:
+      type: object
+      properties:
+        section_name:
+          type: string
+        adviser_id:
+          type: integer
+        capacity:
+          type: integer
+    AssignAdviserRequest:
+      type: object
+      required: [section_id]
+      properties:
+        section_id:
+          type: integer
+        adviser_user_id:
+          type: integer
+          nullable: true
+    SchoolYearCreateRequest:
+      type: object
+      required: [year_name, start_date, end_date]
+      properties:
+        year_name:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+    SchoolYearSetCurrentRequest:
+      type: object
+      required: [school_year_id]
+      properties:
+        school_year_id:
+          type: integer
+    PromotionRequest:
+      type: object
+      required: [current_school_year_id, target_school_year_id]
+      properties:
+        current_school_year_id:
+          type: integer
+        target_school_year_id:
+          type: integer
+    BackupRestoreRequest:
+      type: object
+      required: [filename]
+      properties:
+        filename:
+          type: string
+    StudentUpdateRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        middle_name:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        gender:
+          type: string
+        address:
+          type: string
+        blood_type:
+          type: string
+        emergency_contact:
+          type: string
+        emergency_contact_relation:
+          type: string
+        emergency_contact_phone:
+          type: string
+        height_cm:
+          type: number
+        weight_kg:
+          type: number
+        email:
+          type: string
+        phone:
+          type: string
+    MedicalVisitCreateRequest:
+      type: object
+      required: [student_id, clinic_staff_id, visit_type, status]
+      properties:
+        student_id:
+          type: integer
+        clinic_staff_id:
+          type: integer
+        chief_complaint:
+          type: string
+        notes:
+          type: string
+        visit_type:
+          type: string
+          example: Emergency
+        status:
+          type: string
+          example: Open
+        notify_parent:
+          type: boolean
+        notification_method:
+          type: string
+          example: sms
+        visit_datetime:
+          type: string
+          format: date-time
+    SHDFBasicRequest:
+      type: object
+      required: [student_id, parent_guardian_name, emergency_contact, emergency_contact_relation, emergency_contact_phone]
+      properties:
+        student_id:
+          type: integer
+        parent_guardian_name:
+          type: string
+        emergency_contact:
+          type: string
+        emergency_contact_relation:
+          type: string
+        emergency_contact_phone:
+          type: string
+        height_cm:
+          type: number
+        weight_kg:
+          type: number
+        blood_type:
+          type: string
+    PushSubscribeRequest:
+      type: object
+      required: [endpoint, user_agent, token_type]
+      properties:
+        endpoint:
+          type: string
+        p256dh_key:
+          type: string
+          nullable: true
+        auth_key:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+        token_type:
+          type: string
+          example: fcm
+    FcmSendToUserRequest:
+      type: object
+      required: [user_id, title, body]
+      properties:
+        user_id:
+          type: integer
+        title:
+          type: string
+        body:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+    FcmSendToTokenRequest:
+      type: object
+      required: [token, title, body]
+      properties:
+        token:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+    FcmSendToTopicRequest:
+      type: object
+      required: [topic, title, body]
+      properties:
+        topic:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+    FcmSendToConditionRequest:
+      type: object
+      required: [condition, title, body]
+      properties:
+        condition:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        data:
+          type: object
+          additionalProperties: true

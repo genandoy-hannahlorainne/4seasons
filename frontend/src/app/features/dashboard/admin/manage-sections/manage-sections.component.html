@@ -7,10 +7,8 @@
       <h1>{{ selectedGradeId ? selectedGrade?.level_name + ' Sections' : 'Manage Sections' }}</h1>
       <p>{{ selectedGradeId ? 'Manage sections for ' + selectedGrade?.level_name : 'View and manage all grade level sections' }}</p>
     </div>
+    <!-- header end intentionally only shows notification bell per design -->
     <app-admin-notification-bell variant="page-header-corner" />
-    <button class="btn btn-primary" *ngIf="selectedGradeId" (click)="openAdd(selectedGradeId)">
-      <i class="fa-solid fa-plus"></i> Add Section
-    </button>
   </div>
 
   <div class="alert alert-success" *ngIf="successMessage">
@@ -95,6 +93,11 @@
             <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
           </select>
           <span>per page</span>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-primary" *ngIf="selectedGradeId" (click)="openAdd(selectedGradeId)">
+            <i class="fa-solid fa-plus"></i> Add Section
+          </button>
         </div>
       </div>
     </div>

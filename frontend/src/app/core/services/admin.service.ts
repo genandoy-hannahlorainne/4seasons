@@ -80,18 +80,6 @@ export class AdminService {
     return this.http.post<any>(`${environment.apiUrl}/admin/students/bulk-import`, formData);
   }
 
-  // System Settings (Laravel)
-  getSystemSettings(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/admin/system-settings`);
-  }
-
-  updateSystemSettings(section: string, settings: any): Observable<any> {
-    return this.http.put<any>(`${environment.apiUrl}/admin/system-settings`, {
-      section,
-      settings
-    });
-  }
-
   // Reports
   getReport(reportType: string, startDate?: string, endDate?: string): Observable<any> {
     let url = `${environment.apiUrl}/admin/reports?type=${reportType}`;

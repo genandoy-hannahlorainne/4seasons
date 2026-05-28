@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Add new notification types for password change requests and emergency drills
+        // Add new notification types for password change requests
         DB::statement("ALTER TABLE notifications MODIFY COLUMN notification_type VARCHAR(50) NULL");
 
         // Add request_data column to store additional request information

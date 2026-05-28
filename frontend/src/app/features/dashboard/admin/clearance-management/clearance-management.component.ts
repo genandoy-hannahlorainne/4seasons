@@ -11,12 +11,12 @@ import { AdminNotificationBellComponent } from '../shared/admin-notification-bel
   imports: [CommonModule, FormsModule, AdminNotificationBellComponent],
   template: `
     <div class="clearance-management">
-      <div class="page-header has-notif-bell">
+      <div class="page-header notif-bell-corner">
         <div class="page-header-main">
           <h1>Medical Clearance Management</h1>
           <p>Manage student medical clearances for off-campus activities</p>
         </div>
-        <app-admin-notification-bell />
+        <app-admin-notification-bell variant="page-header-corner" />
       </div>
 
       <!-- Filters -->

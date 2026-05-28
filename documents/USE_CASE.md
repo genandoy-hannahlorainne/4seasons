@@ -74,15 +74,6 @@ rectangle "Dashboard & Reports" {
     usecase "View Health Heatmap" as UC_HEATMAP
 }
 
-rectangle "Emergency Drills" {
-    usecase "Create Emergency Drill" as UC_CREATEDRILL
-    usecase "Start / End Drill" as UC_RUNDRILL
-    usecase "Add Drill Participants" as UC_ADDPARTICIPANTS
-    usecase "Scan Participant (QR)" as UC_SCANDRILL
-    usecase "View Drill Dashboard" as UC_DRILLDASH
-    usecase "View Drill Details" as UC_DRILLDETAILS
-}
-
 rectangle "Wellness Badges" {
     usecase "View Wellness Streak & Badges" as UC_BADGES
     usecase "View Badge Notifications" as UC_BADGENOTIF
@@ -126,9 +117,6 @@ Admin --> UC_ACTLOGS
 Admin --> UC_AUDITLOGS
 Admin --> UC_BACKUP
 Admin --> UC_ADMINNOTIF
-Admin --> UC_CREATEDRILL
-Admin --> UC_RUNDRILL
-Admin --> UC_ADDPARTICIPANTS
 
 ' Clinic Staff
 Staff --> UC_LOGIN
@@ -143,7 +131,6 @@ Staff --> UC_VIEWVISITS
 Staff --> UC_VITALS
 Staff --> UC_CLINICDASH
 Staff --> UC_REPORTS
-Staff --> UC_SCANDRILL
 
 ' Adviser
 Adviser --> UC_LOGIN
@@ -154,7 +141,6 @@ Adviser --> UC_VIEWSTUDENT
 Adviser --> UC_VIEWMEDICAL
 Adviser --> UC_VISITHISTORY
 Adviser --> UC_ADVISERNOTIF
-Adviser --> UC_DRILLDETAILS
 
 ' Student
 Student --> UC_LOGIN
@@ -182,7 +168,5 @@ Student --> UC_LOGOUT
 Admin --> UC_VIEWSTUDENT
 Admin --> UC_SEARCHSTUDENT
 Admin --> UC_VIEWVISITS
-Admin --> UC_DRILLDETAILS
-Admin --> UC_DRILLDASH
 
 @enduml

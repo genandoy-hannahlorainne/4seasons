@@ -1,15 +1,11 @@
 <div class="backup-recovery-page">
-  <div class="page-header has-notif-bell">
+  <div class="page-header notif-bell-corner">
     <div class="header-left">
       <h1>Backup & Recovery</h1>
       <p>Manage database backups and system recovery</p>
     </div>
     <div class="page-header-end">
-      <app-admin-notification-bell />
-      <button class="btn btn-create-backup" (click)="createBackup()" [disabled]="creating">
-      <span *ngIf="!creating"><i class="fa-solid fa-box-archive"></i> Create Backup</span>
-        <span *ngIf="creating"><i class="fa-solid fa-hourglass-half"></i> Creating Backup...</span>
-      </button>
+      <app-admin-notification-bell variant="page-header-corner" />
     </div>
   </div>
 
@@ -25,9 +21,15 @@
   <div class="card">
     <div class="card-header">
       <h2>Backup History</h2>
-      <button class="btn btn-secondary" (click)="loadBackups()" [disabled]="loading">
-        <i class="fa-solid fa-rotate"></i> Refresh
-      </button>
+      <div class="action-buttons">
+        <button class="btn btn-primary" (click)="createBackup()" [disabled]="creating">
+          <span *ngIf="!creating"><i class="fa-solid fa-box-archive"></i> Create Backup</span>
+          <span *ngIf="creating"><i class="fa-solid fa-hourglass-half"></i> Creating Backup...</span>
+        </button>
+        <button class="btn btn-secondary" (click)="loadBackups()" [disabled]="loading">
+          <i class="fa-solid fa-rotate"></i> Refresh
+        </button>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -38,7 +40,7 @@
 
     <!-- Empty State -->
     <div class="empty-state" *ngIf="!loading && backups.length === 0">
-      <p>No backups found. Create your first backup above.</p>
+      <p>No backups found. Create your first backup below.</p>
     </div>
 
     <!-- Backup List -->

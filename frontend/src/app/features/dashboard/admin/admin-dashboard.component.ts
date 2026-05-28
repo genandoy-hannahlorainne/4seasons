@@ -49,13 +49,13 @@ interface UsersResponse {
     <div class="admin-dashboard">
       <!-- Hero Section -->
       <div class="hero-section">
-        <app-admin-notification-bell variant="hero" />
         <div class="hero-content">
           <div class="hero-text">
             <h1>Welcome to PDMHS Admin Dashboard</h1>
             <p>Manage your school's medical records system efficiently and securely</p>
           </div>
         </div>
+        <app-admin-notification-bell variant="page-header-corner" />
       </div>
 
       <!-- Skeleton Loading State -->
@@ -71,33 +71,6 @@ interface UsersResponse {
       </div>
 
       <div class="dashboard-content" *ngIf="!loading">
-        <!-- Emergency Drill Alerts -->
-        <div class="drill-alerts-banner" *ngIf="drillAlerts.length > 0">
-          <div class="drill-header">
-            <i class="fa-solid fa-bell"></i>
-            <span>{{ drillAlerts.length }} Emergency Drill Alert{{ drillAlerts.length > 1 ? 's' : '' }}</span>
-            <button class="mark-all-read" (click)="markAllNotificationsAsRead()">
-              Mark All Read
-            </button>
-          </div>
-          <div class="drill-list">
-            <div *ngFor="let alert of drillAlerts" class="drill-item">
-              <div class="drill-content">
-                <div class="drill-message">{{ alert.message }}</div>
-                <div class="drill-meta">
-                  <span><strong>{{ alert.request_data?.drill_name }}</strong> ({{ alert.request_data?.drill_type }})</span>
-                  <span>{{ alert.timeAgo }}</span>
-                </div>
-              </div>
-              <div class="drill-actions">
-                <button class="drill-view" (click)="viewDrillDashboard(alert.request_data?.drill_id)">
-                  <i class="fa-solid fa-chart-line"></i> View Dashboard
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Emergency Notifications (if any) -->
         <div class="emergency-banner" *ngIf="emergencyNotifications.length > 0">
           <div class="emergency-header">
@@ -352,7 +325,7 @@ interface UsersResponse {
               <span class="dash-card-sub">BMI distribution</span>
             </div>
           </div>
-          <app-health-risk-visualization></app-health-risk-visualization>
+          <app-health-risk-visualization [hideHeader]="true"></app-health-risk-visualization>
         </div>
 
       </div>
@@ -976,6 +949,8 @@ interface UsersResponse {
         margin-bottom: 1rem;
         &:last-child { margin-bottom: 0; }
       }
+      /* When embedded in the admin dashboard, hide the internal viz header to avoid duplicate titles */
+      /* Inner visualization cards use their own padding; keep minimal overrides */
     }
 
     /* Empty state */
@@ -1114,8 +1089,6 @@ interface UsersResponse {
         }
         .alert-dismiss {
           background: none;
-          border: none;
-          font-size: 1.25rem;
           color: #7f8c8d;
           cursor: pointer;
           &:hover { color: #2c3e50; }
@@ -1263,7 +1236,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   activityLog: any[] = [];
   emergencyNotifications: any[] = [];
   notificationHistory: any[] = [];
-  drillAlerts: any[] = [];
 
   // Chart data
   visitsByDay: { date: string; count: number }[] = [];
@@ -1487,11 +1459,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             };
           });
 
-          // Emergency drill alerts (pending)
-          this.drillAlerts = allNotifications.filter(
-            (notif: any) => notif?.notification_type === 'emergency_drill_alert' && notif?.status === 'Pending'
-          );
-
           // Medical emergency notifications (urgent + pending + has visit_id)
           this.emergencyNotifications = allNotifications.filter(
             (notif: any) =>
@@ -1513,10 +1480,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             };
           });
 
-          this.drillAlerts = allNotifications.filter(
-            (notif: any) => notif?.notification_type === 'emergency_drill_alert' && notif?.status === 'Pending'
-          );
-
           this.emergencyNotifications = allNotifications.filter(
             (notif: any) =>
               notif?.status === 'Pending' &&
@@ -1526,8 +1489,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
           this.notificationHistory = this.notifPanelService.buildAdminFeed(allNotifications);
           this.notifPanelService.setNotificationHistory(this.notificationHistory);
-
-          // Notifications categorized and loaded
         }
       },
       error: (err) => {
@@ -1799,17 +1760,9 @@ ${notification.message || 'N/A'}
     alert(details);
   }
 
-  viewDrillDashboard(drillId: number): void {
-    if (drillId) {
-      this.router.navigate(['/dashboard/admin/emergency-drills', drillId, 'dashboard']);
-    }
-  }
-
   getNotificationIcon(notification: any): string {
     if (notification.notification_type === 'password_change_request') {
       return 'fa-key';
-    } else if (notification.notification_type === 'emergency_drill_alert') {
-      return 'fa-bell';
     } else if (notification.priority === 'urgent') {
       return 'fa-triangle-exclamation';
     } else {
