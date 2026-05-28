@@ -27,7 +27,7 @@ return [
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => ['Authorization', 'Content-Type', 'X-Requested-With'],
+    'exposed_headers' => ['Authorization', 'Content-Type', 'X-Requested-With', 'X-XSRF-TOKEN'],
 
     'max_age' => 86400, // Cache preflight for 24 hours
 
