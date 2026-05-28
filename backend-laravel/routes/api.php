@@ -127,13 +127,13 @@ if (app()->environment('local')) {
 // VAPID public key — no auth needed so the frontend can subscribe before login
 Route::get('/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey']);
 
-// Authentication routes
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
-Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:sanctum', 'throttle:10,1']);
-Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
-Route::post('/refresh', [AuthController::class, 'refresh'])->middleware(['auth:sanctum', 'throttle:10,1']);
-Route::post('/force-change-password', [AuthController::class, 'forceChangePassword'])->middleware(['auth:sanctum', 'throttle:10,1']);
-Route::post('/request-password-change', [AuthController::class, 'requestPasswordChange'])->middleware(['auth:sanctum', 'throttle:10,1']);
+// Authentication routes (use web middleware to enable session store for SPA auth)
+Route::post('/login', [AuthController::class, 'login'])->middleware(['throttle:5,1', 'web']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware(['web', 'auth:sanctum', 'throttle:10,1']);
+Route::get('/me', [AuthController::class, 'me'])->middleware(['web', 'auth:sanctum']);
+Route::post('/refresh', [AuthController::class, 'refresh'])->middleware(['web', 'auth:sanctum', 'throttle:10,1']);
+Route::post('/force-change-password', [AuthController::class, 'forceChangePassword'])->middleware(['web', 'auth:sanctum', 'throttle:10,1']);
+Route::post('/request-password-change', [AuthController::class, 'requestPasswordChange'])->middleware(['web', 'auth:sanctum', 'throttle:10,1']);
 
 // Protected routes
 Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function () {
