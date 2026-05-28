@@ -1,6 +1,21 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('App Shell', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.context().clearCookies();
+    await page.addInitScript(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+    await page.route('**/api/me', async route => {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: false, message: 'Unauthenticated' })
+      });
+    });
+  });
+
   test('should serve the Angular app without a blank page', async ({ page }) => {
     await page.goto('/');
     // Angular app should render something — not a blank white page
