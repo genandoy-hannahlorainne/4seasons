@@ -1,0 +1,71 @@
+name: CI - Backend Tests
+
+on:
+  push:
+    branches: [ main, security ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: laravel_test
+          MYSQL_USER: tester
+          MYSQL_PASSWORD: secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=5s --health-timeout=10s --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, bcmath, xml, curl, intl
+
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y unzip git
+
+      - name: Install Composer
+        run: curl -sS https://getcomposer.org/installer | php && sudo mv composer.phar /usr/local/bin/composer
+
+      - name: Prepare .env.testing
+        run: |
+          cp backend-laravel/.env.example backend-laravel/.env.testing
+          cat >> backend-laravel/.env.testing <<'EOF'
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel_test
+DB_USERNAME=tester
+DB_PASSWORD=secret
+APP_ENV=testing
+APP_DEBUG=false
+EOF
+
+      - name: Install PHP deps
+        run: |
+          cd backend-laravel
+          composer install --no-interaction --no-progress
+
+      - name: Run migrations & tests
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: laravel_test
+          DB_USERNAME: tester
+          DB_PASSWORD: secret
+        run: |
+          cd backend-laravel
+          php artisan key:generate --ansi
+          php artisan migrate --env=testing --force
+          php artisan test --testsuite=Feature

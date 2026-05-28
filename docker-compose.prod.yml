@@ -24,8 +24,9 @@ services:
       - ./firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
     extra_hosts:
       - "dbaas-db-3809521-do-user-34366867-0.k.db.ondigitalocean.com:152.42.176.6"
+    # Use an explicit production env file (create from .env.prod.example)
     env_file:
-      - ./.env
+      - ./.env.prod
     depends_on:
       redis:
         condition: service_started
