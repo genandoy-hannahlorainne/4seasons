@@ -169,7 +169,8 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Default to true in production (HTTPS) and false for local/dev when env not set
+    'secure' => env('SESSION_SECURE_COOKIE', app()->environment('production')),
 
     /*
     |--------------------------------------------------------------------------
@@ -199,7 +200,8 @@ return [
     |
     */
 
-    'same_site' => env('SESSION_SAME_SITE', 'lax'),
+    // Use None in production by default to allow cross-site cookies (frontend on separate domain)
+    'same_site' => env('SESSION_SAME_SITE', app()->environment('production') ? 'None' : 'lax'),
 
     /*
     |--------------------------------------------------------------------------
