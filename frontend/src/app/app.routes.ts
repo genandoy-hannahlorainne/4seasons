@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { noAuthGuard } from './core/guards/no-auth.guard';
+import { forceChangePasswordGuard } from './core/guards/force-change-password.guard';
 
 export const routes: Routes = [
   {
@@ -53,6 +54,7 @@ export const routes: Routes = [
   },
   {
     path: 'force-change-password',
+    canActivate: [forceChangePasswordGuard],
     loadComponent: () => import('./features/auth/force-change-password/force-change-password.component').then(m => m.ForceChangePasswordComponent)
   },
   {

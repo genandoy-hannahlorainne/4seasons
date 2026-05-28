@@ -136,7 +136,7 @@ Route::post('/force-change-password', [AuthController::class, 'forceChangePasswo
 Route::post('/request-password-change', [AuthController::class, 'requestPasswordChange'])->middleware(['web', 'auth:sanctum', 'throttle:10,1']);
 
 // Protected routes
-Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function () {
+Route::middleware(['auth:sanctum', 'password.change.required', 'throttle:60,1', 'audit'])->group(function () {
     // Legacy route for compatibility - redirects to admin/users logic
     Route::get('/get-all-users', [AdminController::class, 'getAllUsers'])->middleware('role:admin');
 
@@ -223,21 +223,28 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
 
     // Student routes
     Route::prefix('students')->group(function () {
-        Route::get('/', [StudentController::class, 'index']);
-        Route::get('/search', [StudentController::class, 'search']);
-        Route::get('/qr/lookup', [StudentController::class, 'getByQr']);
-        Route::get('/medical-data', [StudentController::class, 'getMedicalDataByUserId']);
-        Route::get('/badges/summary', [StudentController::class, 'getBadgeSummary']);
-        Route::get('/visit-summaries', [StudentController::class, 'getVisitSummaries']);
-        Route::post('/', [StudentController::class, 'store']);
-        Route::get('/{student}', [StudentController::class, 'show'])->name('students.show');
-        Route::put('/{student}', [StudentController::class, 'update'])->name('students.update');
-        Route::get('/{student}/medical-data', [StudentController::class, 'getMedicalData']);
-        Route::put('/{student}/medical-data', [StudentController::class, 'updateMedicalData']);
-        Route::get('/{student}/visits', [MedicalVisitController::class, 'getStudentVisits']);
-        Route::get('/{student}/visit-history', [MedicalVisitController::class, 'getStudentVisitHistory']);
-        Route::get('/{studentId}/badges', [StudentBadgeController::class, 'getStudentBadges']);
-        Route::get('/{studentId}/badge-notifications', [StudentBadgeController::class, 'getBadgeNotifications']);
+        // Broad student listing/search endpoints are restricted to staff/adviser/admin.
+        Route::middleware('role:admin,clinic_staff,adviser')->group(function () {
+            Route::get('/', [StudentController::class, 'index']);
+            Route::get('/search', [StudentController::class, 'search']);
+            Route::get('/qr/lookup', [StudentController::class, 'getByQr']);
+            Route::post('/', [StudentController::class, 'store']);
+            Route::put('/{student}', [StudentController::class, 'update'])->name('students.update');
+            Route::put('/{student}/medical-data', [StudentController::class, 'updateMedicalData']);
+        });
+
+        // Read endpoints can also be accessed by student role, with ownership checks in controllers.
+        Route::middleware('role:admin,clinic_staff,adviser,student')->group(function () {
+            Route::get('/medical-data', [StudentController::class, 'getMedicalDataByUserId']);
+            Route::get('/badges/summary', [StudentController::class, 'getBadgeSummary']);
+            Route::get('/visit-summaries', [StudentController::class, 'getVisitSummaries']);
+            Route::get('/{student}', [StudentController::class, 'show'])->name('students.show');
+            Route::get('/{student}/medical-data', [StudentController::class, 'getMedicalData']);
+            Route::get('/{student}/visits', [MedicalVisitController::class, 'getStudentVisits']);
+            Route::get('/{student}/visit-history', [MedicalVisitController::class, 'getStudentVisitHistory']);
+            Route::get('/{studentId}/badges', [StudentBadgeController::class, 'getStudentBadges']);
+            Route::get('/{studentId}/badge-notifications', [StudentBadgeController::class, 'getBadgeNotifications']);
+        });
     });
 
     // Student badge metadata route
@@ -246,12 +253,12 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
     });
 
     // Badge notifications
-    Route::prefix('notifications')->group(function () {
+    Route::prefix('notifications')->middleware('role:admin,clinic_staff,adviser,student')->group(function () {
         Route::put('/{notificationId}/read', [StudentBadgeController::class, 'markNotificationAsRead']);
     });
 
     // Medical visits
-    Route::prefix('medical-visits')->group(function () {
+    Route::prefix('medical-visits')->middleware('role:admin,clinic_staff,adviser')->group(function () {
         Route::get('/', [MedicalVisitController::class, 'index']);
         Route::post('/', [MedicalVisitController::class, 'store'])->name('medical-visits.store');
         Route::get('/{id}', [MedicalVisitController::class, 'show'])->name('medical-visits.show');
@@ -273,13 +280,13 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
     Route::get('/dashboard/clinic/overview', [DashboardController::class, 'getClinicOverview']);
 
     // School years
-    Route::prefix('school-years')->group(function () {
+    Route::prefix('school-years')->middleware('role:admin')->group(function () {
         Route::get('/', [SchoolYearController::class, 'index']);
         Route::post('/', [SchoolYearController::class, 'store']);
     });
 
     // Student badges
-    Route::prefix('student-badges')->group(function () {
+    Route::prefix('student-badges')->middleware('role:admin,clinic_staff,adviser,student')->group(function () {
         Route::get('/{studentId}', [StudentBadgeController::class, 'getStudentBadges']);
     });
 

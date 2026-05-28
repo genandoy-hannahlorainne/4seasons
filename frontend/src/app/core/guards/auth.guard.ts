@@ -17,6 +17,10 @@ export const authGuard: CanActivateFn = (route, state) => {
   return authService.getCurrentUser().pipe(
     map(user => {
       if (user) {
+        if (user.password_must_change && state.url !== '/force-change-password') {
+          return router.createUrlTree(['/force-change-password']);
+        }
+
         return true;
       }
       // console.warn(...); // Removed for production

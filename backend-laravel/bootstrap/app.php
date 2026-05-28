@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'audit' => \App\Http\Middleware\AuditMiddleware::class,
             'nocache' => \App\Http\Middleware\NoCacheMiddleware::class,
+            'password.change.required' => \App\Http\Middleware\EnforcePasswordChangeMiddleware::class,
         ]);
 
         // Apply no-cache headers to all API responses
