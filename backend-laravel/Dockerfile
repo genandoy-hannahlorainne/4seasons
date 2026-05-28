@@ -28,12 +28,8 @@ RUN echo "Cache bust: ${CACHE_BUST}"
 # Copy the rest of the app
 COPY . /var/www/html
 
-# Run package:discover after full copy so service providers are registered.
-# APP_KEY is passed inline — no .env file is written into the image so the
-# real key from env_file (injected at container start) is always used.
-RUN APP_KEY=base64:ts45ilpSzvWpMDLq+TQAot+nH6YzM28YSFfC/wFWFG4= \
-    APP_ENV=production \
-    php artisan package:discover --ansi
+# Run post-install scripts after full copy
+RUN composer run-script post-autoload-dump || true
 
 # Serve Laravel from /public
 RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf /etc/apache2/apache2.conf

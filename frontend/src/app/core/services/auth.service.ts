@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { catchError, finalize, map, shareReplay, switchMap } from 'rxjs/operators';
+import { map, catchError, finalize, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User } from '../models/user.model';
 import { PushNotificationService } from './push-notification.service';
@@ -13,11 +13,15 @@ export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
   private currentUserRequest$: Observable<User> | null = null;
-  private currentUserLoadedAt = 0;
-  private readonly cacheTtlMs = 15000;
+  private lastValidatedToken: string | null = null;
+  private lastValidatedAt = 0;
+  private readonly verificationTtlMs = 15000;
 
   constructor(private http: HttpClient, private pushNotificationService: PushNotificationService) {
-    this.currentUserSubject = new BehaviorSubject<User | null>(null);
+    const storedUser = localStorage.getItem('currentUser');
+    this.currentUserSubject = new BehaviorSubject<User | null>(
+      storedUser ? JSON.parse(storedUser) : null
+    );
     this.currentUser = this.currentUserSubject.asObservable();
   }
 
@@ -25,125 +29,208 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  ensureCsrfCookie(): Observable<void> {
-    return this.http.get(this.getCsrfCookieUrl(), {
-      withCredentials: true,
-      responseType: 'text'
-    }).pipe(
-      map(() => void 0),
-      catchError((error: HttpErrorResponse) => {
-        if (error.status === 404) {
-          return of(void 0);
-        }
-
-        return throwError(() => error);
-      })
-    );
-  }
-
   login(username: string, password: string): Observable<User> {
-    return this.ensureCsrfCookie().pipe(
-      switchMap(() => this.http.post<any>(`${environment.apiUrl}/login`, { username, password }, { withCredentials: true })),
-      map(response => {
-        if (response && response.success && response.data) {
-          const userData = response.data.user;
-
-          this.currentUserSubject.next(userData);
-          this.currentUserLoadedAt = Date.now();
-
-          if (this.isAdviserUser(userData)) {
-            this.pushNotificationService.init().catch(() => {
-              // Push init failed silently — non-critical
-            });
-          }
-
-          return userData;
-        }
-
-        throw new Error('Invalid response format');
-      }),
-      catchError((error: HttpErrorResponse) => {
-        this.clearAuthData();
-        return throwError(() => error);
-      })
-    );
-  }
-
-  register(userData: any): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/register`, userData, { withCredentials: true });
-  }
-
-  logout(): Observable<any> {
-    this.pushNotificationService.unsubscribeAll().catch(() => {});
-
-    return this.ensureCsrfCookie().pipe(
-      switchMap(() => this.http.post<any>(`${environment.apiUrl}/logout`, {}, { withCredentials: true })),
-      map(() => {
-        this.clearAuthData();
-        return { success: true };
-      }),
-      catchError(() => {
-        this.clearAuthData();
-        return of({ success: true });
-      })
-    );
-  }
-
-  getCurrentUser(forceRefresh = false): Observable<User> {
-    const currentUser = this.currentUserValue;
-
-    if (!forceRefresh && currentUser && this.hasFreshValidation()) {
-      return of(currentUser);
-    }
-
-    if (this.currentUserRequest$) {
-      return this.currentUserRequest$;
-    }
-
-    this.currentUserRequest$ = this.http.get<any>(`${environment.apiUrl}/me`, { withCredentials: true })
+    return this.http.post<any>(`${environment.apiUrl}/login`, { username, password })
       .pipe(
         map(response => {
+          // Login response received
+
           if (response && response.success && response.data) {
-            const userData = response.data;
+            const userData = response.data.user;
+            const token = response.data.token;
+
+            // Store user data and token
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            localStorage.setItem('token', token);
+            localStorage.setItem('tokenExpiry', (Date.now() + (24 * 60 * 60 * 1000)).toString()); // 24 hours
+
             this.currentUserSubject.next(userData);
-            this.currentUserLoadedAt = Date.now();
+            this.markValidation(token);
+            // Login successful, user stored
+
+            // Verify storage immediately
+            setTimeout(() => {
+              const storedToken = localStorage.getItem('token');
+              const storedUser = localStorage.getItem('currentUser');
+              // Verification - Token and user in storage
+            }, 100);
+
+            // Start token refresh and session timeout timers
+            this.startTokenRefreshTimer();
+            this.startSessionTimeoutWarning();
+
+            // Subscribe to push notifications for adviser users
+            if (this.isAdviserUser(userData)) {
+              this.pushNotificationService.init().catch(() => {
+                // Push init failed silently — non-critical
+              });
+            }
+
             return userData;
           }
-
           throw new Error('Invalid response format');
         }),
         catchError((error: HttpErrorResponse) => {
-          if (error.status === 401 || error.status === 419) {
-            this.clearAuthData();
-          }
-
+          // Login error
+          this.clearAuthData();
           return throwError(() => error);
-        }),
-        finalize(() => {
-          this.currentUserRequest$ = null;
-        }),
-        shareReplay(1)
+        })
       );
+  }
 
-    return this.currentUserRequest$;
+  register(userData: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/register`, userData);
+  }
+
+  logout(): Observable<any> {
+    const token = localStorage.getItem('token');
+
+    // Unsubscribe from push notifications before clearing auth data
+    this.pushNotificationService.unsubscribeAll().catch(() => {});
+
+    // Call Laravel logout endpoint if we have a token
+    if (token) {
+      return this.http.post<any>(`${environment.apiUrl}/logout`, {})
+        .pipe(
+          map(() => {
+            // Logout successful
+            this.clearAuthData();
+            return { success: true };
+          }),
+          catchError((error) => {
+            // Logout API failed, clearing local data anyway
+            this.clearAuthData();
+            return new Observable(observer => {
+              observer.next({ success: true });
+              observer.complete();
+            });
+          })
+        );
+    } else {
+      // No token found, clearing local data
+      this.clearAuthData();
+
+      return new Observable(observer => {
+        observer.next({ success: true });
+        observer.complete();
+      });
+    }
+  }
+
+  getCurrentUser(): Observable<User> {
+    const token = localStorage.getItem('token');
+
+    // Check if token is expired
+    if (!this.isTokenValid()) {
+      // Token expired, clearing auth data
+      this.clearAuthData();
+      return throwError(() => new Error('Token expired'));
+    }
+
+    // If we have a valid token, use Laravel /me endpoint
+    if (token) {
+      const currentUser = this.currentUserValue;
+
+      if (currentUser && this.hasFreshValidation(token)) {
+        return of(currentUser);
+      }
+
+      if (this.currentUserRequest$) {
+        return this.currentUserRequest$;
+      }
+
+      this.currentUserRequest$ = this.http.get<any>(`${environment.apiUrl}/me`)
+        .pipe(
+          map(response => {
+            // Current user response received
+
+            if (response && response.success && response.data) {
+              const userData = response.data;
+              // Update stored user data
+              localStorage.setItem('currentUser', JSON.stringify(userData));
+              this.currentUserSubject.next(userData);
+              this.markValidation(token);
+              return userData;
+            }
+            throw new Error('Invalid response format');
+          }),
+          catchError((error: HttpErrorResponse) => {
+            // Get current user failed
+
+            // If 401, token is invalid
+            if (error.status === 401) {
+              // Token invalid, clearing auth data
+              this.clearAuthData();
+            }
+
+            return throwError(() => error);
+          }),
+          finalize(() => {
+            this.currentUserRequest$ = null;
+          }),
+          shareReplay(1)
+        );
+
+      return this.currentUserRequest$;
+    } else {
+      // No token, return current user from storage or error
+      const currentUser = this.currentUserValue;
+      if (currentUser) {
+        return new Observable(observer => {
+          observer.next(currentUser);
+          observer.complete();
+        });
+      } else {
+        return throwError(() => new Error('No authenticated user'));
+      }
+    }
   }
 
   isAuthenticated(): boolean {
-    return !!this.currentUserValue;
+    const user = this.currentUserValue;
+    const token = this.getToken();
+    const isValid = !!user && !!token && this.isTokenValid();
+
+    if (!isValid && (user || token)) {
+      // Invalid auth state detected, clearing data
+      this.clearAuthData();
+    }
+
+    return isValid;
   }
 
   getToken(): string | null {
-    return null;
+    return localStorage.getItem('token');
   }
 
   public isTokenValid(): boolean {
-    return !!this.currentUserValue;
+    const token = localStorage.getItem('token');
+    const expiry = localStorage.getItem('tokenExpiry');
+
+    if (!token || !expiry) {
+      return false;
+    }
+
+    const expiryTime = parseInt(expiry, 10);
+    const now = Date.now();
+
+    return now < expiryTime;
   }
 
+  // Enhanced authentication status check
   checkAuthenticationStatus(): boolean {
+    const token = localStorage.getItem('token');
     const user = this.currentUserValue;
 
-    if (!user) {
+    if (!token || !user) {
+      // Authentication check failed - missing token or user
+      this.clearAuthData();
+      return false;
+    }
+
+    // Check token expiry
+    if (!this.isTokenValid()) {
+      // Token expired during authentication check
       this.clearAuthData();
       return false;
     }
@@ -151,29 +238,95 @@ export class AuthService {
     return true;
   }
 
+  // Auto-refresh token before expiry
   startTokenRefreshTimer(): void {
-    return;
+    const expiry = localStorage.getItem('tokenExpiry');
+    if (!expiry) return;
+
+    const expiryTime = parseInt(expiry, 10);
+    const now = Date.now();
+    const timeUntilExpiry = expiryTime - now;
+
+    // Refresh token 5 minutes before expiry
+    const refreshTime = timeUntilExpiry - (5 * 60 * 1000);
+
+    if (refreshTime > 0) {
+      setTimeout(() => {
+        this.refreshToken().subscribe({
+            next: () => {
+            // Token refreshed successfully
+            this.startTokenRefreshTimer(); // Start next refresh cycle
+          },
+          error: (error) => {
+            // Token refresh failed
+            this.logout().subscribe(); // Force logout on refresh failure
+          }
+        });
+      }, refreshTime);
+    }
   }
 
+  // Refresh token endpoint
   refreshToken(): Observable<any> {
-    return this.ensureCsrfCookie().pipe(
-      switchMap(() => this.http.post<any>(`${environment.apiUrl}/refresh`, {}, { withCredentials: true })),
-      map(response => {
-        if (response && response.success) {
-          return response;
-        }
+    return this.http.post<any>(`${environment.apiUrl}/refresh`, {})
+      .pipe(
+        map(response => {
+          if (response && response.success && response.data) {
+            const newToken = response.data.token;
+            const newExpiry = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
 
-        throw new Error('Invalid refresh response');
-      }),
-      catchError((error: HttpErrorResponse) => {
-        this.clearAuthData();
-        return throwError(() => error);
-      })
-    );
+            localStorage.setItem('token', newToken);
+            localStorage.setItem('tokenExpiry', newExpiry.toString());
+            this.markValidation(newToken);
+
+            // Token refreshed successfully
+            return response;
+          }
+          throw new Error('Invalid refresh response');
+        }),
+        catchError((error: HttpErrorResponse) => {
+          // Token refresh failed
+          this.clearAuthData();
+          return throwError(() => error);
+        })
+      );
   }
 
+  // Session timeout warning
   startSessionTimeoutWarning(): void {
-    return;
+    const expiry = localStorage.getItem('tokenExpiry');
+    if (!expiry) return;
+
+    const expiryTime = parseInt(expiry, 10);
+    const now = Date.now();
+    const timeUntilExpiry = expiryTime - now;
+
+    // Show warning 10 minutes before expiry
+    const warningTime = timeUntilExpiry - (10 * 60 * 1000);
+
+    if (warningTime > 0) {
+      setTimeout(() => {
+        const remainingMinutes = Math.floor((expiryTime - Date.now()) / (60 * 1000));
+        if (remainingMinutes > 0) {
+          const extendSession = confirm(
+            `Your session will expire in ${remainingMinutes} minutes. Would you like to extend your session?`
+          );
+
+          if (extendSession) {
+            this.refreshToken().subscribe({
+              next: () => {
+                alert('Session extended successfully!');
+                this.startSessionTimeoutWarning(); // Start next warning cycle
+              },
+              error: () => {
+                alert('Failed to extend session. Please login again.');
+                this.logout().subscribe();
+              }
+            });
+          }
+        }
+      }, warningTime);
+    }
   }
 
   private clearAuthData(): void {
@@ -182,19 +335,23 @@ export class AuthService {
     localStorage.removeItem('tokenExpiry');
     this.currentUserSubject.next(null);
     this.currentUserRequest$ = null;
-    this.currentUserLoadedAt = 0;
+    this.lastValidatedToken = null;
+    this.lastValidatedAt = 0;
+    // Auth data cleared
   }
 
+  // Public method for interceptor to clear auth data
   public clearAuth(): void {
     this.clearAuthData();
   }
 
-  private hasFreshValidation(): boolean {
-    return (Date.now() - this.currentUserLoadedAt) < this.cacheTtlMs;
+  private hasFreshValidation(token: string): boolean {
+    return this.lastValidatedToken === token && (Date.now() - this.lastValidatedAt) < this.verificationTtlMs;
   }
 
-  private getCsrfCookieUrl(): string {
-    return environment.apiUrl.replace(/\/api\/?$/, '') + '/sanctum/csrf-cookie';
+  private markValidation(token: string): void {
+    this.lastValidatedToken = token;
+    this.lastValidatedAt = Date.now();
   }
 
   changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {
@@ -202,38 +359,45 @@ export class AuthService {
       current_password: currentPassword,
       new_password: newPassword,
       new_password_confirmation: newPassword,
-    }, { withCredentials: true });
+    });
   }
 
   updateCurrentUser(updatedUser: User): void {
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     this.currentUserSubject.next(updatedUser);
-    this.currentUserLoadedAt = Date.now();
+    // Current user updated
   }
 
+  // Force change password for first-time login
   forceChangePassword(currentPassword: string, newPassword: string): Observable<any> {
     return this.http.post<any>(`${environment.apiUrl}/force-change-password`, {
       current_password: currentPassword,
       new_password: newPassword,
       confirm_password: newPassword
-    }, { withCredentials: true }).pipe(
+    }).pipe(
       map(response => {
+        // Force change password response
         return response;
       }),
       catchError((error: HttpErrorResponse) => {
+        // Force change password error
         return throwError(() => error);
       })
     );
   }
 
+  // Request password change from admin
   requestPasswordChange(reason?: string, newPassword?: string): Observable<any> {
     return this.http.post<any>(`${environment.apiUrl}/request-password-change`, {
       reason: reason || '',
       new_password: newPassword || ''
-    }, { withCredentials: true }).pipe(
+    }).pipe(
       map(response => {
+        // Password change request response
         return response;
       }),
       catchError((error: HttpErrorResponse) => {
+        // Password change request error
         return throwError(() => error);
       })
     );
@@ -241,9 +405,8 @@ export class AuthService {
 
   private isAdviserUser(user: User): boolean {
     if (!user) return false;
-
+    // role_id 3 = adviser (matches backend isAdviserUser logic)
     if (user.role_id === 3) return true;
-
     const roleName = (user.role_name ?? '').toLowerCase();
     return roleName.includes('adviser');
   }
