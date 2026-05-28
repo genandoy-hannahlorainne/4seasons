@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SHDFFileUploadTest extends TestCase
@@ -23,7 +24,7 @@ class SHDFFileUploadTest extends TestCase
         SchoolYear::factory()->create(['is_current' => true]);
     }
 
-    /** @test */
+    #[Test]
     public function it_accepts_valid_pdf_upload()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();
@@ -43,10 +44,12 @@ class SHDFFileUploadTest extends TestCase
 
         $consent = StudentParentalConsent::where('student_id', $student->student_id)->first();
         $this->assertNotNull($consent->signature_file_path);
-        Storage::disk('signatures')->assertExists($consent->signature_file_path);
+        $this->assertTrue(
+            Storage::disk('signatures')->exists($consent->signature_file_path)
+        );
     }
 
-    /** @test */
+    #[Test]
     public function it_accepts_valid_png_upload()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();
@@ -63,10 +66,12 @@ class SHDFFileUploadTest extends TestCase
 
         $consent = StudentParentalConsent::where('student_id', $student->student_id)->first();
         $this->assertNotNull($consent->signature_file_path);
-        Storage::disk('signatures')->assertExists($consent->signature_file_path);
+        $this->assertTrue(
+            Storage::disk('signatures')->exists($consent->signature_file_path)
+        );
     }
 
-    /** @test */
+    #[Test]
     public function it_accepts_valid_jpeg_upload()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();
@@ -82,7 +87,7 @@ class SHDFFileUploadTest extends TestCase
         $response->assertStatus(200);
     }
 
-    /** @test */
+    #[Test]
     public function it_rejects_oversized_file()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();
@@ -100,7 +105,7 @@ class SHDFFileUploadTest extends TestCase
         $response->assertJsonValidationErrors('signature');
     }
 
-    /** @test */
+    #[Test]
     public function it_rejects_wrong_mime_type()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();
@@ -117,7 +122,7 @@ class SHDFFileUploadTest extends TestCase
         $response->assertJsonValidationErrors('signature');
     }
 
-    /** @test */
+    #[Test]
     public function it_rejects_missing_signature()
     {
         $studentRole = \App\Models\Role::where('role_name', 'student')->first();

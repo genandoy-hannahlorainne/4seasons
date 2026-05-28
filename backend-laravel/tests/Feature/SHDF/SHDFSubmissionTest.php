@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SHDFSubmissionTest extends TestCase
@@ -26,7 +27,7 @@ class SHDFSubmissionTest extends TestCase
         Storage::fake('signatures');
     }
 
-    /** @test */
+    #[Test]
     public function it_submits_complete_valid_shdf_payload()
     {
         $schoolYear = SchoolYear::factory()->create(['is_current' => true]);
@@ -81,7 +82,7 @@ class SHDFSubmissionTest extends TestCase
         $this->assertEquals('oo', $consent->deworming_consent);
     }
 
-    /** @test */
+    #[Test]
     public function it_upserts_on_duplicate_submission()
     {
         $schoolYear = SchoolYear::factory()->create(['is_current' => true]);

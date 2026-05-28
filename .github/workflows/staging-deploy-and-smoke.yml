@@ -1,0 +1,44 @@
+name: Staging Deploy + Smoke Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Deploy to staging via SSH
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: |
+            set -e
+            cd /srv/4seasons
+            # pull latest images and restart
+            docker-compose pull
+            docker-compose up -d --remove-orphans
+            # run migrations
+            docker-compose exec -T backend php artisan migrate --force
+
+      - name: Run smoke tests against staging
+        env:
+          SMOKE_USER: ${{ secrets.SMOKE_USER }}
+          SMOKE_PASS: ${{ secrets.SMOKE_PASS }}
+        run: |
+          set -e
+          echo "Request CSRF cookie"
+          curl -c cookies.txt -i https://api.staging.studentcare.site/sanctum/csrf-cookie
+
+          echo "Login with smoke account"
+          curl -b cookies.txt -c cookies.txt -X POST https://api.staging.studentcare.site/api/login \
+            -d "username=${SMOKE_USER}&password=${SMOKE_PASS}" -H "Content-Type: application/x-www-form-urlencoded" -i
+
+          echo "Verify /me"
+          curl -b cookies.txt -X GET https://api.staging.studentcare.site/api/me -i
+
