@@ -5,13 +5,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_values(array_unique(array_filter(array_map(
-        static fn (string $origin) => trim($origin),
-        array_merge(
-            explode(',', env('ALLOWED_ORIGINS', '')),
-            ['https://studentcare.site', 'https://www.studentcare.site', 'https://api.studentcare.site']
-        )
-    )))),
+    'allowed_origins' => array_filter(array_merge(
+        explode(',', env('ALLOWED_ORIGINS', '')),
+        ['https://studentcare.site', 'https://www.studentcare.site']
+    )),
 
     'allowed_origins_patterns' => [
         '/^https?:\/\/localhost(:[0-9]+)?$/',
@@ -27,7 +24,7 @@ return [
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => ['Authorization', 'Content-Type', 'X-Requested-With', 'X-XSRF-TOKEN'],
+    'exposed_headers' => ['Authorization', 'Content-Type', 'X-Requested-With'],
 
     'max_age' => 86400, // Cache preflight for 24 hours
 

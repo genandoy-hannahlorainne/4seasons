@@ -15,7 +15,8 @@ export const noAuthGuard: CanActivateFn = () => {
       'Admin': '/dashboard/admin'
     };
     const route = (user?.role_name && roleRoutes[user.role_name]) || '/dashboard';
-    return router.createUrlTree([route]);
+    router.navigate([route]);
+    return false;
   }
 
   return true;

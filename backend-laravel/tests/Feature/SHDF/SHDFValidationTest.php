@@ -9,7 +9,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SHDFValidationTest extends TestCase
@@ -24,7 +23,7 @@ class SHDFValidationTest extends TestCase
         SchoolYear::factory()->create(['is_current' => true]);
     }
 
-    #[Test]
+    /** @test */
     public function it_rejects_missing_required_fields()
     {
         // Create student with user account so authorization passes
@@ -55,7 +54,7 @@ class SHDFValidationTest extends TestCase
         }
     }
 
-    #[Test]
+    /** @test */
     public function it_rejects_medical_condition_none_with_other_conditions()
     {
         $student = Student::factory()->create();
@@ -71,7 +70,7 @@ class SHDFValidationTest extends TestCase
         $response->assertJsonValidationErrors('condition_none');
     }
 
-    #[Test]
+    /** @test */
     public function it_rejects_medication_none_with_other_medications()
     {
         $student = Student::factory()->create();
@@ -87,7 +86,7 @@ class SHDFValidationTest extends TestCase
         $response->assertJsonValidationErrors('medications_none');
     }
 
-    #[Test]
+    /** @test */
     public function it_rejects_family_condition_none_with_other_conditions()
     {
         $student = Student::factory()->create();
@@ -103,7 +102,7 @@ class SHDFValidationTest extends TestCase
         $response->assertJsonValidationErrors('family.condition_none');
     }
 
-    #[Test]
+    /** @test */
     public function it_rejects_emergency_contact_other_without_free_text()
     {
         $student = Student::factory()->create();
@@ -119,7 +118,7 @@ class SHDFValidationTest extends TestCase
         $response->assertJsonValidationErrors('emergency_contact_relation_other');
     }
 
-    #[Test]
+    /** @test */
     public function it_rejects_pwd_congenital_without_detail()
     {
         $student = Student::factory()->create();
@@ -135,7 +134,7 @@ class SHDFValidationTest extends TestCase
         $response->assertJsonValidationErrors('pwd_congenital_detail');
     }
 
-    #[Test]
+    /** @test */
     public function it_rejects_deworming_hindi_without_refusal_reason()
     {
         $student = Student::factory()->create();
@@ -151,7 +150,7 @@ class SHDFValidationTest extends TestCase
         $response->assertJsonValidationErrors('deworming_refusal_reason');
     }
 
-    #[Test]
+    /** @test */
     public function it_requires_mrtd_consent_for_grade_7()
     {
         $student = Student::factory()->create(['grade_level' => 'Grade 7']);
@@ -166,7 +165,7 @@ class SHDFValidationTest extends TestCase
         $response->assertJsonValidationErrors('mrtd_consent');
     }
 
-    #[Test]
+    /** @test */
     public function it_does_not_require_mrtd_consent_for_other_grades()
     {
         $student = Student::factory()->create(['grade_level' => 'Grade 8', 'gender' => 'M']);
@@ -180,7 +179,7 @@ class SHDFValidationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    #[Test]
+    /** @test */
     public function it_requires_wifa_consent_for_female_students()
     {
         $student = Student::factory()->create(['gender' => 'F']);
@@ -195,7 +194,7 @@ class SHDFValidationTest extends TestCase
         $response->assertJsonValidationErrors('wifa_consent');
     }
 
-    #[Test]
+    /** @test */
     public function it_does_not_require_wifa_consent_for_male_students()
     {
         // Use Grade 8 to avoid MRTD consent requirement (which is only for Grade 7)

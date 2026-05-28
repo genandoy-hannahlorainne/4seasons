@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
-import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-force-change-password',
@@ -292,28 +291,10 @@ export class ForceChangePasswordComponent implements OnInit {
     }, { validators: this.passwordMatchValidator });
   }
 
-  async ngOnInit(): Promise<void> {
-    let user = this.authService.currentUserValue;
-
-    if (!user) {
-      try {
-        user = await firstValueFrom(this.authService.getCurrentUser(true));
-      } catch {
-        this.router.navigate(['/login']);
-        return;
-      }
-    }
-
-    if (!user?.password_must_change) {
-      const roleRoutes: { [key: string]: string } = {
-        'Student': '/dashboard/student',
-        'Adviser': '/dashboard/adviser',
-        'Clinic Staff': '/dashboard/staff',
-        'Admin': '/dashboard/admin'
-      };
-
-      const route = roleRoutes[user?.role_name || ''] || '/dashboard';
-      this.router.navigate([route]);
+  ngOnInit(): void {
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+      this.router.navigate(['/login']);
     }
   }
 
