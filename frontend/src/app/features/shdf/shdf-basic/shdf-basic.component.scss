@@ -5,16 +5,22 @@
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .shdf-basic-container {
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
+  padding-top: 2rem;
   background: rgba(255, 255, 255, 0.96);
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(4px);
+  position: relative;
+  z-index: 1;
 }
 
 .header {
@@ -114,12 +120,14 @@
     margin-bottom: 0.5rem;
   }
 
-  input, select {
+  input, select, textarea {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
+    font-family: inherit;
+    box-sizing: border-box;
 
     &:focus {
       outline: none;
@@ -130,6 +138,11 @@
     &.error {
       border-color: #e74c3c;
     }
+  }
+
+  textarea {
+    resize: none;
+    min-height: 100px;
   }
 
   .error-message {
