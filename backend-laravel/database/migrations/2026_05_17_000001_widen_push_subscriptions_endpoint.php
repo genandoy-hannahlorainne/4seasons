@@ -20,12 +20,24 @@ return new class extends Migration
         });
 
         // Re-add unique index using a prefix (191 chars = safe for utf8mb4)
-        DB::statement('ALTER TABLE push_subscriptions ADD UNIQUE INDEX push_subscriptions_user_endpoint_unique (user_id, endpoint(191))');
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE push_subscriptions ADD UNIQUE INDEX push_subscriptions_user_endpoint_unique (user_id, endpoint(191))');
+        } else {
+            Schema::table('push_subscriptions', function (Blueprint $table) {
+                $table->unique(['user_id', 'endpoint'], 'push_subscriptions_user_endpoint_unique');
+            });
+        }
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE push_subscriptions DROP INDEX push_subscriptions_user_endpoint_unique');
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE push_subscriptions DROP INDEX push_subscriptions_user_endpoint_unique');
+        } else {
+            Schema::table('push_subscriptions', function (Blueprint $table) {
+                $table->dropUnique('push_subscriptions_user_endpoint_unique');
+            });
+        }
 
         Schema::table('push_subscriptions', function (Blueprint $table) {
             $table->string('endpoint', 512)->change();

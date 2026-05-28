@@ -2149,13 +2149,20 @@ class AdminController extends BaseController
     public function approvePasswordChangeRequest(Request $request, $notificationId)
     {
         try {
-            $notification = \App\Models\Notification::findOrFail($notificationId);
+            $notification = \App\Models\Notification::with('user.role')->findOrFail($notificationId);
 
             if ($notification->notification_type !== 'password_change_request') {
                 return $this->sendError('Invalid notification type', [], 400);
             }
 
-            $userId = $notification->request_data['user_id'] ?? null;
+            $requestData = $notification->request_data;
+            if (is_string($requestData)) {
+                $requestData = json_decode($requestData, true);
+            }
+
+            $requestData = is_array($requestData) ? $requestData : [];
+
+            $userId = $requestData['user_id'] ?? $notification->user_id ?? $notification->user?->user_id;
             if (!$userId) {
                 return $this->sendError('User ID not found in notification', [], 400);
             }
@@ -2163,7 +2170,7 @@ class AdminController extends BaseController
             $user = User::findOrFail($userId);
 
             // Check if this is a new request with user-provided password or old request
-            $newPassword = $notification->request_data['new_password'] ?? null;
+            $newPassword = $requestData['new_password'] ?? null;
 
             if ($newPassword) {
                 // New flow: Use user's requested password
@@ -2177,15 +2184,13 @@ class AdminController extends BaseController
                 $notification->markAsRead();
 
                 // Log activity
-                \App\Models\AuditLog::create([
-                    'user_id' => auth()->id(),
-                    'action' => 'Password Change Request Approved',
-                    'table_name' => 'users',
-                    'record_id' => $userId,
-                    'old_values' => null,
-                    'new_values' => json_encode(['password_changed' => true]),
-                    'ip_address' => $request->ip()
-                ]);
+                \App\Models\AuditLog::log(
+                    action: 'Password Change Request Approved',
+                    resourceType: 'User',
+                    resourceId: (int) $userId,
+                    description: 'Approved requested password change for ' . $user->username,
+                    changes: ['password_changed' => true]
+                );
 
                 return $this->sendResponse([
                     'username' => $user->username,
@@ -2205,15 +2210,13 @@ class AdminController extends BaseController
                 $notification->markAsRead();
 
                 // Log activity
-                \App\Models\AuditLog::create([
-                    'user_id' => auth()->id(),
-                    'action' => 'Password Reset Approved',
-                    'table_name' => 'users',
-                    'record_id' => $userId,
-                    'old_values' => null,
-                    'new_values' => json_encode(['password_reset' => true]),
-                    'ip_address' => $request->ip()
-                ]);
+                \App\Models\AuditLog::log(
+                    action: 'Password Reset Approved',
+                    resourceType: 'User',
+                    resourceId: (int) $userId,
+                    description: 'Approved password reset for ' . $user->username,
+                    changes: ['password_reset' => true]
+                );
 
                 return $this->sendResponse([
                     'temp_password' => $tempPassword,

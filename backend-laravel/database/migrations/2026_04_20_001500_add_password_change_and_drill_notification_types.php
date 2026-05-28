@@ -10,7 +10,10 @@ return new class extends Migration
     public function up(): void
     {
         // Add new notification types for password change requests
-        DB::statement("ALTER TABLE notifications MODIFY COLUMN notification_type VARCHAR(50) NULL");
+        // Only run MySQL-specific ALTER statements when using MySQL
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE notifications MODIFY COLUMN notification_type VARCHAR(50) NULL");
+        }
 
         // Add request_data column to store additional request information
         Schema::table('notifications', function (Blueprint $table) {
