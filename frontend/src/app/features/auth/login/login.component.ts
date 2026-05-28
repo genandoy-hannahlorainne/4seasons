@@ -41,6 +41,7 @@ export class LoginComponent implements OnInit {
       || this.route.snapshot.paramMap.get('role')
       || urlRole
       || this.route.snapshot.queryParamMap.get('role')
+      || localStorage.getItem('selectedRole')
       || '';
 
     // If no role selected, redirect back to role selection
