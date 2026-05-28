@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('medical_history', function (Blueprint $table) {
-            $table->bigInteger('history_id', true, true)->primary();
+            $table->bigIncrements('history_id');
             $table->integer('student_id', false, true);
             $table->boolean('condition_asthma')->default(false);
             $table->boolean('condition_diabetes')->default(false);

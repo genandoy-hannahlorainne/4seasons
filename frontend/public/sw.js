@@ -2,7 +2,7 @@
  * Studentcare Service Worker (auto-generated — do not edit by hand)
  * Regenerate: npm run generate:sw
  */
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `studentcare-${CACHE_VERSION}`;
 const STATIC_ASSETS = ['/', '/index.html', '/favicon.ico', '/manifest.webmanifest'];
 
@@ -76,6 +76,14 @@ self.addEventListener('fetch', (event) => {
   if (!event.request.url.startsWith(self.location.origin) || event.request.method !== 'GET') {
     return;
   }
+
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
   if (event.request.url.includes('/api/')) {
     event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
     return;
