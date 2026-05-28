@@ -35,15 +35,18 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Get role from query params
-    this.route.queryParams.subscribe(params => {
-      this.selectedRole = params['role'] || '';
-      
-      // If no role selected, redirect back to role selection
-      if (!this.selectedRole) {
-        this.router.navigate(['/role-selection']);
-      }
-    });
+    // Support explicit role routes, /login/student, and /login?role=student
+    const urlRole = this.router.url.split('?')[0].split('/')[2] || '';
+    this.selectedRole = this.route.snapshot.data['role']
+      || this.route.snapshot.paramMap.get('role')
+      || urlRole
+      || this.route.snapshot.queryParamMap.get('role')
+      || '';
+
+    // If no role selected, redirect back to role selection
+    if (!this.selectedRole) {
+      this.router.navigate(['/role-selection']);
+    }
   }
 
   togglePasswordVisibility(): void {

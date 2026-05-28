@@ -4,8 +4,7 @@ test.describe('App Shell', () => {
   test('should serve the Angular app without a blank page', async ({ page }) => {
     await page.goto('/');
     // Angular app should render something — not a blank white page
-    await expect(page.locator('body')).not.toBeEmpty();
-    await expect(page.locator('app-root')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('body')).toContainText(/StudentCare\+|PDMHS|Login|Select your role to continue/i, { timeout: 10000 });
   });
 
   test('should redirect unauthenticated users away from dashboard', async ({ page }) => {
