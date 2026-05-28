@@ -38,19 +38,24 @@ jobs:
     
     - name: Install dependencies
       working-directory: ./backend-laravel
-      run: composer install --no-progress --prefer-dist --optimize-autoloader
+      run: composer install --no-progress --prefer-dist --optimize-autoloader --no-scripts
     
     - name: Setup environment
       working-directory: ./backend-laravel
       run: |
         cp .env.example .env
+        sed -i "s|APP_KEY=|APP_KEY=base64:ts45ilpSzvWpMDLq+TQAot+nH6YzM28YSFfC/wFWFG4=|" .env
+        sed -i "s|SESSION_DOMAIN=null|SESSION_DOMAIN=|" .env
         echo "DB_CONNECTION=mysql" >> .env
         echo "DB_HOST=127.0.0.1" >> .env
         echo "DB_PORT=3306" >> .env
         echo "DB_DATABASE=testing" >> .env
         echo "DB_USERNAME=root" >> .env
         echo "DB_PASSWORD=password" >> .env
-        php artisan key:generate
+
+    - name: Run post-install scripts
+      working-directory: ./backend-laravel
+      run: php artisan package:discover --ansi
     
     - name: Run migrations
       working-directory: ./backend-laravel
@@ -150,7 +155,7 @@ jobs:
     
     - name: Install backend dependencies
       working-directory: ./backend-laravel
-      run: composer install --no-progress --prefer-dist --optimize-autoloader
+      run: composer install --no-progress --prefer-dist --optimize-autoloader --no-scripts
     
     - name: Install frontend dependencies
       working-directory: ./frontend
@@ -160,13 +165,18 @@ jobs:
       working-directory: ./backend-laravel
       run: |
         cp .env.example .env
+        sed -i "s|APP_KEY=|APP_KEY=base64:ts45ilpSzvWpMDLq+TQAot+nH6YzM28YSFfC/wFWFG4=|" .env
+        sed -i "s|SESSION_DOMAIN=null|SESSION_DOMAIN=|" .env
         echo "DB_CONNECTION=mysql" >> .env
         echo "DB_HOST=127.0.0.1" >> .env
         echo "DB_PORT=3306" >> .env
         echo "DB_DATABASE=testing" >> .env
         echo "DB_USERNAME=root" >> .env
         echo "DB_PASSWORD=password" >> .env
-        php artisan key:generate
+
+    - name: Run post-install scripts
+      working-directory: ./backend-laravel
+      run: php artisan package:discover --ansi
     
     - name: Run migrations and seed
       working-directory: ./backend-laravel

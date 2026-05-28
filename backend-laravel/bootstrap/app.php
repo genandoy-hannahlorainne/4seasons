@@ -14,6 +14,16 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
 
+        // Exclude auth endpoints from CSRF verification.
+        // These routes are cross-origin SPA calls — no session exists yet at login,
+        // and the XSRF-TOKEN cookie cannot be read cross-domain (e.g. localhost dev → production API).
+        $middleware->validateCsrfTokens(except: [
+            'api/login',
+            'api/logout',
+            'api/refresh',
+            'api/register',
+        ]);
+
         // For API routes, return JSON responses for unauthenticated requests
         $middleware->redirectGuestsTo(function ($request) {
             if ($request->is('api/*') || $request->expectsJson()) {
