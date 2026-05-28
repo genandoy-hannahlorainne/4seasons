@@ -267,11 +267,8 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
   debugAuth(): void {
     // Testing authentication
-    const token = localStorage.getItem('token');
     const user = this.authService.currentUserValue;
-    // Token and user retrieved for auth test
-
-    if (token) {
+    if (user) {
       // Test auth endpoint first
       this.adminService.testAuth().subscribe({
         next: (response) => {
@@ -303,15 +300,13 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
           }
       });
     } else {
-      alert('No authentication token found. Please login again.');
+      alert('No authenticated user found. Please login again.');
     }
   }
 
   debugClearAndRelogin(): void {
     if (confirm('This will clear all authentication data and redirect to login. Continue?')) {
       localStorage.removeItem('currentUser');
-      localStorage.removeItem('token');
-      localStorage.removeItem('tokenExpiry');
       // Cleared all auth data
       alert('Authentication data cleared. Redirecting to login...');
       this.router.navigate(['/login']);
@@ -327,19 +322,9 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     }
 
     const currentUser = this.authService.currentUserValue;
-    const token = localStorage.getItem('token');
-
-    // Authentication verified for manage-users
 
     if (currentUser?.role_name?.toLowerCase() !== 'admin') {
       this.errorMessage = 'Access denied. Admin privileges required.';
-      return;
-    }
-
-    if (!token) {
-      // No authentication token found
-      this.errorMessage = 'Authentication token missing. Please login again.';
-      this.router.navigate(['/login']);
       return;
     }
 
@@ -397,10 +382,8 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
 
     // Check authentication first
     const currentUser = this.authService.currentUserValue;
-    const token = localStorage.getItem('token');
-    // Current user and token checked
 
-    if (!currentUser || !token) {
+    if (!currentUser) {
       this.errorMessage = 'Authentication required. Please login again.';
       this.loading = false;
       this.router.navigate(['/login']);

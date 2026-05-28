@@ -24,105 +24,116 @@ Route::get('/health', function () {
     ]);
 });
 
-// Test route to check adviser data
-Route::get('/test-adviser-data', function () {
-    $advisers = \App\Models\Adviser::with('user')->get();
+if (app()->environment('local')) {
+    // Test route to check adviser data
+    Route::get('/test-adviser-data', function () {
+        $advisers = \App\Models\Adviser::with('user')->get();
 
-    $result = [];
-    foreach ($advisers as $adviser) {
-        $result[] = [
-            'adviser_id' => $adviser->adviser_id,
-            'user_id' => $adviser->user_id,
-            'employee_id' => $adviser->employee_id,
-            'birth_date' => $adviser->birth_date,
-            'user_name' => $adviser->user ? $adviser->user->full_name : 'No user',
-        ];
-    }
+        $result = [];
+        foreach ($advisers as $adviser) {
+            $result[] = [
+                'adviser_id' => $adviser->adviser_id,
+                'user_id' => $adviser->user_id,
+                'employee_id' => $adviser->employee_id,
+                'birth_date' => $adviser->birth_date,
+                'user_name' => $adviser->user ? $adviser->user->full_name : 'No user',
+            ];
+        }
 
-    return response()->json([
-        'success' => true,
-        'count' => count($result),
-        'advisers' => $result
-    ]);
-});
+        return response()->json([
+            'success' => true,
+            'count' => count($result),
+            'advisers' => $result
+        ]);
+    });
 
-// Debug route to test authentication
-Route::get('/debug/auth', function (Request $request) {
-    $user = $request->user();
-    return response()->json([
-        'authenticated' => !!$user,
-        'user' => $user ? [
-            'user_id' => $user->user_id,
-            'username' => $user->username,
-            'role' => $user->role->role_name ?? 'Unknown'
-        ] : null,
-        'token_present' => $request->bearerToken() ? 'yes' : 'no',
-        'headers' => [
-            'authorization' => $request->header('Authorization') ? 'present' : 'missing',
-            'accept' => $request->header('Accept'),
-            'content_type' => $request->header('Content-Type')
-        ]
-    ]);
-})->middleware('auth:sanctum');
+    // Debug route to diagnose authentication
+    Route::get('/debug/auth', function (Request $request) {
+        $user = $request->user();
+        return response()->json([
+            'authenticated' => !!$user,
+            'user' => $user ? [
+                'user_id' => $user->user_id,
+                'username' => $user->username,
+                'role' => $user->role->role_name ?? 'Unknown'
+            ] : null,
+            'headers' => [
+                'authorization' => $request->header('Authorization') ? 'present' : 'missing',
+                'accept' => $request->header('Accept'),
+                'content_type' => $request->header('Content-Type')
+            ]
+        ]);
+    })->middleware('auth:sanctum');
 
-// Debug route to diagnose SHDF authorization for a specific student
-Route::get('/debug/shdf-auth/{studentId}', function (Request $request, int $studentId) {
-    $user = $request->user();
-    if (!$user) {
-        return response()->json(['error' => 'Not authenticated'], 401);
-    }
+    // Debug route to diagnose SHDF authorization for a specific student
+    Route::get('/debug/shdf-auth/{studentId}', function (Request $request, int $studentId) {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Not authenticated'], 401);
+        }
 
-    $user->load('role');
-    $student = \App\Models\Student::where('student_id', $studentId)->first();
+        $user->load('role');
+        $student = \App\Models\Student::where('student_id', $studentId)->first();
 
-    $role = strtolower(trim($user->role?->role_name ?? ''));
+        $role = strtolower(trim($user->role?->role_name ?? ''));
 
-    $canFix = false;
-    if ($student) {
-        $canFix = (!empty($user->username) && !empty($student->student_number)
-            && strtolower(trim($user->username)) === strtolower(trim($student->student_number)))
-            || (\App\Models\Student::where('user_id', $user->user_id)->value('student_id') == $student->student_id);
-    }
+        $canFix = false;
+        if ($student) {
+            $canFix = (!empty($user->username) && !empty($student->student_number)
+                && strtolower(trim($user->username)) === strtolower(trim($student->student_number)))
+                || (\App\Models\Student::where('user_id', $user->user_id)->value('student_id') == $student->student_id);
+        }
 
-    return response()->json([
-        'user' => [
-            'user_id'    => $user->user_id,
-            'username'   => $user->username,
-            'role_id'    => $user->role_id,
-            'role_name'  => $user->role?->role_name,
-            'role_lower' => $role,
-        ],
-        'student' => $student ? [
-            'student_id'     => $student->student_id,
-            'student_number' => $student->student_number,
-            'user_id'        => $student->user_id,
-            'user_id_match'  => (int) $student->user_id === (int) $user->user_id,
-        ] : null,
-        'auth_result' => [
-            'role_is_student'    => $role === 'student',
-            'role_is_admin'      => $role === 'admin',
-            'role_is_staff'      => in_array($role, ['clinic_staff', 'clinic staff']),
-            'user_id_matches'    => $student ? (int) $student->user_id === (int) $user->user_id : false,
-            'can_fix_mapping'    => $canFix,
-            'would_authorize'    => $role === 'student'
-                || $role === 'admin'
-                || in_array($role, ['clinic_staff', 'clinic staff'])
-                || ($student && (int) $student->user_id === (int) $user->user_id)
-                || $canFix,
-        ],
-    ]);
-})->middleware('auth:sanctum');
+        return response()->json([
+            'user' => [
+                'user_id'    => $user->user_id,
+                'username'   => $user->username,
+                'role_id'    => $user->role_id,
+                'role_name'  => $user->role?->role_name,
+                'role_lower' => $role,
+            ],
+            'student' => $student ? [
+                'student_id'     => $student->student_id,
+                'student_number' => $student->student_number,
+                'user_id'        => $student->user_id,
+                'user_id_match'  => (int) $student->user_id === (int) $user->user_id,
+            ] : null,
+            'auth_result' => [
+                'role_is_student'    => $role === 'student',
+                'role_is_admin'      => $role === 'admin',
+                'role_is_staff'      => in_array($role, ['clinic_staff', 'clinic staff']),
+                'user_id_matches'    => $student ? (int) $student->user_id === (int) $user->user_id : false,
+                'can_fix_mapping'    => $canFix,
+                'would_authorize'    => $role === 'student'
+                    || $role === 'admin'
+                    || in_array($role, ['clinic_staff', 'clinic staff'])
+                    || ($student && (int) $student->user_id === (int) $user->user_id)
+                    || $canFix,
+            ],
+        ]);
+    })->middleware('auth:sanctum');
+
+    Route::get('/test-time', function () {
+        return response()->json([
+            'server_time' => now()->toDateTimeString(),
+            'server_timezone' => now()->timezone->getName(),
+            'server_timestamp' => now()->timestamp,
+            'config_timezone' => config('app.timezone'),
+            'php_timezone' => date_default_timezone_get()
+        ]);
+    })->middleware('auth:sanctum');
+}
 
 // VAPID public key — no auth needed so the frontend can subscribe before login
 Route::get('/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey']);
 
 // Authentication routes
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:sanctum', 'throttle:10,1']);
 Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
-Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:sanctum');
-Route::post('/force-change-password', [AuthController::class, 'forceChangePassword'])->middleware('auth:sanctum');
-Route::post('/request-password-change', [AuthController::class, 'requestPasswordChange'])->middleware('auth:sanctum');
+Route::post('/refresh', [AuthController::class, 'refresh'])->middleware(['auth:sanctum', 'throttle:10,1']);
+Route::post('/force-change-password', [AuthController::class, 'forceChangePassword'])->middleware(['auth:sanctum', 'throttle:10,1']);
+Route::post('/request-password-change', [AuthController::class, 'requestPasswordChange'])->middleware(['auth:sanctum', 'throttle:10,1']);
 
 // Protected routes
 Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function () {

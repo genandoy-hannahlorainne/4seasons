@@ -4,102 +4,68 @@ import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { catchError, throwError } from 'rxjs';
 
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  const cookiePrefix = `${encodeURIComponent(name)}=`;
+  const cookies = document.cookie ? document.cookie.split('; ') : [];
+
+  for (const cookie of cookies) {
+    if (cookie.startsWith(cookiePrefix)) {
+      return decodeURIComponent(cookie.substring(cookiePrefix.length));
+    }
+  }
+
+  return null;
+}
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const authService = inject(AuthService);
-  const token = localStorage.getItem('token');
-  const tokenExpiry = localStorage.getItem('tokenExpiry');
-
-  // Check if token is expired
-  const isTokenExpired = () => {
-    if (!tokenExpiry) return true;
-    return Date.now() >= parseInt(tokenExpiry, 10);
-  };
-
-  // Clear expired auth data — must use authService to also clear the BehaviorSubject
-  const clearExpiredAuth = () => {
-    authService.clearAuth();
-  };
 
   // Treat both old XAMPP and Docker :8081 endpoints as legacy PHP API.
   const isLegacyApi = req.url.includes('/backend/api') || req.url.includes('localhost:8081/api');
   const isLaravelApi = req.url.includes('/api') && !isLegacyApi;
 
-  // Skip auth for login and register endpoints
+  // Skip auth redirects for auth and health endpoints.
   const isAuthEndpoint = req.url.includes('/login') || req.url.includes('/register') || req.url.includes('/debug/') || req.url.endsWith('/health');
 
-  // console.log(...); // Removed for production
+  const headers: Record<string, string> = {
+    Accept: 'application/json'
+  };
 
-  let headers: any = {};
-
-  // Add CORS headers for all requests
-  headers['Accept'] = 'application/json';
-
-  // Do NOT set Content-Type for FormData requests — the browser must set it
-  // automatically so it includes the correct multipart boundary.
-  // Only set it explicitly for non-FormData (JSON) requests.
   if (!(req.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
 
-  if (isLaravelApi && token && !isAuthEndpoint) {
-    // Check if token is expired before using it
-    if (isTokenExpired()) {
-      clearExpiredAuth();
-      // console.warn(...); // Removed for production
-      router.navigate(['/login']);
-      return throwError(() => new Error('Token expired'));
-    }
+  if (isLaravelApi) {
+    headers['X-Requested-With'] = 'XMLHttpRequest';
 
-    // Use Bearer token for Laravel API (except auth endpoints)
-    headers['Authorization'] = `Bearer ${token}`;
-    // console.log(...); // Removed for production
-  } else if (isLaravelApi && !token && !isAuthEndpoint) {
-    // No token available for Laravel API request
-    // console.log(...); // Removed for production
-    // console.log(...); // Removed for production
-  } else if (isLaravelApi && isAuthEndpoint) {
-    // console.log(...); // Removed for production
-  } else if (isLegacyApi) {
-    // Use legacy user_id header for old PHP API
-    const currentUserStr = localStorage.getItem('currentUser');
-    if (currentUserStr) {
-      try {
-        const user = JSON.parse(currentUserStr);
-        if (user.user_id) {
-          headers['user_id'] = user.user_id.toString();
-          // console.log(...); // Removed for production
-        }
-      } catch (e) {
-    // Error parsing current user
-      }
+    const csrfToken = readCookie('XSRF-TOKEN');
+    if (csrfToken && req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+      headers['X-XSRF-TOKEN'] = csrfToken;
     }
-  } else if (isLaravelApi && !token && !isAuthEndpoint) {
-    // Laravel API request without token - this will likely fail
-    // console.warn(...); // Removed for production
   }
 
-  // Clone request with headers
-  const authReq = req.clone({ setHeaders: headers });
+  if (isLegacyApi) {
+    const user = authService.currentUserValue;
+    if (user?.user_id) {
+      headers['user_id'] = user.user_id.toString();
+    }
+  }
+
+  const authReq = req.clone({
+    setHeaders: headers,
+    withCredentials: isLaravelApi ? true : req.withCredentials,
+  });
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // HTTP Error occurred
-
-      // Handle 401 Unauthorized responses (but not for login attempts)
-      if (error.status === 401 && isLaravelApi && !isAuthEndpoint) {
-        // console.warn(...); // Removed for production
-
-        // Clear stored auth data
-        clearExpiredAuth();
-
-        // Redirect to login
+      if ((error.status === 401 || error.status === 419) && isLaravelApi && !isAuthEndpoint) {
+        authService.clearAuth();
         router.navigate(['/login']);
-      }
-
-      // Handle CORS errors
-      if (error.status === 0) {
-        // console.error('🌐 CORS or Network error detected:', error);
       }
 
       return throwError(() => error);
