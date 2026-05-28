@@ -29,8 +29,18 @@ class AuthTest extends TestCase
             'password' => 'password123',
         ]);
 
+        // Session-based login: expect user data and a Set-Cookie header (no bearer token)
         $response->assertStatus(200)
-                 ->assertJsonStructure(['data' => ['user', 'token']]);
+                 ->assertJsonStructure(['data' => ['user']]);
+
+        // Response should not include a client-side bearer token anymore
+        $this->assertArrayNotHasKey('token', $response->json('data'));
+
+        // Ensure a session cookie was set on login (Set-Cookie header present)
+        $this->assertTrue(
+            $response->headers->has('set-cookie'),
+            'Login response did not include Set-Cookie header'
+        );
     }
 
     public function test_user_cannot_login_with_invalid_credentials(): void

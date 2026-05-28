@@ -7,7 +7,7 @@ return [
 
     'allowed_origins' => array_filter(array_merge(
         explode(',', env('ALLOWED_ORIGINS', '')),
-        ['https://studentcare.site', 'https://www.studentcare.site']
+        ['https://studentcare.site', 'https://www.studentcare.site', 'https://api.studentcare.site']
     )),
 
     'allowed_origins_patterns' => [
