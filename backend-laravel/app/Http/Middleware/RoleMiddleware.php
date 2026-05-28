@@ -13,10 +13,10 @@ class RoleMiddleware
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
-     * @param  string  $role
+     * @param  string ...$roles
      * @return mixed
      */
-    public function handle(Request $request, Closure $next, string $role)
+    public function handle(Request $request, Closure $next, string ...$roles)
     {
         if (!Auth::check()) {
             return response()->json(['error' => 'Unauthenticated'], 401);
@@ -28,25 +28,33 @@ class RoleMiddleware
             return response()->json(['error' => 'User has no role assigned'], 403);
         }
 
-        $userRole = strtolower($user->role->role_name);
-        $requiredRole = strtolower($role);
+        if (empty($roles)) {
+            return response()->json(['error' => 'Role middleware misconfigured: no role specified'], 500);
+        }
+
+        $userRole = strtolower(trim($user->role->role_name));
 
         // Map role names for consistency
         $roleMapping = [
             'admin' => 'admin',
-            'adviser' => 'adviser', 
+            'adviser' => 'adviser',
             'clinic_staff' => 'clinic staff',
+            'clinic staff' => 'clinic staff',
             'student' => 'student'
         ];
 
         $mappedUserRole = $roleMapping[$userRole] ?? $userRole;
-        $mappedRequiredRole = $roleMapping[$requiredRole] ?? $requiredRole;
 
-        if ($mappedUserRole !== $mappedRequiredRole) {
+        $allowedRoles = array_map(function ($role) use ($roleMapping) {
+            $normalized = strtolower(trim($role));
+            return $roleMapping[$normalized] ?? $normalized;
+        }, $roles);
+
+        if (!in_array($mappedUserRole, $allowedRoles, true)) {
             return response()->json([
                 'error' => 'Insufficient permissions',
-                'required_role' => $requiredRole,
-                'user_role' => $userRole
+                'required_roles' => $allowedRoles,
+                'user_role' => $mappedUserRole
             ], 403);
         }
 
