@@ -25,10 +25,8 @@ class AuditMiddleware
     {
         $response = $next($request);
 
-        // Only audit successful requests
-        if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
-            $this->logIfAuditable($request);
-        }
+        // Audit all matched sensitive routes, including denied attempts.
+        $this->logIfAuditable($request);
 
         return $response;
     }

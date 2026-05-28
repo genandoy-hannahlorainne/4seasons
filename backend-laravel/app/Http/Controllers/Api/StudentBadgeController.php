@@ -10,6 +10,38 @@ use Illuminate\Support\Facades\Validator;
 
 class StudentBadgeController extends BaseController
 {
+    private function getNormalizedRoleName($user): string
+    {
+        return strtolower(trim((string) ($user?->role?->role_name ?? '')));
+    }
+
+    private function isStudentRole($user): bool
+    {
+        return $this->getNormalizedRoleName($user) === 'student';
+    }
+
+    private function resolveOwnedStudentId(int $userId): ?int
+    {
+        return \App\Models\Student::where('user_id', $userId)
+            ->where('is_active', true)
+            ->value('student_id');
+    }
+
+    private function ensureStudentOwnsStudentResource(Request $request, int $studentId)
+    {
+        $authUser = $request->user();
+        if (!$authUser || !$this->isStudentRole($authUser)) {
+            return null;
+        }
+
+        $ownedStudentId = $this->resolveOwnedStudentId((int) $authUser->user_id);
+        if ((int) $ownedStudentId !== (int) $studentId) {
+            return $this->sendError('Forbidden', [], 403);
+        }
+
+        return null;
+    }
+
     /**
      * Get streak badge metadata from frontend assets directory
      */
@@ -82,6 +114,11 @@ class StudentBadgeController extends BaseController
     public function getStudentBadges(Request $request, $studentId)
     {
         try {
+            $ownershipError = $this->ensureStudentOwnsStudentResource($request, (int) $studentId);
+            if ($ownershipError) {
+                return $ownershipError;
+            }
+
             $student = \App\Models\Student::find($studentId);
             if (!$student) {
                 return $this->sendError('Student not found', [], 404);
@@ -265,6 +302,11 @@ class StudentBadgeController extends BaseController
     public function getBadgeNotifications(Request $request, $studentId)
     {
         try {
+            $ownershipError = $this->ensureStudentOwnsStudentResource($request, (int) $studentId);
+            if ($ownershipError) {
+                return $ownershipError;
+            }
+
             $student = \App\Models\Student::find($studentId);
             if (!$student) {
                 return $this->sendError('Student not found', [], 404);
@@ -314,6 +356,14 @@ class StudentBadgeController extends BaseController
             $notification = Notification::find($notificationId);
             if (!$notification) {
                 return $this->sendError('Notification not found', [], 404);
+            }
+
+            $authUser = $request->user();
+            if ($authUser && $this->isStudentRole($authUser)) {
+                $ownedStudentId = $this->resolveOwnedStudentId((int) $authUser->user_id);
+                if ((int) $notification->student_id !== (int) $ownedStudentId) {
+                    return $this->sendError('Forbidden', [], 403);
+                }
             }
 
             $notification->markAsRead();
