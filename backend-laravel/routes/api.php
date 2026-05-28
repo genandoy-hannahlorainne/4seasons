@@ -7,7 +7,6 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AdviserController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\MedicalVisitController;
-use App\Http\Controllers\Api\EmergencyDrillController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\SchoolYearController;
 use App\Http\Controllers\Api\StudentBadgeController;
@@ -256,21 +255,6 @@ Route::middleware(['auth:sanctum', 'throttle:60,1', 'audit'])->group(function ()
             'config_timezone' => config('app.timezone'),
             'php_timezone' => date_default_timezone_get()
         ]);
-    });
-
-    // Emergency drills
-    Route::prefix('emergency-drills')->group(function () {
-        Route::get('/', [EmergencyDrillController::class, 'index']);
-        Route::post('/', [EmergencyDrillController::class, 'store']);
-        Route::get('/{id}', [EmergencyDrillController::class, 'show']);
-        Route::post('/{id}/start', [EmergencyDrillController::class, 'start']);
-        Route::post('/{id}/end', [EmergencyDrillController::class, 'end']);
-        Route::post('/{id}/participants', [EmergencyDrillController::class, 'addParticipants']);
-        Route::post('/{id}/scan', [EmergencyDrillController::class, 'scanParticipant']);
-        Route::get('/{id}/dashboard', [EmergencyDrillController::class, 'dashboard']);
-        Route::get('/{id}/search-users', [EmergencyDrillController::class, 'searchUsers']);
-        Route::delete('/{id}', [EmergencyDrillController::class, 'destroy']);
-        Route::post('/{id}/delete', [EmergencyDrillController::class, 'destroy']);
     });
 
     // Dashboard

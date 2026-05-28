@@ -42,6 +42,62 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   createErrorMessages: string[] = [];   // all error messages for the popup list
   createFieldErrors: Record<string, string> = {};  // field → first error message
   showErrorModal = false;
+  createUserStep = 1;
+  readonly createUserStepCount = 2;
+
+  get createRoleLabel(): string {
+    const roleLabels: Record<string, string> = {
+      student: 'Student',
+      adviser: 'Faculty/Adviser',
+      clinic_staff: 'Clinic Staff'
+    };
+
+    return roleLabels[this.newUser.role] || 'Role details';
+  }
+
+  get canProceedToRoleStep(): boolean {
+    return !!this.newUser.role && !!this.newUser.email?.trim();
+  }
+
+  get isBasicInfoValid(): boolean {
+    return this.canProceedToRoleStep;
+  }
+
+  get isRoleInfoValid(): boolean {
+    if (!this.newUser.role) return false;
+
+    if (this.newUser.role === 'student') {
+      const validStudentNumber = /^13\d{10}$/.test(this.newUser.student_number);
+      return !!(
+        validStudentNumber &&
+        this.newUser.first_name &&
+        this.newUser.last_name &&
+        this.newUser.gender &&
+        this.newUser.birth_date &&
+        this.newUser.grade_level &&
+        this.newUser.section_id
+      );
+    }
+
+    if (this.newUser.role === 'adviser') {
+      return !!(
+        this.newUser.employee_id &&
+        this.newUser.first_name &&
+        this.newUser.last_name
+      );
+    }
+
+    if (this.newUser.role === 'clinic_staff') {
+      return !!(
+        this.newUser.full_name &&
+        this.newUser.staff_code &&
+        this.newUser.staff_code.trim().length <= 20 &&
+        this.newUser.position
+      );
+    }
+
+    return false;
+  }
 
   showCreateError(errorsObj: Record<string, string[]> | null, fallbackMessage?: string): void {
     this.createFieldErrors = {};
@@ -577,6 +633,28 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     return this.users.filter(u => u.role === role && u.is_active).length;
   }
 
+  get totalUsersCount(): number {
+    return this.users.length;
+  }
+
+  get activeUsersCount(): number {
+    return this.users.filter(u => !!u.is_active).length;
+  }
+
+  get inactiveUsersCount(): number {
+    return Math.max(this.totalUsersCount - this.activeUsersCount, 0);
+  }
+
+  get recentUsers(): any[] {
+    return [...this.users]
+      .sort((a, b) => {
+        const aTime = new Date(a.created_at || 0).getTime();
+        const bTime = new Date(b.created_at || 0).getTime();
+        return bTime - aTime;
+      })
+      .slice(0, 5);
+  }
+
   // Adviser filters
   adviserFilterGrade = '';
   adviserFilterSection = '';
@@ -808,6 +886,12 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.resetNewUserForm();
   }
 
+  goToCreateUserStep(step: number): void {
+    if (step < 1 || step > this.createUserStepCount) return;
+    if (step === 2 && !this.canProceedToRoleStep) return;
+    this.createUserStep = step;
+  }
+
   resetNewUserForm(): void {
     this.newUser = {
       role: '',
@@ -831,6 +915,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.createErrorMessages = [];
     this.createErrorMessage = '';
     this.showErrorModal = false;
+    this.createUserStep = 1;
   }
 
   onRoleSelect(): void {
@@ -848,6 +933,7 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
     this.newUser.position = '';
     this.newUser.full_name = '';
     this.availableSections = [];
+    this.createUserStep = 1;
   }
 
   onGradeLevelChange(): void {
@@ -896,41 +982,15 @@ export class ManageUsersComponent implements OnInit, OnDestroy {
   }
 
   isCreateFormValid(): boolean {
-    if (!this.newUser.role) return false;
-
-    // Role-specific validation
-    if (this.newUser.role === 'student') {
-      const validStudentNumber = /^13\d{10}$/.test(this.newUser.student_number);
-      return !!(
-        validStudentNumber &&
-        this.newUser.first_name &&
-        this.newUser.last_name &&
-        this.newUser.gender &&
-        this.newUser.birth_date &&
-        this.newUser.grade_level &&
-        this.newUser.section_id
-      );
-    } else if (this.newUser.role === 'adviser') {
-      return !!(
-        this.newUser.employee_id &&
-        this.newUser.first_name &&
-        this.newUser.last_name
-      );
-    } else if (this.newUser.role === 'clinic_staff') {
-      return !!(
-        this.newUser.full_name &&
-        this.newUser.staff_code &&
-        this.newUser.staff_code.trim().length <= 20 &&
-        this.newUser.position
-      );
-    }
-
-    return false;
+    return this.isBasicInfoValid && this.isRoleInfoValid;
   }
 
   createUser(): void {
     if (!this.isCreateFormValid()) {
-      this.showCreateError(null, 'Please fill in all required fields');
+      this.createUserStep = !this.isBasicInfoValid ? 1 : 2;
+      this.showCreateError(null, this.createUserStep === 1
+        ? 'Please complete the basic information first'
+        : 'Please fill in the role-specific information');
       return;
     }
 

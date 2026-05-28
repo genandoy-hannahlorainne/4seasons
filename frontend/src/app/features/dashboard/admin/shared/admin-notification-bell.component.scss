@@ -1,19 +1,27 @@
 .admin-notif-bell {
+  --admin-notif-bell-size: 48px;
+  --admin-notif-bell-icon-size: 1.25rem;
+
   position: relative;
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: var(--admin-notif-bell-size);
+  height: var(--admin-notif-bell-size);
+  min-width: var(--admin-notif-bell-size);
+  min-height: var(--admin-notif-bell-size);
+  aspect-ratio: 1 / 1;
   padding: 0;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  line-height: 1;
   transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   z-index: 5200;
 
   i {
-    font-size: 1.25rem;
+    font-size: var(--admin-notif-bell-icon-size);
     pointer-events: none;
   }
 
@@ -63,7 +71,8 @@
 
 /* Dashboard-style: bell fixed top-right of header card */
 .page-header.notif-bell-corner,
-.profile-header.notif-bell-corner {
+.profile-header.notif-bell-corner,
+.hero-section {
   position: relative;
   display: flex;
   align-items: center;
@@ -94,8 +103,7 @@
 }
 
 /* Inline: bell on the right beside action buttons */
-.page-header.notif-bell-inline,
-.emergency-drills-container .header.notif-bell-inline {
+.page-header.notif-bell-inline {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -121,7 +129,47 @@
   .page-header.notif-bell-corner app-admin-notification-bell,
   .page-header.notif-bell-inline app-admin-notification-bell,
   .profile-header.notif-bell-corner app-admin-notification-bell,
-  .emergency-drills-container .header.notif-bell-inline app-admin-notification-bell {
+  .hero-section app-admin-notification-bell {
     display: none;
+  }
+}
+
+/* Ensure consistent corner placement and height across pages
+   - pin the bell to the same top/right offset when using corner/hero variants
+   - ensure common header/hero containers are positioned relative for correct absolute placement
+*/
+.page-header,
+.profile-header,
+.management-hero {
+  position: relative;
+}
+
+/* Target only the corner/hero variants so inline layouts remain unaffected */
+.page-header app-admin-notification-bell.variant-page-header-corner,
+.profile-header app-admin-notification-bell.variant-page-header-corner,
+.management-hero app-admin-notification-bell.variant-hero,
+.page-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner,
+.hero-section app-admin-notification-bell.variant-page-header-corner {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  z-index: 5200;
+}
+
+/* Align bell to central content column so visual offset is consistent across pages.
+   Uses a fixed inner max width (matches common `hero-content` max-width). Fallback
+   to 1.5rem when calc is not supported or viewport is narrow. */
+.page-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner,
+.hero-section app-admin-notification-bell.variant-page-header-corner,
+.profile-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner {
+  right: 1.5rem; /* baseline */
+}
+
+@supports (right: calc(0px)) {
+  .page-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner,
+  .hero-section app-admin-notification-bell.variant-page-header-corner,
+  .profile-header.notif-bell-corner app-admin-notification-bell.variant-page-header-corner {
+    /* 1400px mirrors the common centered content max-width used across pages */
+    right: calc((100% - 1400px) / 2 + 1.5rem);
   }
 }

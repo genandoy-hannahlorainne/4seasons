@@ -2,6 +2,9 @@
 
 Base URL: `http://localhost:8081/api`
 
+Swagger UI: `http://localhost:8081/swagger`
+OpenAPI source: [`documents/openapi.yaml`](./openapi.yaml)
+
 All protected routes require:
 ```
 Authorization: Bearer <token>
@@ -69,6 +72,11 @@ Force password change for users with `password_must_change: true`. Requires auth
   "new_password_confirmation": "string"
 }
 ```
+
+### POST /request-password-change
+Request a password change notification for the current account. Requires auth.
+
+---
 
 ---
 
@@ -176,6 +184,21 @@ Admin notifications.
 
 ### GET /admin/activity-logs
 System activity logs.
+
+### GET /admin/notifications
+Admin notification inbox.
+
+### PUT /admin/notifications/{id}/read
+Mark an admin notification as read.
+
+### POST /admin/notifications/mark-all-read
+Mark all admin notifications as read.
+
+### POST /admin/notifications/{id}/approve-password-change
+Approve a password change request.
+
+### POST /admin/notifications/{id}/dismiss
+Dismiss a password change request.
 
 ---
 
@@ -408,6 +431,8 @@ List all medical visits. Supports pagination.
 ### POST /medical-visits
 Create a new medical visit.
 
+When the visit is marked as emergency-related, the backend attempts to send an SMS to the student's emergency contact after the visit is saved. The SMS service uses `emergency_contact_phone` first, then falls back to the student's own `phone`.
+
 **Body:**
 ```json
 {
@@ -433,6 +458,37 @@ Create a new medical visit.
 
 ### GET /medical-visits/{id}
 Get a specific medical visit with student, staff, and vitals.
+
+---
+
+## Push Notifications
+
+### GET /push/vapid-public-key
+Return the VAPID public key used by the frontend to subscribe browsers for Web Push.
+
+### POST /push/subscribe
+Register a browser push token or endpoint.
+
+### DELETE /push/unsubscribe
+Remove a browser push token or endpoint.
+
+---
+
+## Direct FCM Messaging
+
+All routes require `role:admin`, `role:adviser`, or `role:clinic_staff`.
+
+### POST /fcm/send-to-user
+Send a push message to a user.
+
+### POST /fcm/send-to-token
+Send a push message to a specific FCM token.
+
+### POST /fcm/send-to-topic
+Send a push message to an FCM topic.
+
+### POST /fcm/send-to-condition
+Send a push message to a topic condition.
 
 ---
 
@@ -527,30 +583,6 @@ Submit Stage 2 (full SHDF form). Uses `SHDFFormRequest` validation.
 
 ### POST /shdf
 Submit full SHDF (legacy endpoint).
-
----
-
-## Emergency Drills
-
-### GET /emergency-drills
-List all drills. Query: `?status=planned|active|completed&drill_type=fire`
-
-### POST /emergency-drills
-Create a new drill.
-
-**Body:**
-```json
-{
-  "drill_name": "string",
-  "drill_type": "earthquake | fire | lockdown | medical | evacuation",
-  "description": "string",
-  "scheduled_at": "2026-04-01T08:00:00",
-  "settings": {}
-}
-```
-
-### GET /emergency-drills/{id}
-Get drill details with participants and statistics.
 
 ---
 

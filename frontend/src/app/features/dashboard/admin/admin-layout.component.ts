@@ -75,13 +75,9 @@ interface PasswordChangeRequest {
             <i class="bi bi-arrow-up-circle-fill nav-icon"></i>
             <span class="nav-label">Grade Promotion</span>
           </a>
-          <a routerLink="/dashboard/admin/emergency-drills" routerLinkActive="active" class="nav-item" title="Emergency Drills" (click)="closeMobile()">
-            <i class="bi bi-exclamation-triangle-fill nav-icon"></i>
-            <span class="nav-label">Emergency Drills</span>
-          </a>
-          <a routerLink="/dashboard/admin/settings" routerLinkActive="active" class="nav-item" title="Settings" (click)="closeMobile()">
+          <a routerLink="/dashboard/admin/backup-recovery" routerLinkActive="active" class="nav-item" title="Backup & Recovery" (click)="closeMobile()">
             <i class="bi bi-gear-fill nav-icon"></i>
-            <span class="nav-label">Settings</span>
+            <span class="nav-label">Backup & Recovery</span>
           </a>
           <a routerLink="/dashboard/admin/reports" routerLinkActive="active" class="nav-item" title="Reports" (click)="closeMobile()">
             <i class="bi bi-bar-chart-fill nav-icon"></i>
