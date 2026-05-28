@@ -10,8 +10,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
   // First check: Local authentication state
   if (!authService.isAuthenticated()) {
     // console.warn(...); // Removed for production
-    router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
-    return false;
+    return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
   }
 
   // Get required roles from route data
@@ -22,8 +21,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
     return authService.getCurrentUser().pipe(
       map(user => !!user),
       catchError(() => {
-        router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
-        return of(false);
+        return of(router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } }));
       })
     );
   }
@@ -33,8 +31,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
     map(user => {
       if (!user) {
         // console.warn(...); // Removed for production
-        router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
-        return false;
+        return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
       }
 
       // STRICT VALIDATION: Check if user's role matches required roles (exact match, case-sensitive)
@@ -57,14 +54,12 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) =
       };
 
       const redirectUrl = roleRoutes[userRole || ''] || '/role-selection';
-      router.navigate([redirectUrl]);
-      return false;
+      return router.createUrlTree([redirectUrl]);
     }),
     catchError(error => {
       // Role Guard: Backend verification error
       authService.logout().subscribe();
-      router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
-      return of(false);
+      return of(router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } }));
     })
   );
 };

@@ -10,8 +10,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   // First check: Local authentication state
   if (!authService.isAuthenticated()) {
     // console.warn(...); // Removed for production
-    router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
-    return false;
+    return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
   }
 
   // Second check: Verify with backend that token is still valid
@@ -21,14 +20,12 @@ export const authGuard: CanActivateFn = (route, state) => {
         return true;
       }
       // console.warn(...); // Removed for production
-      router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
-      return false;
+      return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
     }),
     catchError(error => {
       // Auth Guard: Backend verification error
       authService.logout().subscribe();
-      router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
-      return of(false);
+      return of(router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } }));
     })
   );
 };

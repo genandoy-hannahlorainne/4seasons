@@ -5,10 +5,13 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_filter(array_merge(
-        explode(',', env('ALLOWED_ORIGINS', '')),
-        ['https://studentcare.site', 'https://www.studentcare.site', 'https://api.studentcare.site']
-    )),
+    'allowed_origins' => array_values(array_unique(array_filter(array_map(
+        static fn (string $origin) => trim($origin),
+        array_merge(
+            explode(',', env('ALLOWED_ORIGINS', '')),
+            ['https://studentcare.site', 'https://www.studentcare.site', 'https://api.studentcare.site']
+        )
+    )))),
 
     'allowed_origins_patterns' => [
         '/^https?:\/\/localhost(:[0-9]+)?$/',
