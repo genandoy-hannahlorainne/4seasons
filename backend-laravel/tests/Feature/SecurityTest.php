@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\AuditLog;
 use App\Services\HashidService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 
 class SecurityTest extends TestCase
 {
@@ -19,7 +20,7 @@ class SecurityTest extends TestCase
         $this->seed(\Database\Seeders\RoleSeeder::class);
     }
 
-    /** @test */
+    #[Test]
     public function hashid_service_can_encode_and_decode_ids()
     {
         $service = new HashidService();
@@ -34,7 +35,7 @@ class SecurityTest extends TestCase
         $this->assertGreaterThanOrEqual(6, strlen($encoded));
     }
 
-    /** @test */
+    #[Test]
     public function student_model_has_hashid_attribute()
     {
         $student = Student::factory()->create();
@@ -44,7 +45,7 @@ class SecurityTest extends TestCase
         $this->assertGreaterThanOrEqual(6, strlen($student->hashid));
     }
 
-    /** @test */
+    #[Test]
     public function can_find_student_by_hashid()
     {
         $student = Student::factory()->create();
@@ -56,7 +57,7 @@ class SecurityTest extends TestCase
         $this->assertEquals($student->student_id, $found->student_id);
     }
 
-    /** @test */
+    #[Test]
     public function audit_log_records_user_actions()
     {
         $user = User::factory()->create();
@@ -78,7 +79,7 @@ class SecurityTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function rate_limiting_is_applied_to_api_routes()
     {
         $user = User::factory()->create();
@@ -100,7 +101,7 @@ class SecurityTest extends TestCase
         $this->assertEquals(429, $response->status());
     }
 
-    /** @test */
+    #[Test]
     public function audit_middleware_logs_sensitive_routes()
     {
         $user = User::factory()->create();

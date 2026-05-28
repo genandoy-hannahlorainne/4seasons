@@ -16,6 +16,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SHDFTransactionTest extends TestCase
@@ -29,7 +30,7 @@ class SHDFTransactionTest extends TestCase
         Storage::fake('signatures');
     }
 
-    /** @test */
+    #[Test]
     public function it_rolls_back_on_database_failure()
     {
         $this->markTestSkipped('DB transaction mocking interferes with test database operations');
