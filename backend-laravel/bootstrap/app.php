@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->statefulApi();
+
         // For API routes, return JSON responses for unauthenticated requests
         $middleware->redirectGuestsTo(function ($request) {
             if ($request->is('api/*') || $request->expectsJson()) {
