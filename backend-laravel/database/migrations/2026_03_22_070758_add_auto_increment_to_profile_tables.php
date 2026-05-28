@@ -7,6 +7,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Skip MySQL-specific ALTER TABLE operations when not using MySQL
+        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Fix students.student_id — drop FKs first
         DB::statement('ALTER TABLE `allergies` DROP FOREIGN KEY `allergies_student_id_foreign`');
         DB::statement('ALTER TABLE `medical_history` DROP FOREIGN KEY `medical_history_student_id_foreign`');
@@ -27,6 +32,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement('ALTER TABLE `allergies` DROP FOREIGN KEY `allergies_student_id_foreign`');
         DB::statement('ALTER TABLE `medical_history` DROP FOREIGN KEY `medical_history_student_id_foreign`');
         DB::statement('ALTER TABLE `medical_visits` DROP FOREIGN KEY `medical_visits_student_id_foreign`');
