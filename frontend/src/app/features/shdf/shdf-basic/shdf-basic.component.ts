@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,7 +9,8 @@ import { SHDFService } from '../shdf.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './shdf-basic.component.html',
-  styleUrls: ['./shdf-basic.component.scss']
+  styleUrls: ['./shdf-basic.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class SHDFBasicComponent implements OnInit {
   form!: FormGroup;
