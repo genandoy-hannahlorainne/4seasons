@@ -136,7 +136,7 @@ Route::post('/force-change-password', [AuthController::class, 'forceChangePasswo
 Route::post('/request-password-change', [AuthController::class, 'requestPasswordChange'])->middleware(['web', 'auth:sanctum', 'throttle:10,1']);
 
 // Protected routes
-Route::middleware(['auth:sanctum', 'password.change.required', 'throttle:60,1', 'audit'])->group(function () {
+Route::middleware(['web', 'auth:sanctum', 'password.change.required', 'throttle:60,1', 'audit'])->group(function () {
     // Legacy route for compatibility - redirects to admin/users logic
     Route::get('/get-all-users', [AdminController::class, 'getAllUsers'])->middleware('role:admin');
 
