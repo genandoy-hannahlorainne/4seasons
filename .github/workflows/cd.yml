@@ -78,6 +78,16 @@ jobs:
             set -e
             cd "${{ secrets.SERVER_DEPLOY_PATH }}"
 
+            # Backwards-compatible env handling:
+            # prefer .env.prod, but fall back to an existing .env on older servers.
+            if [ ! -f .env.prod ] && [ -f .env ]; then
+              cp .env .env.prod
+            fi
+            if [ ! -f .env.prod ]; then
+              echo "Missing .env.prod (or legacy .env) on the deploy host"
+              exit 1
+            fi
+
             mkdir -p nginx
             if [ -f api.studentcare.site.conf ]; then
               mv api.studentcare.site.conf nginx/
