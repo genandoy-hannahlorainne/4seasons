@@ -65,7 +65,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       if ((error.status === 401 || error.status === 419) && isLaravelApi && !isAuthEndpoint) {
         authService.clearAuth();
-        router.navigate(['/login']);
+
+        // Avoid forcing a login redirect for public/auth bootstrap routes.
+        const currentUrl = router.url;
+        const publicRoutes = ['/', '/login', '/admin/login', '/role-selection'];
+        const isPublicRoute = publicRoutes.includes(currentUrl) || currentUrl.startsWith('/login');
+
+        if (!isPublicRoute && !req.url.endsWith('/me') && !req.url.endsWith('/logout') && !req.url.endsWith('/refresh')) {
+          router.navigate(['/login']);
+        }
       }
 
       return throwError(() => error);
