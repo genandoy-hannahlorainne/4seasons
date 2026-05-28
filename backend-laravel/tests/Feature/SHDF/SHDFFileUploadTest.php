@@ -26,7 +26,7 @@ class SHDFFileUploadTest extends TestCase
     /** @test */
     public function it_accepts_valid_pdf_upload()
     {
-        $studentRole = \App\Models\Role::where('role_name', 'student')->first();
+        $studentRole = \App\Models\Role::where('role_name', 'Student')->first();
         $student = Student::factory()->create(['gender' => 'F', 'grade_level' => 'Grade 8']);
         $user = User::factory()->create([
             'user_id' => $student->user_id,
@@ -49,7 +49,7 @@ class SHDFFileUploadTest extends TestCase
     /** @test */
     public function it_accepts_valid_png_upload()
     {
-        $studentRole = \App\Models\Role::where('role_name', 'student')->first();
+        $studentRole = \App\Models\Role::where('role_name', 'Student')->first();
         $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 8']);
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $student->update(['user_id' => $user->user_id]);
@@ -69,7 +69,7 @@ class SHDFFileUploadTest extends TestCase
     /** @test */
     public function it_accepts_valid_jpeg_upload()
     {
-        $studentRole = \App\Models\Role::where('role_name', 'student')->first();
+        $studentRole = \App\Models\Role::where('role_name', 'Student')->first();
         $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 7']);
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $student->update(['user_id' => $user->user_id]);
@@ -85,7 +85,7 @@ class SHDFFileUploadTest extends TestCase
     /** @test */
     public function it_rejects_oversized_file()
     {
-        $studentRole = \App\Models\Role::where('role_name', 'student')->first();
+        $studentRole = \App\Models\Role::where('role_name', 'Student')->first();
         $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 8']);
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $student->update(['user_id' => $user->user_id]);
@@ -103,7 +103,7 @@ class SHDFFileUploadTest extends TestCase
     /** @test */
     public function it_rejects_wrong_mime_type()
     {
-        $studentRole = \App\Models\Role::where('role_name', 'student')->first();
+        $studentRole = \App\Models\Role::where('role_name', 'Student')->first();
         $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 8']);
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $student->update(['user_id' => $user->user_id]);
@@ -120,7 +120,7 @@ class SHDFFileUploadTest extends TestCase
     /** @test */
     public function it_rejects_missing_signature()
     {
-        $studentRole = \App\Models\Role::where('role_name', 'student')->first();
+        $studentRole = \App\Models\Role::where('role_name', 'Student')->first();
         $student = Student::factory()->create(['gender' => 'M', 'grade_level' => 'Grade 8']);
         $user = User::factory()->create(['role_id' => $studentRole->role_id]);
         $student->update(['user_id' => $user->user_id]);

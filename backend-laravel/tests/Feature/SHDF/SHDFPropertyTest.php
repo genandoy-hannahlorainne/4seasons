@@ -314,7 +314,7 @@ class SHDFPropertyTest extends TestCase
      */
     public function test_property_adviser_access(): void
     {
-        $adviserRole = Role::where('role_name', 'adviser')->first();
+        $adviserRole = Role::where('role_name', 'Adviser')->first();
 
         for ($i = 0; $i < 20; $i++) {
             $adviser = User::factory()->create(['role_id' => $adviserRole->role_id]);
