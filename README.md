@@ -14,7 +14,7 @@
 
 <br/>
 
-> **Studentcare+: A Web-Based Clinic Management System with QR Scanning and SMS Notifications at President Diosdado Macapagal High School (PDMHS). Streamlines student health data, medical visits, and health monitoring across multiple user roles.
+> Studentcare+: A Web-Based Clinic Management System with QR Scanning and SMS Notifications at President Diosdado Macapagal High School (PDMHS). Streamlines student health data, medical visits, and health monitoring across multiple user roles.
 
 </div>
 
@@ -261,7 +261,3 @@ All protected routes require `Authorization: Bearer <token>` from `POST /api/log
 
 For capstone project use only.
 Diploma in Information Technology - 2026.
-
-<br/>
-
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,14,20&height=100&section=footer&text=Made%20with%20%E2%9D%A4%EF%B8%8F%20by%20Team%204seasons&fontSize=16&fontColor=ffffff&fontAlignY=65"/>
